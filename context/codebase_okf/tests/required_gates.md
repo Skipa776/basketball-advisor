@@ -6,7 +6,7 @@ tags: [tests, policy, gates]
 source_paths: []
 test_paths: [tests]
 depends_on: [../tasks/run_quality_gates.md]
-status: planned
+status: partial
 last_updated: 2026-07-29
 owners: [engineering]
 ---

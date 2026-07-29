@@ -20,10 +20,21 @@ second, right after `AGENTS.md`.
 
 # Current state — 2026-07-29
 
-**Build step 1 is implemented.** The repository has the solution skeleton,
-central dependency pins and lock files, local PostgreSQL Compose configuration,
-and a green executable quality gate. The next step is step 2 of
-[`AGENT_INSTRUCTIONS.md`](../../AGENT_INSTRUCTIONS.md).
+**Build steps 1–3 are implemented.** The repository has the solution skeleton,
+central dependency pins and lock files, healthy local PostgreSQL Compose
+configuration, and a green executable quality gate. The canonical stat
+vocabulary, valid-by-construction league configuration, points scoring, and
+category scoring are implemented with all required scoring-matrix cases.
+
+The full gate passes 22 domain tests with 83.95% Domain line coverage, zero
+build warnings, and a clean OKF validation. Application and integration test
+projects intentionally have no tests yet because no subsystem using them has
+been started.
+
+No persistence code has been created. The single next action is step 4 of
+[`AGENT_INSTRUCTIONS.md`](../../AGENT_INSTRUCTIONS.md): implement the complete
+EF Core persistence subsystem and its required A-04–A-09, A-16, and A-17 tests
+in one green commit.
 
 **Build prerequisites not yet installed on the development machine:**
 
