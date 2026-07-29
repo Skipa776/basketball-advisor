@@ -6,7 +6,7 @@ tags: [tests, api, persistence, matrix]
 source_paths: [src/FantasyBasketball.Api, src/FantasyBasketball.Infrastructure/Persistence]
 test_paths: [tests/FantasyBasketball.IntegrationTests]
 depends_on: [required_gates.md, ../contracts/persistence_contract.md, ../contracts/api_surface.md]
-status: planned
+status: partial
 last_updated: 2026-07-29
 owners: [engineering]
 ---

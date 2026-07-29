@@ -126,4 +126,28 @@ public sealed class ScoringEngineTests
         result[StatKey.FG3M].ShouldBe(4m);
         result.ShouldNotContainKey(StatKey.MIN);
     }
+
+    [Fact]
+    public void Engines_reject_the_wrong_league_result_shape()
+    {
+        var line = new StatLine(new Dictionary<StatKey, decimal>());
+        var categoryLeague = new FantasyLeague(
+            Guid.NewGuid(),
+            "Categories",
+            LeagueType.Categories,
+            10,
+            [],
+            [StatKey.PTS],
+            [new RosterSlot(RosterSlotKind.UTIL)],
+            LineupCadence.Daily);
+
+        Should.Throw<ArgumentException>(() =>
+            new PointsScoringEngine().Score(line, categoryLeague));
+        Should.Throw<NotSupportedException>(() =>
+            new PointsScoringEngine().ScoreCategories(line, seedLeague));
+        Should.Throw<ArgumentException>(() =>
+            new CategoryScoringEngine().ScoreCategories(line, seedLeague));
+        Should.Throw<NotSupportedException>(() =>
+            new CategoryScoringEngine().Score(line, categoryLeague));
+    }
 }

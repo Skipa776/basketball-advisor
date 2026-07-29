@@ -26,15 +26,25 @@ configuration, and a green executable quality gate. The canonical stat
 vocabulary, valid-by-construction league configuration, points scoring, and
 category scoring are implemented with all required scoring-matrix cases.
 
-The full gate passes 22 domain tests with 83.95% Domain line coverage, zero
-build warnings, and a clean OKF validation. Application and integration test
-projects intentionally have no tests yet because no subsystem using them has
-been started.
+**Build step 4 is partial.** EF Core now has generated forward migration and
+snapshot files, explicit per-entity configuration, snake-case PostgreSQL
+storage, JSONB stat lines, string enums, numeric precision, uniqueness indexes,
+append-only baseline enforcement, and repositories that round-trip leagues,
+players, and season stat lines. Tests use isolated Testcontainers PostgreSQL 17
+instances and cover migration from empty, duplicate provider identity,
+baseline immutability, enum storage, dependency direction, repository shape,
+and league/draft cascade versus player-history restriction.
 
-No persistence code has been created. The single next action is step 4 of
-[`AGENT_INSTRUCTIONS.md`](../../AGENT_INSTRUCTIONS.md): implement the complete
-EF Core persistence subsystem and its required A-04–A-09, A-16, and A-17 tests
-in one green commit.
+The full gate passes 26 Domain, 1 Application, and 7 integration tests. Domain
+line coverage is 87.11%, Application line coverage is 100%, the build has zero
+warnings, and OKF validation is clean.
+
+Persistence remains `partial` because the initial migration does not yet contain
+the later projection, context, recommendation, import-run, game, ADP, and
+pending-identity entities listed by the full persistence contract. The single
+next action is to finish step 4's remaining entity/configuration/repository
+surface and the exact A-04 append-only interface checks before starting the
+identity resolver in step 5.
 
 **Build prerequisites not yet installed on the development machine:**
 

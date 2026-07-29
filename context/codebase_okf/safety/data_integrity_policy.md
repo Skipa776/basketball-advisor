@@ -6,7 +6,7 @@ tags: [safety, integrity, projections]
 source_paths: [src/FantasyBasketball.Domain/Projections, src/FantasyBasketball.Domain/Context]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Projections]
 depends_on: [../contracts/projection_pipeline_contract.md, ../contracts/provenance_contract.md, ../contracts/context_event_catalog.md]
-status: planned
+status: partial
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: high

@@ -6,7 +6,7 @@ tags: [component, application, use-cases]
 source_paths: [src/FantasyBasketball.Application]
 test_paths: [tests/FantasyBasketball.Application.Tests]
 depends_on: [../contracts/provider_contracts.md, ../contracts/api_surface.md]
-status: planned
+status: partial
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: medium

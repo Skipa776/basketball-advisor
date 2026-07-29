@@ -6,7 +6,7 @@ tags: [contract, provenance, ingestion]
 source_paths: [src/FantasyBasketball.Domain/Provenance]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Ingestion]
 depends_on: [provider_contracts.md]
-status: planned
+status: partial
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: medium

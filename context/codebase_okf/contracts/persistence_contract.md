@@ -6,7 +6,7 @@ tags: [contract, persistence, database]
 source_paths: [src/FantasyBasketball.Infrastructure/Persistence]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Persistence]
 depends_on: [provenance_contract.md, stat_vocabulary.md]
-status: planned
+status: partial
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: medium

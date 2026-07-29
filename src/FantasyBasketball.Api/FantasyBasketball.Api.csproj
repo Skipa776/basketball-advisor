@@ -4,4 +4,10 @@
     <ProjectReference Include="../FantasyBasketball.Domain/FantasyBasketball.Domain.csproj" />
     <ProjectReference Include="../FantasyBasketball.Infrastructure/FantasyBasketball.Infrastructure.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 </Project>
