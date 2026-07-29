@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <ProjectReference Include="../FantasyBasketball.Application/FantasyBasketball.Application.csproj" />
+    <ProjectReference Include="../FantasyBasketball.Domain/FantasyBasketball.Domain.csproj" />
+    <ProjectReference Include="../FantasyBasketball.Infrastructure/FantasyBasketball.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

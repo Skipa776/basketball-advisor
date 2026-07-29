@@ -1,0 +1,12 @@
+bin/
+obj/
+TestResults/
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+appsettings.*.Local.json
+.env
+*.pfx
+secrets/

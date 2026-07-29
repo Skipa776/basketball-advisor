@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: fb-postgres
+    environment:
+      POSTGRES_DB: fantasy_basketball
+      POSTGRES_USER: fantasy
+      POSTGRES_PASSWORD: fantasy_local
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fantasy -d fantasy_basketball"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+    volumes:
+      - fantasy-basketball-postgres:/var/lib/postgresql/data
+
+volumes:
+  fantasy-basketball-postgres:

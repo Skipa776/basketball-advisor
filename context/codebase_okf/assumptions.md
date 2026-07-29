@@ -20,14 +20,15 @@ second, right after `AGENTS.md`.
 
 # Current state — 2026-07-29
 
-**No application code exists.** The repository contains the design doc, the spec
-stack, and this bundle. Every concept is `status: planned`. The next step is
-step 1 of [`AGENT_INSTRUCTIONS.md`](../../AGENT_INSTRUCTIONS.md).
+**Build step 1 is implemented.** The repository has the solution skeleton,
+central dependency pins and lock files, local PostgreSQL Compose configuration,
+and a green executable quality gate. The next step is step 2 of
+[`AGENT_INSTRUCTIONS.md`](../../AGENT_INSTRUCTIONS.md).
 
 **Build prerequisites not yet installed on the development machine:**
 
-- **.NET 10 SDK is absent** (`dotnet` is not on PATH). It must be installed
-  before step 1. Verified absent 2026-07-29.
+- **.NET 10 SDK is installed.** SDK 10.0.302 satisfies `global.json` through
+  `rollForward: latestFeature`. Verified 2026-07-29.
 - Docker 28.5.1 is present — `compose.yaml` and Testcontainers will work.
 - Python 3.12 is present — the OKF validator runs today.
 

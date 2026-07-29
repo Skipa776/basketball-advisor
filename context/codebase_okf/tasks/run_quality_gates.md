@@ -6,7 +6,7 @@ tags: [task, gates, ci]
 source_paths: [scripts/gate.sh]
 test_paths: []
 depends_on: [../tests/required_gates.md]
-status: planned
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 ---
