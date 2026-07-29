@@ -6,7 +6,7 @@ tags: [tests, scoring, matrix]
 source_paths: [src/FantasyBasketball.Domain/Scoring]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Scoring]
 depends_on: [required_gates.md, ../contracts/scoring_rules_catalog.md]
-status: planned
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 ---

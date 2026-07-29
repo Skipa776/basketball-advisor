@@ -6,7 +6,7 @@ tags: [component, scoring, domain]
 source_paths: [src/FantasyBasketball.Domain/Scoring]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Scoring]
 depends_on: [../contracts/scoring_rules_catalog.md, ../contracts/stat_vocabulary.md]
-status: planned
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: high
@@ -30,7 +30,7 @@ One interface, two implementations selected by `LeagueType`:
 public interface IScoringEngine
 {
     LeagueType Handles { get; }
-    FantasyValue Score(StatLine line, FantasyLeague league);
+    decimal Score(StatLine line, FantasyLeague league);
     IReadOnlyDictionary<StatKey, decimal> ScoreCategories(StatLine line, FantasyLeague league);
 }
 ```
@@ -39,6 +39,10 @@ public interface IScoringEngine
 per-category totals. Two implementations of one interface is the *only*
 justification for the interface — do not add a factory, a registry, or a
 strategy pattern on top of a switch over two cases.
+
+The scalar returned by `Score` is per-game value. The projection subsystem
+later combines it with player identity and projected games to create the
+persisted `Projections.FantasyValue` record.
 
 # Invariants
 

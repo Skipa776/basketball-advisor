@@ -114,6 +114,18 @@ real check.
   that they are computed as specified and decomposed correctly. Accuracy
   back-testing is post-MVP.
 
+# Build decisions
+
+### Scoring result boundary
+
+The original scoring component signature returned the persisted
+`Projections.FantasyValue` from only a `StatLine` and `FantasyLeague`. That
+record also requires player identity, projected games, and an optional adjusted
+projection identity, none of which the scoring engine owns. The scoring layer
+therefore returns the per-game scalar as `decimal`; the projection subsystem
+will assemble the persisted record once those inputs exist. This keeps scoring
+pure and avoids placeholder identifiers or false season totals.
+
 # Revisit triggers
 
 - The user's real league settings differ from the seed league → update
