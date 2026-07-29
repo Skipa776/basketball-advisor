@@ -6,7 +6,7 @@ tags: [component, domain, architecture]
 source_paths: [src/FantasyBasketball.Domain]
 test_paths: [tests/FantasyBasketball.Domain.Tests]
 depends_on: [../contracts/stat_vocabulary.md, ../contracts/scoring_rules_catalog.md]
-status: planned
+status: partial
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: high

@@ -6,7 +6,7 @@ tags: [contract, catalog, scoring]
 source_paths: [src/FantasyBasketball.Domain/Leagues]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Scoring]
 depends_on: [stat_vocabulary.md]
-status: planned
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: high

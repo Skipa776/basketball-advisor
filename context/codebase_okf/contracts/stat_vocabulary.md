@@ -6,7 +6,7 @@ tags: [contract, catalog, stats]
 source_paths: [src/FantasyBasketball.Domain/Stats]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Stats]
 depends_on: []
-status: planned
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: high
