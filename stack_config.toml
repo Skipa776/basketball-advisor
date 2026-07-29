@@ -1,0 +1,115 @@
+# Machine-readable build constraints for FantasyBasketball.
+# This file is canonical for versions, dependencies, and gate minimums.
+# Prose elsewhere that disagrees with this file is wrong.
+
+[project]
+name           = "FantasyBasketball"
+solution       = "FantasyBasketball.sln"
+root_namespace = "FantasyBasketball"
+description    = "League-aware fantasy basketball decision engine"
+
+[runtime]
+# .NET 10 is the current LTS (released 2025-11).
+sdk              = "10.0.100"
+roll_forward     = "latestFeature"   # global.json; patch/feature drift is fine, major is not
+target_framework = "net10.0"
+lang_version     = "14.0"
+nullable         = "enable"
+implicit_usings  = "enable"
+treat_warnings_as_errors = true
+
+[database]
+engine        = "postgresql"
+version       = "17"
+provisioning  = "docker-compose"     # compose.yaml at repo root
+dev_container = "fb-postgres"
+test_strategy = "testcontainers"     # integration tests get a throwaway container, never the dev DB
+
+# --- Dependencies -----------------------------------------------------------
+# Central Package Management: every version lives in Directory.Packages.props.
+# packages.lock.json is committed for every project; restore runs --locked-mode.
+# All versions below verified present on nuget.org 2026-07-29.
+
+[dependencies.runtime]
+"Microsoft.EntityFrameworkCore"             = "10.0.10"
+"Microsoft.EntityFrameworkCore.Design"      = "10.0.10"
+"Npgsql.EntityFrameworkCore.PostgreSQL"     = "10.0.3"
+"Microsoft.Extensions.Http.Resilience"      = "10.8.0"   # retry + backoff + circuit breaker
+"Microsoft.Extensions.Caching.Memory"       = "10.0.10"
+"Microsoft.Extensions.Hosting"              = "10.0.10"
+"AngleSharp"                                = "1.6.0"    # HTML parsing, CSS selectors
+
+[dependencies.test]
+"xunit.v3"                     = "3.2.2"
+"xunit.runner.visualstudio"    = "3.1.5"
+"Shouldly"                     = "4.3.0"
+"Microsoft.NET.Test.Sdk"       = "18.8.1"
+"Testcontainers.PostgreSql"    = "4.13.0"
+"coverlet.collector"           = "10.0.1"
+
+[dependencies.framework_references]
+# Provided by the SDK; never pinned as packages.
+api = ["Microsoft.AspNetCore.App"]
+# System.Threading.RateLimiting ships in the shared framework — do not add a package for it.
+
+[dependencies.policy]
+# Adding ANY package not listed above requires explicit user approval.
+# Justify against this ladder, in order: does it need to exist at all; does the
+# BCL do it; does the platform do it; does an already-listed package do it.
+new_dependency_requires_approval = true
+
+[forbidden.packages]
+# Each entry is scannable: the gate greps Directory.Packages.props and *.csproj.
+"FluentAssertions"   = "License changed to commercial from v8 (Xceed). Use Shouldly."
+"Serilog*"           = "Built-in ILogger with structured message templates meets the requirement."
+"MediatR"            = "License changed to commercial. Application services are called directly."
+"AutoMapper"         = "License changed to commercial. Write the mapping; it is three lines."
+"Newtonsoft.Json"    = "System.Text.Json is in the framework."
+"HtmlAgilityPack"    = "AngleSharp is the chosen parser; one HTML parser only."
+"Polly"              = "Consume it through Microsoft.Extensions.Http.Resilience, not directly."
+"Hangfire"           = "Post-MVP. BackgroundService covers the MVP cadences."
+"StackExchange.Redis" = "Post-MVP. IMemoryCache covers the MVP."
+"Moq"                = "Telemetry incident (SponsorLink). Hand-write fakes, or use NSubstitute with approval."
+
+[forbidden.patterns]
+# Regex-scanned across src/. Each pattern maps to the concept that explains why.
+"DateTime\\.Now"             = "UTC only. Use DateTimeOffset.UtcNow / TimeProvider. See contracts/persistence_contract.md"
+"DateTime\\.UtcNow"          = "Inject TimeProvider so time is testable. See contracts/persistence_contract.md"
+"new HttpClient\\("          = "Use IHttpClientFactory. See components/ingestion_pipeline.md"
+"\\.Result|\\.Wait\\(\\)"    = "Async all the way down; sync-over-async deadlocks. See components/application_services.md"
+"catch\\s*\\(\\s*Exception\\s*\\w*\\s*\\)\\s*\\{\\s*\\}" = "Never silently swallow errors. See components/ingestion_pipeline.md"
+"float |double "             = "Money-like and stat aggregate values use decimal. See contracts/stat_vocabulary.md"
+
+[commands]
+# The gate runs these in order. All must exit 0.
+restore   = "dotnet restore --locked-mode"
+format    = "dotnet format --verify-no-changes"
+build     = "dotnet build --no-restore -c Release"
+test      = "dotnet test --no-build -c Release --collect:\"XPlat Code Coverage\""
+validate  = "python3 context/validate_okf.py"
+compose_up = "docker compose up -d --wait"
+
+[gates]
+# Minimums. A gate that is not met blocks the commit, not the concept status.
+domain_line_coverage_min      = 80     # FantasyBasketball.Domain
+application_line_coverage_min = 70
+build_warnings_allowed        = 0
+okf_validator_errors_allowed  = 0
+forbidden_pattern_hits_allowed = 0
+
+[scraping]
+# Canonical rate ceilings. safety/scraping_policy.md owns the path allowlist.
+# These are deliberately far below the hosts' ban thresholds.
+global_max_requests_per_minute = 6
+default_delay_seconds          = 10
+user_agent = "FantasyBasketballDecisionEngine/0.1 (personal project; contact via repository)"
+respect_robots_txt             = true
+cache_first                    = true
+
+[data_sources]
+# Which source fills which role. components/scrapers.md and the provider
+# contracts own the implementation details.
+identity_and_schedule = "balldontlie"           # HTTP JSON, free tier, API key required
+season_stats          = "basketball-reference"  # HTML scraper, season-level pages only
+adp                   = "fantasypros"           # HTML scraper, /nba/adp/ only, CSV fallback
+news                  = "manual"                # MVP: user-entered context events only
