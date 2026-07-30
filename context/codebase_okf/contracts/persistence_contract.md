@@ -123,6 +123,9 @@ provenance-complete storage; a Testcontainers test migrates from empty and
 round-trips the entity. `ProjectionRecords` adds separate observed-stat
 references and full baseline rows, with latest-observed and baseline-id reads;
 repository serialization rounds projection decimals half-away-from-zero to
-four places and PostgreSQL tests migrate and round-trip them. The contract
-remains `partial` until every entity in the list above is present and
-round-tripped.
+four places and PostgreSQL tests migrate and round-trip them. `ContextPipeline`
+adds context events and impacts with review/override audit fields, adjusted
+projections with their immutable baseline and event references, and league-
+scoped fantasy values. A PostgreSQL 17 test migrates from empty and round-trips
+all four new record types. The contract remains `partial` until recommendation
+and evidence persistence lands with the API slice.

@@ -41,6 +41,16 @@ public sealed class FantasyDbContext(DbContextOptions<FantasyDbContext> options)
 
     public DbSet<DraftPickRow> DraftPicks => Set<DraftPickRow>();
 
+    public DbSet<ContextEventRow> ContextEvents => Set<ContextEventRow>();
+
+    public DbSet<PlayerContextImpactRow> PlayerContextImpacts =>
+        Set<PlayerContextImpactRow>();
+
+    public DbSet<AdjustedProjectionRow> AdjustedProjections =>
+        Set<AdjustedProjectionRow>();
+
+    public DbSet<FantasyValueRow> FantasyValues => Set<FantasyValueRow>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(FantasyDbContext).Assembly);

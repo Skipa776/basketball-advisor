@@ -3,6 +3,7 @@ using FantasyBasketball.Application.Abstractions;
 using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Domain.Projections;
 using FantasyBasketball.Domain.Provenance;
+using FantasyBasketball.Domain.Recommendations;
 using FantasyBasketball.Domain.Stats;
 using FantasyBasketball.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -89,6 +90,84 @@ public sealed class ProjectionRepository(FantasyDbContext database)
                 row.ProjectedGamesPlayed,
                 row.ComputedAt,
                 row.ModelVersion);
+    }
+
+    public async Task AddAdjustedAsync(
+        AdjustedProjection adjusted,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(adjusted);
+        database.AdjustedProjections.Add(AdjustedProjectionRow.Create(
+            adjusted.Id,
+            adjusted.PlayerId.Value,
+            adjusted.BaselineProjectionId,
+            Serialize(adjusted.ProjectedPerGame),
+            adjusted.AppliedContextEventIds.ToArray(),
+            Round(adjusted.RoleRisk),
+            adjusted.Confidence.ToString(),
+            Round(adjusted.ContextCertainty),
+            adjusted.HasUnverifiedContext,
+            adjusted.ComputedAt));
+        await database.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<AdjustedProjection?> GetAdjustedAsync(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var row = await database.AdjustedProjections
+            .AsNoTracking()
+            .SingleOrDefaultAsync(value => value.Id == id, cancellationToken);
+        return row is null
+            ? null
+            : new AdjustedProjection(
+                row.Id,
+                new PlayerId(row.PlayerId),
+                row.BaselineProjectionId,
+                Deserialize(row.ProjectedPerGame),
+                row.AppliedContextEventIds,
+                row.RoleRisk,
+                Enum.Parse<Confidence>(row.Confidence),
+                row.ContextCertainty,
+                row.HasUnverifiedContext,
+                row.ComputedAt);
+    }
+
+    public async Task AddFantasyValueAsync(
+        FantasyValue value,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        database.FantasyValues.Add(FantasyValueRow.Create(
+            Guid.NewGuid(),
+            value.PlayerId.Value,
+            value.LeagueId,
+            Round(value.PerGame),
+            Round(value.SeasonTotal),
+            value.AdjustedProjectionId));
+        await database.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<FantasyValue?> GetFantasyValueAsync(
+        PlayerId playerId,
+        Guid leagueId,
+        CancellationToken cancellationToken)
+    {
+        var row = await database.FantasyValues
+            .AsNoTracking()
+            .Where(value =>
+                value.PlayerId == playerId.Value
+                && value.FantasyLeagueId == leagueId)
+            .OrderByDescending(value => value.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+        return row is null
+            ? null
+            : new FantasyValue(
+                new PlayerId(row.PlayerId),
+                row.FantasyLeagueId,
+                row.PerGame,
+                row.SeasonTotal,
+                row.AdjustedProjectionId);
     }
 
     private static SeasonStatLine Map(SeasonStatLineRow row) =>

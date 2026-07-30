@@ -6,7 +6,7 @@ tags: [contract, catalog, context]
 source_paths: [src/FantasyBasketball.Domain/Context]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Context]
 depends_on: [stat_vocabulary.md]
-status: planned
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: high
@@ -116,3 +116,13 @@ picker, and a test asserting the defaults — one commit.
 # Verification
 
 `test_matrix_projection_draft.md`, rows C-01 through C-07.
+
+# Implementation evidence
+
+All fourteen event types, the three directions, the three verification states,
+their default deltas, and their default expirations are defined once in
+`ContextEventCatalog`. Creation clamps magnitude, requires a source, and always
+starts at `Proposed`. Explicit human review records the reviewer and UTC review
+time; the source tree contains exactly one assignment of `Verified`, inside
+`ContextEvent.VerifyByHuman`. C-01 through C-07 cover the workflow, defaults,
+source requirement, overrides, and magnitude clamp.

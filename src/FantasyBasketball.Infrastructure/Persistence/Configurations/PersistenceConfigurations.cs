@@ -428,3 +428,203 @@ public sealed class DraftPickConfiguration : IEntityTypeConfiguration<DraftPickR
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
+
+public sealed class ContextEventConfiguration
+    : IEntityTypeConfiguration<ContextEventRow>
+{
+    public void Configure(EntityTypeBuilder<ContextEventRow> builder)
+    {
+        builder.ToTable("context_event");
+        builder.HasKey(value => value.Id);
+        builder.Property(value => value.Id).HasColumnName("id").ValueGeneratedNever();
+        builder.Property(value => value.Type).HasColumnName("type").IsRequired();
+        builder.Property(value => value.TeamId).HasColumnName("team_id");
+        builder.Property(value => value.PrimaryPlayerId).HasColumnName("primary_player_id");
+        builder.Property(value => value.AffectedPlayerIds)
+            .HasColumnName("affected_player_ids")
+            .HasColumnType("uuid[]");
+        builder.Property(value => value.CreatedAt)
+            .HasColumnName("created_at")
+            .HasColumnType("timestamptz");
+        builder.Property(value => value.EffectiveFrom)
+            .HasColumnName("effective_from")
+            .HasColumnType("timestamptz");
+        builder.Property(value => value.ExpectedExpiration)
+            .HasColumnName("expected_expiration")
+            .HasColumnType("timestamptz");
+        builder.Property(value => value.Direction).HasColumnName("direction").IsRequired();
+        builder.Property(value => value.Magnitude)
+            .HasColumnName("magnitude")
+            .HasPrecision(10, 4);
+        builder.Property(value => value.Confidence)
+            .HasColumnName("confidence")
+            .IsRequired();
+        builder.Property(value => value.SourceUrl).HasColumnName("source_url");
+        builder.Property(value => value.SourceName)
+            .HasColumnName("source_name")
+            .IsRequired();
+        builder.Property(value => value.RawText).HasColumnName("raw_text");
+        builder.Property(value => value.Summary).HasColumnName("summary").IsRequired();
+        builder.Property(value => value.Verification)
+            .HasColumnName("verification")
+            .IsRequired();
+        builder.Property(value => value.ReviewedByUserId)
+            .HasColumnName("reviewed_by_user_id");
+        builder.Property(value => value.VerifiedByUserId)
+            .HasColumnName("verified_by_user_id");
+        builder.Property(value => value.VerifiedAt)
+            .HasColumnName("verified_at")
+            .HasColumnType("timestamptz");
+        builder.Property(value => value.ReviewedAt)
+            .HasColumnName("reviewed_at")
+            .HasColumnType("timestamptz");
+        builder.HasIndex(value => new
+        {
+            value.EffectiveFrom,
+            value.ExpectedExpiration,
+        }).HasDatabaseName("ix_context_event_effective_expiration");
+        builder.HasOne<NbaTeamRow>()
+            .WithMany()
+            .HasForeignKey(value => value.TeamId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<PlayerRow>()
+            .WithMany()
+            .HasForeignKey(value => value.PrimaryPlayerId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public sealed class PlayerContextImpactConfiguration
+    : IEntityTypeConfiguration<PlayerContextImpactRow>
+{
+    public void Configure(EntityTypeBuilder<PlayerContextImpactRow> builder)
+    {
+        builder.ToTable("player_context_impact");
+        builder.HasKey(value => value.Id);
+        builder.Property(value => value.Id).HasColumnName("id").ValueGeneratedNever();
+        builder.Property(value => value.ContextEventId).HasColumnName("context_event_id");
+        builder.Property(value => value.PlayerId).HasColumnName("player_id");
+        builder.Property(value => value.MinutesDelta)
+            .HasColumnName("minutes_delta")
+            .HasPrecision(10, 4);
+        builder.Property(value => value.UsageDelta)
+            .HasColumnName("usage_delta")
+            .HasPrecision(10, 4);
+        builder.Property(value => value.AssistShareDelta)
+            .HasColumnName("assist_share_delta")
+            .HasPrecision(10, 4);
+        builder.Property(value => value.ReboundShareDelta)
+            .HasColumnName("rebound_share_delta")
+            .HasPrecision(10, 4);
+        builder.Property(value => value.ShotVolumeDelta)
+            .HasColumnName("shot_volume_delta")
+            .HasPrecision(10, 4);
+        builder.Property(value => value.RoleRiskDelta)
+            .HasColumnName("role_risk_delta")
+            .HasPrecision(10, 4);
+        builder.Property(value => value.ProjectionConfidenceDelta)
+            .HasColumnName("projection_confidence_delta")
+            .HasPrecision(10, 4);
+        builder.Property(value => value.IsOverridden).HasColumnName("is_overridden");
+        builder.Property(value => value.OverrideUserId).HasColumnName("override_user_id");
+        builder.Property(value => value.OverriddenAt)
+            .HasColumnName("overridden_at")
+            .HasColumnType("timestamptz");
+        builder.HasIndex(value => new { value.ContextEventId, value.PlayerId })
+            .IsUnique()
+            .HasDatabaseName("ux_context_impact_event_player");
+        builder.HasOne<ContextEventRow>()
+            .WithMany(value => value.Impacts)
+            .HasForeignKey(value => value.ContextEventId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne<PlayerRow>()
+            .WithMany()
+            .HasForeignKey(value => value.PlayerId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public sealed class AdjustedProjectionConfiguration
+    : IEntityTypeConfiguration<AdjustedProjectionRow>
+{
+    public void Configure(EntityTypeBuilder<AdjustedProjectionRow> builder)
+    {
+        builder.ToTable("adjusted_projection");
+        builder.HasKey(value => value.Id);
+        builder.Property(value => value.Id).HasColumnName("id").ValueGeneratedNever();
+        builder.Property(value => value.PlayerId).HasColumnName("player_id");
+        builder.Property(value => value.BaselineProjectionId)
+            .HasColumnName("baseline_projection_id");
+        builder.Property(value => value.ProjectedPerGame)
+            .HasColumnName("projected_per_game")
+            .HasColumnType("jsonb");
+        builder.Property(value => value.AppliedContextEventIds)
+            .HasColumnName("applied_context_event_ids")
+            .HasColumnType("uuid[]");
+        builder.Property(value => value.RoleRisk)
+            .HasColumnName("role_risk")
+            .HasPrecision(10, 4);
+        builder.Property(value => value.Confidence)
+            .HasColumnName("confidence")
+            .IsRequired();
+        builder.Property(value => value.ContextCertainty)
+            .HasColumnName("context_certainty")
+            .HasPrecision(10, 4);
+        builder.Property(value => value.HasUnverifiedContext)
+            .HasColumnName("has_unverified_context");
+        builder.Property(value => value.ComputedAt)
+            .HasColumnName("computed_at")
+            .HasColumnType("timestamptz");
+        builder.HasIndex(value => new { value.PlayerId, value.ComputedAt })
+            .IsDescending(false, true)
+            .HasDatabaseName("ix_adjusted_projection_player_computed_at");
+        builder.HasOne<PlayerRow>()
+            .WithMany()
+            .HasForeignKey(value => value.PlayerId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<BaselineProjectionRow>()
+            .WithMany()
+            .HasForeignKey(value => value.BaselineProjectionId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public sealed class FantasyValueConfiguration
+    : IEntityTypeConfiguration<FantasyValueRow>
+{
+    public void Configure(EntityTypeBuilder<FantasyValueRow> builder)
+    {
+        builder.ToTable("fantasy_value");
+        builder.HasKey(value => value.Id);
+        builder.Property(value => value.Id).HasColumnName("id").ValueGeneratedNever();
+        builder.Property(value => value.PlayerId).HasColumnName("player_id");
+        builder.Property(value => value.FantasyLeagueId)
+            .HasColumnName("fantasy_league_id");
+        builder.Property(value => value.PerGame)
+            .HasColumnName("per_game")
+            .HasPrecision(10, 4);
+        builder.Property(value => value.SeasonTotal)
+            .HasColumnName("season_total")
+            .HasPrecision(10, 4);
+        builder.Property(value => value.AdjustedProjectionId)
+            .HasColumnName("adjusted_projection_id");
+        builder.HasIndex(value => new
+        {
+            value.PlayerId,
+            value.FantasyLeagueId,
+            value.AdjustedProjectionId,
+        }).HasDatabaseName("ix_fantasy_value_player_league_adjusted");
+        builder.HasOne<PlayerRow>()
+            .WithMany()
+            .HasForeignKey(value => value.PlayerId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<FantasyLeagueRow>()
+            .WithMany()
+            .HasForeignKey(value => value.FantasyLeagueId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne<AdjustedProjectionRow>()
+            .WithMany()
+            .HasForeignKey(value => value.AdjustedProjectionId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}

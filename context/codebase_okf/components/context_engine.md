@@ -6,7 +6,7 @@ tags: [component, context, projections]
 source_paths: [src/FantasyBasketball.Domain/Context, src/FantasyBasketball.Application/Context, src/FantasyBasketball.Application/Projections/ContextApplier.cs]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Context]
 depends_on: [../contracts/context_event_catalog.md, ../safety/data_integrity_policy.md]
-status: planned
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: high
@@ -66,3 +66,14 @@ the review UI picker, and a defaults test — one commit.
 
 [test_matrix_projection_draft](../tests/test_matrix_projection_draft.md), rows
 C-01 through C-07 and P-05 through P-09.
+
+# Implementation evidence
+
+`ContextEventService` creates proposed events and provides audited human verify,
+reject, expire, and impact-override actions over an Application repository
+contract. `ContextApplier` is pure Domain code: it selects effective,
+non-expired, non-rejected events at computation time, clamps minutes and
+aggregate multipliers, prevents usage/shot-volume compounding, recomputes final
+stat components, and returns a new `AdjustedProjection` naming its immutable
+baseline and applied event ids. Domain, Application, and PostgreSQL integration
+tests cover every required context and adjusted-projection row.

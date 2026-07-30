@@ -69,5 +69,8 @@ rows I-06 and I-09, plus per-service unit tests.
 `ImportPlayersService` is constructor-injected over Application abstractions,
 passes cancellation through every await, and is covered with hand-written
 fakes. Cancellation escapes promptly after transaction rollback; other failures
-return a failed run after rollback instead of leaking partial data. The
-remaining MVP use cases keep this broader component `partial`.
+return a failed run after rollback instead of leaking partial data.
+`ContextEventService` likewise orchestrates proposed creation and audited human
+verify, reject, expire, and override actions through a small repository
+abstraction and an injected `TimeProvider`; its unit tests use a hand-written
+fake. The remaining user-facing use cases keep this broader component `partial`.

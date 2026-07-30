@@ -97,6 +97,27 @@ public sealed class ProjectionServiceTests
                 .Where(item => item.Baseline.Id == id)
                 .Select(item => item.Baseline)
                 .SingleOrDefault());
+
+        public Task AddAdjustedAsync(
+            AdjustedProjection adjusted,
+            CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+
+        public Task<AdjustedProjection?> GetAdjustedAsync(
+            Guid id,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<AdjustedProjection?>(null);
+
+        public Task AddFantasyValueAsync(
+            FantasyValue value,
+            CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+
+        public Task<FantasyValue?> GetFantasyValueAsync(
+            PlayerId playerId,
+            Guid leagueId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<FantasyValue?>(null);
     }
 
     private sealed class FixedTimeProvider(DateTimeOffset value) : TimeProvider

@@ -644,3 +644,276 @@ public sealed class DraftPickRow
             PickNumber = pickNumber,
         };
 }
+
+public sealed class ContextEventRow
+{
+    private ContextEventRow()
+    {
+    }
+
+    public Guid Id { get; private set; }
+
+    public string Type { get; private set; } = string.Empty;
+
+    public Guid? TeamId { get; private set; }
+
+    public Guid? PrimaryPlayerId { get; private set; }
+
+    public Guid[] AffectedPlayerIds { get; private set; } = [];
+
+    public DateTimeOffset CreatedAt { get; private set; }
+
+    public DateTimeOffset EffectiveFrom { get; private set; }
+
+    public DateTimeOffset? ExpectedExpiration { get; private set; }
+
+    public string Direction { get; private set; } = string.Empty;
+
+    public decimal Magnitude { get; private set; }
+
+    public string Confidence { get; private set; } = string.Empty;
+
+    public string? SourceUrl { get; private set; }
+
+    public string SourceName { get; private set; } = string.Empty;
+
+    public string? RawText { get; private set; }
+
+    public string Summary { get; private set; } = string.Empty;
+
+    public string Verification { get; private set; } = string.Empty;
+
+    public Guid? ReviewedByUserId { get; private set; }
+
+    public Guid? VerifiedByUserId { get; private set; }
+
+    public DateTimeOffset? VerifiedAt { get; private set; }
+
+    public DateTimeOffset? ReviewedAt { get; private set; }
+
+    public List<PlayerContextImpactRow> Impacts { get; private set; } = [];
+
+    public static ContextEventRow Create(
+        Guid id,
+        string type,
+        Guid? teamId,
+        Guid? primaryPlayerId,
+        Guid[] affectedPlayerIds,
+        DateTimeOffset createdAt,
+        DateTimeOffset effectiveFrom,
+        DateTimeOffset? expectedExpiration,
+        string direction,
+        decimal magnitude,
+        string confidence,
+        string? sourceUrl,
+        string sourceName,
+        string? rawText,
+        string summary,
+        string verification) =>
+        new()
+        {
+            Id = id,
+            Type = type,
+            TeamId = teamId,
+            PrimaryPlayerId = primaryPlayerId,
+            AffectedPlayerIds = affectedPlayerIds,
+            CreatedAt = createdAt,
+            EffectiveFrom = effectiveFrom,
+            ExpectedExpiration = expectedExpiration,
+            Direction = direction,
+            Magnitude = magnitude,
+            Confidence = confidence,
+            SourceUrl = sourceUrl,
+            SourceName = sourceName,
+            RawText = rawText,
+            Summary = summary,
+            Verification = verification,
+        };
+
+    public void ApplyReview(
+        DateTimeOffset? expectedExpiration,
+        string verification,
+        Guid? reviewedByUserId,
+        Guid? verifiedByUserId,
+        DateTimeOffset? verifiedAt,
+        DateTimeOffset? reviewedAt)
+    {
+        ExpectedExpiration = expectedExpiration;
+        Verification = verification;
+        ReviewedByUserId = reviewedByUserId;
+        VerifiedByUserId = verifiedByUserId;
+        VerifiedAt = verifiedAt;
+        ReviewedAt = reviewedAt;
+    }
+}
+
+public sealed class PlayerContextImpactRow
+{
+    private PlayerContextImpactRow()
+    {
+    }
+
+    public Guid Id { get; private set; }
+
+    public Guid ContextEventId { get; private set; }
+
+    public Guid PlayerId { get; private set; }
+
+    public decimal MinutesDelta { get; private set; }
+
+    public decimal UsageDelta { get; private set; }
+
+    public decimal AssistShareDelta { get; private set; }
+
+    public decimal ReboundShareDelta { get; private set; }
+
+    public decimal ShotVolumeDelta { get; private set; }
+
+    public decimal RoleRiskDelta { get; private set; }
+
+    public decimal ProjectionConfidenceDelta { get; private set; }
+
+    public bool IsOverridden { get; private set; }
+
+    public Guid? OverrideUserId { get; private set; }
+
+    public DateTimeOffset? OverriddenAt { get; private set; }
+
+    public static PlayerContextImpactRow Create(
+        Guid id,
+        Guid contextEventId,
+        Guid playerId,
+        decimal minutesDelta,
+        decimal usageDelta,
+        decimal assistShareDelta,
+        decimal reboundShareDelta,
+        decimal shotVolumeDelta,
+        decimal roleRiskDelta,
+        decimal projectionConfidenceDelta,
+        bool isOverridden) =>
+        new()
+        {
+            Id = id,
+            ContextEventId = contextEventId,
+            PlayerId = playerId,
+            MinutesDelta = minutesDelta,
+            UsageDelta = usageDelta,
+            AssistShareDelta = assistShareDelta,
+            ReboundShareDelta = reboundShareDelta,
+            ShotVolumeDelta = shotVolumeDelta,
+            RoleRiskDelta = roleRiskDelta,
+            ProjectionConfidenceDelta = projectionConfidenceDelta,
+            IsOverridden = isOverridden,
+        };
+
+    public void ApplyOverride(
+        decimal minutesDelta,
+        decimal usageDelta,
+        decimal assistShareDelta,
+        decimal reboundShareDelta,
+        decimal shotVolumeDelta,
+        decimal roleRiskDelta,
+        decimal projectionConfidenceDelta,
+        Guid userId,
+        DateTimeOffset overriddenAt)
+    {
+        MinutesDelta = minutesDelta;
+        UsageDelta = usageDelta;
+        AssistShareDelta = assistShareDelta;
+        ReboundShareDelta = reboundShareDelta;
+        ShotVolumeDelta = shotVolumeDelta;
+        RoleRiskDelta = roleRiskDelta;
+        ProjectionConfidenceDelta = projectionConfidenceDelta;
+        IsOverridden = true;
+        OverrideUserId = userId;
+        OverriddenAt = overriddenAt;
+    }
+}
+
+public sealed class AdjustedProjectionRow
+{
+    private AdjustedProjectionRow()
+    {
+    }
+
+    public Guid Id { get; private set; }
+
+    public Guid PlayerId { get; private set; }
+
+    public Guid BaselineProjectionId { get; private set; }
+
+    public string ProjectedPerGame { get; private set; } = "{}";
+
+    public Guid[] AppliedContextEventIds { get; private set; } = [];
+
+    public decimal RoleRisk { get; private set; }
+
+    public string Confidence { get; private set; } = string.Empty;
+
+    public decimal ContextCertainty { get; private set; }
+
+    public bool HasUnverifiedContext { get; private set; }
+
+    public DateTimeOffset ComputedAt { get; private set; }
+
+    public static AdjustedProjectionRow Create(
+        Guid id,
+        Guid playerId,
+        Guid baselineProjectionId,
+        string projectedPerGame,
+        Guid[] appliedContextEventIds,
+        decimal roleRisk,
+        string confidence,
+        decimal contextCertainty,
+        bool hasUnverifiedContext,
+        DateTimeOffset computedAt) =>
+        new()
+        {
+            Id = id,
+            PlayerId = playerId,
+            BaselineProjectionId = baselineProjectionId,
+            ProjectedPerGame = projectedPerGame,
+            AppliedContextEventIds = appliedContextEventIds,
+            RoleRisk = roleRisk,
+            Confidence = confidence,
+            ContextCertainty = contextCertainty,
+            HasUnverifiedContext = hasUnverifiedContext,
+            ComputedAt = computedAt,
+        };
+}
+
+public sealed class FantasyValueRow
+{
+    private FantasyValueRow()
+    {
+    }
+
+    public Guid Id { get; private set; }
+
+    public Guid PlayerId { get; private set; }
+
+    public Guid FantasyLeagueId { get; private set; }
+
+    public decimal PerGame { get; private set; }
+
+    public decimal SeasonTotal { get; private set; }
+
+    public Guid? AdjustedProjectionId { get; private set; }
+
+    public static FantasyValueRow Create(
+        Guid id,
+        Guid playerId,
+        Guid fantasyLeagueId,
+        decimal perGame,
+        decimal seasonTotal,
+        Guid? adjustedProjectionId) =>
+        new()
+        {
+            Id = id,
+            PlayerId = playerId,
+            FantasyLeagueId = fantasyLeagueId,
+            PerGame = perGame,
+            SeasonTotal = seasonTotal,
+            AdjustedProjectionId = adjustedProjectionId,
+        };
+}

@@ -74,10 +74,10 @@ exit check is not certified in this repository session because no operator API
 key was used and no scrape target was contacted; W-01 through W-03 belong to
 the later background-worker subsystem and also remain pending.
 
-The full gate passes 56 Domain, 18 Application, and 30 integration tests. Domain
-line coverage is 89.23%, Application line coverage is 87.39%, the build has zero
+The full gate passes 70 Domain, 20 Application, and 31 integration tests. Domain
+line coverage is 89.56%, Application line coverage is 87.64%, the build has zero
 warnings, and all 72 OKF concepts validate. Persistence remains `partial`
-because adjusted projection, context, and recommendation entities are absent.
+because recommendation and evidence entities await the API slice.
 
 **Build step 10 is implemented.** League-average rate shrinkage, minutes and
 durability projection, ratio recomputation, zero-history behavior, and the
@@ -90,8 +90,13 @@ scarcity, roster redundancy, market value, and risk from current session state;
 manual picks and undo restore availability, category leagues show an explicit
 fallback, and every ranked recommendation carries structured evidence. A full
 10-team, 13-round manual mock draft completes within the tested rerank latency.
-The single next action is build step 12: implement context events, human
-verification, and immutable baseline-to-adjusted projection application.
+
+**Build step 12 and epic E02 are implemented.** Context events use the complete
+catalog, proposed/verified/rejected human review, audited impact overrides, and
+computation-time expiry. Pure context application creates a separate adjusted
+projection without mutating its baseline, and the four projection records now
+round-trip through PostgreSQL. The single next action is epic E03: expose the
+implemented use cases through the API host, Blazor UI, and background workers.
 
 **Build prerequisites on the development machine:**
 
@@ -174,6 +179,24 @@ their unique NBA abbreviation. A separate `nba_team_source` audit row stores
 the team import's source id and full provenance without adding source fields to
 the canonical `NbaTeam` shape or backfilling invented provenance onto existing
 teams.
+
+## Context certainty where upstream factors are unavailable
+
+The catalog requires proposed events to apply at reduced confidence but does not
+assign the reduction. Proposed event certainty is therefore half of the event's
+confidence value; the full impact still applies and
+`HasUnverifiedContext` remains visible. `ContextApplier` cannot derive sample
+size, import freshness, or source quality from `BaselineProjection`, so those
+three confidence factors use a conservative neutral `0.5` until the later
+source-health/application orchestration slice supplies measured values. Event
+`ProjectionConfidenceDelta` overrides adjust the context-certainty factor after
+that reduction and the result is clamped to `[0,1]`.
+
+For default impacts, catalog cells marked `±` follow the event direction; cells
+with a fixed sign (`Injury`, `BenchRoleChange`, `MinutesRestriction`,
+`RestRisk`, and return-from-injury minutes) retain that sign. Role-risk deltas
+are always non-negative uncertainty additions. This preserves the catalog's
+fixed-sign rows instead of multiplying a recorded negative twice.
 
 # Red-team findings from the pre-build cold read
 

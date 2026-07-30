@@ -1,4 +1,5 @@
 using FantasyBasketball.Domain.Players;
+using FantasyBasketball.Domain.Recommendations;
 using FantasyBasketball.Domain.Stats;
 
 namespace FantasyBasketball.Domain.Projections;
@@ -97,6 +98,74 @@ public sealed record BaselineProjection
     public DateTimeOffset ComputedAt { get; }
 
     public string ModelVersion { get; }
+}
+
+public sealed record AdjustedProjection
+{
+    public AdjustedProjection(
+        Guid id,
+        PlayerId playerId,
+        Guid baselineProjectionId,
+        StatLine projectedPerGame,
+        IReadOnlyList<Guid> appliedContextEventIds,
+        decimal roleRisk,
+        Confidence confidence,
+        decimal contextCertainty,
+        bool hasUnverifiedContext,
+        DateTimeOffset computedAt)
+    {
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException(
+                "Adjusted projection id cannot be empty.",
+                nameof(id));
+        }
+
+        if (baselineProjectionId == Guid.Empty)
+        {
+            throw new ArgumentException(
+                "Baseline projection id cannot be empty.",
+                nameof(baselineProjectionId));
+        }
+
+        ArgumentNullException.ThrowIfNull(projectedPerGame);
+        ArgumentNullException.ThrowIfNull(appliedContextEventIds);
+        if (computedAt.Offset != TimeSpan.Zero)
+        {
+            throw new ArgumentException("ComputedAt must be UTC.", nameof(computedAt));
+        }
+
+        Id = id;
+        PlayerId = playerId;
+        BaselineProjectionId = baselineProjectionId;
+        ProjectedPerGame = projectedPerGame;
+        AppliedContextEventIds = appliedContextEventIds.ToArray();
+        RoleRisk = Math.Clamp(roleRisk, 0m, 1m);
+        Confidence = confidence;
+        ContextCertainty = Math.Clamp(contextCertainty, 0m, 1m);
+        HasUnverifiedContext = hasUnverifiedContext;
+        ComputedAt = computedAt;
+    }
+
+    public Guid Id { get; }
+
+    public PlayerId PlayerId { get; }
+
+    public Guid BaselineProjectionId { get; }
+
+    public StatLine ProjectedPerGame { get; }
+
+    public IReadOnlyList<Guid> AppliedContextEventIds { get; }
+
+    public decimal RoleRisk { get; }
+
+    public Confidence Confidence { get; }
+
+    public decimal ContextCertainty { get; }
+
+    public bool HasUnverifiedContext { get; }
+
+    public DateTimeOffset ComputedAt { get; }
 }
 
 public sealed record FantasyValue

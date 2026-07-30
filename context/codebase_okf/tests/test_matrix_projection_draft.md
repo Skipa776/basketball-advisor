@@ -74,12 +74,12 @@ full gate.
 
 # Current evidence
 
-P-01 through P-04 and P-10 are implemented. The worked example, derived ratios,
-repeatability, and zero-minute behavior are Domain tests; P-02 crosses a fresh
-PostgreSQL migration and verifies four-decimal half-away-from-zero persistence
-without rounding projector intermediates. P-05 through P-09 await the context
-slice. D-01 through D-09 are implemented, including a complete 130-pick manual
-mock draft and the realistic-pool latency assertion. E-01, E-02, E-03, and E-05
-cover construction, risk polarity, confidence buckets, and evidence ordering;
-E-04 awaits source-health integration. Context rows remain pending, so this
-matrix is `partial`.
+P-01 through P-10, C-01 through C-07, and D-01 through D-09 are implemented.
+Projection coverage includes the worked example, four-record PostgreSQL
+persistence, immutable baselines, non-compounding context, bounds, expiry, and
+baseline/event links. Context coverage includes proposed/verified/rejected
+review, sources, overrides, defaults, and magnitude clamping. Draft coverage
+includes a complete 130-pick manual mock draft and the realistic-pool latency
+assertion. E-01, E-02, E-03, and E-05 cover construction, risk polarity,
+confidence buckets, and evidence ordering; E-04 awaits source-health
+integration, so this matrix remains `partial`.

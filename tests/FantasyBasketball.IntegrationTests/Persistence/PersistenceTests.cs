@@ -1,9 +1,11 @@
 using FantasyBasketball.Application.Abstractions;
 using FantasyBasketball.Application.Ingestion;
+using FantasyBasketball.Domain.Context;
 using FantasyBasketball.Domain.Leagues;
 using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Domain.Provenance;
 using FantasyBasketball.Domain.Projections;
+using FantasyBasketball.Domain.Recommendations;
 using FantasyBasketball.Domain.Schedule;
 using FantasyBasketball.Domain.Stats;
 using FantasyBasketball.Infrastructure.Persistence;
@@ -597,6 +599,142 @@ public sealed class PersistenceTests : IAsyncLifetime
             storedBaseline.PerMinuteRates[StatKey.PTS].ShouldBe(0.1235m);
             storedBaseline.ProjectedPerGame[StatKey.PTS].ShouldBe(3.7183m);
             storedBaseline.ComputedAt.ShouldBe(DateTimeOffset.UnixEpoch);
+        }
+    }
+
+    [Fact]
+    public async Task Context_adjusted_projection_and_value_round_trip()
+    {
+        var playerId = new PlayerId(Guid.NewGuid());
+        var player = new Player(
+            playerId,
+            "Context Player",
+            "context player",
+            null,
+            ["G"],
+            null);
+        var league = LeagueCatalog.CreateSeedPointsLeague(Guid.NewGuid());
+        var baseline = new BaselineProjection(
+            Guid.NewGuid(),
+            playerId,
+            30m,
+            new StatLine(new Dictionary<StatKey, decimal>
+            {
+                [StatKey.MIN] = 1m,
+                [StatKey.PTS] = 0.5m,
+            }),
+            new StatLine(new Dictionary<StatKey, decimal>
+            {
+                [StatKey.MIN] = 30m,
+                [StatKey.PTS] = 15m,
+            }),
+            70,
+            DateTimeOffset.UnixEpoch,
+            "context-persistence-v1");
+        var contextEvent = ContextEvent.Create(
+            Guid.NewGuid(),
+            ContextEventType.RotationChange,
+            null,
+            playerId,
+            [playerId],
+            DateTimeOffset.UnixEpoch,
+            DateTimeOffset.UnixEpoch,
+            ContextDirection.Positive,
+            1m,
+            Confidence.High,
+            null,
+            DataSourceName.Manual,
+            null,
+            "Rotation expanded");
+        var impact = PlayerContextImpact.CreateDefault(
+            Guid.NewGuid(),
+            contextEvent,
+            playerId);
+        var adjusted = new ContextApplier(new ConfidenceCalculator()).Apply(
+            Guid.NewGuid(),
+            baseline,
+            [contextEvent],
+            [impact],
+            DateTimeOffset.UnixEpoch);
+
+        await using (var database = new FantasyDbContext(options))
+        {
+            await new PlayerRepository(database).AddAsync(
+                player,
+                TestContext.Current.CancellationToken);
+            await new LeagueRepository(database).AddAsync(
+                league,
+                TestContext.Current.CancellationToken);
+            database.BaselineProjections.Add(BaselineProjectionRow.Create(
+                baseline.Id,
+                playerId.Value,
+                baseline.ProjectedMinutesPerGame,
+                """{"MIN":1,"PTS":0.5}""",
+                """{"MIN":30,"PTS":15}""",
+                baseline.ProjectedGamesPlayed,
+                baseline.ComputedAt,
+                baseline.ModelVersion));
+            await database.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+            var contextRepository = new ContextEventRepository(database);
+            await contextRepository.AddAsync(
+                contextEvent,
+                [impact],
+                TestContext.Current.CancellationToken);
+            contextEvent.VerifyByHuman(Guid.NewGuid(), DateTimeOffset.UnixEpoch);
+            await contextRepository.SaveAsync(
+                contextEvent,
+                TestContext.Current.CancellationToken);
+            await contextRepository.SaveImpactOverrideAsync(
+                impact.Override(2m, 0m, 0m, 0m, 0m, 0.1m, -0.1m),
+                Guid.NewGuid(),
+                DateTimeOffset.UnixEpoch,
+                TestContext.Current.CancellationToken);
+
+            var projectionRepository = new ProjectionRepository(database);
+            await projectionRepository.AddAdjustedAsync(
+                adjusted,
+                TestContext.Current.CancellationToken);
+            await projectionRepository.AddFantasyValueAsync(
+                new FantasyValue(
+                    playerId,
+                    league.Id,
+                    25.12345m,
+                    1758.64155m,
+                    adjusted.Id),
+                TestContext.Current.CancellationToken);
+        }
+
+        await using (var database = new FantasyDbContext(options))
+        {
+            var contextRepository = new ContextEventRepository(database);
+            var storedEvent = await contextRepository.GetAsync(
+                contextEvent.Id,
+                TestContext.Current.CancellationToken);
+            var storedImpact = await contextRepository.GetImpactAsync(
+                contextEvent.Id,
+                playerId,
+                TestContext.Current.CancellationToken);
+            var projectionRepository = new ProjectionRepository(database);
+            var storedAdjusted = await projectionRepository.GetAdjustedAsync(
+                adjusted.Id,
+                TestContext.Current.CancellationToken);
+            var storedValue = await projectionRepository.GetFantasyValueAsync(
+                playerId,
+                league.Id,
+                TestContext.Current.CancellationToken);
+
+            storedEvent.ShouldNotBeNull();
+            storedEvent.Verification.ShouldBe(VerificationState.Verified);
+            storedImpact.ShouldNotBeNull();
+            storedImpact.IsOverridden.ShouldBeTrue();
+            storedImpact.MinutesDelta.ShouldBe(2m);
+            storedAdjusted.ShouldNotBeNull();
+            storedAdjusted.BaselineProjectionId.ShouldBe(baseline.Id);
+            storedAdjusted.AppliedContextEventIds.ShouldBe([contextEvent.Id]);
+            storedValue.ShouldNotBeNull();
+            storedValue.PerGame.ShouldBe(25.1235m);
+            storedValue.SeasonTotal.ShouldBe(1758.6416m);
         }
     }
 

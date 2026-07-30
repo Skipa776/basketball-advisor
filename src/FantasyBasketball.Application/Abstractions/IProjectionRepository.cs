@@ -17,4 +17,21 @@ public interface IProjectionRepository
     Task<BaselineProjection?> GetBaselineAsync(
         Guid id,
         CancellationToken cancellationToken);
+
+    Task AddAdjustedAsync(
+        AdjustedProjection adjusted,
+        CancellationToken cancellationToken);
+
+    Task<AdjustedProjection?> GetAdjustedAsync(
+        Guid id,
+        CancellationToken cancellationToken);
+
+    Task AddFantasyValueAsync(
+        FantasyValue value,
+        CancellationToken cancellationToken);
+
+    Task<FantasyValue?> GetFantasyValueAsync(
+        PlayerId playerId,
+        Guid leagueId,
+        CancellationToken cancellationToken);
 }
