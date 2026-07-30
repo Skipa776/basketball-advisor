@@ -10,3 +10,9 @@ appsettings.*.Local.json
 .env
 *.pfx
 secrets/
+
+# Locally installed agent skills (third-party, vendored by a skill manager).
+# Tooling, not product -- and not ours to redistribute from this repo.
+.claude/skills/
+.agents/skills/
+skills-lock.json
