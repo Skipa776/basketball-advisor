@@ -6,7 +6,7 @@ tags: [contract, explainability, recommendations]
 source_paths: [src/FantasyBasketball.Domain/Recommendations]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Recommendations]
 depends_on: [provenance_contract.md]
-status: planned
+status: partial
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: medium
@@ -96,3 +96,12 @@ row E-03's expectations.
 # Verification
 
 `test_matrix_projection_draft.md`, rows E-01 through E-05.
+
+# Implementation evidence
+
+The canonical evidence kinds, polarities, confidence buckets, factor formula,
+deterministic ordering, and valid-by-construction `Recommendation` are
+implemented. E-01, E-02, E-03, and E-05 have Domain coverage, and every draft
+recommendation carries ordered evidence. E-04's stale/failed import factor and
+visible `DataQuality` item depend on source-health state from the later host
+slice, so this contract remains `partial`.

@@ -1,0 +1,212 @@
+using System.Collections.ObjectModel;
+using FantasyBasketball.Domain.Leagues;
+using FantasyBasketball.Domain.Players;
+using FantasyBasketball.Domain.Recommendations;
+using FantasyBasketball.Domain.Stats;
+
+namespace FantasyBasketball.Domain.Draft;
+
+public sealed record DraftCandidate(
+    PlayerId PlayerId,
+    decimal ProjectedSeasonValue,
+    IReadOnlyList<string> Positions,
+    decimal? AverageDraftPosition,
+    decimal ContextAdjustment,
+    decimal InjuryRisk,
+    decimal RoleRisk,
+    IReadOnlyDictionary<StatKey, decimal> CategoryTotals);
+
+public sealed record DraftBoardResult(
+    IReadOnlyList<DraftValue> Rankings,
+    string? Banner);
+
+public sealed class DraftBoard(DraftValueCalculator calculator)
+{
+    public DraftBoardResult Rank(
+        DraftSession session,
+        FantasyLeague league,
+        IReadOnlyList<DraftCandidate> candidates,
+        IReadOnlyList<PlayerId> userRoster)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        ArgumentNullException.ThrowIfNull(league);
+        ArgumentNullException.ThrowIfNull(candidates);
+        ArgumentNullException.ThrowIfNull(userRoster);
+        var drafted = session.Picks.Select(pick => pick.PlayerId).ToHashSet();
+        var available = candidates
+            .Where(candidate => !drafted.Contains(candidate.PlayerId))
+            .ToArray();
+        if (available.Length == 0)
+        {
+            return new DraftBoardResult([], null);
+        }
+
+        var startersPerTeam = league.RosterSlots.Count(slot =>
+            slot.Kind is not RosterSlotKind.BENCH and not RosterSlotKind.IR);
+        var replacementRank = league.TeamCount * startersPerTeam;
+        var orderedValues = available
+            .OrderByDescending(candidate => candidate.ProjectedSeasonValue)
+            .ToArray();
+        var replacementValue = orderedValues[
+            Math.Min(replacementRank, orderedValues.Length) - 1]
+            .ProjectedSeasonValue;
+        var bestValue = orderedValues[0].ProjectedSeasonValue;
+        var valuePerPick = (bestValue - replacementValue)
+            / Math.Max(1, replacementRank);
+        var values = available.Select(candidate =>
+        {
+            var varValue = candidate.ProjectedSeasonValue - replacementValue;
+            var scarcity = CalculateScarcity(
+                candidate,
+                available,
+                session.PicksUntilNextTurn,
+                replacementValue);
+            var fit = CalculateRosterFit(
+                candidate,
+                candidates,
+                userRoster,
+                league,
+                replacementValue);
+            var market = candidate.AverageDraftPosition is { } adp
+                ? (adp - session.CurrentPick) * valuePerPick
+                : 0m;
+            var evidence = CreateEvidence(
+                varValue,
+                scarcity,
+                fit,
+                market,
+                candidate.AverageDraftPosition,
+                candidate.InjuryRisk,
+                candidate.RoleRisk);
+            return calculator.Calculate(
+                candidate.PlayerId,
+                candidate.ProjectedSeasonValue,
+                varValue,
+                scarcity,
+                fit,
+                market,
+                candidate.ContextAdjustment,
+                candidate.InjuryRisk,
+                candidate.RoleRisk,
+                evidence);
+        });
+
+        var categoryLeague = league.Type == LeagueType.Categories;
+        var sorted = categoryLeague
+            ? values.OrderByDescending(value =>
+                league.Categories.Sum(category =>
+                    candidates.Single(candidate => candidate.PlayerId == value.PlayerId)
+                        .CategoryTotals.GetValueOrDefault(category)))
+            : values.OrderByDescending(value => value.Total);
+        return new DraftBoardResult(
+            new ReadOnlyCollection<DraftValue>(sorted
+                .ThenBy(value => value.PlayerId.Value)
+                .ToArray()),
+            categoryLeague
+                ? "Category league fallback: ranked by projected category totals."
+                : null);
+    }
+
+    private static decimal CalculateScarcity(
+        DraftCandidate candidate,
+        IReadOnlyList<DraftCandidate> available,
+        int picksUntilNextTurn,
+        decimal replacementValue) =>
+        candidate.Positions
+            .Select(position =>
+            {
+                var atPosition = available
+                    .Where(other => other.Positions.Contains(position))
+                    .OrderByDescending(other => other.ProjectedSeasonValue)
+                    .ToArray();
+                var future = atPosition.Length >= picksUntilNextTurn
+                    ? atPosition[picksUntilNextTurn - 1].ProjectedSeasonValue
+                    : replacementValue;
+                return Math.Max(0m, atPosition[0].ProjectedSeasonValue - future);
+            })
+            .DefaultIfEmpty(0m)
+            .Max();
+
+    private static decimal CalculateRosterFit(
+        DraftCandidate candidate,
+        IReadOnlyList<DraftCandidate> allCandidates,
+        IReadOnlyList<PlayerId> userRoster,
+        FantasyLeague league,
+        decimal replacementValue)
+    {
+        var eligibleSlots = league.RosterSlots.Where(slot =>
+            slot.Kind is not RosterSlotKind.BENCH and not RosterSlotKind.IR
+            && candidate.Positions.Any(slot.Accepts)).ToArray();
+        if (eligibleSlots.Length == 0)
+        {
+            return 0m;
+        }
+
+        var eligibleRoster = allCandidates.Where(other =>
+            userRoster.Contains(other.PlayerId)
+            && other.Positions.Any(position =>
+                eligibleSlots.Any(slot => slot.Accepts(position)))).ToArray();
+        return eligibleRoster.Length < eligibleSlots.Length
+            ? 0m
+            : replacementValue
+                - eligibleRoster.Min(player => player.ProjectedSeasonValue);
+    }
+
+    private static IReadOnlyList<RecommendationEvidence> CreateEvidence(
+        decimal varValue,
+        decimal scarcity,
+        decimal fit,
+        decimal market,
+        decimal? adp,
+        decimal injuryRisk,
+        decimal roleRisk)
+    {
+        var evidence = new List<RecommendationEvidence>
+        {
+            new(
+                EvidenceKind.Opportunity,
+                varValue >= 0m
+                    ? EvidencePolarity.Supporting
+                    : EvidencePolarity.Risk,
+                "Value above current replacement level",
+                varValue),
+        };
+        if (scarcity > 0m)
+        {
+            evidence.Add(new(
+                EvidenceKind.Scarcity,
+                EvidencePolarity.Supporting,
+                "Position loses value before the next turn",
+                scarcity));
+        }
+
+        if (fit < 0m)
+        {
+            evidence.Add(new(
+                EvidenceKind.RosterFit,
+                EvidencePolarity.Risk,
+                "Eligible starting slots are already occupied",
+                fit));
+        }
+
+        evidence.Add(new(
+            EvidenceKind.Market,
+            adp is null
+                ? EvidencePolarity.Neutral
+                : market >= 0m
+                    ? EvidencePolarity.Supporting
+                    : EvidencePolarity.Risk,
+            adp is null ? "No ADP is available" : "Value relative to market ADP",
+            adp is null ? null : market));
+        if (injuryRisk > 0m || roleRisk > 0m)
+        {
+            evidence.Add(new(
+                EvidenceKind.Injury,
+                EvidencePolarity.Risk,
+                "Role or injury uncertainty reduces draft value",
+                Math.Max(injuryRisk, roleRisk)));
+        }
+
+        return evidence;
+    }
+}

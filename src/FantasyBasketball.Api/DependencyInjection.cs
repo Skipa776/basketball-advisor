@@ -4,6 +4,8 @@ using FantasyBasketball.Application.Ingestion;
 using FantasyBasketball.Application.Projections;
 using FantasyBasketball.Domain.Provenance;
 using FantasyBasketball.Domain.Projections;
+using FantasyBasketball.Domain.Draft;
+using FantasyBasketball.Domain.Recommendations;
 using FantasyBasketball.Infrastructure.Http;
 using FantasyBasketball.Infrastructure.Persistence;
 using FantasyBasketball.Infrastructure.Persistence.Repositories;
@@ -38,6 +40,10 @@ public static class DependencyInjection
                 options => options.IsValid(),
                 "Projection options are invalid.")
             .ValidateOnStart();
+        services.AddOptions<DraftWeightOptions>()
+            .Bind(configuration.GetSection(DraftWeightOptions.SectionName))
+            .Validate(options => options.IsValid(), "Draft weights are invalid.")
+            .ValidateOnStart();
         services.AddDbContext<FantasyDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("Fantasy")));
         services.AddMemoryCache();
@@ -45,8 +51,14 @@ public static class DependencyInjection
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton(serviceProvider =>
             serviceProvider.GetRequiredService<IOptions<ProjectionOptions>>().Value);
+        services.AddSingleton(serviceProvider =>
+            serviceProvider.GetRequiredService<IOptions<DraftWeightOptions>>().Value);
         services.AddSingleton<MinutesProjector>();
         services.AddSingleton<BaselineProjector>();
+        services.AddSingleton<DraftValueCalculator>();
+        services.AddSingleton<DraftBoard>();
+        services.AddSingleton<ConfidenceCalculator>();
+        services.AddSingleton<DraftRecommendationEngine>();
         services.AddScoped<IPlayerRepository, PlayerRepository>();
         services.AddScoped<ITeamRepository, TeamRepository>();
         services.AddScoped<IGameRepository, GameRepository>();

@@ -74,8 +74,8 @@ exit check is not certified in this repository session because no operator API
 key was used and no scrape target was contacted; W-01 through W-03 belong to
 the later background-worker subsystem and also remain pending.
 
-The full gate passes 45 Domain, 18 Application, and 30 integration tests. Domain
-line coverage is 87.92%, Application line coverage is 87.39%, the build has zero
+The full gate passes 56 Domain, 18 Application, and 30 integration tests. Domain
+line coverage is 89.23%, Application line coverage is 87.39%, the build has zero
 warnings, and all 72 OKF concepts validate. Persistence remains `partial`
 because adjusted projection, context, and recommendation entities are absent.
 
@@ -83,8 +83,15 @@ because adjusted projection, context, and recommendation entities are absent.
 durability projection, ratio recomputation, zero-history behavior, and the
 worked scoring example are covered by pure Domain tests. Observed statistics
 and statistical baselines persist as separate append-only rows, with rounding
-only at the repository boundary. The single next action is build step 11:
-implement the live draft board and structured recommendation evidence.
+only at the repository boundary.
+
+**Build step 11 is implemented.** The live board recomputes replacement level,
+scarcity, roster redundancy, market value, and risk from current session state;
+manual picks and undo restore availability, category leagues show an explicit
+fallback, and every ranked recommendation carries structured evidence. A full
+10-team, 13-round manual mock draft completes within the tested rerank latency.
+The single next action is build step 12: implement context events, human
+verification, and immutable baseline-to-adjusted projection application.
 
 **Build prerequisites on the development machine:**
 

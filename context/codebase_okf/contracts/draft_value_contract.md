@@ -6,7 +6,7 @@ tags: [contract, draft, scoring]
 source_paths: [src/FantasyBasketball.Domain/Draft]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Draft]
 depends_on: [projection_pipeline_contract.md, scoring_rules_catalog.md, recommendation_evidence_contract.md]
-status: planned
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: high
@@ -165,3 +165,13 @@ together.
 
 `test_matrix_projection_draft.md`, rows D-01 through D-07, plus the R7 latency
 assertion.
+
+# Implementation evidence
+
+`DraftValueCalculator` implements exactly the five additive terms with validated,
+options-bound weights; decomposition-only fields never enter `Total`.
+`DraftBoard` recomputes replacement level, positional scarcity, roster
+redundancy, and market value from the currently available pool on every call.
+Tests cover D-01 through D-07 and rerank 300 players inside the 500 ms target.
+Missing ADP is zero with explicit market evidence, and category leagues carry
+the required fallback banner. This contract's done criteria are implemented.

@@ -6,7 +6,7 @@ tags: [component, draft, recommendations]
 source_paths: [src/FantasyBasketball.Domain/Draft, src/FantasyBasketball.Application/Draft]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Draft]
 depends_on: [../contracts/draft_value_contract.md, ../contracts/recommendation_evidence_contract.md]
-status: planned
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: high
@@ -77,3 +77,14 @@ affected rows in `test_matrix_projection_draft.md` — one commit.
 
 [test_matrix_projection_draft](../tests/test_matrix_projection_draft.md), rows
 D-01 through D-09, plus rows A-11 and A-12.
+
+# Implementation evidence
+
+`DraftSession` owns sequential manual picks, snake-turn distance, duplicate
+player rejection, and last-pick undo. `DraftBoard` always projects from session
+state and never caches replacement level; drafted players leave immediately.
+`DraftRecommendationEngine` converts every ranked value into a valid structured
+recommendation. D-01 through D-09 pass, a 300-player rerank stays under 500 ms,
+and a 10-team, 13-round manual mock draft completes all 130 picks with evidence
+on every recommendation. API idempotency rows A-11/A-12 remain for the API
+slice but do not block this component's two done criteria.
