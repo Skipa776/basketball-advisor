@@ -15,6 +15,31 @@ public sealed record DataProvenance
         ArgumentException.ThrowIfNullOrWhiteSpace(parserVersion);
         ArgumentException.ThrowIfNullOrWhiteSpace(rawRecordHash);
 
+        if (!DataSourceName.IsKnown(source))
+        {
+            throw new ArgumentException("Source is not a canonical data source name.", nameof(source));
+        }
+
+        var expectedVersionPrefix = $"{source}-v";
+        if (!parserVersion.StartsWith(expectedVersionPrefix, StringComparison.Ordinal)
+            || !int.TryParse(
+                parserVersion.AsSpan(expectedVersionPrefix.Length),
+                out var parserVersionNumber)
+            || parserVersionNumber < 1)
+        {
+            throw new ArgumentException(
+                $"ParserVersion must use the format '{source}-v{{n}}'.",
+                nameof(parserVersion));
+        }
+
+        if (rawRecordHash.Length != 64
+            || rawRecordHash.Any(character => !Uri.IsHexDigit(character)))
+        {
+            throw new ArgumentException(
+                "RawRecordHash must be a 64-character SHA-256 hexadecimal value.",
+                nameof(rawRecordHash));
+        }
+
         if (fetchedAt.Offset != TimeSpan.Zero)
         {
             throw new ArgumentException("FetchedAt must be UTC.", nameof(fetchedAt));

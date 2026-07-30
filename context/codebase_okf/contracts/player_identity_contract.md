@@ -6,7 +6,7 @@ tags: [contract, identity, ingestion]
 source_paths: [src/FantasyBasketball.Domain/Players, src/FantasyBasketball.Application/Ingestion/PlayerIdentityResolver.cs]
 test_paths: [tests/FantasyBasketball.Application.Tests/Ingestion]
 depends_on: [provider_contracts.md]
-status: partial
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: high
@@ -95,3 +95,12 @@ regenerating the examples above.
 # Verification
 
 `test_matrix_ingestion_scrapers.md`, rows N-01 through N-05.
+
+# Implementation evidence
+
+`PlayerName.Normalize` implements the ordered normalization table, and
+`PlayerIdentityResolverTests` covers N-01 through N-05. The resolver writes a
+link, a new canonical player, or a `PendingIdentityMatch` through one repository
+boundary. `ImportPlayersService` records the pending count without blocking
+later players in the same run; the PostgreSQL integration test proves the
+pending path commits no provider link.

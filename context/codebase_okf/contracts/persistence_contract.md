@@ -108,3 +108,12 @@ file — one commit.
 
 `test_matrix_api_persistence.md`, rows A-04 through A-09, plus a migrate-from-empty
 test.
+
+# Implementation evidence
+
+The initial schema plus the forward `IdentityResolution` and `ImportRuns`
+migrations now cover the identity entities and immutable import history.
+Provider links are unique both by `(provider, external_id)` and by
+`(player_id, provider)`, which makes the N-05 append-only conflict rule a
+database invariant. The contract remains `partial` until every entity in the
+list above is present and round-tripped.

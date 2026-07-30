@@ -3,6 +3,7 @@ using System;
 using FantasyBasketball.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FantasyBasketball.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(FantasyDbContext))]
-    partial class FantasyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260730001414_IdentityResolution")]
+    partial class IdentityResolution
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -65,51 +68,6 @@ namespace FantasyBasketball.Infrastructure.Persistence.Migrations
                     b.HasIndex("PlayerId");
 
                     b.ToTable("baseline_projection", (string)null);
-                });
-
-            modelBuilder.Entity("FantasyBasketball.Infrastructure.Persistence.Entities.DataImportRunRow", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("FailureDetail")
-                        .HasColumnType("text")
-                        .HasColumnName("failure_detail");
-
-                    b.Property<DateTimeOffset?>("FinishedAt")
-                        .HasColumnType("timestamptz")
-                        .HasColumnName("finished_at");
-
-                    b.Property<int>("PendingIdentityMatches")
-                        .HasColumnType("integer")
-                        .HasColumnName("pending_identity_matches");
-
-                    b.Property<int>("RowsWritten")
-                        .HasColumnType("integer")
-                        .HasColumnName("rows_written");
-
-                    b.Property<string>("Source")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("source");
-
-                    b.Property<DateTimeOffset>("StartedAt")
-                        .HasColumnType("timestamptz")
-                        .HasColumnName("started_at");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("status");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Source", "StartedAt")
-                        .IsDescending(false, true)
-                        .HasDatabaseName("ix_data_import_run_source_started_at");
-
-                    b.ToTable("data_import_run", (string)null);
                 });
 
             modelBuilder.Entity("FantasyBasketball.Infrastructure.Persistence.Entities.DraftPickRow", b =>

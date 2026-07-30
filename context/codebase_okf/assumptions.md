@@ -33,34 +33,34 @@ append-only baseline enforcement, and repositories that round-trip leagues,
 players, and season stat lines. Tests use isolated Testcontainers PostgreSQL 17
 instances and cover migration from empty, duplicate provider identity,
 baseline immutability, enum storage, dependency direction, repository shape,
-and league/draft cascade versus player-history restriction.
+league/draft cascade versus player-history restriction, pending identity
+matches, and immutable import runs.
 
-The full gate passes 26 Domain, 1 Application, and 7 integration tests. Domain
-line coverage is 87.11%, Application line coverage is 100%, the build has zero
-warnings, and OKF validation is clean.
+**Build step 5 is partial.** Exact player-name normalization, the six-tier
+identity ladder, canonical source names and confidence defaults, provenance
+validation, ambiguity review records, and atomic player-import accounting are
+implemented. Rows N-01 through N-05 pass, including the real EF transaction and
+queryable import-run path.
 
-Persistence remains `partial` because the initial migration does not yet contain
-the later projection, context, recommendation, import-run, game, ADP, and
-pending-identity entities listed by the full persistence contract. The single
-next action is to finish step 4's remaining entity/configuration/repository
-surface and the exact A-04 append-only interface checks before starting the
-identity resolver in step 5.
+The full gate passes 37 Domain, 12 Application, and 8 integration tests. Domain
+line coverage is 88.48%, Application line coverage is 95.90%, the build has zero
+warnings, and OKF validation is clean. Persistence remains `partial` because
+later projection, context, recommendation, game, and ADP entities are absent.
+The single next action is E01's HTTP ingestion pipeline: failed-run degraded
+behavior, cancellation rollback, process-wide per-host limiting, and caching.
 
-**Build prerequisites not yet installed on the development machine:**
+**Build prerequisites on the development machine:**
 
 - **.NET 10 SDK is installed.** SDK 10.0.302 satisfies `global.json` through
   `rollForward: latestFeature`. Verified 2026-07-29.
 - Docker 28.5.1 is present — `compose.yaml` and Testcontainers will work.
-- Python 3.12 is present — the OKF validator runs today.
+- Python 3.14.6 is present — the OKF validator runs today.
 
 **Dependency pins verified:** every version in
 [`stack_config.toml`](../../stack_config.toml) was confirmed to exist as a
 stable release on nuget.org on 2026-07-29 by querying the flat-container index.
-**Co-resolution was not proved** — that needs `dotnet restore --locked-mode`,
-which needs the SDK. This is the one pre-flight check that could not be
-completed, and it is deliberately the exit criterion of build step 1: if the pin
-set does not co-resolve, that is discovered in the first commit rather than the
-tenth.
+`dotnet restore --locked-mode` now proves the committed lock files co-resolve
+under SDK 10.0.302 on every full gate run.
 
 # Deliberate defaults
 
@@ -79,6 +79,18 @@ in its final section). Each is now canonical.
 | Per-minute × minutes projection | over rolling fantasy-point averages | Context deltas need a structural variable to modify; a blended fantasy-point average gives them nothing to attach to | A real ML minutes model replaces the heuristic (post-MVP) |
 | Points seed league | design doc's values | Every golden test needs one concrete league | The user's actual league differs — then update the catalog and regenerate goldens |
 | No Serilog / Redis / Hangfire / MediatR / AutoMapper | platform features instead | Each solves a problem this app does not have yet; several have licensing traps | A measured need appears, with the measurement |
+
+## Identity-ingestion shapes not specified upstream
+
+The contracts name `PendingIdentityMatch` and `DataImportRun` but do not define
+their property shapes. The implementation records a pending match's provider,
+external id, raw and normalized names, candidate player ids, UTC creation time,
+and reason. An import run records source, `Running | Succeeded | Failed`, UTC
+start/finish, rows written, pending count, and failure detail. Both use
+application-generated GUIDs. `DataImportRun` is stored append-only; the
+synchronous import use case writes its terminal snapshot once. The later API
+slice must preserve append-only storage when it exposes the contract's immediate
+`Running` response, rather than adding an update method.
 
 # Red-team findings from the pre-build cold read
 

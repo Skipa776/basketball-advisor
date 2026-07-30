@@ -45,11 +45,17 @@ public sealed class PersistenceDomainTests
         team.Abbreviation.ShouldBe("TM");
         var identity = new ExternalPlayerIdentity(
             player.Id,
-            "provider",
+            DataSourceName.Manual,
             "42",
             DateTimeOffset.UnixEpoch,
             false);
         identity.ExternalId.ShouldBe("42");
+        Should.Throw<ArgumentException>(() => new ExternalPlayerIdentity(
+            player.Id,
+            "unknown",
+            "42",
+            DateTimeOffset.UnixEpoch,
+            false));
     }
 
     [Fact]
@@ -62,16 +68,40 @@ public sealed class PersistenceDomainTests
             new DateTimeOffset(2026, 7, 29, 12, 0, 0, TimeSpan.Zero),
             1.1m));
         Should.Throw<ArgumentException>(() => new DataProvenance(
-            "manual",
+            DataSourceName.Manual,
             null,
             DateTimeOffset.UnixEpoch,
             new DateTimeOffset(2026, 7, 29, 12, 0, 0, TimeSpan.FromHours(1)),
             "manual-v1",
             1m,
             new string('c', 64)));
+        Should.Throw<ArgumentException>(() => new DataProvenance(
+            "unknown",
+            null,
+            DateTimeOffset.UnixEpoch,
+            null,
+            "unknown-v1",
+            1m,
+            new string('c', 64)));
+        Should.Throw<ArgumentException>(() => new DataProvenance(
+            DataSourceName.Manual,
+            null,
+            DateTimeOffset.UnixEpoch,
+            null,
+            "wrong-v1",
+            1m,
+            new string('c', 64)));
+        Should.Throw<ArgumentException>(() => new DataProvenance(
+            DataSourceName.Manual,
+            null,
+            DateTimeOffset.UnixEpoch,
+            null,
+            "manual-v1",
+            1m,
+            "not-a-sha-256-hash"));
 
         var valid = CreateProvenance(DateTimeOffset.UnixEpoch, 0.5m);
-        valid.Source.ShouldBe("manual");
+        valid.Source.ShouldBe(DataSourceName.Manual);
         valid.Confidence.ShouldBe(0.5m);
     }
 
@@ -138,7 +168,7 @@ public sealed class PersistenceDomainTests
         DateTimeOffset fetchedAt,
         decimal confidence) =>
         new(
-            "manual",
+            DataSourceName.Manual,
             null,
             fetchedAt,
             null,

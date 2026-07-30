@@ -6,7 +6,7 @@ tags: [component, ingestion, http]
 source_paths: [src/FantasyBasketball.Infrastructure/Http, src/FantasyBasketball.Infrastructure/Import]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Ingestion]
 depends_on: [../safety/scraping_policy.md, ../contracts/provenance_contract.md]
-status: planned
+status: partial
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: high
@@ -75,3 +75,11 @@ entry in the scraping policy allowlist, and its adapter — one commit.
 
 [test_matrix_ingestion_scrapers](../tests/test_matrix_ingestion_scrapers.md),
 rows I-06 through I-13 and S-11, S-12.
+
+# Implementation evidence
+
+The identity slice establishes immutable `DataImportRun` recording and an EF
+transaction boundary that commits player links, pending matches, and the
+successful run record together. HTTP clients, resilience, the process-wide
+limiter, cache, and failed-run degraded behavior remain unimplemented, so this
+component remains `partial`.

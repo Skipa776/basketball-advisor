@@ -84,6 +84,94 @@ public sealed class ExternalPlayerIdentityRow
         };
 }
 
+public sealed class PendingIdentityMatchRow
+{
+    private PendingIdentityMatchRow()
+    {
+    }
+
+    public Guid Id { get; private set; }
+
+    public string Provider { get; private set; } = string.Empty;
+
+    public string ExternalId { get; private set; } = string.Empty;
+
+    public string FullName { get; private set; } = string.Empty;
+
+    public string NormalizedName { get; private set; } = string.Empty;
+
+    public Guid[] CandidatePlayerIds { get; private set; } = [];
+
+    public DateTimeOffset CreatedAt { get; private set; }
+
+    public string Reason { get; private set; } = string.Empty;
+
+    public static PendingIdentityMatchRow Create(
+        Guid id,
+        string provider,
+        string externalId,
+        string fullName,
+        string normalizedName,
+        Guid[] candidatePlayerIds,
+        DateTimeOffset createdAt,
+        string reason) =>
+        new()
+        {
+            Id = id,
+            Provider = provider,
+            ExternalId = externalId,
+            FullName = fullName,
+            NormalizedName = normalizedName,
+            CandidatePlayerIds = candidatePlayerIds,
+            CreatedAt = createdAt,
+            Reason = reason,
+        };
+}
+
+public sealed class DataImportRunRow
+{
+    private DataImportRunRow()
+    {
+    }
+
+    public Guid Id { get; private set; }
+
+    public string Source { get; private set; } = string.Empty;
+
+    public string Status { get; private set; } = string.Empty;
+
+    public DateTimeOffset StartedAt { get; private set; }
+
+    public DateTimeOffset? FinishedAt { get; private set; }
+
+    public int RowsWritten { get; private set; }
+
+    public int PendingIdentityMatches { get; private set; }
+
+    public string? FailureDetail { get; private set; }
+
+    public static DataImportRunRow Create(
+        Guid id,
+        string source,
+        string status,
+        DateTimeOffset startedAt,
+        DateTimeOffset? finishedAt,
+        int rowsWritten,
+        int pendingIdentityMatches,
+        string? failureDetail) =>
+        new()
+        {
+            Id = id,
+            Source = source,
+            Status = status,
+            StartedAt = startedAt,
+            FinishedAt = finishedAt,
+            RowsWritten = rowsWritten,
+            PendingIdentityMatches = pendingIdentityMatches,
+            FailureDetail = failureDetail,
+        };
+}
+
 public sealed class FantasyLeagueRow
 {
     private FantasyLeagueRow()

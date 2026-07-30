@@ -87,3 +87,12 @@ and every adapter that constructs it — one commit.
 
 `test_matrix_ingestion_scrapers.md` rows I-07, I-10, I-11, plus the schema
 assertion that provenance columns are `NOT NULL`.
+
+# Implementation evidence
+
+`DataSourceName` is the single code catalog for the five canonical names and
+`DataProvenance` now rejects unknown sources, malformed parser versions,
+non-UTC timestamps, out-of-range confidence, and non-SHA-256 hashes.
+`ExternalPlayer` requires provenance at construction. The concept remains
+`partial` until every provider, scraper, CSV, and manual adapter persists its
+output and the I-07, I-10, and I-11 integration cases pass.

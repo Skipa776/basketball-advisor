@@ -52,10 +52,64 @@ public sealed class ExternalPlayerIdentityConfiguration
         builder.HasIndex(value => new { value.Provider, value.ExternalId })
             .IsUnique()
             .HasDatabaseName("ux_external_player_identity_provider_external_id");
+        builder.HasIndex(value => new { value.PlayerId, value.Provider })
+            .IsUnique()
+            .HasDatabaseName("ux_external_player_identity_player_provider");
         builder.HasOne<PlayerRow>()
             .WithMany()
             .HasForeignKey(value => value.PlayerId)
             .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public sealed class PendingIdentityMatchConfiguration
+    : IEntityTypeConfiguration<PendingIdentityMatchRow>
+{
+    public void Configure(EntityTypeBuilder<PendingIdentityMatchRow> builder)
+    {
+        builder.ToTable("pending_identity_match");
+        builder.HasKey(value => value.Id);
+        builder.Property(value => value.Id).HasColumnName("id").ValueGeneratedNever();
+        builder.Property(value => value.Provider).HasColumnName("provider").IsRequired();
+        builder.Property(value => value.ExternalId).HasColumnName("external_id").IsRequired();
+        builder.Property(value => value.FullName).HasColumnName("full_name").IsRequired();
+        builder.Property(value => value.NormalizedName)
+            .HasColumnName("normalized_name")
+            .IsRequired();
+        builder.Property(value => value.CandidatePlayerIds)
+            .HasColumnName("candidate_player_ids")
+            .HasColumnType("uuid[]");
+        builder.Property(value => value.CreatedAt)
+            .HasColumnName("created_at")
+            .HasColumnType("timestamptz");
+        builder.Property(value => value.Reason).HasColumnName("reason").IsRequired();
+        builder.HasIndex(value => new { value.Provider, value.ExternalId })
+            .HasDatabaseName("ix_pending_identity_match_provider_external_id");
+    }
+}
+
+public sealed class DataImportRunConfiguration : IEntityTypeConfiguration<DataImportRunRow>
+{
+    public void Configure(EntityTypeBuilder<DataImportRunRow> builder)
+    {
+        builder.ToTable("data_import_run");
+        builder.HasKey(value => value.Id);
+        builder.Property(value => value.Id).HasColumnName("id").ValueGeneratedNever();
+        builder.Property(value => value.Source).HasColumnName("source").IsRequired();
+        builder.Property(value => value.Status).HasColumnName("status").IsRequired();
+        builder.Property(value => value.StartedAt)
+            .HasColumnName("started_at")
+            .HasColumnType("timestamptz");
+        builder.Property(value => value.FinishedAt)
+            .HasColumnName("finished_at")
+            .HasColumnType("timestamptz");
+        builder.Property(value => value.RowsWritten).HasColumnName("rows_written");
+        builder.Property(value => value.PendingIdentityMatches)
+            .HasColumnName("pending_identity_matches");
+        builder.Property(value => value.FailureDetail).HasColumnName("failure_detail");
+        builder.HasIndex(value => new { value.Source, value.StartedAt })
+            .IsDescending(false, true)
+            .HasDatabaseName("ix_data_import_run_source_started_at");
     }
 }
 

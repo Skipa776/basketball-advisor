@@ -6,7 +6,7 @@ tags: [tests, ingestion, scrapers, matrix]
 source_paths: [src/FantasyBasketball.Infrastructure]
 test_paths: [tests/FantasyBasketball.IntegrationTests]
 depends_on: [required_gates.md, ../safety/scraping_policy.md, ../contracts/player_identity_contract.md]
-status: planned
+status: partial
 last_updated: 2026-07-29
 owners: [engineering]
 ---
@@ -105,3 +105,11 @@ than aspirational.
 
 `dotnet test --filter "Ingestion|Scrapers|Workers"`, inside the full gate, with
 Docker running.
+
+# Current evidence
+
+Rows N-01 through N-05 are implemented in
+`PlayerIdentityResolverTests`; N-04 also crosses the real EF transaction and
+queryable `DataImportRun` repository in `PersistenceTests`. The I-, S-, and W-
+rows remain pending their corresponding E01 slices, so this matrix remains
+`partial`.

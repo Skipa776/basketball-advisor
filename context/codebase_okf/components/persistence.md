@@ -59,3 +59,12 @@ the contract's entity list — one commit.
 
 [test_matrix_api_persistence](../tests/test_matrix_api_persistence.md), rows
 A-04 through A-09 and A-16, A-17.
+
+# Implementation evidence
+
+The forward `IdentityResolution` and `ImportRuns` migrations add
+`PendingIdentityMatch`, the one-provider-link-per-player constraint, and
+append-only `DataImportRun` storage. The identity resolver's player/link/pending
+write and its successful run record commit in one EF transaction. Persistence
+remains `partial` because later projection, context, recommendation, game, and
+ADP entities in the contract are not implemented yet.

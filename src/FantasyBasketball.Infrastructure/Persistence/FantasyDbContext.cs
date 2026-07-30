@@ -13,6 +13,11 @@ public sealed class FantasyDbContext(DbContextOptions<FantasyDbContext> options)
     public DbSet<ExternalPlayerIdentityRow> ExternalPlayerIdentities =>
         Set<ExternalPlayerIdentityRow>();
 
+    public DbSet<PendingIdentityMatchRow> PendingIdentityMatches =>
+        Set<PendingIdentityMatchRow>();
+
+    public DbSet<DataImportRunRow> DataImportRuns => Set<DataImportRunRow>();
+
     public DbSet<FantasyLeagueRow> FantasyLeagues => Set<FantasyLeagueRow>();
 
     public DbSet<ScoringRuleRow> ScoringRules => Set<ScoringRuleRow>();
@@ -53,6 +58,12 @@ public sealed class FantasyDbContext(DbContextOptions<FantasyDbContext> options)
             .Any(entry => entry.State is EntityState.Modified or EntityState.Deleted))
         {
             throw new InvalidOperationException("Baseline projections are append-only.");
+        }
+
+        if (ChangeTracker.Entries<DataImportRunRow>()
+            .Any(entry => entry.State is EntityState.Modified or EntityState.Deleted))
+        {
+            throw new InvalidOperationException("Data import runs are append-only.");
         }
     }
 }

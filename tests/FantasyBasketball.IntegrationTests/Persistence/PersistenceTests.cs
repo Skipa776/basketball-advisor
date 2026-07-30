@@ -1,4 +1,5 @@
 using FantasyBasketball.Application.Abstractions;
+using FantasyBasketball.Application.Ingestion;
 using FantasyBasketball.Domain.Leagues;
 using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Domain.Provenance;
@@ -45,7 +46,7 @@ public sealed class PersistenceTests : IAsyncLifetime
             new DateOnly(1995, 2, 19));
         var league = LeagueCatalog.CreateSeedPointsLeague(Guid.NewGuid());
         var provenance = new DataProvenance(
-            "manual",
+            DataSourceName.Manual,
             null,
             new DateTimeOffset(2026, 7, 29, 12, 0, 0, TimeSpan.Zero),
             null,
@@ -85,7 +86,11 @@ public sealed class PersistenceTests : IAsyncLifetime
             var storedLeague = await new LeagueRepository(database)
                 .GetAsync(league.Id, CancellationToken.None);
             var storedSeason = await new SeasonStatLineRepository(database)
-                .GetAsync(playerId, 2026, "manual", CancellationToken.None);
+                .GetAsync(
+                    playerId,
+                    2026,
+                    DataSourceName.Manual,
+                    CancellationToken.None);
 
             storedPlayer.ShouldNotBeNull();
             storedPlayer.Id.ShouldBe(player.Id);
@@ -113,8 +118,14 @@ public sealed class PersistenceTests : IAsyncLifetime
             PlayerRow.Create(first.Value, "First", "first", [], null),
             PlayerRow.Create(second.Value, "Second", "second", [], null));
         database.ExternalPlayerIdentities.AddRange(
-            ExternalPlayerIdentityRow.Create(first.Value, "balldontlie", "42"),
-            ExternalPlayerIdentityRow.Create(second.Value, "balldontlie", "42"));
+            ExternalPlayerIdentityRow.Create(
+                first.Value,
+                DataSourceName.BallDontLie,
+                "42"),
+            ExternalPlayerIdentityRow.Create(
+                second.Value,
+                DataSourceName.BallDontLie,
+                "42"));
 
         await Should.ThrowAsync<DbUpdateException>(
             database.SaveChangesAsync(CancellationToken.None));
@@ -232,7 +243,7 @@ public sealed class PersistenceTests : IAsyncLifetime
             "{}",
             "{}",
             null,
-            "manual",
+            DataSourceName.Manual,
             null,
             new DateTimeOffset(2026, 7, 29, 12, 0, 0, TimeSpan.Zero),
             null,
@@ -265,5 +276,67 @@ public sealed class PersistenceTests : IAsyncLifetime
                 async () => await database.SaveChangesAsync(
                     TestContext.Current.CancellationToken));
         }
+    }
+
+    [Fact]
+    public async Task Ambiguous_identity_persists_pending_match_without_a_link()
+    {
+        var first = new Player(
+            new PlayerId(Guid.NewGuid()),
+            "Marcus Williams",
+            PlayerName.Normalize("Marcus Williams"),
+            null,
+            ["G"],
+            null);
+        var second = new Player(
+            new PlayerId(Guid.NewGuid()),
+            first.FullName,
+            first.NormalizedName,
+            null,
+            first.Positions,
+            null);
+        var provenance = new DataProvenance(
+            DataSourceName.BallDontLie,
+            "99",
+            new DateTimeOffset(2026, 7, 29, 12, 0, 0, TimeSpan.Zero),
+            null,
+            "balldontlie-v1",
+            DataSourceConfidence.OfficialApi,
+            new string('c', 64));
+
+        await using var database = new FantasyDbContext(options);
+        var repository = new PlayerRepository(database);
+        await repository.AddAsync(first, TestContext.Current.CancellationToken);
+        await repository.AddAsync(second, TestContext.Current.CancellationToken);
+        var resolver = new PlayerIdentityResolver(
+            repository,
+            new FixedTimeProvider(provenance.FetchedAt));
+        var runRepository = new DataImportRunRepository(database);
+        var service = new ImportPlayersService(
+            resolver,
+            runRepository,
+            new EfImportTransaction(database),
+            new FixedTimeProvider(provenance.FetchedAt));
+
+        var run = await service.ImportAsync(
+            DataSourceName.BallDontLie,
+            [new ExternalPlayer("99", "Marcus Williams", null, ["G"], null, provenance)],
+            TestContext.Current.CancellationToken);
+        var storedRun = await runRepository.GetAsync(
+            run.Id,
+            TestContext.Current.CancellationToken);
+
+        run.PendingIdentityMatches.ShouldBe(1);
+        run.RowsWritten.ShouldBe(0);
+        storedRun.ShouldBe(run);
+        (await database.PendingIdentityMatches.CountAsync(
+            TestContext.Current.CancellationToken)).ShouldBe(1);
+        (await database.ExternalPlayerIdentities.CountAsync(
+            TestContext.Current.CancellationToken)).ShouldBe(0);
+    }
+
+    private sealed class FixedTimeProvider(DateTimeOffset value) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => value;
     }
 }

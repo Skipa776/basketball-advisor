@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using FantasyBasketball.Domain.Provenance;
 
 namespace FantasyBasketball.Domain.Players;
 
@@ -74,9 +75,44 @@ public sealed record Player
 
 public sealed record NbaTeam(NbaTeamId Id, string Name, string Abbreviation);
 
-public sealed record ExternalPlayerIdentity(
-    PlayerId PlayerId,
-    string Provider,
-    string ExternalId,
-    DateTimeOffset LinkedAt,
-    bool ConfirmedByHuman);
+public sealed record ExternalPlayerIdentity
+{
+    public ExternalPlayerIdentity(
+        PlayerId playerId,
+        string provider,
+        string externalId,
+        DateTimeOffset linkedAt,
+        bool confirmedByHuman)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(provider);
+        ArgumentException.ThrowIfNullOrWhiteSpace(externalId);
+
+        if (!DataSourceName.IsKnown(provider))
+        {
+            throw new ArgumentException(
+                "Provider is not a canonical data source name.",
+                nameof(provider));
+        }
+
+        if (linkedAt.Offset != TimeSpan.Zero)
+        {
+            throw new ArgumentException("LinkedAt must be UTC.", nameof(linkedAt));
+        }
+
+        PlayerId = playerId;
+        Provider = provider;
+        ExternalId = externalId;
+        LinkedAt = linkedAt;
+        ConfirmedByHuman = confirmedByHuman;
+    }
+
+    public PlayerId PlayerId { get; }
+
+    public string Provider { get; }
+
+    public string ExternalId { get; }
+
+    public DateTimeOffset LinkedAt { get; }
+
+    public bool ConfirmedByHuman { get; }
+}
