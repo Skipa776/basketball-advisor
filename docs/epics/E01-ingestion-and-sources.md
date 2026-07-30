@@ -51,8 +51,11 @@ Build epic E01 in this repository: the ingestion pipeline and data sources.
       implementations of one contract.
 
 3. Required test rows before the corresponding commit: N-01 to N-05, I-01 to
-   I-13, S-10 to S-14, W-01 to W-03. Capture fixtures by hand, trimmed, and
-   commit them. No test may make a real network request.
+   I-13, S-10 to S-14. Capture fixtures by hand, trimmed, and commit them.
+   Row S-12 is a shared test-base handler that throws on any real network send —
+   build it first, so every later test inherits the guarantee rather than
+   asserting it individually. (W-01 to W-03 are background workers, built in
+   E03 at AGENT_INSTRUCTIONS step 14 — not this epic.)
 
 4. Commit after each of a-f with a conventional-commit message. Never leave the
    tree broken at a commit boundary. Update OKF concept status in the same commit
@@ -81,6 +84,6 @@ the one next step. Under-claim rather than over-claim.
 
 ## Exit gate
 
-`scripts/gate.sh` green, with rows N-01…N-05, I-01…I-13, S-10…S-14, W-01…W-03
-passing, and a live import of players, teams, games, and one season of stats
-succeeding against a real key.
+`scripts/gate.sh` green, with rows N-01…N-05, I-01…I-13 and S-10…S-14 passing,
+and a live import of players, teams, games, and one season of stats succeeding
+against a real key.

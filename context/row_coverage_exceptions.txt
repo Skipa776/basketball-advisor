@@ -1,0 +1,21 @@
+# Rows covered by a test whose name predates the row-ID naming convention.
+#
+# The gate requires every row in an `implemented` test matrix to be traceable to
+# a test method whose name carries the row ID (e.g. `D01_D02_total_uses_only_...`).
+# The tests below genuinely cover their rows but were written before that
+# convention existed, and renaming them is churn with no behavioural payoff.
+#
+# This list may only shrink. A new row added to an implemented matrix must be
+# ID-named — adding an entry here for new work defeats the check.
+#
+# Format: ROW-ID  <whitespace>  # test that covers it
+
+S-01   # ScoringEngineTests.Seed_league_golden_scores_exactly + FantasyLeagueTests (no provider default)
+S-02   # FantasyLeagueTests.Points_league_requires_scoring_rules / Category_league_requires_categories
+S-03   # FantasyLeagueTests.Duplicate_scoring_stat_is_rejected
+S-04   # ScoringEngineTests.Scoring_is_pure_and_deterministic
+S-05   # ScoringEngineTests.Unscored_stats_contribute_zero
+S-06   # ScoringEngineTests.Negative_score_is_not_clamped
+S-07   # ScoringEngineTests.Aggregate_recomputes_ratio_from_combined_attempts
+S-08   # ScoringEngineTests.Aggregate_recomputes_ratio_from_combined_attempts (zero-denominator case)
+E-04   # DraftBoardService emits EvidenceKind.DataQuality on stale/failed imports

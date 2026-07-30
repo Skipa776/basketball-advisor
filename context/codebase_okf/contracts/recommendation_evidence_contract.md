@@ -4,7 +4,7 @@ title: Recommendation and Evidence Contract
 description: Evidence shape and kinds, the confidence enum and how it is derived, and the rule that no score ships without evidence.
 tags: [contract, explainability, recommendations]
 source_paths: [src/FantasyBasketball.Domain/Recommendations]
-test_paths: [tests/FantasyBasketball.Domain.Tests/Recommendations]
+test_paths: [tests/FantasyBasketball.Domain.Tests/Draft]
 depends_on: [provenance_contract.md]
 status: implemented
 last_updated: 2026-07-29

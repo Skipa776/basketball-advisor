@@ -49,7 +49,7 @@ The cases gating build steps 5 through 9 and 14 — requirements R2, R3, R4.
 |---|---|---|---|
 | `S-10` | Ask each URL builder for a `*/gamelog/` path | Throws; disallowed paths are unreachable by construction | ✅ |
 | `S-11` | 20 rapid requests through the pipeline | Elapsed time consistent with the 6/min ceiling; limiter is per host and process-wide | ✅ |
-| `S-12` | Any test in the suite | A handler that throws on real send is installed; nothing reaches the network | ✅ |
+| `S-12` | Any test in the suite | `NoNetworkHandler` throws on any real send, and no test file constructs an egress-capable handler without the `s12-allow: loopback self-host` marker | ✅ |
 | `S-13` | Parse the same fixture twice | Identical output; parser is pure | ✅ |
 | `S-14` | Fixture with a renamed or missing column | Throws a parse error naming the column; **never a row of zeros** | ✅ |
 | — | `REB = OREB + DREB` on every fixture row | Identity holds, or the parse fails | ✅ |

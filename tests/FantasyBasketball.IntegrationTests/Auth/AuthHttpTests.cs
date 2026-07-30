@@ -19,6 +19,7 @@ using Microsoft.Extensions.Logging;
 using Shouldly;
 using Testcontainers.PostgreSql;
 
+// s12-allow: loopback self-host -- drives the in-process Kestrel app under test.
 namespace FantasyBasketball.IntegrationTests.Auth;
 
 public sealed class AuthHttpTests : IAsyncLifetime

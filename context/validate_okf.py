@@ -65,7 +65,9 @@ def inline_list(value: str) -> list[str]:
     return [item.strip() for item in inner.split(",") if item.strip()]
 
 
-def check_file(path: Path, display_root: Path, errors: list[str]) -> None:
+def check_file(
+    path: Path, display_root: Path, errors: list[str], repo_root: Path | None = None
+) -> None:
     rel = path.relative_to(display_root)
     lines = path.read_text(encoding="utf-8").splitlines()
     front = parse_frontmatter(lines)
@@ -80,6 +82,18 @@ def check_file(path: Path, display_root: Path, errors: list[str]) -> None:
     status = front.get("status", "")
     if status and status not in VALID_STATUS:
         errors.append(f"{rel}: invalid status '{status}' (expected planned|partial|implemented)")
+
+    # Forward-looking source_paths/test_paths are legal while a concept is still
+    # planned or partial. Once it claims `implemented`, every path it points at
+    # must exist -- otherwise the concept documents code that is somewhere else.
+    if status == "implemented" and repo_root is not None:
+        for key in ("source_paths", "test_paths"):
+            for declared in inline_list(front.get(key, "[]")):
+                if not (repo_root / declared).exists():
+                    errors.append(
+                        f"{rel}: status is 'implemented' but {key} entry "
+                        f"'{declared}' does not exist"
+                    )
 
     date = front.get("last_updated", "")
     if date and not DATE_RE.match(date):
@@ -122,8 +136,9 @@ def main() -> int:
     if not files:
         errors.append(f"no Markdown files found under {bundle}")
     display_root = bundle.parent
+    repo_root = Path.cwd()
     for path in files:
-        check_file(path, display_root, errors)
+        check_file(path, display_root, errors, repo_root)
     check_agent_index(bundle, errors)
 
     if errors:

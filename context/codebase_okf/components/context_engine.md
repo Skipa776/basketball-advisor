@@ -3,7 +3,7 @@ type: component
 title: Context Engine
 description: Manages context events and their impacts, and applies them to a baseline to produce an adjusted projection.
 tags: [component, context, projections]
-source_paths: [src/FantasyBasketball.Domain/Context, src/FantasyBasketball.Application/Context, src/FantasyBasketball.Application/Projections/ContextApplier.cs]
+source_paths: [src/FantasyBasketball.Domain/Context, src/FantasyBasketball.Application/Context, src/FantasyBasketball.Domain/Projections/ContextApplier.cs]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Context]
 depends_on: [../contracts/context_event_catalog.md, ../safety/data_integrity_policy.md]
 status: implemented

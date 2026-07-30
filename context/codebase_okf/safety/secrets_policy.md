@@ -4,7 +4,7 @@ title: Secrets Policy
 description: How credentials, API keys, and tokens are stored, loaded, and kept out of the repository and logs.
 tags: [safety, secrets, configuration]
 source_paths: [src/FantasyBasketball.Api/Options, src/FantasyBasketball.Api/Program.cs]
-test_paths: [tests/FantasyBasketball.IntegrationTests/Configuration]
+test_paths: [tests/FantasyBasketball.IntegrationTests/Auth]
 depends_on: []
 status: implemented
 last_updated: 2026-07-29
