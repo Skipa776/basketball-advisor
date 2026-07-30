@@ -51,6 +51,22 @@ public sealed class ImportJobQueue(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        try
+        {
+            await DrainAsync(stoppingToken);
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            // Shutdown, not a failure. ReadAllAsync cancels from the enumerator
+            // itself, outside any per-job try, so without this every clean stop
+            // logged "BackgroundService failed" and a critical StopHost entry --
+            // which reads like a crash to anyone running this for the first
+            // time. Matches RecurringImportWorker, which already did this.
+        }
+    }
+
+    private async Task DrainAsync(CancellationToken stoppingToken)
+    {
         await foreach (var queued in channel.Reader.ReadAllAsync(stoppingToken))
         {
             try

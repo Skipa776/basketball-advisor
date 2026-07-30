@@ -61,6 +61,12 @@ The cases gating build steps 5 through 9 and 14 — requirements R2, R3, R4.
 | `W-01` | A worker run throws | Caught, logged, failed run recorded, **next run still executes** | ✅ |
 | `W-02` | Host shutdown requested | Worker stops promptly on the token | ✅ |
 | `W-03` | Successive worker iterations | Fresh scoped provider and `DbContext` per run | ✅ |
+| `W-04` | **Start the import queue, then stop it** | `ExecuteTask` reaches `RanToCompletion` — a clean stop is never reported as a failed background service | ✅ |
+
+`W-04` asserts on `ExecuteTask` rather than on `StopAsync`, because `StopAsync`
+awaits with `Task.WhenAny` and so swallows the fault. The host is what observes
+the task and logs `BackgroundService failed` plus a critical `StopHost` entry, so
+the task is the only place the thing a user actually sees is visible.
 
 # Box-score importer (`S-30`–`S-34`) — R11
 

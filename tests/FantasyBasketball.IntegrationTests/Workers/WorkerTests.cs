@@ -66,6 +66,54 @@ public sealed class WorkerTests
     }
 
     [Fact]
+    public async Task W04_import_queue_shutdown_is_not_reported_as_a_failure()
+    {
+        var probe = new WorkerProbe();
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton(probe);
+        services.AddScoped<IAdpProvider, ProbeAdpProvider>();
+        services.AddScoped<IPlayerRepository, EmptyPlayerRepository>();
+        services.AddScoped<IAdpRepository, EmptyAdpRepository>();
+        services.AddScoped<IDataImportRunRepository>(
+            serviceProvider => serviceProvider.GetRequiredService<WorkerProbe>());
+        services.AddScoped<IImportTransaction, ProbeImportTransaction>();
+        services.AddScoped<PlayerIdentityResolver>();
+        services.AddScoped<ImportAdpService>();
+        await using var provider = services.BuildServiceProvider();
+        var queue = ActivatorUtilities.CreateInstance<ImportJobQueue>(provider);
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+
+        // Drive the queue through real work first, so the stop below is the
+        // ordering a running host actually shuts down from rather than a race
+        // against startup.
+        await queue.StartAsync(timeout.Token);
+        for (var i = 0; i < 3; i++)
+        {
+            await queue.EnqueueAsync(
+                new ImportJobRequest(ImportJobKind.Adp),
+                timeout.Token);
+        }
+
+        await probe.ThreeRuns.Task.WaitAsync(timeout.Token);
+        await queue.StopAsync(timeout.Token);
+
+        // StopAsync suppresses whatever ExecuteTask did, so it cannot report
+        // this. The host is what awaits ExecuteTask, and a throw there is what
+        // prints "BackgroundService failed" plus a critical StopHost entry --
+        // which is the thing a person sees on Ctrl-C.
+        var executeTask = queue.ExecuteTask;
+        (executeTask is null).ShouldBeFalse("the queue never started");
+        executeTask!.IsCompleted.ShouldBeTrue();
+        executeTask.IsFaulted.ShouldBeFalse(
+            $"a clean shutdown must not fault: {executeTask.Exception?.InnerException?.GetType().Name}");
+        executeTask.IsCanceled.ShouldBeFalse(
+            "a cancelled task still throws when the host awaits it");
+        queue.Dispose();
+    }
+
+    [Fact]
     public async Task W02_host_shutdown_cancels_a_staggered_worker_promptly()
     {
         var options = Options.Create(new RefreshWorkerOptions

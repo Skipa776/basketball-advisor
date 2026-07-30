@@ -63,6 +63,15 @@ scripts/gate.sh                 # format, build, test, and the bundle validator
 
 ### Actually running it
 
+```bash
+export BallDontLie__ApiKey="your-key"
+scripts/run.sh                  # checks the port, applies migrations, starts
+```
+
+`scripts/run.sh` fills in every other setting, refuses to start with a clear
+message if the port is held or the API key is missing, and takes `PORT=5281` to
+move off the default. The long form below is what it does.
+
 There is no committed `appsettings.json` — this is deliberate, so no shipped
 artifact carries a credential — which means the app reads everything it needs from
 the environment.

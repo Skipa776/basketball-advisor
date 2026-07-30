@@ -532,6 +532,29 @@ would — plus a narrower rule these defects earn:
 and adds no owner predicate, consistent with every other list query. `U-01`'s
 sweep is what keeps that honest.
 
+# Clean shutdown printed a crash — and one thing about it is unexplained
+
+`ImportJobQueue.ExecuteAsync` ran `await foreach (... ReadAllAsync(stoppingToken))`
+with the per-job `try` *inside* the loop, so the enumerator's own cancellation
+had nothing to catch it. Every clean stop therefore ended with
+`BackgroundService failed`, an `OperationCanceledException` stack, and a
+critical `StopHost` entry — the log a first-time self-hoster sees on Ctrl-C, and
+which they will reasonably read as having broken something.
+`RecurringImportWorker` already did this correctly; only the queue did not.
+Row `W-04`.
+
+**Known gap, deliberately left:** if `StopAsync` is called immediately after
+`StartAsync`, before the queue reaches its first suspension point, `ExecuteTask`
+still ends `Canceled` rather than `RanToCompletion`. A marker inside the catch
+proved the handler is *not* entered on that path, so the cancellation is not
+flowing through `ExecuteAsync`'s body at all, and the cause was not identified.
+It does not occur on the real shutdown path — verified by sending the running
+app a `SIGINT` and getting zero `BackgroundService failed` and zero `crit:`
+lines — so `W-04` drives the queue through real work before stopping it, which
+is the ordering a running host actually shuts down from. The startup race is
+untested and unexplained. If a future change makes the host log on shutdown
+again, start here rather than assuming `W-04` covers it.
+
 # Revisit triggers
 
 - The user's real league settings differ from the seed league → update
