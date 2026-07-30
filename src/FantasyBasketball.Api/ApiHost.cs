@@ -61,6 +61,8 @@ public static class ApiHost
                 "not_found",
                 "The requested resource was not found."));
         app.UseAntiforgery();
+        app.MapStaticAssets(
+            "FantasyBasketball.Api.staticwebassets.endpoints.json");
         app.MapRazorComponents<App>()
             .AddInteractiveServerRenderMode();
     }

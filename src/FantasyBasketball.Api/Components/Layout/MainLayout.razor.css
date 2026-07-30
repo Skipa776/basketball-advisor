@@ -190,6 +190,11 @@ main ::deep select {
     color: var(--color-text);
 }
 
+main ::deep input[type="checkbox"] {
+    width: var(--target-min);
+    vertical-align: middle;
+}
+
 main ::deep button {
     padding: var(--space-3) var(--space-5);
     background: var(--color-surface-raised);
@@ -229,6 +234,140 @@ main ::deep time,
 main ::deep [data-numeric] {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
+}
+
+main ::deep small {
+    display: block;
+    margin-block-start: var(--space-2);
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+}
+
+main ::deep .draft-workspace {
+    display: grid;
+    grid-template-columns: minmax(16rem, 0.7fr) minmax(28rem, 2fr);
+    align-items: start;
+    gap: var(--space-7);
+}
+
+main ::deep .instrument-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: var(--space-7);
+}
+
+main ::deep .inline-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(12rem, 1fr)) auto;
+    align-items: end;
+    gap: var(--space-5);
+    padding: var(--space-6);
+    border: thin solid var(--color-rule);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+}
+
+main ::deep .inline-form p {
+    margin: 0;
+}
+
+main ::deep .panel {
+    padding: var(--space-6);
+    border: thin solid var(--color-rule);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+}
+
+main ::deep .panel .eyebrow {
+    margin-block-end: var(--space-2);
+    color: var(--color-text-muted);
+    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+main ::deep .panel ul,
+main ::deep .stat-list {
+    margin: var(--space-5) 0;
+    padding: 0;
+    list-style: none;
+}
+
+main ::deep .panel li,
+main ::deep .stat-list div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-5);
+    padding-block: var(--space-3);
+    border-block-end: thin solid var(--color-rule);
+}
+
+main ::deep .stat-list dt,
+main ::deep .stat-list dd {
+    margin: 0;
+}
+
+main ::deep .stat-list dd {
+    text-align: end;
+}
+
+main ::deep .status-list {
+    border-block-start: thin solid var(--color-rule);
+}
+
+main ::deep .action-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin-block-end: var(--space-6);
+}
+
+main ::deep .button-link {
+    display: inline-flex;
+    min-height: var(--target-min);
+    align-items: center;
+    padding: var(--space-3) var(--space-5);
+    border: thin solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-raised);
+    color: var(--color-text);
+    font-size: var(--text-sm);
+    text-decoration: none;
+}
+
+main ::deep .button-link.primary {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+}
+
+main ::deep .notice {
+    padding: var(--space-4) var(--space-5);
+    border-inline-start: var(--space-1) solid var(--color-positive);
+    background: var(--color-surface-raised);
+}
+
+main ::deep details summary {
+    min-height: var(--target-min);
+    cursor: pointer;
+    font-weight: 600;
+}
+
+main ::deep caption {
+    padding: var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+    text-align: start;
+}
+
+main ::deep .visually-hidden {
+    position: absolute;
+    width: var(--space-1);
+    height: var(--space-1);
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -271,6 +410,15 @@ main ::deep [data-numeric] {
 
     main {
         padding: var(--space-5);
+    }
+
+    main ::deep .draft-workspace {
+        grid-template-columns: 1fr;
+    }
+
+    main ::deep .instrument-grid,
+    main ::deep .inline-form {
+        grid-template-columns: 1fr;
     }
 }
 

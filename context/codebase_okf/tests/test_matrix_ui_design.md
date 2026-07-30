@@ -6,8 +6,8 @@ tags: [tests, ui, design, accessibility, matrix]
 source_paths: [src/FantasyBasketball.Api/Components]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Api]
 depends_on: [required_gates.md, ../contracts/design_system_contract.md]
-status: planned
-last_updated: 2026-07-29
+status: implemented
+last_updated: 2026-07-30
 owners: [engineering]
 ---
 

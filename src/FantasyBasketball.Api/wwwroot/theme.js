@@ -9,8 +9,10 @@
         }
 
         if (theme === "system") {
-            root.removeAttribute("data-theme");
-        } else {
+            if (root.hasAttribute("data-theme")) {
+                root.removeAttribute("data-theme");
+            }
+        } else if (root.dataset.theme !== theme) {
             root.dataset.theme = theme;
         }
 
@@ -18,17 +20,22 @@
             const label = button.querySelector("[data-theme-label]");
             const icon = button.querySelector("[data-theme-icon]");
             const display = theme[0].toUpperCase() + theme.slice(1);
-            button.setAttribute("aria-label", `Theme: ${display.toLowerCase()}`);
-            if (label) {
+            const accessibleLabel = `Theme: ${display.toLowerCase()}`;
+            if (button.getAttribute("aria-label") !== accessibleLabel) {
+                button.setAttribute("aria-label", accessibleLabel);
+            }
+
+            if (label && label.textContent !== display) {
                 label.textContent = display;
             }
 
-            if (icon) {
-                icon.textContent = theme === "dark"
-                    ? "●"
-                    : theme === "light"
-                        ? "○"
-                        : "◐";
+            const iconText = theme === "dark"
+                ? "●"
+                : theme === "light"
+                    ? "○"
+                    : "◐";
+            if (icon && icon.textContent !== iconText) {
+                icon.textContent = iconText;
             }
         });
     }

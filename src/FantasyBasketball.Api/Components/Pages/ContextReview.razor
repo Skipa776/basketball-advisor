@@ -3,101 +3,136 @@
 @inject ContextEventService ContextEvents
 @inject ContextEventQueryService ContextQueries
 @inject TimeProvider Clock
+@inject IUserContext UserContext
 
 <PageTitle>Context Review</PageTitle>
-<h1>Context Review</h1>
-
-<form @onsubmit="CreateAsync" @onsubmit:preventDefault>
-    <fieldset>
-        <legend>Create a proposed context event</legend>
-        <p>
-            <label for="context-player">Affected player ID</label>
-            <input id="context-player" @bind="playerText" required />
-        </p>
-        <p>
-            <label for="context-summary">Summary</label>
-            <input id="context-summary" @bind="summary" required />
-        </p>
-        <p>
-            <label for="context-type">Type</label>
-            <select id="context-type" @bind="eventType">
-                @foreach (var value in Enum.GetValues<ContextEventType>())
-                {
-                    <option value="@value">@value</option>
-                }
-            </select>
-        </p>
-        <p>
-            <label for="context-direction">Direction</label>
-            <select id="context-direction" @bind="direction">
-                @foreach (var value in Enum.GetValues<ContextDirection>())
-                {
-                    <option value="@value">@value</option>
-                }
-            </select>
-        </p>
-        <button type="submit">Create proposal</button>
-    </fieldset>
-</form>
-
-<form @onsubmit="OverrideAsync" @onsubmit:preventDefault>
-    <fieldset>
-        <legend>Override an impact</legend>
-        <p>
-            <label for="override-event">Context event ID</label>
-            <input id="override-event" @bind="overrideEventText" />
-        </p>
-        <p>
-            <label for="override-player">Player ID</label>
-            <input id="override-player" @bind="overridePlayerText" />
-        </p>
-        <p>
-            <label for="minutes-delta">Minutes delta</label>
-            <input id="minutes-delta" type="number" step="0.1" @bind="minutesDelta" />
-        </p>
-        <p>
-            <label for="confidence-delta">Projection confidence delta</label>
-            <input id="confidence-delta" type="number" step="0.1" min="-1" max="1" @bind="confidenceDelta" />
-        </p>
-        <button type="submit">Save impact override</button>
-    </fieldset>
-</form>
+<PageHeader Title="Context Review"
+            Eyebrow="Human verification queue"
+            Description="Proposed injuries, role changes, and availability signals remain unverified until a reviewer accepts or rejects them." />
 
 @if (error is not null)
 {
-    <p role="alert">@error</p>
-}
-@if (events is null)
-{
-    <p>Loading context events…</p>
-}
-else if (events.Items.Count == 0)
-{
-    <p>No context events need review.</p>
-}
-else
-{
-    <section>
-        <h2>Events</h2>
-        <ul>
-            @foreach (var contextEvent in events.Items)
-            {
-                <li>
-                    <strong>@contextEvent.Type: @contextEvent.Summary</strong>
-                    — @contextEvent.Verification
-                    @if (contextEvent.Verification == VerificationState.Proposed)
-                    {
-                        <button type="button" @onclick="() => ReviewAsync(contextEvent.Id, true)">Verify</button>
-                        <button type="button" @onclick="() => ReviewAsync(contextEvent.Id, false)">Reject</button>
-                    }
-                </li>
-            }
-        </ul>
-    </section>
+    <ErrorState Id="context-error"
+                Message="@error"
+                Recovery="No proposal is promoted automatically. Retry after checking the IDs and values." />
 }
 
+<div class="instrument-grid">
+    <form @onsubmit="CreateAsync" @onsubmit:preventDefault>
+        <fieldset aria-describedby="@(error is null ? null : "context-error")">
+            <legend>Create a proposed context event</legend>
+            <p>
+                <label for="context-player">Affected player ID</label>
+                <input id="context-player" @bind="playerText" required />
+            </p>
+            <p>
+                <label for="context-summary">Summary</label>
+                <input id="context-summary" @bind="summary" required />
+            </p>
+            <p>
+                <label for="context-type">Type</label>
+                <select id="context-type" @bind="eventType">
+                    @foreach (var value in Enum.GetValues<ContextEventType>())
+                    {
+                        <option value="@value">@value</option>
+                    }
+                </select>
+            </p>
+            <p>
+                <label for="context-direction">Direction</label>
+                <select id="context-direction" @bind="direction">
+                    @foreach (var value in Enum.GetValues<ContextDirection>())
+                    {
+                        <option value="@value">@value</option>
+                    }
+                </select>
+            </p>
+            <button type="submit">Create proposal</button>
+        </fieldset>
+    </form>
+
+    <form @onsubmit="OverrideAsync" @onsubmit:preventDefault>
+        <fieldset aria-describedby="@(error is null ? null : "context-error")">
+            <legend>Override an impact</legend>
+            <p>
+                <label for="override-event">Context event ID</label>
+                <input id="override-event" @bind="overrideEventText" />
+            </p>
+            <p>
+                <label for="override-player">Player ID</label>
+                <input id="override-player" @bind="overridePlayerText" />
+            </p>
+            <p>
+                <label for="minutes-delta">Minutes delta</label>
+                <input id="minutes-delta" type="number" step="0.1" @bind="minutesDelta" />
+            </p>
+            <p>
+                <label for="confidence-delta">Projection confidence delta</label>
+                <input id="confidence-delta"
+                       type="number"
+                       step="0.1"
+                       min="-1"
+                       max="1"
+                       @bind="confidenceDelta" />
+            </p>
+            <button type="submit">Save impact override</button>
+        </fieldset>
+    </form>
+</div>
+
+<section aria-labelledby="events-heading">
+    <h2 id="events-heading">Review queue</h2>
+    @if (events is null)
+    {
+        <EmptyState Title="Loading context events"
+                    Description="The verification queue is still loading." />
+    }
+    else if (events.Items.Count == 0)
+    {
+        <EmptyState Title="Nothing needs review"
+                    Description="New proposed context events will appear here before they can affect trusted output." />
+    }
+    else
+    {
+        <table>
+            <caption>Context events awaiting or recording human review</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Event</th>
+                    <th scope="col">State</th>
+                    <th scope="col">Direction</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var contextEvent in events.Items)
+                {
+                    <tr>
+                        <th scope="row">
+                            <strong>@contextEvent.Type</strong>
+                            <span>@contextEvent.Summary</span>
+                        </th>
+                        <td>@contextEvent.Verification</td>
+                        <td>@contextEvent.Direction</td>
+                        <td>
+                            @if (contextEvent.Verification == VerificationState.Proposed)
+                            {
+                                <button type="button" @onclick="() => ReviewAsync(contextEvent.Id, true)">Verify</button>
+                                <button type="button" @onclick="() => ReviewAsync(contextEvent.Id, false)">Reject</button>
+                            }
+                            else
+                            {
+                                <span>Reviewed</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
 @code {
-    private readonly Guid reviewerId = Guid.NewGuid();
     private PagedResult<ContextEvent>? events;
     private string playerText = string.Empty;
     private string summary = string.Empty;
@@ -172,14 +207,14 @@ else
             {
                 await ContextEvents.VerifyAsync(
                     contextEventId,
-                    reviewerId,
+                    UserContext.CurrentUserId,
                     CancellationToken.None);
             }
             else
             {
                 await ContextEvents.RejectAsync(
                     contextEventId,
-                    reviewerId,
+                    UserContext.CurrentUserId,
                     CancellationToken.None);
             }
 
@@ -214,7 +249,7 @@ else
                     0m,
                     0m,
                     confidenceDelta),
-                reviewerId,
+                UserContext.CurrentUserId,
                 CancellationToken.None);
         }
         catch (Exception)

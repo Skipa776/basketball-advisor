@@ -1,82 +1,97 @@
 @page "/data-sources"
 @inject DataSourceHealthService HealthService
 @inject IImportJobQueue Jobs
+@inject TimeProvider Clock
 
 <PageTitle>Data Sources</PageTitle>
-<h1>Data Sources</h1>
-
-<section>
-    <h2>Run an import</h2>
-    <p>
-        <button type="button" @onclick="() => QueueAsync(ImportJobKind.Players)">Import teams and players</button>
-    </p>
-    <p>
-        <label for="schedule-from">Schedule from</label>
-        <input id="schedule-from" type="date" @bind="scheduleFrom" />
-        <label for="schedule-to">through</label>
-        <input id="schedule-to" type="date" @bind="scheduleTo" />
-        <button type="button" @onclick="() => QueueAsync(ImportJobKind.Schedule)">Import schedule</button>
-    </p>
-    <p>
-        <label for="season-year">Season end year</label>
-        <input id="season-year" type="number" min="1947" max="2199" @bind="seasonEndYear" />
-        <button type="button" @onclick="() => QueueAsync(ImportJobKind.SeasonStats)">Import season stats</button>
-    </p>
-    <p>
-        <button type="button" @onclick="() => QueueAsync(ImportJobKind.Adp)">Import ADP</button>
-    </p>
-    @if (queuedRun is not null)
-    {
-        <p role="status">Queued @queuedRun.Source import @queuedRun.Id.</p>
-    }
-</section>
+<PageHeader Title="Data Sources"
+            Eyebrow="Ingestion control"
+            Description="Run imports and inspect source freshness. Inferred or scraped context never becomes ground truth without review." />
 
 @if (error is not null)
 {
-    <p role="alert">@error</p>
+    <ErrorState Message="@error"
+                Recovery="The previous successful import remains available. Check source configuration before retrying." />
 }
-else if (sources is null)
-{
-    <p>Loading source health…</p>
-}
-else
-{
-    <table>
-        <caption>Import source health and freshness</caption>
-        <thead>
-            <tr>
-                <th scope="col">Source</th>
-                <th scope="col">Status</th>
-                <th scope="col">Last success</th>
-                <th scope="col">Last failure</th>
-            </tr>
-        </thead>
-        <tbody>
+
+<section aria-labelledby="run-import-heading">
+    <h2 id="run-import-heading">Run an import</h2>
+    <div class="action-grid">
+        <button type="button" @onclick="() => QueueAsync(ImportJobKind.Players)">Import teams and players</button>
+        <button type="button" @onclick="() => QueueAsync(ImportJobKind.Adp)">Import ADP</button>
+    </div>
+    <div class="instrument-grid">
+        <fieldset>
+            <legend>Schedule window</legend>
+            <p>
+                <label for="schedule-from">From</label>
+                <input id="schedule-from" type="date" @bind="scheduleFrom" />
+            </p>
+            <p>
+                <label for="schedule-to">Through</label>
+                <input id="schedule-to" type="date" @bind="scheduleTo" />
+            </p>
+            <button type="button" @onclick="() => QueueAsync(ImportJobKind.Schedule)">Import schedule</button>
+        </fieldset>
+        <fieldset>
+            <legend>Season statistics</legend>
+            <p>
+                <label for="season-year">Season end year</label>
+                <input id="season-year" type="number" min="1947" max="2199" @bind="seasonEndYear" />
+            </p>
+            <button type="button" @onclick="() => QueueAsync(ImportJobKind.SeasonStats)">Import season stats</button>
+        </fieldset>
+    </div>
+    @if (queuedRun is not null)
+    {
+        <p class="notice">Queued @queuedRun.Source import <code>@queuedRun.Id</code>.</p>
+    }
+</section>
+
+<section aria-labelledby="source-health-heading">
+    <h2 id="source-health-heading">Source health</h2>
+    @if (sources is null)
+    {
+        <EmptyState Title="Loading source health"
+                    Description="Freshness checks are still running." />
+    }
+    else if (sources.All(source => source.LastSuccess is null))
+    {
+        <EmptyState Title="No successful imports"
+                    Description="Start with teams and players. Each source will report its age and most recent failure here." />
+        <div class="status-list">
             @foreach (var source in sources)
             {
-                <tr>
-                    <th scope="row">@source.Source</th>
-                    <td>@(source.IsDegraded ? "Degraded" : "Healthy")@(source.IsStale ? " — stale" : string.Empty)</td>
-                    <td>@FormatTimestamp(source.LastSuccess)</td>
-                    <td>@FormatTimestamp(source.LastFailure)</td>
-                </tr>
+                <SourceHealthCard Item="@ToHealthItem(source)" />
             }
-        </tbody>
-    </table>
-}
+        </div>
+    }
+    else
+    {
+        <div class="status-list">
+            @foreach (var source in sources)
+            {
+                <SourceHealthCard Item="@ToHealthItem(source)" />
+            }
+        </div>
+    }
+</section>
 
 @code {
     private IReadOnlyList<DataSourceHealth>? sources;
     private string? error;
     private DataImportRun? queuedRun;
-    private DateOnly scheduleFrom = DateOnly.FromDateTime(DateTime.UtcNow);
-    private DateOnly scheduleTo = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(14));
-    private int seasonEndYear = DateTime.UtcNow.Month >= 7
-        ? DateTime.UtcNow.Year + 1
-        : DateTime.UtcNow.Year;
+    private DateOnly scheduleFrom;
+    private DateOnly scheduleTo;
+    private int seasonEndYear;
 
     protected override async Task OnInitializedAsync()
     {
+        var today = DateOnly.FromDateTime(Clock.GetUtcNow().UtcDateTime);
+        scheduleFrom = today;
+        scheduleTo = today.AddDays(14);
+        seasonEndYear = today.Month >= 7 ? today.Year + 1 : today.Year;
+
         try
         {
             sources = await HealthService.GetAsync(CancellationToken.None);
@@ -87,8 +102,29 @@ else
         }
     }
 
-    private static string FormatTimestamp(DateTimeOffset? value) =>
-        value?.ToString("u", CultureInfo.InvariantCulture) ?? "Never";
+    private SourceHealthItem ToHealthItem(DataSourceHealth source) =>
+        new(
+            source.Source,
+            source.IsDegraded,
+            source.IsStale,
+            source.LastSuccess is { } success
+                ? $"updated {Age(success)}"
+                : "never updated",
+            source.LastFailure is { } failure
+                ? $"Last failure {Age(failure)}"
+                : "No recorded import failure");
+
+    private string Age(DateTimeOffset value)
+    {
+        var elapsed = Clock.GetUtcNow() - value;
+        return elapsed.TotalMinutes switch
+        {
+            < 1 => "just now",
+            < 60 => $"{Math.Floor(elapsed.TotalMinutes)}m ago",
+            < 1440 => $"{Math.Floor(elapsed.TotalHours)}h ago",
+            _ => $"{Math.Floor(elapsed.TotalDays)}d ago",
+        };
+    }
 
     private async Task QueueAsync(ImportJobKind kind)
     {

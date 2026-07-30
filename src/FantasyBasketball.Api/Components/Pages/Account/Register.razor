@@ -4,34 +4,55 @@
 @inject Microsoft.Extensions.Options.IOptions<FantasyBasketball.Infrastructure.Identity.AuthOptions> Auth
 
 <PageTitle>Register</PageTitle>
-<h1>Register</h1>
+<PageHeader Title="Register"
+            Eyebrow="Local account"
+            Description="Create the first owner account for this self-hosted instance." />
 
 @if (!registrationOpen)
 {
-    <p>The requested page was not found.</p>
+    <EmptyState Title="Registration is closed"
+                Description="This instance already has an owner and open registration is disabled.">
+        <Action>
+            <a class="button-link" href="/account/login">Log in</a>
+        </Action>
+    </EmptyState>
 }
 else
 {
     @if (Error == "invalid")
     {
-        <p role="alert">The account could not be created. Use a valid email and a password of at least 12 characters.</p>
+        <ErrorState Id="register-error"
+                    Message="The account could not be created."
+                    Recovery="Use a valid email and a password of at least 12 characters." />
     }
-    <form method="post" action="/account/register">
-        <AntiforgeryToken />
-        <p>
-            <label for="register-name">Display name</label>
-            <input id="register-name" name="displayName" autocomplete="name" required />
-        </p>
-        <p>
-            <label for="register-email">Email</label>
-            <input id="register-email" name="email" type="email" autocomplete="username" required />
-        </p>
-        <p>
-            <label for="register-password">Password</label>
-            <input id="register-password" name="password" type="password" minlength="12" autocomplete="new-password" required />
-        </p>
-        <button type="submit">Create account</button>
-    </form>
+    <EmptyState Title="Create the instance owner"
+                Description="The first account controls this local installation.">
+        <Action>
+            <form method="post"
+                  action="/account/register"
+                  aria-describedby="@(Error is null ? null : "register-error")">
+                <AntiforgeryToken />
+                <p>
+                    <label for="register-name">Display name</label>
+                    <input id="register-name" name="displayName" autocomplete="name" required />
+                </p>
+                <p>
+                    <label for="register-email">Email</label>
+                    <input id="register-email" name="email" type="email" autocomplete="username" required />
+                </p>
+                <p>
+                    <label for="register-password">Password</label>
+                    <input id="register-password"
+                           name="password"
+                           type="password"
+                           minlength="12"
+                           autocomplete="new-password"
+                           required />
+                </p>
+                <button type="submit">Create account</button>
+            </form>
+        </Action>
+    </EmptyState>
 }
 
 @code {

@@ -1,25 +1,29 @@
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using AngleSharp.Dom;
+using AngleSharp.Html.Parser;
 using FantasyBasketball.Api;
 using FantasyBasketball.Application.Abstractions;
 using FantasyBasketball.Application.Ingestion;
-using FantasyBasketball.Domain.Context;
 using FantasyBasketball.Domain.Accounts;
+using FantasyBasketball.Domain.Context;
 using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Domain.Projections;
 using FantasyBasketball.Domain.Provenance;
 using FantasyBasketball.Domain.Recommendations;
 using FantasyBasketball.Domain.Stats;
+using FantasyBasketball.Infrastructure.Identity;
 using FantasyBasketball.Infrastructure.Persistence;
 using FantasyBasketball.Infrastructure.Persistence.Repositories;
-using FantasyBasketball.Infrastructure.Identity;
 using FantasyBasketball.Infrastructure.Workers;
+using FantasyBasketball.IntegrationTests.TestSupport;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
@@ -48,6 +52,7 @@ public sealed class ApiHttpTests : IAsyncLifetime
         await postgres.StartAsync();
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions
         {
+            ApplicationName = typeof(ApiHost).Assembly.GetName().Name,
             EnvironmentName = Environments.Development,
         });
         builder.WebHost.ConfigureKestrel(options =>
@@ -386,7 +391,109 @@ public sealed class ApiHttpTests : IAsyncLifetime
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var html = await response.Content.ReadAsStringAsync(
             TestContext.Current.CancellationToken);
-        html.ShouldContain($"<h1>{heading}</h1>");
+        var document = new HtmlParser().ParseDocument(html);
+        document.QuerySelector("h1")?.TextContent.Trim().ShouldBe(heading);
+    }
+
+    public static TheoryData<string, string> PageThemeCases()
+    {
+        string[] pages =
+        [
+            "/",
+            "/league",
+            "/players",
+            "/draft",
+            "/context-review",
+            "/data-sources",
+            "/account/login",
+            "/account/logout",
+            "/account/register",
+        ];
+        string[] themes = ["dark", "light"];
+        var cases = new TheoryData<string, string>();
+        foreach (var page in pages)
+        {
+            foreach (var theme in themes)
+            {
+                cases.Add(page, theme);
+            }
+        }
+
+        return cases;
+    }
+
+    [Theory]
+    [MemberData(nameof(PageThemeCases))]
+    public async Task D17_D18_every_page_has_empty_state_and_zero_accessibility_violations(
+        string path,
+        string theme)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, path);
+        request.Headers.Add("X-Accessibility-Theme", theme);
+        using var response = await client.SendAsync(
+            request,
+            TestContext.Current.CancellationToken);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var html = await response.Content.ReadAsStringAsync(
+            TestContext.Current.CancellationToken);
+        var document = new HtmlParser().ParseDocument(html);
+
+        document.QuerySelector(".empty-state").ShouldNotBeNull(
+            $"{path} must render its first-run empty state in {theme}");
+        AccessibilityViolations(document, path).ShouldBeEmpty(
+            $"{path} has accessibility violations in {theme}");
+    }
+
+    [Fact]
+    public async Task D13_D14_live_draft_commits_in_three_keys_and_has_no_visible_reflow()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var leagueId = await CreateLeagueAsync(cancellationToken);
+        string[] names =
+        [
+            "Zed UI Player",
+            "Queue UI Player",
+            .. Enumerable.Range(1, 48)
+                .Select(index => $"Alpha UI Player {index:00}"),
+        ];
+        foreach (var name in names)
+        {
+            var playerId = await AddPlayerAsync(name, cancellationToken);
+            await SeedProjectionAsync(
+                playerId,
+                leagueId,
+                cancellationToken);
+        }
+
+        var repositoryRoot = Directory.GetParent(TestPaths.TestsRoot)!.FullName;
+        var startInfo = new ProcessStartInfo("node")
+        {
+            WorkingDirectory = repositoryRoot,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        startInfo.ArgumentList.Add("scripts/ui-browser-gate.mjs");
+        startInfo.Environment["UI_BASE_URL"] = client.BaseAddress!.ToString();
+        startInfo.Environment["UI_LEAGUE_ID"] = leagueId.ToString();
+        using var process = Process.Start(startInfo)
+            ?? throw new InvalidOperationException(
+                "Could not start the browser UI gate.");
+        var standardOutput = process.StandardOutput.ReadToEndAsync(
+            cancellationToken);
+        var standardError = process.StandardError.ReadToEndAsync(
+            cancellationToken);
+        await process.WaitForExitAsync(cancellationToken);
+        var output = await standardOutput;
+        var errorOutput = await standardError;
+
+        process.ExitCode.ShouldBe(
+            0,
+            $"browser gate failed:\n{output}\n{errorOutput}");
+        output.ShouldContain(
+            "D-13 browser interaction: 3 keystrokes, pick committed, focus restored");
+        output.ShouldContain("D-14 live Blazor measurement:");
+        output.ShouldContain("0.000 CSS px maximum offset delta");
     }
 
     private async Task<Guid> CreateLeagueAsync(CancellationToken cancellationToken)
@@ -402,6 +509,160 @@ public sealed class ApiHttpTests : IAsyncLifetime
             .GetProperty("id")
             .GetGuid();
     }
+
+    private static IReadOnlyList<string> AccessibilityViolations(
+        IDocument document,
+        string path)
+    {
+        var violations = new List<string>();
+        if (!string.Equals(
+            document.DocumentElement?.GetAttribute("lang"),
+            "en",
+            StringComparison.OrdinalIgnoreCase))
+        {
+            violations.Add("document language is missing");
+        }
+
+        if (document.QuerySelectorAll("main").Length != 1)
+        {
+            violations.Add("page must have exactly one main landmark");
+        }
+
+        if (document.QuerySelectorAll("h1").Length != 1)
+        {
+            violations.Add("page must have exactly one h1");
+        }
+
+        foreach (var duplicate in document.QuerySelectorAll("[id]")
+            .GroupBy(element => element.Id, StringComparer.Ordinal)
+            .Where(group => !string.IsNullOrWhiteSpace(group.Key)
+                && group.Count() > 1))
+        {
+            violations.Add($"duplicate id '{duplicate.Key}'");
+        }
+
+        foreach (var element in document.QuerySelectorAll(
+            "[aria-describedby], [aria-labelledby], [aria-controls]"))
+        {
+            foreach (var attribute in new[]
+                {
+                    "aria-describedby",
+                    "aria-labelledby",
+                    "aria-controls",
+                })
+            {
+                foreach (var id in (element.GetAttribute(attribute) ?? string.Empty)
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    if (document.GetElementById(id) is null)
+                    {
+                        violations.Add(
+                            $"{attribute} references missing id '{id}'");
+                    }
+                }
+            }
+        }
+
+        foreach (var image in document.QuerySelectorAll("img"))
+        {
+            if (!image.HasAttribute("alt"))
+            {
+                violations.Add("image missing alt");
+            }
+        }
+
+        foreach (var control in document.QuerySelectorAll(
+            "input:not([type=hidden]), select, textarea"))
+        {
+            if (!HasAccessibleLabel(document, control))
+            {
+                violations.Add(
+                    $"{control.LocalName}#{control.Id} has no accessible label");
+            }
+        }
+
+        foreach (var button in document.QuerySelectorAll("button"))
+        {
+            if (!HasAccessibleName(button))
+            {
+                violations.Add("button has no accessible name");
+            }
+        }
+
+        foreach (var link in document.QuerySelectorAll("a[href]"))
+        {
+            if (!HasAccessibleName(link))
+            {
+                violations.Add($"link to '{link.GetAttribute("href")}' has no accessible name");
+            }
+        }
+
+        foreach (var table in document.QuerySelectorAll("table"))
+        {
+            if (table.QuerySelector("caption") is null)
+            {
+                violations.Add("table has no caption");
+            }
+
+            if (table.QuerySelector("th") is null)
+            {
+                violations.Add("table has no header cells");
+            }
+        }
+
+        foreach (var navigation in document.QuerySelectorAll("nav"))
+        {
+            if (!navigation.HasAttribute("aria-label")
+                && !navigation.HasAttribute("aria-labelledby"))
+            {
+                violations.Add("navigation landmark has no label");
+            }
+        }
+
+        var liveRegionCount = document.QuerySelectorAll("[aria-live]").Length;
+        if (path == "/draft")
+        {
+            if (liveRegionCount != 2)
+            {
+                violations.Add("draft page must expose exactly two live regions");
+            }
+        }
+        else if (liveRegionCount != 0)
+        {
+            violations.Add("non-draft page exposes an unexpected live region");
+        }
+
+        return violations;
+    }
+
+    private static bool HasAccessibleLabel(
+        IDocument document,
+        IElement control)
+    {
+        if (!string.IsNullOrWhiteSpace(control.GetAttribute("aria-label"))
+            || !string.IsNullOrWhiteSpace(control.GetAttribute("aria-labelledby")))
+        {
+            return true;
+        }
+
+        if (control.Closest("label") is not null)
+        {
+            return true;
+        }
+
+        return !string.IsNullOrWhiteSpace(control.Id)
+            && document.QuerySelectorAll("label[for]")
+                .Any(label => string.Equals(
+                    label.GetAttribute("for"),
+                    control.Id,
+                    StringComparison.Ordinal));
+    }
+
+    private static bool HasAccessibleName(IElement element) =>
+        !string.IsNullOrWhiteSpace(element.TextContent)
+        || !string.IsNullOrWhiteSpace(element.GetAttribute("aria-label"))
+        || !string.IsNullOrWhiteSpace(element.GetAttribute("aria-labelledby"))
+        || !string.IsNullOrWhiteSpace(element.GetAttribute("title"));
 
     private static object LeagueRequest(IReadOnlyList<object> scoringRules) =>
         new

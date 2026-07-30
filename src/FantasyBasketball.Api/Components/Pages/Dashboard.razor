@@ -1,50 +1,75 @@
 @page "/"
 @inject DataSourceHealthService HealthService
 @inject ImportRunQueryService ImportRuns
+@inject TimeProvider Clock
 
 <PageTitle>Dashboard</PageTitle>
-<h1>Dashboard</h1>
+<PageHeader Title="Dashboard"
+            Eyebrow="System overview"
+            Description="Data readiness and the latest ingestion activity for this local decision engine.">
+    <Actions>
+        <a class="button-link" href="/data-sources">Manage imports</a>
+        <a class="button-link primary" href="/draft">Open draft assistant</a>
+    </Actions>
+</PageHeader>
 
 @if (error is not null)
 {
-    <p role="alert">@error</p>
+    <ErrorState Message="@error"
+                Recovery="Check the database connection, then reload this page." />
 }
 else if (health is null || runs is null)
 {
-    <p>Loading data status…</p>
+    <EmptyState Title="Loading system status"
+                Description="The local data-health checks are still running." />
 }
 else
 {
-    <section>
-        <h2>Data freshness</h2>
-        <ul>
+    <section aria-labelledby="freshness-heading">
+        <h2 id="freshness-heading">Data freshness</h2>
+        <div class="status-list">
             @foreach (var source in health)
             {
-                <li>
-                    <strong>@source.Source</strong>:
-                    @(source.IsDegraded ? "Degraded" : "Healthy")
-                    @if (source.IsStale)
-                    {
-                        <span>— stale</span>
-                    }
-                </li>
+                <SourceHealthCard Item="@ToHealthItem(source)" />
             }
-        </ul>
+        </div>
     </section>
-    <section>
-        <h2>Recent imports</h2>
+
+    <section aria-labelledby="imports-heading">
+        <h2 id="imports-heading">Recent imports</h2>
         @if (runs.Items.Count == 0)
         {
-            <p>No imports have run.</p>
+            <EmptyState Title="No imports yet"
+                        Description="Run the player import first, then add schedules, season statistics, and ADP.">
+                <Action>
+                    <a class="button-link" href="/data-sources">Go to data sources</a>
+                </Action>
+            </EmptyState>
         }
         else
         {
-            <ul>
-                @foreach (var run in runs.Items)
-                {
-                    <li>@run.Source — @run.Status — @run.RowsWritten rows</li>
-                }
-            </ul>
+            <table>
+                <caption>Ten most recent data imports</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Source</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Rows</th>
+                        <th scope="col">Started</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var run in runs.Items)
+                    {
+                        <tr>
+                            <th scope="row">@run.Source</th>
+                            <td>@run.Status</td>
+                            <td data-numeric>@run.RowsWritten</td>
+                            <td><time datetime="@run.StartedAt.ToString("O")">@Age(run.StartedAt)</time></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         }
     </section>
 }
@@ -65,5 +90,29 @@ else
         {
             error = "Data status could not be loaded.";
         }
+    }
+
+    private SourceHealthItem ToHealthItem(DataSourceHealth source) =>
+        new(
+            source.Source,
+            source.IsDegraded,
+            source.IsStale,
+            source.LastSuccess is { } success
+                ? $"updated {Age(success)}"
+                : "never updated",
+            source.LastFailure is { } failure
+                ? $"Last failure {Age(failure)}"
+                : "No recorded import failure");
+
+    private string Age(DateTimeOffset value)
+    {
+        var elapsed = Clock.GetUtcNow() - value;
+        return elapsed.TotalMinutes switch
+        {
+            < 1 => "just now",
+            < 60 => $"{Math.Floor(elapsed.TotalMinutes)}m ago",
+            < 1440 => $"{Math.Floor(elapsed.TotalHours)}h ago",
+            _ => $"{Math.Floor(elapsed.TotalDays)}d ago",
+        };
     }
 }

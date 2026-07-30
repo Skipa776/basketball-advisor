@@ -6,7 +6,7 @@ tags: [contract, design, ui, accessibility]
 source_paths: [src/FantasyBasketball.Api/Components/Design, DESIGN.md]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Api]
 depends_on: [recommendation_evidence_contract.md, ../components/web_ui_blazor.md]
-status: partial
+status: implemented
 last_updated: 2026-07-30
 owners: [engineering]
 risk_level: medium

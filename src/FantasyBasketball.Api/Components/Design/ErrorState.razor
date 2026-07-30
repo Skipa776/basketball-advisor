@@ -1,4 +1,7 @@
-<section class="error-state" role="alert" aria-labelledby="@HeadingId">
+<section id="@Id"
+         class="error-state"
+         role="alert"
+         aria-labelledby="@HeadingId">
     <span class="state-mark" aria-hidden="true">!</span>
     <div>
         <h2 id="@HeadingId">@Title</h2>
@@ -19,6 +22,9 @@
 
     [Parameter]
     public string Title { get; set; } = "This view could not be loaded";
+
+    [Parameter]
+    public string? Id { get; set; }
 
     [Parameter, EditorRequired]
     public string Message { get; set; } = string.Empty;

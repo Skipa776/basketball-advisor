@@ -12,7 +12,8 @@ public sealed record PlayerTableItem(
     decimal? AverageDraftPosition,
     bool IsRecommended,
     bool HasUnverifiedContext,
-    IReadOnlyList<RecommendationEvidence> Evidence);
+    IReadOnlyList<RecommendationEvidence> Evidence,
+    string? Href = null);
 
 public sealed record ProjectionStageItem(
     string Label,

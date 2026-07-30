@@ -11,7 +11,14 @@
         @Rank
     </td>
     <th scope="row" class="player">
-        <span>@Item.Name</span>
+        @if (Item.Href is null)
+        {
+            <span>@Item.Name</span>
+        }
+        else
+        {
+            <a href="@Item.Href">@Item.Name</a>
+        }
         @if (Item.HasUnverifiedContext)
         {
             <span class="unverified">△ unverified</span>

@@ -3,69 +3,81 @@
 @inject ProjectionDecompositionService Projections
 
 <PageTitle>Players</PageTitle>
-<h1>Players</h1>
+<PageHeader Title="Players"
+            Eyebrow="Projection workspace"
+            Description="Search the imported player pool and inspect every stage of a league-specific projection." />
 
-<form @onsubmit="SearchAsync" @onsubmit:preventDefault>
-    <label for="player-search">Search players</label>
-    <input id="player-search" @bind="search" />
+<form class="inline-form" @onsubmit="SearchAsync" @onsubmit:preventDefault>
+    <p>
+        <label for="player-search">Search players</label>
+        <input id="player-search" @bind="search" />
+    </p>
+    <p>
+        <label for="projection-league">League ID for projection links</label>
+        <input id="projection-league" @bind="leagueText" />
+    </p>
     <button type="submit">Search</button>
 </form>
 
 @if (error is not null)
 {
-    <p role="alert">@error</p>
+    <ErrorState Message="@error"
+                Recovery="Confirm the player and league exist and that a projection run has completed." />
 }
-@if (players is not null)
+
+@if (players is null)
 {
-    <ul>
-        @foreach (var player in players.Items)
-        {
-            <li>
-                <a href="@ProjectionLink(player.Id)">@player.FullName</a>
-                — @string.Join(", ", player.Positions)
-            </li>
-        }
-    </ul>
+    <EmptyState Title="Loading player pool"
+                Description="Imported players will appear here." />
+}
+else if (players.Items.Count == 0)
+{
+    <EmptyState Title="No players found"
+                Description="Change the search term or import the player pool from Data Sources.">
+        <Action>
+            <a class="button-link" href="/data-sources">Manage imports</a>
+        </Action>
+    </EmptyState>
+}
+else
+{
+    <PlayerTable Rows="@PlayerRows" Caption="Player search results" />
 }
 
 @if (projection is not null)
 {
-    <article>
-        <h2>Projection details</h2>
-        @if (projection.Adjusted.HasUnverifiedContext)
-        {
-            <p role="status"><strong>Unverified context</strong> affects this estimate.</p>
-        }
-        <section>
-            <h3>Baseline projection</h3>
-            <p>Projected games: @projection.Baseline.ProjectedGamesPlayed</p>
-            <dl>
-                @foreach (var stat in projection.Baseline.ProjectedPerGame.Values)
-                {
-                    <dt>@stat.Key</dt>
-                    <dd>@stat.Value.ToString("0.###", CultureInfo.InvariantCulture) per game estimate</dd>
-                }
-            </dl>
-        </section>
-        <section>
-            <h3>Context adjustment</h3>
-            <p>Applied context events: @projection.Adjusted.AppliedContextEventIds.Count</p>
-            <p>Context certainty: @projection.Adjusted.ContextCertainty.ToString("0.###", CultureInfo.InvariantCulture)</p>
-            <p>Confidence: @projection.Adjusted.Confidence</p>
-            <dl>
-                @foreach (var stat in projection.Adjusted.ProjectedPerGame.Values)
-                {
-                    <dt>@stat.Key</dt>
-                    <dd>@stat.Value.ToString("0.###", CultureInfo.InvariantCulture) adjusted per game estimate</dd>
-                }
-            </dl>
-        </section>
-        <section>
-            <h3>Final projection</h3>
-            <p>@projection.Value.PerGame.ToString("0.###", CultureInfo.InvariantCulture) fantasy points per game estimate</p>
-            <p>@projection.Value.SeasonTotal.ToString("0.###", CultureInfo.InvariantCulture) fantasy points season estimate</p>
-        </section>
-    </article>
+    <ProjectionDecomposition Stages="@ProjectionStages"
+                             Confidence="@projection.Adjusted.Confidence"
+                             HasUnverifiedContext="@projection.Adjusted.HasUnverifiedContext" />
+    <details class="panel">
+        <summary>Projection stat detail</summary>
+        <div class="instrument-grid">
+            <section aria-labelledby="baseline-stats-heading">
+                <h2 id="baseline-stats-heading">Baseline per game</h2>
+                <dl class="stat-list">
+                    @foreach (var stat in projection.Baseline.ProjectedPerGame.Values)
+                    {
+                        <div>
+                            <dt>@stat.Key</dt>
+                            <dd data-numeric>@stat.Value.ToString("0.###", CultureInfo.InvariantCulture)</dd>
+                        </div>
+                    }
+                </dl>
+            </section>
+            <section aria-labelledby="adjusted-stats-heading">
+                <h2 id="adjusted-stats-heading">Adjusted per game</h2>
+                <dl class="stat-list">
+                    @foreach (var stat in projection.Adjusted.ProjectedPerGame.Values)
+                    {
+                        <div>
+                            <dt>@stat.Key</dt>
+                            <dd data-numeric>@stat.Value.ToString("0.###", CultureInfo.InvariantCulture)</dd>
+                        </div>
+                    }
+                </dl>
+            </section>
+        </div>
+    </details>
 }
 
 @code {
@@ -76,12 +88,47 @@
     public Guid? LeagueId { get; set; }
 
     private string? search;
+    private string leagueText = string.Empty;
     private PagedResult<Player>? players;
     private FantasyBasketball.Application.Projections.ProjectionDecomposition? projection;
     private string? error;
 
+    private IList<PlayerTableItem> PlayerRows =>
+        players?.Items.Select(player => new PlayerTableItem(
+                player.Id,
+                player.FullName,
+                string.Join("/", player.Positions),
+                null,
+                null,
+                null,
+                false,
+                false,
+                [],
+                ProjectionLink(player.Id)))
+            .ToList() ?? [];
+
+    private IReadOnlyList<ProjectionStageItem> ProjectionStages =>
+        projection is null
+            ? []
+            :
+            [
+                new(
+                    "Baseline projection",
+                    projection.Baseline.ProjectedGamesPlayed,
+                    "projected games"),
+                new(
+                    "Context adjustment",
+                    projection.Adjusted.AppliedContextEventIds.Count,
+                    "applied context events"),
+                new(
+                    "Final projection",
+                    projection.Value.PerGame,
+                    "fantasy points per game"),
+            ];
+
     protected override async Task OnParametersSetAsync()
     {
+        leagueText = LeagueId?.ToString() ?? leagueText;
         await SearchAsync();
         projection = null;
         if (PlayerId is null || LeagueId is null)
@@ -105,6 +152,12 @@
     private async Task SearchAsync()
     {
         error = null;
+        if (!string.IsNullOrWhiteSpace(leagueText)
+            && Guid.TryParse(leagueText, out var leagueId))
+        {
+            LeagueId = leagueId;
+        }
+
         try
         {
             players = await PlayersService.ListAsync(

@@ -6,8 +6,15 @@
     <NotFound>
         <PageTitle>Not found</PageTitle>
         <LayoutView Layout="typeof(MainLayout)">
-            <h1>Not found</h1>
-            <p>The requested page does not exist.</p>
+            <PageHeader Title="Not found"
+                        Eyebrow="Unknown route"
+                        Description="The requested page does not exist in this local decision instrument." />
+            <EmptyState Title="No page at this address"
+                        Description="Return to the dashboard or use the primary navigation.">
+                <Action>
+                    <a class="button-link" href="/">Return to dashboard</a>
+                </Action>
+            </EmptyState>
         </LayoutView>
     </NotFound>
 </Router>

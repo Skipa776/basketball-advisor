@@ -3,77 +3,101 @@
 @inject LeagueService Leagues
 
 <PageTitle>My League</PageTitle>
-<h1>My League</h1>
-
-<form @onsubmit="CreateLeagueAsync" @onsubmit:preventDefault>
-    <fieldset disabled="@saving">
-        <legend>Create a league</legend>
-        <p>
-            <label for="league-name">League name</label>
-            <input id="league-name" @bind="name" required />
-        </p>
-        <p>
-            <label for="team-count">Team count</label>
-            <input id="team-count" type="number" min="2" @bind="teamCount" />
-        </p>
-        <p>
-            <label for="league-type">League type</label>
-            <select id="league-type" @bind="leagueType">
-                @foreach (var value in Enum.GetValues<LeagueType>())
-                {
-                    <option value="@value">@value</option>
-                }
-            </select>
-        </p>
-        <p>
-            <label for="league-cadence">Lineup cadence</label>
-            <select id="league-cadence" @bind="cadence">
-                @foreach (var value in Enum.GetValues<LineupCadence>())
-                {
-                    <option value="@value">@value</option>
-                }
-            </select>
-        </p>
-        <p>
-            <label for="scoring-rules">Points scoring rules (for example, PTS=1,REB=1.2)</label>
-            <input id="scoring-rules" @bind="scoringText" />
-        </p>
-        <p>
-            <label for="categories">Categories (for example, PTS,REB,AST)</label>
-            <input id="categories" @bind="categoriesText" />
-        </p>
-        <p>
-            <label for="roster-slots">Roster slots (for example, PG,SG,SF,PF,C,UTIL,BENCH,IR)</label>
-            <input id="roster-slots" @bind="rosterText" required />
-        </p>
-        <button type="submit">Create league</button>
-    </fieldset>
-</form>
+<PageHeader Title="My League"
+            Eyebrow="Scoring context"
+            Description="League rules determine every projection value and draft recommendation." />
 
 @if (error is not null)
 {
-    <p role="alert">@error</p>
+    <ErrorState Id="league-error"
+                Message="@error"
+                Recovery="Check category, scoring, and roster values against the examples below." />
 }
-@if (league is not null)
-{
-    <section>
-        <h2>@league.Name</h2>
-        <p>League ID: <code>@league.Id</code></p>
-        <p>@league.TeamCount teams · @league.Type · @league.Cadence lineups</p>
-        <h3>Scoring</h3>
-        <ul>
-            @foreach (var rule in league.ScoringRules)
-            {
-                <li>@rule.Stat: @rule.PointsPerUnit points per unit</li>
-            }
-            @foreach (var category in league.Categories)
-            {
-                <li>@category category</li>
-            }
-        </ul>
-        <p>Roster: @string.Join(", ", league.RosterSlots.Select(slot => slot.Kind))</p>
-    </section>
-}
+
+<div class="instrument-grid">
+    <form @onsubmit="CreateLeagueAsync" @onsubmit:preventDefault>
+        <fieldset disabled="@saving"
+                  aria-describedby="@(error is null ? null : "league-error")">
+            <legend>Create a league</legend>
+            <p>
+                <label for="league-name">League name</label>
+                <input id="league-name" @bind="name" required />
+            </p>
+            <p>
+                <label for="team-count">Team count</label>
+                <input id="team-count" type="number" min="2" @bind="teamCount" />
+            </p>
+            <p>
+                <label for="league-type">League type</label>
+                <select id="league-type" @bind="leagueType">
+                    @foreach (var value in Enum.GetValues<LeagueType>())
+                    {
+                        <option value="@value">@value</option>
+                    }
+                </select>
+            </p>
+            <p>
+                <label for="league-cadence">Lineup cadence</label>
+                <select id="league-cadence" @bind="cadence">
+                    @foreach (var value in Enum.GetValues<LineupCadence>())
+                    {
+                        <option value="@value">@value</option>
+                    }
+                </select>
+            </p>
+            <p>
+                <label for="scoring-rules">Points scoring rules</label>
+                <input id="scoring-rules"
+                       @bind="scoringText"
+                       aria-describedby="scoring-help" />
+                <small id="scoring-help">Example: PTS=1,REB=1.2</small>
+            </p>
+            <p>
+                <label for="categories">Categories</label>
+                <input id="categories"
+                       @bind="categoriesText"
+                       aria-describedby="categories-help" />
+                <small id="categories-help">Example: PTS,REB,AST</small>
+            </p>
+            <p>
+                <label for="roster-slots">Roster slots</label>
+                <input id="roster-slots"
+                       @bind="rosterText"
+                       required
+                       aria-describedby="roster-help" />
+                <small id="roster-help">Example: PG,SG,SF,PF,C,UTIL,BENCH,IR</small>
+            </p>
+            <button type="submit">Create league</button>
+        </fieldset>
+    </form>
+
+    @if (league is null)
+    {
+        <EmptyState Title="No league configured"
+                    Description="Create the scoring and roster context that the decision engine will use." />
+    }
+    else
+    {
+        <article class="panel" aria-labelledby="league-summary-heading">
+            <p class="eyebrow">Active configuration</p>
+            <h2 id="league-summary-heading">@league.Name</h2>
+            <p><code>@league.Id</code></p>
+            <p>@league.TeamCount teams · @league.Type · @league.Cadence lineups</p>
+            <h3>Scoring</h3>
+            <ul>
+                @foreach (var rule in league.ScoringRules)
+                {
+                    <li><span>@rule.Stat</span><strong data-numeric>@rule.PointsPerUnit</strong></li>
+                }
+                @foreach (var category in league.Categories)
+                {
+                    <li><span>@category</span><strong>category</strong></li>
+                }
+            </ul>
+            <p>Roster: @string.Join(", ", league.RosterSlots.Select(slot => slot.Kind))</p>
+        </article>
+    }
+</div>
 
 @code {
     private string name = "My League";
@@ -114,7 +138,7 @@
         }
         catch (Exception)
         {
-            error = "The league could not be created. Check each field.";
+            error = "The league could not be created.";
         }
         finally
         {
@@ -135,9 +159,7 @@
                 | StringSplitOptions.TrimEntries)
             .Select(value =>
             {
-                var pair = value.Split(
-                    '=',
-                    StringSplitOptions.TrimEntries);
+                var pair = value.Split('=', StringSplitOptions.TrimEntries);
                 if (pair.Length != 2
                     || !Enum.TryParse<StatKey>(pair[0], true, out var stat)
                     || !decimal.TryParse(

@@ -14,21 +14,21 @@
     [Parameter, EditorRequired]
     public SourceHealthItem Item { get; set; } = null!;
 
-    private string State => Item.IsDegraded
-        ? "degraded"
-        : Item.IsStale
-            ? "stale"
+    private string State => Item.IsStale
+        ? "stale"
+        : Item.IsDegraded
+            ? "degraded"
             : "healthy";
 
-    private string StateLabel => Item.IsDegraded
-        ? "Degraded"
-        : Item.IsStale
-            ? "Stale"
+    private string StateLabel => Item.IsStale
+        ? "Stale"
+        : Item.IsDegraded
+            ? "Degraded"
             : "Healthy";
 
-    private string StateIcon => Item.IsDegraded
-        ? "!"
-        : Item.IsStale
-            ? "△"
+    private string StateIcon => Item.IsStale
+        ? "△"
+        : Item.IsDegraded
+            ? "!"
             : "✓";
 }

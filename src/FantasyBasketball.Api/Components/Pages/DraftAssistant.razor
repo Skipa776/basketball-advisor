@@ -3,18 +3,32 @@
 @inject DraftSessionService Drafts
 @inject DraftBoardService Boards
 @inject PlayerQueryService PlayersService
+@inject IJSRuntime JavaScript
 
 <PageTitle>Draft Assistant</PageTitle>
-<h1>Draft Assistant</h1>
+<PageHeader Title="Draft Assistant"
+            Eyebrow="Live decision surface"
+            Description="Record picks without leaving the keyboard. Rankings update from league value, scarcity, roster fit, market position, and risk." />
+
+@if (error is not null)
+{
+    <ErrorState Id="draft-error"
+                Message="@error"
+                Recovery="Your current draft session is unchanged. Correct the input or retry the action." />
+}
 
 @if (session is null)
 {
     <form @onsubmit="StartDraftAsync" @onsubmit:preventDefault>
-        <fieldset>
+        <fieldset aria-describedby="@(error is null ? null : "draft-error")">
             <legend>Start a draft</legend>
             <p>
                 <label for="draft-league">League ID</label>
-                <input id="draft-league" @bind="leagueText" required />
+                <input id="draft-league"
+                       @bind="leagueText"
+                       required
+                       aria-describedby="draft-league-help" />
+                <small id="draft-league-help">Use the ID shown on My League.</small>
             </p>
             <p>
                 <label for="draft-slot">Your draft position</label>
@@ -27,104 +41,47 @@
             <button type="submit">Start draft</button>
         </fieldset>
     </form>
+    <EmptyState Title="No active draft"
+                Description="Start a session with a league ID to load the ranked board and pick entry instrument." />
 }
 else
 {
-    <p>Current pick: <strong>@session.CurrentPick</strong></p>
-    <section>
-        <h2>Record a pick</h2>
-        <p>Type to filter, use up/down arrows, and press Enter to commit.</p>
-        <label for="pick-search">Player</label>
-        <input id="pick-search"
-               @ref="pickInput"
-               @bind="pickSearch"
-               @bind:event="oninput"
-               @onkeydown="HandlePickKeyAsync"
-               autocomplete="off"
-               role="combobox"
-               aria-controls="pick-results"
-               aria-expanded="true" />
-        <ul id="pick-results" role="listbox">
-            @for (var index = 0; index < FilteredPlayers.Count; index++)
-            {
-                var player = FilteredPlayers[index];
-                <li role="option"
-                    aria-selected="@(index == selectedIndex)"
-                    @key="player.Id">
-                    @if (index == selectedIndex)
-                    {
-                        <strong>@player.FullName</strong>
-                    }
-                    else
-                    {
-                        @player.FullName
-                    }
-                </li>
-            }
-        </ul>
+    <section aria-label="Draft status">
+        <strong data-numeric>Pick @session.CurrentPick</strong>
+        <span> · @session.PicksUntilNextTurn picks until your next turn</span>
     </section>
 
-    <section>
-        <h2>Ranked board</h2>
-        @if (board is null || board.Rankings.Count == 0)
+    <div class="draft-workspace">
+        <PickEntry Items="@AvailablePlayers"
+                   OnCommit="RecordSelectedAsync"
+                   CanUndo="@(session.Picks.Count > 0)"
+                   OnUndo="UndoAsync" />
+
+        @if (board is null)
         {
-            <p>No ranked players are available.</p>
+            <EmptyState Title="Rankings are loading"
+                        Description="The board will appear when league projections are available." />
+        }
+        else if (board.Rankings.Count == 0)
+        {
+            <EmptyState Title="No ranked players"
+                        Description="Import players and projections, then return to this draft session." />
         }
         else
         {
-            @if (board.Banner is not null)
-            {
-                <p role="status">@board.Banner</p>
-            }
-            <ol>
-                @foreach (var value in board.Rankings)
-                {
-                    <li>
-                        <strong>@PlayerName(value.PlayerId)</strong>
-                        — score @value.Total.ToString("0.###", CultureInfo.InvariantCulture)
-                        <ul>
-                            @foreach (var evidence in value.Evidence)
-                            {
-                                <li>@evidence.Polarity: @evidence.Statement</li>
-                            }
-                        </ul>
-                    </li>
-                }
-            </ol>
+            <DraftBoard Items="@BoardItems" Banner="@board.Banner" />
         }
-    </section>
-
-    <section>
-        <h2>Recommendations</h2>
-        @if (recommendations is null || recommendations.Count == 0)
-        {
-            <p>No recommendations are available.</p>
-        }
-        else
-        {
-            <ol>
-                @foreach (var recommendation in recommendations)
-                {
-                    <li>
-                        <strong>@recommendation.Action: @PlayerName(recommendation.SubjectPlayerId)</strong>
-                        — @recommendation.Confidence confidence
-                        <ul>
-                            @foreach (var evidence in recommendation.Evidence)
-                            {
-                                <li>@evidence.Polarity: @evidence.Statement</li>
-                            }
-                        </ul>
-                    </li>
-                }
-            </ol>
-        }
-    </section>
+    </div>
 }
 
-@if (error is not null)
-{
-    <p role="alert">@error</p>
-}
+<div class="visually-hidden"
+     aria-live="polite"
+     aria-atomic="true"
+     data-live-region="pick">@pickAnnouncement</div>
+<div class="visually-hidden"
+     aria-live="polite"
+     aria-atomic="true"
+     data-live-region="top-recommendation">@topRecommendationAnnouncement</div>
 
 @code {
     private string leagueText = string.Empty;
@@ -132,21 +89,73 @@ else
     private int roundCount = 13;
     private DraftSession? session;
     private DraftBoardResult? board;
-    private IReadOnlyList<Recommendation>? recommendations;
+    private IReadOnlyList<Recommendation> recommendations = [];
     private IReadOnlyList<Player> players = [];
-    private string pickSearch = string.Empty;
-    private int selectedIndex;
-    private ElementReference pickInput;
+    private DraftBoardSnapshot? pendingSnapshot;
+    private string? pickAnnouncement;
+    private string? topRecommendationAnnouncement;
     private string? error;
 
-    private IReadOnlyList<Player> FilteredPlayers =>
-        players.Where(player =>
-                string.IsNullOrWhiteSpace(pickSearch)
-                || player.FullName.Contains(
-                    pickSearch,
-                    StringComparison.OrdinalIgnoreCase))
-            .Take(10)
-            .ToArray();
+    private IReadOnlyList<PickEntryItem> AvailablePlayers
+    {
+        get
+        {
+            var drafted = session?.Picks
+                .Select(pick => pick.PlayerId)
+                .ToHashSet() ?? [];
+            return players
+                .Where(player => !drafted.Contains(player.Id))
+                .Select(player => new PickEntryItem(
+                    player.Id,
+                    player.FullName,
+                    string.Join("/", player.Positions)))
+                .ToArray();
+        }
+    }
+
+    private IReadOnlyList<DraftBoardItem> BoardItems
+    {
+        get
+        {
+            if (board is null)
+            {
+                return [];
+            }
+
+            var topPlayerId = recommendations.FirstOrDefault()?.SubjectPlayerId
+                ?? board.Rankings.FirstOrDefault()?.PlayerId;
+            return board.Rankings.Select(value =>
+            {
+                var recommendation = recommendations.FirstOrDefault(candidate =>
+                    candidate.SubjectPlayerId == value.PlayerId);
+                return new DraftBoardItem(
+                    new PlayerTableItem(
+                        value.PlayerId,
+                        PlayerName(value.PlayerId),
+                        PlayerPositions(value.PlayerId),
+                        value.ProjectedSeasonValue,
+                        value.ValueAboveReplacement,
+                        null,
+                        value.PlayerId == topPlayerId,
+                        false,
+                        value.Evidence),
+                    recommendation?.Confidence ?? Confidence.Moderate);
+            }).ToArray();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (pendingSnapshot is not null)
+        {
+            var snapshot = pendingSnapshot;
+            pendingSnapshot = null;
+            await JavaScript.InvokeVoidAsync(
+                "draftBoard.restore",
+                "live-draft-board",
+                snapshot);
+        }
+    }
 
     private async Task StartDraftAsync()
     {
@@ -180,25 +189,7 @@ else
         }
     }
 
-    private async Task HandlePickKeyAsync(KeyboardEventArgs args)
-    {
-        var count = FilteredPlayers.Count;
-        if (args.Key == "ArrowDown" && count > 0)
-        {
-            selectedIndex = Math.Min(selectedIndex + 1, count - 1);
-        }
-        else if (args.Key == "ArrowUp" && count > 0)
-        {
-            selectedIndex = Math.Max(selectedIndex - 1, 0);
-        }
-        else if (args.Key == "Enter" && count > 0)
-        {
-            await RecordSelectedAsync(FilteredPlayers[
-                Math.Clamp(selectedIndex, 0, count - 1)]);
-        }
-    }
-
-    private async Task RecordSelectedAsync(Player player)
+    private async Task RecordSelectedAsync(PickEntryItem selected)
     {
         if (session is null)
         {
@@ -208,22 +199,50 @@ else
         error = null;
         try
         {
+            pendingSnapshot = await CaptureBoardAsync();
             await Drafts.RecordPickAsync(
                 session.Id,
                 session.CurrentPick,
-                player.Id,
+                selected.Id,
                 CancellationToken.None);
             session = (await Drafts.GetAsync(
                 session.Id,
                 CancellationToken.None)).Session;
-            pickSearch = string.Empty;
-            selectedIndex = 0;
+            pickAnnouncement = $"Pick recorded: {selected.Name}.";
             await RefreshBoardAsync();
-            await pickInput.FocusAsync();
         }
         catch (Exception)
         {
+            pendingSnapshot = null;
             error = "The pick could not be recorded.";
+        }
+    }
+
+    private async Task UndoAsync()
+    {
+        if (session is null || session.Picks.Count == 0)
+        {
+            return;
+        }
+
+        error = null;
+        try
+        {
+            pendingSnapshot = await CaptureBoardAsync();
+            var removed = await Drafts.UndoPickAsync(
+                session.Id,
+                session.Picks[^1].PickNumber,
+                CancellationToken.None);
+            session = (await Drafts.GetAsync(
+                session.Id,
+                CancellationToken.None)).Session;
+            pickAnnouncement = $"Pick removed: {PlayerName(removed.PlayerId)}.";
+            await RefreshBoardAsync();
+        }
+        catch (Exception)
+        {
+            pendingSnapshot = null;
+            error = "The last pick could not be undone.";
         }
     }
 
@@ -234,18 +253,47 @@ else
             return;
         }
 
+        var previousTop = recommendations.FirstOrDefault()?.SubjectPlayerId;
         board = await Boards.GetBoardAsync(
             session.Id,
             CancellationToken.None);
         recommendations = await Boards.GetRecommendationsAsync(
             session.Id,
             CancellationToken.None);
+        var currentTop = recommendations.FirstOrDefault()?.SubjectPlayerId;
+        if (currentTop != previousTop && currentTop is not null)
+        {
+            topRecommendationAnnouncement =
+                $"Top recommendation changed to {PlayerName(currentTop.Value)}.";
+        }
     }
 
-    private string PlayerName(PlayerId? playerId) =>
-        playerId is null
-            ? "No player"
-            : players.FirstOrDefault(player => player.Id == playerId.Value)
-                ?.FullName
-                ?? playerId.Value.Value.ToString();
+    private async Task<DraftBoardSnapshot?> CaptureBoardAsync()
+    {
+        if (board is null || board.Rankings.Count == 0)
+        {
+            return null;
+        }
+
+        return await JavaScript.InvokeAsync<DraftBoardSnapshot?>(
+            "draftBoard.capture",
+            "live-draft-board");
+    }
+
+    private string PlayerName(PlayerId playerId) =>
+        players.FirstOrDefault(player => player.Id == playerId)?.FullName
+        ?? playerId.Value.ToString();
+
+    private string PlayerPositions(PlayerId playerId) =>
+        players.FirstOrDefault(player => player.Id == playerId) is { } player
+            ? string.Join("/", player.Positions)
+            : "—";
+
+    public sealed record DraftBoardSnapshot(
+        decimal ScrollTop,
+        IReadOnlyList<DraftBoardRowSnapshot> Rows);
+
+    public sealed record DraftBoardRowSnapshot(
+        string PlayerId,
+        decimal Offset);
 }

@@ -413,6 +413,14 @@ therefore returns the per-game scalar as `decimal`; the projection subsystem
 will assemble the persisted record once those inputs exist. This keeps scoring
 pure and avoids placeholder identifiers or false season totals.
 
+### E05 back-test chart inventory
+
+E05 explicitly requires a back-test calibration chart, while the design-system
+component inventory originally named no component that could own it. The inventory
+now includes `BacktestCalibration` before the component implementation. It remains
+presentational and accepts calibration points; producing those points stays in E11,
+so E05 does not fabricate historical results or pull post-MVP computation forward.
+
 # Revisit triggers
 
 - The user's real league settings differ from the seed league → update

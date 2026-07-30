@@ -2,35 +2,48 @@
 @attribute [AllowAnonymous]
 
 <PageTitle>Log in</PageTitle>
-<h1>Log in</h1>
+<PageHeader Title="Log in"
+            Eyebrow="Local account"
+            Description="Resume your private leagues, projections, and draft sessions." />
 
 @if (Error == "invalid")
 {
-    <p role="alert">Email or password is incorrect.</p>
+    <ErrorState Id="login-error"
+                Message="Email or password is incorrect."
+                Recovery="Check both fields and try again." />
 }
 else if (Error == "locked")
 {
-    <p role="alert">The account is temporarily locked.</p>
+    <ErrorState Id="login-error"
+                Message="The account is temporarily locked."
+                Recovery="Wait before trying again." />
 }
 
-<form method="post" action="/account/login">
-    <AntiforgeryToken />
-    <p>
-        <label for="login-email">Email</label>
-        <input id="login-email" name="email" type="email" autocomplete="username" required />
-    </p>
-    <p>
-        <label for="login-password">Password</label>
-        <input id="login-password" name="password" type="password" autocomplete="current-password" required />
-    </p>
-    <p>
-        <label>
-            <input name="rememberMe" type="checkbox" value="true" />
-            Keep me signed in
-        </label>
-    </p>
-    <button type="submit">Log in</button>
-</form>
+<EmptyState Title="Authentication required"
+            Description="FantasyBasketball keeps each account's leagues and draft sessions isolated.">
+    <Action>
+        <form method="post"
+              action="/account/login"
+              aria-describedby="@(Error is null ? null : "login-error")">
+            <AntiforgeryToken />
+            <p>
+                <label for="login-email">Email</label>
+                <input id="login-email" name="email" type="email" autocomplete="username" required />
+            </p>
+            <p>
+                <label for="login-password">Password</label>
+                <input id="login-password" name="password" type="password" autocomplete="current-password" required />
+            </p>
+            <p>
+                <label>
+                    <input name="rememberMe" type="checkbox" value="true" />
+                    Keep me signed in
+                </label>
+            </p>
+            <button type="submit">Log in</button>
+        </form>
+    </Action>
+</EmptyState>
 
 @code {
     [SupplyParameterFromQuery]

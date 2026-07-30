@@ -6,9 +6,11 @@
     scrollbar-gutter: stable;
 }
 
-table {
+.player-table table {
     width: 100%;
-    border-collapse: collapse;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
 caption {
@@ -27,7 +29,8 @@ thead {
     background: var(--color-surface);
 }
 
-th {
+.player-table th {
+    box-sizing: border-box;
     height: var(--board-row-height);
     padding: var(--space-2) var(--space-5);
     border-block-end: thin solid var(--color-border-strong);
@@ -36,6 +39,27 @@ th {
     letter-spacing: 0.06em;
     text-align: start;
     text-transform: uppercase;
+}
+
+.player-table ::deep .player-row {
+    height: var(--board-row-height);
+}
+
+.player-table ::deep .player-row > td,
+.player-table ::deep .player-row > th {
+    box-sizing: border-box;
+    height: var(--board-row-height);
+    padding: var(--space-2) var(--space-5);
+    overflow: hidden;
+    border-block-end: 0;
+    box-shadow:
+        inset 0 calc(-1 * var(--rule-width)) var(--color-rule);
+    font-size: var(--text-sm);
+    line-height: 1;
+    letter-spacing: normal;
+    text-overflow: ellipsis;
+    text-transform: none;
+    white-space: nowrap;
 }
 
 .numeric {

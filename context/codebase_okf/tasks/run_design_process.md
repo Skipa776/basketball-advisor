@@ -6,8 +6,8 @@ tags: [task, design, ui, workflow]
 source_paths: [DESIGN.md, DESIGN_BRIEF.md, src/FantasyBasketball.Api/Components/Design]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Api]
 depends_on: [../contracts/design_system_contract.md, ../components/design_system.md]
-status: planned
-last_updated: 2026-07-29
+status: partial
+last_updated: 2026-07-30
 owners: [engineering]
 ---
 
