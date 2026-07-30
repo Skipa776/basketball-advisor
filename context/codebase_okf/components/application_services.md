@@ -6,7 +6,7 @@ tags: [component, application, use-cases]
 source_paths: [src/FantasyBasketball.Application]
 test_paths: [tests/FantasyBasketball.Application.Tests]
 depends_on: [../contracts/provider_contracts.md, ../contracts/api_surface.md]
-status: partial
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: medium
@@ -75,5 +75,6 @@ verify, reject, expire, and override actions through a small repository
 abstraction and an injected `TimeProvider`; its unit tests use a hand-written
 fake. League, player, draft lifecycle/board, decomposed projection, import,
 source-health, and paging services now expose the remaining HTTP use cases
-without Infrastructure dependencies. The recurring worker orchestration and
-remaining UI close-out keep this broader component `partial`.
+without Infrastructure dependencies. The Blazor surface calls these services
+directly, while recurring infrastructure workers enter through the same import
+use cases and preserve the dependency direction.

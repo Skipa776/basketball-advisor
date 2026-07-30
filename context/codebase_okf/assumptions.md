@@ -76,7 +76,7 @@ exit check is not certified in this repository session because no operator API
 key was used and no scrape target was contacted; W-01 through W-03 belong to
 the later background-worker subsystem and also remain pending.
 
-The full gate passes 70 Domain, 30 Application, and 43 integration tests. Domain
+The full gate passes 70 Domain, 30 Application, and 46 integration tests. Domain
 line coverage is 88.42%, Application line coverage is 73.01%, the build has zero
 warnings, and all 72 OKF concepts validate.
 
@@ -107,8 +107,14 @@ routes run through the real Kestrel host and an isolated PostgreSQL database.
 League, Players, Draft Assistant, Context Review, and Data Sources. The UI calls
 Application services in process; projections remain decomposed and visibly
 unverified where applicable; recommendations never appear without evidence;
-pick entry supports type, arrows, Enter, and focus restoration. The remaining
-E03 work is the three recurring refresh workers.
+pick entry supports type, arrows, Enter, and focus restoration.
+
+**Build steps 15 and epic E03 are implemented.** Schedule, stats, and ADP each
+have their own hosted service, configurable cadence, staggered startup, and the
+shared import queue's fresh scope per run. Worker failure, continuation,
+shutdown, registration, and configuration rows pass. All ten MVP stories now
+have implementation and automated evidence; live external-source certification
+still requires operator credentials and remains explicitly under-claimed.
 
 **Build prerequisites on the development machine:**
 
@@ -173,6 +179,14 @@ connection details; the type is sufficient for the operator-facing status
 surface while structured server logs retain the trace identifier. The public
 error envelope likewise returns a stable generic message for unexpected
 failures.
+
+The recurring refresh defaults are one day per source, staggered one, five, and
+ten minutes after startup for schedule, stats, and ADP respectively. Schedule
+refresh covers yesterday through fourteen days ahead so a corrected recent game
+or near-term schedule change is included without widening the request window
+indefinitely. The NBA season end year rolls forward in July. ADP runs only from
+July through October by default; those active months, every cadence, startup
+delay, and schedule window are configuration values.
 
 ## ADP shapes and fallback inputs not specified upstream
 

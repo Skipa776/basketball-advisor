@@ -56,6 +56,12 @@ public static class DependencyInjection
                 options => options.IsValid(),
                 "Data source health options are invalid.")
             .ValidateOnStart();
+        services.AddOptions<RefreshWorkerOptions>()
+            .Bind(configuration.GetSection(RefreshWorkerOptions.SectionName))
+            .Validate(
+                options => options.IsValid(),
+                "Refresh worker options are invalid.")
+            .ValidateOnStart();
         services.AddDbContext<FantasyDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("Fantasy")));
         services.AddMemoryCache();
@@ -123,6 +129,9 @@ public static class DependencyInjection
             serviceProvider.GetRequiredService<ImportJobQueue>());
         services.AddHostedService(serviceProvider =>
             serviceProvider.GetRequiredService<ImportJobQueue>());
+        services.AddHostedService<ScheduleRefreshWorker>();
+        services.AddHostedService<StatRefreshWorker>();
+        services.AddHostedService<AdpRefreshWorker>();
 
         AddSourceClient(
             services,

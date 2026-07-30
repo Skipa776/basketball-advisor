@@ -128,5 +128,9 @@ provenance-complete values with no scraper registered; the generic import
 service resolves and persists every rung as one canonical ADP entity. I-11 and
 health-driven half of I-06 are now implemented: failed runs lower draft
 confidence and surface `DataQuality` risk evidence. I-11 is covered by
-user-created context events whose source is canonical `manual`. The W- rows
-await the recurring worker slice, so this matrix remains `partial`.
+user-created context events whose source is canonical `manual`. W-01 through
+W-03 are implemented by a real hosted queue and recurring-worker tests: a
+failed ADP run is persisted, later iterations succeed, provider and transaction
+scope identities differ on every run, configured cadences bind for all three
+registered workers, and shutdown cancels a stagger delay promptly. Post-MVP
+box-score and league-import rows remain, so this matrix stays `partial`.

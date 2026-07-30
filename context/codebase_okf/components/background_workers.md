@@ -6,7 +6,7 @@ tags: [component, workers, hosting]
 source_paths: [src/FantasyBasketball.Infrastructure/Workers]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Workers]
 depends_on: [ingestion_pipeline.md, ../safety/scraping_policy.md]
-status: planned
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: medium
@@ -69,3 +69,16 @@ failure test — one commit.
 
 [test_matrix_ingestion_scrapers](../tests/test_matrix_ingestion_scrapers.md),
 rows W-01 through W-03.
+
+# Implementation evidence
+
+`ScheduleRefreshWorker`, `StatRefreshWorker`, and `AdpRefreshWorker` are separate
+hosted services over the same queued ingestion pipeline. Their startup delays
+and cadences bind from `RefreshWorkers`; schedule windows are configurable,
+the season rolls over in July, and ADP is inactive outside its configured
+preseason month range. Startup is staggered by default. The queue creates an
+async scope for every run, so provider, transaction, and `DbContext` lifetimes
+are never captured by a singleton. W-01 through W-03 prove a failed run is
+recorded, two subsequent runs complete, every iteration receives fresh scoped
+dependencies, all three workers are registered, configured cadence values bind,
+and host cancellation stops a worker waiting in its startup delay.

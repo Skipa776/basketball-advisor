@@ -83,6 +83,9 @@ context-adjusted, and final records; Draft Assistant starts a session, records
 keyboard-selected picks, reranks, and displays evidence with every score;
 Context Review creates proposals and performs verify, reject, and audited
 impact-override actions; Dashboard and Data Sources expose persisted import
-history and degradation. The pick combobox supports type, up/down, Enter, and
+history and degradation, and Data Sources can queue every MVP import. League
+setup accepts points or categories, exact stat rules, roster slots, team count,
+and daily/weekly cadence without a provider default. The pick combobox supports
+type, up/down, Enter, and
 returns focus after a committed pick. A loopback Kestrel render test over real
 PostgreSQL proves A-20 and A-21, and a route sweep renders all six pages.

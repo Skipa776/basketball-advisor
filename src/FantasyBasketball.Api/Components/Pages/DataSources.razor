@@ -1,8 +1,35 @@
 @page "/data-sources"
 @inject DataSourceHealthService HealthService
+@inject IImportJobQueue Jobs
 
 <PageTitle>Data Sources</PageTitle>
 <h1>Data Sources</h1>
+
+<section>
+    <h2>Run an import</h2>
+    <p>
+        <button type="button" @onclick="() => QueueAsync(ImportJobKind.Players)">Import teams and players</button>
+    </p>
+    <p>
+        <label for="schedule-from">Schedule from</label>
+        <input id="schedule-from" type="date" @bind="scheduleFrom" />
+        <label for="schedule-to">through</label>
+        <input id="schedule-to" type="date" @bind="scheduleTo" />
+        <button type="button" @onclick="() => QueueAsync(ImportJobKind.Schedule)">Import schedule</button>
+    </p>
+    <p>
+        <label for="season-year">Season end year</label>
+        <input id="season-year" type="number" min="1947" max="2199" @bind="seasonEndYear" />
+        <button type="button" @onclick="() => QueueAsync(ImportJobKind.SeasonStats)">Import season stats</button>
+    </p>
+    <p>
+        <button type="button" @onclick="() => QueueAsync(ImportJobKind.Adp)">Import ADP</button>
+    </p>
+    @if (queuedRun is not null)
+    {
+        <p role="status">Queued @queuedRun.Source import @queuedRun.Id.</p>
+    }
+</section>
 
 @if (error is not null)
 {
@@ -41,6 +68,12 @@ else
 @code {
     private IReadOnlyList<DataSourceHealth>? sources;
     private string? error;
+    private DataImportRun? queuedRun;
+    private DateOnly scheduleFrom = DateOnly.FromDateTime(DateTime.UtcNow);
+    private DateOnly scheduleTo = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(14));
+    private int seasonEndYear = DateTime.UtcNow.Month >= 7
+        ? DateTime.UtcNow.Year + 1
+        : DateTime.UtcNow.Year;
 
     protected override async Task OnInitializedAsync()
     {
@@ -56,4 +89,29 @@ else
 
     private static string FormatTimestamp(DateTimeOffset? value) =>
         value?.ToString("u", CultureInfo.InvariantCulture) ?? "Never";
+
+    private async Task QueueAsync(ImportJobKind kind)
+    {
+        error = null;
+        try
+        {
+            queuedRun = await Jobs.EnqueueAsync(
+                kind switch
+                {
+                    ImportJobKind.Schedule => new ImportJobRequest(
+                        kind,
+                        From: scheduleFrom,
+                        To: scheduleTo),
+                    ImportJobKind.SeasonStats => new ImportJobRequest(
+                        kind,
+                        SeasonEndYear: seasonEndYear),
+                    _ => new ImportJobRequest(kind),
+                },
+                CancellationToken.None);
+        }
+        catch (Exception)
+        {
+            error = "The import could not be queued.";
+        }
+    }
 }
