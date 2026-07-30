@@ -76,7 +76,7 @@ exit check is not certified in this repository session because no operator API
 key was used and no scrape target was contacted; W-01 through W-03 belong to
 the later background-worker subsystem and also remain pending.
 
-The full gate passes 70 Domain, 30 Application, and 36 integration tests. Domain
+The full gate passes 70 Domain, 30 Application, and 43 integration tests. Domain
 line coverage is 88.42%, Application line coverage is 73.01%, the build has zero
 warnings, and all 72 OKF concepts validate.
 
@@ -102,8 +102,13 @@ round-trip through PostgreSQL.
 validation, sanitized exception mapping, structured request logging, and all
 MVP league, player, import, draft, context, recommendation, and source-health
 routes run through the real Kestrel host and an isolated PostgreSQL database.
-The remaining E03 work is the unstyled Blazor surface and three recurring
-refresh workers.
+
+**Build step 14 is implemented.** One Blazor Server host provides Dashboard, My
+League, Players, Draft Assistant, Context Review, and Data Sources. The UI calls
+Application services in process; projections remain decomposed and visibly
+unverified where applicable; recommendations never appear without evidence;
+pick entry supports type, arrows, Enter, and focus restoration. The remaining
+E03 work is the three recurring refresh workers.
 
 **Build prerequisites on the development machine:**
 

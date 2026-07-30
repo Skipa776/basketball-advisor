@@ -312,6 +312,52 @@ public sealed class ApiHttpTests : IAsyncLifetime
         }
     }
 
+    [Fact]
+    public async Task A20_A21_players_page_decomposes_and_marks_unverified_projection()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var leagueId = await CreateLeagueAsync(cancellationToken);
+        var playerId = await AddPlayerAsync(
+            "Unverified UI Player",
+            cancellationToken);
+        await SeedProjectionAsync(
+            playerId,
+            leagueId,
+            cancellationToken,
+            hasUnverifiedContext: true);
+
+        using var response = await client.GetAsync(
+            $"/players?playerId={playerId.Value}&leagueId={leagueId}",
+            cancellationToken);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var html = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        html.ShouldContain("Baseline projection");
+        html.ShouldContain("Context adjustment");
+        html.ShouldContain("Final projection");
+        html.ShouldContain("Unverified context");
+    }
+
+    [Theory]
+    [InlineData("/", "Dashboard")]
+    [InlineData("/league", "My League")]
+    [InlineData("/players", "Players")]
+    [InlineData("/draft", "Draft Assistant")]
+    [InlineData("/context-review", "Context Review")]
+    [InlineData("/data-sources", "Data Sources")]
+    public async Task Mvp_blazor_pages_render(
+        string path,
+        string heading)
+    {
+        using var response = await client.GetAsync(
+            path,
+            TestContext.Current.CancellationToken);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var html = await response.Content.ReadAsStringAsync(
+            TestContext.Current.CancellationToken);
+        html.ShouldContain($"<h1>{heading}</h1>");
+    }
+
     private async Task<Guid> CreateLeagueAsync(CancellationToken cancellationToken)
     {
         using var response = await client.PostAsJsonAsync(
@@ -358,7 +404,8 @@ public sealed class ApiHttpTests : IAsyncLifetime
     private async Task SeedProjectionAsync(
         PlayerId playerId,
         Guid leagueId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool hasUnverifiedContext = false)
     {
         var provenance = new DataProvenance(
             DataSourceName.Manual,
@@ -408,12 +455,17 @@ public sealed class ApiHttpTests : IAsyncLifetime
             Guid.NewGuid(),
             playerId,
             baseline.Id,
-            baseline.ProjectedPerGame,
+            hasUnverifiedContext
+                ? new StatLine(new Dictionary<StatKey, decimal>
+                {
+                    [StatKey.PTS] = 0.6m,
+                })
+                : baseline.ProjectedPerGame,
             [],
-            0m,
+            hasUnverifiedContext ? 7m : 0m,
             Confidence.Moderate,
             1m,
-            false,
+            hasUnverifiedContext,
             DateTimeOffset.UnixEpoch);
 
         await using var scope = app.Services.CreateAsyncScope();

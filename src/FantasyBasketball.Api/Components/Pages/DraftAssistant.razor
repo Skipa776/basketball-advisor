@@ -1,0 +1,251 @@
+@page "/draft"
+@rendermode InteractiveServer
+@inject DraftSessionService Drafts
+@inject DraftBoardService Boards
+@inject PlayerQueryService PlayersService
+
+<PageTitle>Draft Assistant</PageTitle>
+<h1>Draft Assistant</h1>
+
+@if (session is null)
+{
+    <form @onsubmit="StartDraftAsync" @onsubmit:preventDefault>
+        <fieldset>
+            <legend>Start a draft</legend>
+            <p>
+                <label for="draft-league">League ID</label>
+                <input id="draft-league" @bind="leagueText" required />
+            </p>
+            <p>
+                <label for="draft-slot">Your draft position</label>
+                <input id="draft-slot" type="number" min="1" @bind="userSlot" />
+            </p>
+            <p>
+                <label for="draft-rounds">Rounds</label>
+                <input id="draft-rounds" type="number" min="1" @bind="roundCount" />
+            </p>
+            <button type="submit">Start draft</button>
+        </fieldset>
+    </form>
+}
+else
+{
+    <p>Current pick: <strong>@session.CurrentPick</strong></p>
+    <section>
+        <h2>Record a pick</h2>
+        <p>Type to filter, use up/down arrows, and press Enter to commit.</p>
+        <label for="pick-search">Player</label>
+        <input id="pick-search"
+               @ref="pickInput"
+               @bind="pickSearch"
+               @bind:event="oninput"
+               @onkeydown="HandlePickKeyAsync"
+               autocomplete="off"
+               role="combobox"
+               aria-controls="pick-results"
+               aria-expanded="true" />
+        <ul id="pick-results" role="listbox">
+            @for (var index = 0; index < FilteredPlayers.Count; index++)
+            {
+                var player = FilteredPlayers[index];
+                <li role="option"
+                    aria-selected="@(index == selectedIndex)"
+                    @key="player.Id">
+                    @if (index == selectedIndex)
+                    {
+                        <strong>@player.FullName</strong>
+                    }
+                    else
+                    {
+                        @player.FullName
+                    }
+                </li>
+            }
+        </ul>
+    </section>
+
+    <section>
+        <h2>Ranked board</h2>
+        @if (board is null || board.Rankings.Count == 0)
+        {
+            <p>No ranked players are available.</p>
+        }
+        else
+        {
+            @if (board.Banner is not null)
+            {
+                <p role="status">@board.Banner</p>
+            }
+            <ol>
+                @foreach (var value in board.Rankings)
+                {
+                    <li>
+                        <strong>@PlayerName(value.PlayerId)</strong>
+                        — score @value.Total.ToString("0.###", CultureInfo.InvariantCulture)
+                        <ul>
+                            @foreach (var evidence in value.Evidence)
+                            {
+                                <li>@evidence.Polarity: @evidence.Statement</li>
+                            }
+                        </ul>
+                    </li>
+                }
+            </ol>
+        }
+    </section>
+
+    <section>
+        <h2>Recommendations</h2>
+        @if (recommendations is null || recommendations.Count == 0)
+        {
+            <p>No recommendations are available.</p>
+        }
+        else
+        {
+            <ol>
+                @foreach (var recommendation in recommendations)
+                {
+                    <li>
+                        <strong>@recommendation.Action: @PlayerName(recommendation.SubjectPlayerId)</strong>
+                        — @recommendation.Confidence confidence
+                        <ul>
+                            @foreach (var evidence in recommendation.Evidence)
+                            {
+                                <li>@evidence.Polarity: @evidence.Statement</li>
+                            }
+                        </ul>
+                    </li>
+                }
+            </ol>
+        }
+    </section>
+}
+
+@if (error is not null)
+{
+    <p role="alert">@error</p>
+}
+
+@code {
+    private string leagueText = string.Empty;
+    private int userSlot = 1;
+    private int roundCount = 13;
+    private DraftSession? session;
+    private DraftBoardResult? board;
+    private IReadOnlyList<Recommendation>? recommendations;
+    private IReadOnlyList<Player> players = [];
+    private string pickSearch = string.Empty;
+    private int selectedIndex;
+    private ElementReference pickInput;
+    private string? error;
+
+    private IReadOnlyList<Player> FilteredPlayers =>
+        players.Where(player =>
+                string.IsNullOrWhiteSpace(pickSearch)
+                || player.FullName.Contains(
+                    pickSearch,
+                    StringComparison.OrdinalIgnoreCase))
+            .Take(10)
+            .ToArray();
+
+    private async Task StartDraftAsync()
+    {
+        error = null;
+        if (!Guid.TryParse(leagueText, out var leagueId))
+        {
+            error = "Enter a valid league ID.";
+            return;
+        }
+
+        try
+        {
+            session = await Drafts.CreateAsync(
+                leagueId,
+                userSlot,
+                roundCount,
+                CancellationToken.None);
+            players = (await PlayersService.ListAsync(
+                    null,
+                    null,
+                    null,
+                    1,
+                    Paging.MaximumLimit,
+                    CancellationToken.None))
+                .Items;
+            await RefreshBoardAsync();
+        }
+        catch (Exception)
+        {
+            error = "The draft could not be started.";
+        }
+    }
+
+    private async Task HandlePickKeyAsync(KeyboardEventArgs args)
+    {
+        var count = FilteredPlayers.Count;
+        if (args.Key == "ArrowDown" && count > 0)
+        {
+            selectedIndex = Math.Min(selectedIndex + 1, count - 1);
+        }
+        else if (args.Key == "ArrowUp" && count > 0)
+        {
+            selectedIndex = Math.Max(selectedIndex - 1, 0);
+        }
+        else if (args.Key == "Enter" && count > 0)
+        {
+            await RecordSelectedAsync(FilteredPlayers[
+                Math.Clamp(selectedIndex, 0, count - 1)]);
+        }
+    }
+
+    private async Task RecordSelectedAsync(Player player)
+    {
+        if (session is null)
+        {
+            return;
+        }
+
+        error = null;
+        try
+        {
+            await Drafts.RecordPickAsync(
+                session.Id,
+                session.CurrentPick,
+                player.Id,
+                CancellationToken.None);
+            session = (await Drafts.GetAsync(
+                session.Id,
+                CancellationToken.None)).Session;
+            pickSearch = string.Empty;
+            selectedIndex = 0;
+            await RefreshBoardAsync();
+            await pickInput.FocusAsync();
+        }
+        catch (Exception)
+        {
+            error = "The pick could not be recorded.";
+        }
+    }
+
+    private async Task RefreshBoardAsync()
+    {
+        if (session is null)
+        {
+            return;
+        }
+
+        board = await Boards.GetBoardAsync(
+            session.Id,
+            CancellationToken.None);
+        recommendations = await Boards.GetRecommendationsAsync(
+            session.Id,
+            CancellationToken.None);
+    }
+
+    private string PlayerName(PlayerId? playerId) =>
+        playerId is null
+            ? "No player"
+            : players.FirstOrDefault(player => player.Id == playerId.Value)
+                ?.FullName
+                ?? playerId.Value.Value.ToString();
+}

@@ -1,5 +1,6 @@
 using FantasyBasketball.Api.Endpoints;
 using FantasyBasketball.Api.Middleware;
+using FantasyBasketball.Api.Components;
 
 namespace FantasyBasketball.Api;
 
@@ -7,6 +8,8 @@ public static class ApiHost
 {
     public static void ConfigureServices(WebApplicationBuilder builder)
     {
+        builder.Services.AddRazorComponents()
+            .AddInteractiveServerComponents();
         builder.Services.AddExternalDataHttpClients(builder.Configuration);
     }
 
@@ -41,5 +44,14 @@ public static class ApiHost
         app.MapDraftEndpoints();
         app.MapContextEndpoints();
         app.MapHealthEndpoints();
+        app.MapFallback(
+            "/api/{**path}",
+            () => ApiResults.Failure(
+                StatusCodes.Status404NotFound,
+                "not_found",
+                "The requested resource was not found."));
+        app.UseAntiforgery();
+        app.MapRazorComponents<App>()
+            .AddInteractiveServerRenderMode();
     }
 }

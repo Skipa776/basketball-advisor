@@ -6,7 +6,7 @@ tags: [safety, integrity, projections]
 source_paths: [src/FantasyBasketball.Domain/Projections, src/FantasyBasketball.Domain/Context]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Projections]
 depends_on: [../contracts/projection_pipeline_contract.md, ../contracts/provenance_contract.md, ../contracts/context_event_catalog.md]
-status: partial
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: high
@@ -104,4 +104,6 @@ events remain visibly unverified, rejected events remain in the audit trail,
 and only an explicit human action assigns `Verified`. Persisted import history
 drives source-health degradation; affected draft recommendations lower
 confidence and carry a structured `DataQuality` risk. The final UI
-decomposition/estimate labels remain, so the broader policy stays `partial`.
+renders baseline, context adjustment, and final as siblings, labels each number
+as an estimate, visibly marks unverified context, and exposes stale/degraded
+source health. A real-host render test protects those display rules.

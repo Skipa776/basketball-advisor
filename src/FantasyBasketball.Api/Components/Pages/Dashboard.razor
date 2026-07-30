@@ -1,0 +1,69 @@
+@page "/"
+@inject DataSourceHealthService HealthService
+@inject ImportRunQueryService ImportRuns
+
+<PageTitle>Dashboard</PageTitle>
+<h1>Dashboard</h1>
+
+@if (error is not null)
+{
+    <p role="alert">@error</p>
+}
+else if (health is null || runs is null)
+{
+    <p>Loading data status…</p>
+}
+else
+{
+    <section>
+        <h2>Data freshness</h2>
+        <ul>
+            @foreach (var source in health)
+            {
+                <li>
+                    <strong>@source.Source</strong>:
+                    @(source.IsDegraded ? "Degraded" : "Healthy")
+                    @if (source.IsStale)
+                    {
+                        <span>— stale</span>
+                    }
+                </li>
+            }
+        </ul>
+    </section>
+    <section>
+        <h2>Recent imports</h2>
+        @if (runs.Items.Count == 0)
+        {
+            <p>No imports have run.</p>
+        }
+        else
+        {
+            <ul>
+                @foreach (var run in runs.Items)
+                {
+                    <li>@run.Source — @run.Status — @run.RowsWritten rows</li>
+                }
+            </ul>
+        }
+    </section>
+}
+
+@code {
+    private IReadOnlyList<DataSourceHealth>? health;
+    private PagedResult<DataImportRun>? runs;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            health = await HealthService.GetAsync(CancellationToken.None);
+            runs = await ImportRuns.ListAsync(1, 10, CancellationToken.None);
+        }
+        catch (Exception)
+        {
+            error = "Data status could not be loaded.";
+        }
+    }
+}

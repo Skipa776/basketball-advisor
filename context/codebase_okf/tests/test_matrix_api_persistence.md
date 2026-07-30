@@ -88,12 +88,13 @@ gate, with Docker running. `A-29` and `A-31` require a Docker builder and run in
 
 # Current evidence
 
-A-01 through A-19 are implemented. Architecture reflection, append-only
+A-01 through A-21 are implemented. Architecture reflection, append-only
 repository shape, migration-from-empty, PostgreSQL constraints, and dependency
 direction cover A-01 through A-09, A-16, A-17, and A-18. A local-loopback
 Kestrel test over a throwaway PostgreSQL 17 database covers the universal
 envelope, sanitized errors, validation, every route family, idempotent picks,
 last-pick undo, context verification conflicts, startup validation, and
-request-token handler signatures. A-20 and A-21 await the Blazor projection
-surface. Distribution rows A-22 onward belong to E12, so this matrix remains
-`partial`.
+request-token handler signatures. The same real host renders the Players page
+against a persisted adjusted projection and asserts baseline, adjustment, final,
+and the unverified-context marker for A-20 and A-21. Distribution rows A-22
+onward belong to E12, so this matrix remains `partial`.

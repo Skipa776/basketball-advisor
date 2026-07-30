@@ -1,0 +1,59 @@
+@page "/data-sources"
+@inject DataSourceHealthService HealthService
+
+<PageTitle>Data Sources</PageTitle>
+<h1>Data Sources</h1>
+
+@if (error is not null)
+{
+    <p role="alert">@error</p>
+}
+else if (sources is null)
+{
+    <p>Loading source health…</p>
+}
+else
+{
+    <table>
+        <caption>Import source health and freshness</caption>
+        <thead>
+            <tr>
+                <th scope="col">Source</th>
+                <th scope="col">Status</th>
+                <th scope="col">Last success</th>
+                <th scope="col">Last failure</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var source in sources)
+            {
+                <tr>
+                    <th scope="row">@source.Source</th>
+                    <td>@(source.IsDegraded ? "Degraded" : "Healthy")@(source.IsStale ? " — stale" : string.Empty)</td>
+                    <td>@FormatTimestamp(source.LastSuccess)</td>
+                    <td>@FormatTimestamp(source.LastFailure)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IReadOnlyList<DataSourceHealth>? sources;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            sources = await HealthService.GetAsync(CancellationToken.None);
+        }
+        catch (Exception)
+        {
+            error = "Source health could not be loaded.";
+        }
+    }
+
+    private static string FormatTimestamp(DateTimeOffset? value) =>
+        value?.ToString("u", CultureInfo.InvariantCulture) ?? "Never";
+}

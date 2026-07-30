@@ -1,0 +1,220 @@
+@page "/context-review"
+@rendermode InteractiveServer
+@inject ContextEventService ContextEvents
+@inject ContextEventQueryService ContextQueries
+@inject TimeProvider Clock
+
+<PageTitle>Context Review</PageTitle>
+<h1>Context Review</h1>
+
+<form @onsubmit="CreateAsync" @onsubmit:preventDefault>
+    <fieldset>
+        <legend>Create a proposed context event</legend>
+        <p>
+            <label for="context-player">Affected player ID</label>
+            <input id="context-player" @bind="playerText" required />
+        </p>
+        <p>
+            <label for="context-summary">Summary</label>
+            <input id="context-summary" @bind="summary" required />
+        </p>
+        <p>
+            <label for="context-type">Type</label>
+            <select id="context-type" @bind="eventType">
+                @foreach (var value in Enum.GetValues<ContextEventType>())
+                {
+                    <option value="@value">@value</option>
+                }
+            </select>
+        </p>
+        <p>
+            <label for="context-direction">Direction</label>
+            <select id="context-direction" @bind="direction">
+                @foreach (var value in Enum.GetValues<ContextDirection>())
+                {
+                    <option value="@value">@value</option>
+                }
+            </select>
+        </p>
+        <button type="submit">Create proposal</button>
+    </fieldset>
+</form>
+
+<form @onsubmit="OverrideAsync" @onsubmit:preventDefault>
+    <fieldset>
+        <legend>Override an impact</legend>
+        <p>
+            <label for="override-event">Context event ID</label>
+            <input id="override-event" @bind="overrideEventText" />
+        </p>
+        <p>
+            <label for="override-player">Player ID</label>
+            <input id="override-player" @bind="overridePlayerText" />
+        </p>
+        <p>
+            <label for="minutes-delta">Minutes delta</label>
+            <input id="minutes-delta" type="number" step="0.1" @bind="minutesDelta" />
+        </p>
+        <button type="submit">Save impact override</button>
+    </fieldset>
+</form>
+
+@if (error is not null)
+{
+    <p role="alert">@error</p>
+}
+@if (events is null)
+{
+    <p>Loading context events…</p>
+}
+else if (events.Items.Count == 0)
+{
+    <p>No context events need review.</p>
+}
+else
+{
+    <section>
+        <h2>Events</h2>
+        <ul>
+            @foreach (var contextEvent in events.Items)
+            {
+                <li>
+                    <strong>@contextEvent.Type: @contextEvent.Summary</strong>
+                    — @contextEvent.Verification
+                    @if (contextEvent.Verification == VerificationState.Proposed)
+                    {
+                        <button type="button" @onclick="() => ReviewAsync(contextEvent.Id, true)">Verify</button>
+                        <button type="button" @onclick="() => ReviewAsync(contextEvent.Id, false)">Reject</button>
+                    }
+                </li>
+            }
+        </ul>
+    </section>
+}
+
+@code {
+    private readonly Guid reviewerId = Guid.NewGuid();
+    private PagedResult<ContextEvent>? events;
+    private string playerText = string.Empty;
+    private string summary = string.Empty;
+    private ContextEventType eventType = ContextEventType.RotationChange;
+    private ContextDirection direction = ContextDirection.Neutral;
+    private string overrideEventText = string.Empty;
+    private string overridePlayerText = string.Empty;
+    private decimal minutesDelta;
+    private string? error;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        events = await ContextQueries.ListAsync(
+            1,
+            50,
+            CancellationToken.None);
+    }
+
+    private async Task CreateAsync()
+    {
+        error = null;
+        if (!Guid.TryParse(playerText, out var playerValue))
+        {
+            error = "Enter a valid affected player ID.";
+            return;
+        }
+
+        try
+        {
+            var playerId = new PlayerId(playerValue);
+            var now = Clock.GetUtcNow();
+            var contextEvent = ContextEvent.Create(
+                Guid.NewGuid(),
+                eventType,
+                null,
+                playerId,
+                [playerId],
+                now,
+                now,
+                direction,
+                0.5m,
+                Confidence.Moderate,
+                null,
+                DataSourceName.Manual,
+                null,
+                summary);
+            await ContextEvents.CreateAsync(
+                contextEvent,
+                [PlayerContextImpact.CreateDefault(
+                    Guid.NewGuid(),
+                    contextEvent,
+                    playerId)],
+                CancellationToken.None);
+            summary = string.Empty;
+            await LoadAsync();
+        }
+        catch (Exception)
+        {
+            error = "The context proposal could not be created.";
+        }
+    }
+
+    private async Task ReviewAsync(Guid contextEventId, bool verify)
+    {
+        error = null;
+        try
+        {
+            if (verify)
+            {
+                await ContextEvents.VerifyAsync(
+                    contextEventId,
+                    reviewerId,
+                    CancellationToken.None);
+            }
+            else
+            {
+                await ContextEvents.RejectAsync(
+                    contextEventId,
+                    reviewerId,
+                    CancellationToken.None);
+            }
+
+            await LoadAsync();
+        }
+        catch (Exception)
+        {
+            error = "The review action could not be saved.";
+        }
+    }
+
+    private async Task OverrideAsync()
+    {
+        error = null;
+        if (!Guid.TryParse(overrideEventText, out var eventId)
+            || !Guid.TryParse(overridePlayerText, out var playerId))
+        {
+            error = "Enter valid event and player IDs.";
+            return;
+        }
+
+        try
+        {
+            await ContextEvents.OverrideImpactAsync(
+                eventId,
+                new PlayerId(playerId),
+                new ContextImpactOverride(
+                    minutesDelta,
+                    0m,
+                    0m,
+                    0m,
+                    0m,
+                    0m,
+                    0m),
+                reviewerId,
+                CancellationToken.None);
+        }
+        catch (Exception)
+        {
+            error = "The impact override could not be saved.";
+        }
+    }
+}

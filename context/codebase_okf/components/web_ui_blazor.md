@@ -6,7 +6,7 @@ tags: [component, ui, blazor]
 source_paths: [src/FantasyBasketball.Api/Components]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Api]
 depends_on: [../contracts/recommendation_evidence_contract.md, ../contracts/api_surface.md]
-status: planned
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: low
@@ -73,3 +73,16 @@ integration test that renders it — one commit.
 
 [test_matrix_api_persistence](../tests/test_matrix_api_persistence.md), rows
 A-20 and A-21.
+
+# Implementation evidence
+
+The shared Blazor Server host renders the six MVP routes with semantic HTML and
+calls scoped Application services directly. My League creates a points league
+with its scoring rule; Players searches and renders observed, baseline,
+context-adjusted, and final records; Draft Assistant starts a session, records
+keyboard-selected picks, reranks, and displays evidence with every score;
+Context Review creates proposals and performs verify, reject, and audited
+impact-override actions; Dashboard and Data Sources expose persisted import
+history and degradation. The pick combobox supports type, up/down, Enter, and
+returns focus after a committed pick. A loopback Kestrel render test over real
+PostgreSQL proves A-20 and A-21, and a route sweep renders all six pages.

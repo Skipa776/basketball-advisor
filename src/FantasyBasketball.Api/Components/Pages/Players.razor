@@ -1,0 +1,128 @@
+@page "/players"
+@inject PlayerQueryService PlayersService
+@inject ProjectionDecompositionService Projections
+
+<PageTitle>Players</PageTitle>
+<h1>Players</h1>
+
+<form @onsubmit="SearchAsync" @onsubmit:preventDefault>
+    <label for="player-search">Search players</label>
+    <input id="player-search" @bind="search" />
+    <button type="submit">Search</button>
+</form>
+
+@if (error is not null)
+{
+    <p role="alert">@error</p>
+}
+@if (players is not null)
+{
+    <ul>
+        @foreach (var player in players.Items)
+        {
+            <li>
+                <a href="@ProjectionLink(player.Id)">@player.FullName</a>
+                — @string.Join(", ", player.Positions)
+            </li>
+        }
+    </ul>
+}
+
+@if (projection is not null)
+{
+    <article>
+        <h2>Projection details</h2>
+        @if (projection.Adjusted.HasUnverifiedContext)
+        {
+            <p role="status"><strong>Unverified context</strong> affects this estimate.</p>
+        }
+        <section>
+            <h3>Baseline projection</h3>
+            <p>Projected games: @projection.Baseline.ProjectedGamesPlayed</p>
+            <dl>
+                @foreach (var stat in projection.Baseline.ProjectedPerGame.Values)
+                {
+                    <dt>@stat.Key</dt>
+                    <dd>@stat.Value.ToString("0.###", CultureInfo.InvariantCulture) per game estimate</dd>
+                }
+            </dl>
+        </section>
+        <section>
+            <h3>Context adjustment</h3>
+            <p>Applied context events: @projection.Adjusted.AppliedContextEventIds.Count</p>
+            <p>Context certainty: @projection.Adjusted.ContextCertainty.ToString("0.###", CultureInfo.InvariantCulture)</p>
+            <p>Confidence: @projection.Adjusted.Confidence</p>
+            <dl>
+                @foreach (var stat in projection.Adjusted.ProjectedPerGame.Values)
+                {
+                    <dt>@stat.Key</dt>
+                    <dd>@stat.Value.ToString("0.###", CultureInfo.InvariantCulture) adjusted per game estimate</dd>
+                }
+            </dl>
+        </section>
+        <section>
+            <h3>Final projection</h3>
+            <p>@projection.Value.PerGame.ToString("0.###", CultureInfo.InvariantCulture) fantasy points per game estimate</p>
+            <p>@projection.Value.SeasonTotal.ToString("0.###", CultureInfo.InvariantCulture) fantasy points season estimate</p>
+        </section>
+    </article>
+}
+
+@code {
+    [SupplyParameterFromQuery]
+    public Guid? PlayerId { get; set; }
+
+    [SupplyParameterFromQuery]
+    public Guid? LeagueId { get; set; }
+
+    private string? search;
+    private PagedResult<Player>? players;
+    private ProjectionDecomposition? projection;
+    private string? error;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await SearchAsync();
+        projection = null;
+        if (PlayerId is null || LeagueId is null)
+        {
+            return;
+        }
+
+        try
+        {
+            projection = await Projections.GetAsync(
+                new PlayerId(PlayerId.Value),
+                LeagueId.Value,
+                CancellationToken.None);
+        }
+        catch (Exception)
+        {
+            error = "The requested projection decomposition is unavailable.";
+        }
+    }
+
+    private async Task SearchAsync()
+    {
+        error = null;
+        try
+        {
+            players = await PlayersService.ListAsync(
+                search,
+                null,
+                null,
+                1,
+                50,
+                CancellationToken.None);
+        }
+        catch (Exception)
+        {
+            error = "Players could not be loaded.";
+        }
+    }
+
+    private string ProjectionLink(PlayerId id) =>
+        LeagueId is null
+            ? $"/players?playerId={id.Value}"
+            : $"/players?playerId={id.Value}&leagueId={LeagueId}";
+}

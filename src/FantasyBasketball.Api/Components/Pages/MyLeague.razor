@@ -1,0 +1,82 @@
+@page "/league"
+@rendermode InteractiveServer
+@inject LeagueService Leagues
+
+<PageTitle>My League</PageTitle>
+<h1>My League</h1>
+
+<form @onsubmit="CreateLeagueAsync" @onsubmit:preventDefault>
+    <fieldset disabled="@saving">
+        <legend>Create a points league</legend>
+        <p>
+            <label for="league-name">League name</label>
+            <input id="league-name" @bind="name" required />
+        </p>
+        <p>
+            <label for="team-count">Team count</label>
+            <input id="team-count" type="number" min="2" @bind="teamCount" />
+        </p>
+        <p>
+            <label for="points-weight">Points per point scored</label>
+            <input id="points-weight" type="number" step="0.01" @bind="pointsWeight" />
+        </p>
+        <button type="submit">Create league</button>
+    </fieldset>
+</form>
+
+@if (error is not null)
+{
+    <p role="alert">@error</p>
+}
+@if (league is not null)
+{
+    <section>
+        <h2>@league.Name</h2>
+        <p>League ID: <code>@league.Id</code></p>
+        <p>@league.TeamCount teams · @league.Cadence lineups</p>
+        <h3>Scoring</h3>
+        <ul>
+            @foreach (var rule in league.ScoringRules)
+            {
+                <li>@rule.Stat: @rule.PointsPerUnit points per unit</li>
+            }
+        </ul>
+    </section>
+}
+
+@code {
+    private string name = "My League";
+    private int teamCount = 10;
+    private decimal pointsWeight = 1m;
+    private bool saving;
+    private string? error;
+    private FantasyLeague? league;
+
+    private async Task CreateLeagueAsync()
+    {
+        saving = true;
+        error = null;
+        try
+        {
+            league = await Leagues.CreateAsync(
+                new FantasyLeague(
+                    Guid.NewGuid(),
+                    name,
+                    LeagueType.Points,
+                    teamCount,
+                    [new ScoringRule(StatKey.PTS, pointsWeight)],
+                    [],
+                    [new RosterSlot(RosterSlotKind.UTIL)],
+                    LineupCadence.Daily),
+                CancellationToken.None);
+        }
+        catch (Exception)
+        {
+            error = "The league could not be created. Check each field.";
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+}

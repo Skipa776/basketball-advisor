@@ -6,7 +6,7 @@ tags: [component, api, aspnetcore]
 source_paths: [src/FantasyBasketball.Api]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Api]
 depends_on: [../contracts/api_surface.md, ../safety/secrets_policy.md]
-status: partial
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: medium
@@ -72,6 +72,7 @@ application services, named external-data clients, queued imports, and provider
 adapters. `BallDontLieOptions`, projection/draft weights, and source-health
 options are bound, validated, and checked on start. Exception handling is
 outermost, request logs use named structured holes, every endpoint forwards its
-request token, and a loopback HTTP test covers the complete route surface. The
-Blazor host registration remains for the next slice, so this broader component
-stays `partial`.
+request token, and a loopback HTTP test covers the complete route surface.
+Razor components and interactive server rendering share the same host; a
+specific `/api` fallback preserves the envelope for unknown API routes while
+the Blazor router owns human-facing routes.
