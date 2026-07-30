@@ -126,4 +126,7 @@ exact-path URL gate complete the second scraper's S-10, S-13, and S-14
 coverage. I-08 proves both CSV and manual ADP providers produce validated,
 provenance-complete values with no scraper registered; the generic import
 service resolves and persists every rung as one canonical ADP entity. I-11 and
-the W- rows await their later subsystems, so this matrix remains `partial`.
+health-driven half of I-06 are now implemented: failed runs lower draft
+confidence and surface `DataQuality` risk evidence. I-11 is covered by
+user-created context events whose source is canonical `manual`. The W- rows
+await the recurring worker slice, so this matrix remains `partial`.

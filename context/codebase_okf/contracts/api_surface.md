@@ -6,7 +6,7 @@ tags: [contract, api, http]
 source_paths: [src/FantasyBasketball.Api/Endpoints]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Api]
 depends_on: [recommendation_evidence_contract.md, scoring_rules_catalog.md]
-status: planned
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: low
@@ -99,3 +99,15 @@ the endpoint class, and an integration test — one commit.
 # Verification
 
 `test_matrix_api_persistence.md`, rows A-10 through A-14.
+
+# Implementation evidence
+
+All canonical MVP routes are grouped by resource and return the single
+`ApiEnvelope` helper. Boundary DTO parsing reports named validation fields;
+missing resources and lifecycle conflicts map to the catalogued status codes.
+Exception handling is outermost and returns a generic `internal_error` without
+exception text, SQL, stack traces, connection strings, or provider secrets.
+The local-loopback HTTP integration test exercises every route family,
+including decomposed projection siblings, queued `Running` imports, idempotent
+picks, last-pick undo, context review conflicts, paging metadata, health during
+degradation, framework 404s, and forced 500s.

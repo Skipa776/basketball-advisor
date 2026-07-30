@@ -17,7 +17,8 @@ public sealed class DraftSession
         Guid id,
         int teamCount,
         int roundCount,
-        int userSlot)
+        int userSlot,
+        IReadOnlyList<DraftPick>? existingPicks = null)
     {
         if (id == Guid.Empty)
         {
@@ -38,6 +39,11 @@ public sealed class DraftSession
         TeamCount = teamCount;
         RoundCount = roundCount;
         UserSlot = userSlot;
+        if (existingPicks is not null)
+        {
+            ValidateExistingPicks(existingPicks);
+            picks.AddRange(existingPicks);
+        }
     }
 
     public Guid Id { get; }
@@ -66,6 +72,20 @@ public sealed class DraftSession
         }
     }
 
+    public bool IsUserPick(int pickNumber)
+    {
+        if (pickNumber < 1 || pickNumber > TeamCount * RoundCount)
+        {
+            return false;
+        }
+
+        var round = ((pickNumber - 1) / TeamCount) + 1;
+        var slot = ((pickNumber - 1) % TeamCount) + 1;
+        return round % 2 == 1
+            ? slot == UserSlot
+            : slot == TeamCount - UserSlot + 1;
+    }
+
     public DraftPick MakePick(PlayerId playerId)
     {
         if (picks.Any(pick => pick.PlayerId == playerId))
@@ -92,5 +112,21 @@ public sealed class DraftSession
         var pick = picks[^1];
         picks.RemoveAt(picks.Count - 1);
         return pick;
+    }
+
+    private void ValidateExistingPicks(IReadOnlyList<DraftPick> existingPicks)
+    {
+        var ordered = existingPicks.OrderBy(pick => pick.PickNumber).ToArray();
+        if (ordered.Any(pick => pick.Id == Guid.Empty
+            || pick.DraftSessionId != Id
+            || pick.PickNumber < 1)
+            || ordered.Select(pick => pick.PlayerId).Distinct().Count() != ordered.Length
+            || ordered.Select(pick => pick.PickNumber)
+                .SequenceEqual(Enumerable.Range(1, ordered.Length)) is false)
+        {
+            throw new ArgumentException(
+                "Existing picks must be valid, unique, and contiguous.",
+                nameof(existingPicks));
+        }
     }
 }

@@ -11,6 +11,12 @@ public sealed class ImportPlayersService(
 {
     public async Task<DataImportRun> ImportFromAsync(
         IPlayerDirectoryProvider provider,
+        CancellationToken cancellationToken) =>
+        await ImportFromAsync(provider, null, cancellationToken);
+
+    public async Task<DataImportRun> ImportFromAsync(
+        IPlayerDirectoryProvider provider,
+        Guid? runId,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(provider);
@@ -19,7 +25,11 @@ public sealed class ImportPlayersService(
         try
         {
             var externalPlayers = await provider.GetPlayersAsync(cancellationToken);
-            return await ImportAsync(provider.Name, externalPlayers, cancellationToken);
+            return await ImportAsync(
+                provider.Name,
+                externalPlayers,
+                runId,
+                cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -27,7 +37,11 @@ public sealed class ImportPlayersService(
         }
         catch (Exception exception)
         {
-            var failedRun = CreateFailedRun(provider.Name, startedAt, exception);
+            var failedRun = CreateFailedRun(
+                provider.Name,
+                startedAt,
+                exception,
+                runId);
             await runs.AddAsync(failedRun, cancellationToken);
             return failedRun;
         }
@@ -36,6 +50,13 @@ public sealed class ImportPlayersService(
     public async Task<DataImportRun> ImportAsync(
         string source,
         IReadOnlyList<ExternalPlayer> externalPlayers,
+        CancellationToken cancellationToken) =>
+        await ImportAsync(source, externalPlayers, null, cancellationToken);
+
+    public async Task<DataImportRun> ImportAsync(
+        string source,
+        IReadOnlyList<ExternalPlayer> externalPlayers,
+        Guid? runId,
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(source);
@@ -81,7 +102,7 @@ public sealed class ImportPlayersService(
                     }
 
                     completedRun = new DataImportRun(
-                        Guid.NewGuid(),
+                        runId ?? Guid.NewGuid(),
                         source,
                         DataImportRunStatus.Succeeded,
                         startedAt,
@@ -99,7 +120,7 @@ public sealed class ImportPlayersService(
         }
         catch (Exception exception)
         {
-            var failedRun = CreateFailedRun(source, startedAt, exception);
+            var failedRun = CreateFailedRun(source, startedAt, exception, runId);
             await runs.AddAsync(failedRun, cancellationToken);
             return failedRun;
         }
@@ -111,14 +132,12 @@ public sealed class ImportPlayersService(
     private DataImportRun CreateFailedRun(
         string source,
         DateTimeOffset startedAt,
-        Exception exception) =>
-        new(
-            Guid.NewGuid(),
+        Exception exception,
+        Guid? runId) =>
+        FailedRun.Create(
+            runId,
             source,
-            DataImportRunStatus.Failed,
             startedAt,
             timeProvider.GetUtcNow(),
-            0,
-            0,
-            $"{exception.GetType().Name}: {exception.Message}");
+            exception);
 }

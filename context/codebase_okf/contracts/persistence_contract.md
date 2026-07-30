@@ -6,7 +6,7 @@ tags: [contract, persistence, database]
 source_paths: [src/FantasyBasketball.Infrastructure/Persistence]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Persistence]
 depends_on: [provenance_contract.md, stat_vocabulary.md]
-status: partial
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: medium
@@ -127,5 +127,7 @@ four places and PostgreSQL tests migrate and round-trip them. `ContextPipeline`
 adds context events and impacts with review/override audit fields, adjusted
 projections with their immutable baseline and event references, and league-
 scoped fantasy values. A PostgreSQL 17 test migrates from empty and round-trips
-all four new record types. The contract remains `partial` until recommendation
-and evidence persistence lands with the API slice.
+all four new record types. `DraftSessionState` completes persisted snake-draft
+state needed to reconstruct picks, and `RecommendationPersistence` stores every
+recommendation with ordered structured evidence and string enums. PostgreSQL
+round-trip tests now cover every entity in this contract.

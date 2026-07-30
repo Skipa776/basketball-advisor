@@ -1,4 +1,5 @@
 using FantasyBasketball.Application.Abstractions;
+using FantasyBasketball.Application.Common;
 using FantasyBasketball.Domain.Context;
 using FantasyBasketball.Domain.Players;
 
@@ -51,6 +52,12 @@ public sealed class ContextEventService(
         var contextEvent = await RequireEventAsync(
             contextEventId,
             cancellationToken);
+        if (contextEvent.Verification != VerificationState.Proposed)
+        {
+            throw new ResourceConflictException(
+                "Only a proposed context event can be verified.");
+        }
+
         contextEvent.VerifyByHuman(userId, timeProvider.GetUtcNow());
         await repository.SaveAsync(contextEvent, cancellationToken);
     }
@@ -63,6 +70,12 @@ public sealed class ContextEventService(
         var contextEvent = await RequireEventAsync(
             contextEventId,
             cancellationToken);
+        if (contextEvent.Verification != VerificationState.Proposed)
+        {
+            throw new ResourceConflictException(
+                "Only a proposed context event can be rejected.");
+        }
+
         contextEvent.RejectByHuman(userId, timeProvider.GetUtcNow());
         await repository.SaveAsync(contextEvent, cancellationToken);
     }

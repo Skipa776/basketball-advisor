@@ -6,7 +6,7 @@ tags: [tests, projections, draft, matrix]
 source_paths: [src/FantasyBasketball.Domain/Projections, src/FantasyBasketball.Domain/Context, src/FantasyBasketball.Domain/Draft]
 test_paths: [tests/FantasyBasketball.Domain.Tests]
 depends_on: [required_gates.md, ../contracts/projection_pipeline_contract.md, ../contracts/draft_value_contract.md]
-status: partial
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 ---
@@ -81,5 +81,6 @@ baseline/event links. Context coverage includes proposed/verified/rejected
 review, sources, overrides, defaults, and magnitude clamping. Draft coverage
 includes a complete 130-pick manual mock draft and the realistic-pool latency
 assertion. E-01, E-02, E-03, and E-05 cover construction, risk polarity,
-confidence buckets, and evidence ordering; E-04 awaits source-health
-integration, so this matrix remains `partial`.
+confidence buckets, and evidence ordering. E-04 is implemented by the
+Application draft surface: stale or failed automated imports lower the
+freshness factor and append structured `DataQuality` risk evidence.

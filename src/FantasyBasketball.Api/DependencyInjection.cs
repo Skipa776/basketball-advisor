@@ -3,6 +3,10 @@ using FantasyBasketball.Application.Abstractions;
 using FantasyBasketball.Application.Ingestion;
 using FantasyBasketball.Application.Projections;
 using FantasyBasketball.Application.Context;
+using FantasyBasketball.Application.Draft;
+using FantasyBasketball.Application.Health;
+using FantasyBasketball.Application.Leagues;
+using FantasyBasketball.Application.Players;
 using FantasyBasketball.Domain.Provenance;
 using FantasyBasketball.Domain.Projections;
 using FantasyBasketball.Domain.Draft;
@@ -13,6 +17,7 @@ using FantasyBasketball.Infrastructure.Persistence.Repositories;
 using FantasyBasketball.Infrastructure.Providers.BallDontLie;
 using FantasyBasketball.Infrastructure.Scrapers.BasketballReference;
 using FantasyBasketball.Infrastructure.Scrapers.FantasyPros;
+using FantasyBasketball.Infrastructure.Workers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -45,6 +50,12 @@ public static class DependencyInjection
             .Bind(configuration.GetSection(DraftWeightOptions.SectionName))
             .Validate(options => options.IsValid(), "Draft weights are invalid.")
             .ValidateOnStart();
+        services.AddOptions<DataSourceHealthOptions>()
+            .Bind(configuration.GetSection(DataSourceHealthOptions.SectionName))
+            .Validate(
+                options => options.IsValid(),
+                "Data source health options are invalid.")
+            .ValidateOnStart();
         services.AddDbContext<FantasyDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("Fantasy")));
         services.AddMemoryCache();
@@ -54,6 +65,8 @@ public static class DependencyInjection
             serviceProvider.GetRequiredService<IOptions<ProjectionOptions>>().Value);
         services.AddSingleton(serviceProvider =>
             serviceProvider.GetRequiredService<IOptions<DraftWeightOptions>>().Value);
+        services.AddSingleton(serviceProvider =>
+            serviceProvider.GetRequiredService<IOptions<DataSourceHealthOptions>>().Value);
         services.AddSingleton<MinutesProjector>();
         services.AddSingleton<BaselineProjector>();
         services.AddSingleton<DraftValueCalculator>();
@@ -62,18 +75,38 @@ public static class DependencyInjection
         services.AddSingleton<ContextApplier>();
         services.AddSingleton<DraftRecommendationEngine>();
         services.AddScoped<IPlayerRepository, PlayerRepository>();
+        services.AddScoped<IPlayerQueryRepository, PlayerRepository>();
         services.AddScoped<ITeamRepository, TeamRepository>();
         services.AddScoped<IGameRepository, GameRepository>();
         services.AddScoped<IAdpRepository, AdpRepository>();
+        services.AddScoped<ILeagueRepository, LeagueRepository>();
+        services.AddScoped<ISeasonStatLineRepository, SeasonStatLineRepository>();
         services.AddScoped<IProjectionRepository, ProjectionRepository>();
+        services.AddScoped<IProjectionQueryRepository, ProjectionRepository>();
         services.AddScoped<IContextEventRepository, ContextEventRepository>();
+        services.AddScoped<IContextEventQueryRepository, ContextEventRepository>();
+        services.AddScoped<IDraftRepository, DraftRepository>();
+        services.AddScoped<IDraftCandidateRepository, DraftCandidateRepository>();
         services.AddScoped<IDataImportRunRepository, DataImportRunRepository>();
+        services.AddScoped<IImportRunQueryRepository, DataImportRunRepository>();
+        services.AddScoped<IRecommendationRepository, RecommendationRepository>();
         services.AddScoped<IImportTransaction, EfImportTransaction>();
         services.AddScoped<PlayerIdentityResolver>();
         services.AddScoped<ImportPlayersService>();
+        services.AddScoped<ImportDirectoryService>();
+        services.AddScoped<ImportScheduleService>();
+        services.AddScoped<ImportSeasonStatsService>();
         services.AddScoped<ImportAdpService>();
+        services.AddScoped<ImportRunQueryService>();
         services.AddScoped<ProjectionService>();
+        services.AddScoped<ProjectionDecompositionService>();
         services.AddScoped<ContextEventService>();
+        services.AddScoped<ContextEventQueryService>();
+        services.AddScoped<DraftSessionService>();
+        services.AddScoped<DraftBoardService>();
+        services.AddScoped<LeagueService>();
+        services.AddScoped<PlayerQueryService>();
+        services.AddScoped<DataSourceHealthService>();
         services.AddScoped<BallDontLieProvider>();
         services.AddScoped<IPlayerDirectoryProvider>(serviceProvider =>
             serviceProvider.GetRequiredService<BallDontLieProvider>());
@@ -85,6 +118,11 @@ public static class DependencyInjection
         services.AddScoped<FantasyProsAdpScraper>();
         services.AddScoped<IAdpProvider>(serviceProvider =>
             serviceProvider.GetRequiredService<FantasyProsAdpScraper>());
+        services.AddSingleton<ImportJobQueue>();
+        services.AddSingleton<IImportJobQueue>(serviceProvider =>
+            serviceProvider.GetRequiredService<ImportJobQueue>());
+        services.AddHostedService(serviceProvider =>
+            serviceProvider.GetRequiredService<ImportJobQueue>());
 
         AddSourceClient(
             services,

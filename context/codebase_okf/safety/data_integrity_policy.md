@@ -101,6 +101,7 @@ type. A baseline stores immutable source-independent math while the observed row
 references the exact provenance-carrying season stat line. Context creates a
 separate adjusted row naming that baseline and every applied event; proposed
 events remain visibly unverified, rejected events remain in the audit trail,
-and only an explicit human action assigns `Verified`. Degraded source-health
-evidence and the final UI decomposition remain, so the broader policy stays
-`partial`.
+and only an explicit human action assigns `Verified`. Persisted import history
+drives source-health degradation; affected draft recommendations lower
+confidence and carry a structured `DataQuality` risk. The final UI
+decomposition/estimate labels remain, so the broader policy stays `partial`.

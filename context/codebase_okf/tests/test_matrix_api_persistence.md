@@ -85,3 +85,15 @@ is the most common defect in self-hosted software, and it is trivially checkable
 
 `dotnet test --filter "Architecture|Persistence|Api|Configuration"`, inside the full
 gate, with Docker running. `A-29` and `A-31` require a Docker builder and run in CI.
+
+# Current evidence
+
+A-01 through A-19 are implemented. Architecture reflection, append-only
+repository shape, migration-from-empty, PostgreSQL constraints, and dependency
+direction cover A-01 through A-09, A-16, A-17, and A-18. A local-loopback
+Kestrel test over a throwaway PostgreSQL 17 database covers the universal
+envelope, sanitized errors, validation, every route family, idempotent picks,
+last-pick undo, context verification conflicts, startup validation, and
+request-token handler signatures. A-20 and A-21 await the Blazor projection
+surface. Distribution rows A-22 onward belong to E12, so this matrix remains
+`partial`.

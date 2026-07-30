@@ -1,4 +1,6 @@
 using FantasyBasketball.Application.Abstractions;
+using FantasyBasketball.Application.Common;
+using FantasyBasketball.Application.Draft;
 using FantasyBasketball.Application.Ingestion;
 using FantasyBasketball.Domain.Context;
 using FantasyBasketball.Domain.Leagues;
@@ -243,7 +245,12 @@ public sealed class PersistenceTests : IAsyncLifetime
             10,
             [],
             nameof(LineupCadence.Daily));
-        var session = DraftSessionRow.Create(Guid.NewGuid(), league.Id, 13);
+        var session = DraftSessionRow.Create(
+            Guid.NewGuid(),
+            league.Id,
+            13,
+            league.TeamCount,
+            1);
         var pick = DraftPickRow.Create(Guid.NewGuid(), session.Id, player.Id, 1);
         var season = SeasonStatLineRow.Create(
             player.Id,
@@ -735,6 +742,123 @@ public sealed class PersistenceTests : IAsyncLifetime
             storedValue.ShouldNotBeNull();
             storedValue.PerGame.ShouldBe(25.1235m);
             storedValue.SeasonTotal.ShouldBe(1758.6416m);
+        }
+    }
+
+    [Fact]
+    public async Task Draft_pick_idempotency_and_last_pick_undo_cross_postgresql()
+    {
+        var league = LeagueCatalog.CreateSeedPointsLeague(Guid.NewGuid());
+        var first = new Player(
+            new PlayerId(Guid.NewGuid()),
+            "First Pick",
+            "first pick",
+            null,
+            ["G"],
+            null);
+        var second = new Player(
+            new PlayerId(Guid.NewGuid()),
+            "Second Pick",
+            "second pick",
+            null,
+            ["F"],
+            null);
+
+        await using var database = new FantasyDbContext(options);
+        var leagues = new LeagueRepository(database);
+        await leagues.AddAsync(league, TestContext.Current.CancellationToken);
+        var players = new PlayerRepository(database);
+        await players.AddAsync(first, TestContext.Current.CancellationToken);
+        await players.AddAsync(second, TestContext.Current.CancellationToken);
+        var service = new DraftSessionService(
+            new DraftRepository(database),
+            leagues);
+        var session = await service.CreateAsync(
+            league.Id,
+            1,
+            13,
+            TestContext.Current.CancellationToken);
+
+        var pick = await service.RecordPickAsync(
+            session.Id,
+            1,
+            first.Id,
+            TestContext.Current.CancellationToken);
+        var repeated = await service.RecordPickAsync(
+            session.Id,
+            1,
+            first.Id,
+            TestContext.Current.CancellationToken);
+
+        repeated.ShouldBe(pick);
+        (await database.DraftPicks.CountAsync(
+            TestContext.Current.CancellationToken)).ShouldBe(1);
+        await Should.ThrowAsync<ResourceConflictException>(() =>
+            service.RecordPickAsync(
+                session.Id,
+                1,
+                second.Id,
+                TestContext.Current.CancellationToken));
+        var removed = await service.UndoPickAsync(
+            session.Id,
+            1,
+            TestContext.Current.CancellationToken);
+        removed.ShouldBe(pick);
+        (await database.DraftPicks.CountAsync(
+            TestContext.Current.CancellationToken)).ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Recommendation_and_evidence_round_trip()
+    {
+        var player = new Player(
+            new PlayerId(Guid.NewGuid()),
+            "Recommended Player",
+            "recommended player",
+            null,
+            ["G"],
+            null);
+        var recommendation = new Recommendation(
+            Guid.NewGuid(),
+            "Draft now",
+            player.Id,
+            12.34567m,
+            Confidence.Moderate,
+            [
+                new RecommendationEvidence(
+                    EvidenceKind.Opportunity,
+                    EvidencePolarity.Supporting,
+                    "Above replacement",
+                    4.56789m),
+                new RecommendationEvidence(
+                    EvidenceKind.DataQuality,
+                    EvidencePolarity.Risk,
+                    "Source is stale",
+                    null),
+            ]);
+
+        await using (var database = new FantasyDbContext(options))
+        {
+            await new PlayerRepository(database).AddAsync(
+                player,
+                TestContext.Current.CancellationToken);
+            await new RecommendationRepository(database).AddRangeAsync(
+                [recommendation],
+                TestContext.Current.CancellationToken);
+        }
+
+        await using (var database = new FantasyDbContext(options))
+        {
+            var stored = await new RecommendationRepository(database).GetAsync(
+                recommendation.Id,
+                TestContext.Current.CancellationToken);
+
+            stored.ShouldNotBeNull();
+            stored.Score.ShouldBe(12.3457m);
+            stored.Confidence.ShouldBe(Confidence.Moderate);
+            stored.Evidence.Count.ShouldBe(2);
+            stored.Evidence[0].Magnitude.ShouldBe(4.5679m);
+            stored.Evidence[1].Kind.ShouldBe(EvidenceKind.DataQuality);
         }
     }
 

@@ -608,12 +608,23 @@ public sealed class DraftSessionRow
 
     public int RoundCount { get; private set; }
 
-    public static DraftSessionRow Create(Guid id, Guid fantasyLeagueId, int roundCount) =>
+    public int TeamCount { get; private set; }
+
+    public int UserSlot { get; private set; }
+
+    public static DraftSessionRow Create(
+        Guid id,
+        Guid fantasyLeagueId,
+        int roundCount,
+        int teamCount,
+        int userSlot) =>
         new()
         {
             Id = id,
             FantasyLeagueId = fantasyLeagueId,
             RoundCount = roundCount,
+            TeamCount = teamCount,
+            UserSlot = userSlot,
         };
 }
 
@@ -915,5 +926,78 @@ public sealed class FantasyValueRow
             PerGame = perGame,
             SeasonTotal = seasonTotal,
             AdjustedProjectionId = adjustedProjectionId,
+        };
+}
+
+public sealed class RecommendationRow
+{
+    private RecommendationRow()
+    {
+    }
+
+    public Guid Id { get; private set; }
+
+    public string Action { get; private set; } = string.Empty;
+
+    public Guid? SubjectPlayerId { get; private set; }
+
+    public decimal Score { get; private set; }
+
+    public string Confidence { get; private set; } = string.Empty;
+
+    public List<RecommendationEvidenceRow> Evidence { get; private set; } = [];
+
+    public static RecommendationRow Create(
+        Guid id,
+        string action,
+        Guid? subjectPlayerId,
+        decimal score,
+        string confidence) =>
+        new()
+        {
+            Id = id,
+            Action = action,
+            SubjectPlayerId = subjectPlayerId,
+            Score = score,
+            Confidence = confidence,
+        };
+}
+
+public sealed class RecommendationEvidenceRow
+{
+    private RecommendationEvidenceRow()
+    {
+    }
+
+    public Guid Id { get; private set; }
+
+    public Guid RecommendationId { get; private set; }
+
+    public string Kind { get; private set; } = string.Empty;
+
+    public string Polarity { get; private set; } = string.Empty;
+
+    public string Statement { get; private set; } = string.Empty;
+
+    public decimal? Magnitude { get; private set; }
+
+    public int Ordinal { get; private set; }
+
+    public static RecommendationEvidenceRow Create(
+        Guid recommendationId,
+        string kind,
+        string polarity,
+        string statement,
+        decimal? magnitude,
+        int ordinal) =>
+        new()
+        {
+            Id = Guid.NewGuid(),
+            RecommendationId = recommendationId,
+            Kind = kind,
+            Polarity = polarity,
+            Statement = statement,
+            Magnitude = magnitude,
+            Ordinal = ordinal,
         };
 }

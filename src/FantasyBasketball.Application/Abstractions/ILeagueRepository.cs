@@ -7,4 +7,8 @@ public interface ILeagueRepository
     Task AddAsync(FantasyLeague league, CancellationToken cancellationToken);
 
     Task<FantasyLeague?> GetAsync(Guid id, CancellationToken cancellationToken);
+
+    Task SaveScoringAsync(
+        FantasyLeague league,
+        CancellationToken cancellationToken);
 }

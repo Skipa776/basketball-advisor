@@ -67,9 +67,11 @@ A-10, A-14, A-15, A-18, A-19.
 
 # Implementation evidence
 
-`DependencyInjection.cs` is now the sole composition root for the three named
-external-data clients, their handlers, current repositories, import service,
-and balldontlie provider. `BallDontLieOptions` is bound and validated on start;
-the missing-key test names `BallDontLie:ApiKey`. The endpoint, middleware, other
-validated options, and Blazor host surface remain unimplemented, so this
-component is `partial`.
+`DependencyInjection.cs` is the sole composition root for repositories,
+application services, named external-data clients, queued imports, and provider
+adapters. `BallDontLieOptions`, projection/draft weights, and source-health
+options are bound, validated, and checked on start. Exception handling is
+outermost, request logs use named structured holes, every endpoint forwards its
+request token, and a loopback HTTP test covers the complete route surface. The
+Blazor host registration remains for the next slice, so this broader component
+stays `partial`.

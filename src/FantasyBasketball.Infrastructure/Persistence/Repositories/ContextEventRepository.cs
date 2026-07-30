@@ -1,4 +1,5 @@
 using FantasyBasketball.Application.Abstractions;
+using FantasyBasketball.Application.Common;
 using FantasyBasketball.Domain.Context;
 using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Domain.Recommendations;
@@ -8,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace FantasyBasketball.Infrastructure.Persistence.Repositories;
 
 public sealed class ContextEventRepository(FantasyDbContext database)
-    : IContextEventRepository
+    : IContextEventRepository, IContextEventQueryRepository
 {
     public async Task AddAsync(
         ContextEvent contextEvent,
@@ -148,6 +149,26 @@ public sealed class ContextEventRepository(FantasyDbContext database)
             userId,
             overriddenAt);
         await database.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<PagedResult<ContextEvent>> ListAsync(
+        int page,
+        int limit,
+        CancellationToken cancellationToken)
+    {
+        var total = await database.ContextEvents.CountAsync(cancellationToken);
+        var rows = await database.ContextEvents
+            .AsNoTracking()
+            .OrderByDescending(value => value.EffectiveFrom)
+            .ThenByDescending(value => value.Id)
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .ToArrayAsync(cancellationToken);
+        return new PagedResult<ContextEvent>(
+            rows.Select(Map).ToArray(),
+            total,
+            page,
+            limit);
     }
 
     private static ContextEventRow Map(ContextEvent value) =>

@@ -398,6 +398,8 @@ public sealed class DraftSessionConfiguration : IEntityTypeConfiguration<DraftSe
         builder.Property(value => value.Id).HasColumnName("id").ValueGeneratedNever();
         builder.Property(value => value.FantasyLeagueId).HasColumnName("fantasy_league_id");
         builder.Property(value => value.RoundCount).HasColumnName("round_count");
+        builder.Property(value => value.TeamCount).HasColumnName("team_count");
+        builder.Property(value => value.UserSlot).HasColumnName("user_slot");
         builder.HasOne<FantasyLeagueRow>()
             .WithMany()
             .HasForeignKey(value => value.FantasyLeagueId)
@@ -626,5 +628,60 @@ public sealed class FantasyValueConfiguration
             .WithMany()
             .HasForeignKey(value => value.AdjustedProjectionId)
             .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public sealed class RecommendationConfiguration
+    : IEntityTypeConfiguration<RecommendationRow>
+{
+    public void Configure(EntityTypeBuilder<RecommendationRow> builder)
+    {
+        builder.ToTable("recommendation");
+        builder.HasKey(value => value.Id);
+        builder.Property(value => value.Id).HasColumnName("id").ValueGeneratedNever();
+        builder.Property(value => value.Action).HasColumnName("action").IsRequired();
+        builder.Property(value => value.SubjectPlayerId)
+            .HasColumnName("subject_player_id");
+        builder.Property(value => value.Score)
+            .HasColumnName("score")
+            .HasPrecision(10, 4);
+        builder.Property(value => value.Confidence)
+            .HasColumnName("confidence")
+            .IsRequired();
+        builder.HasOne<PlayerRow>()
+            .WithMany()
+            .HasForeignKey(value => value.SubjectPlayerId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public sealed class RecommendationEvidenceConfiguration
+    : IEntityTypeConfiguration<RecommendationEvidenceRow>
+{
+    public void Configure(EntityTypeBuilder<RecommendationEvidenceRow> builder)
+    {
+        builder.ToTable("recommendation_evidence");
+        builder.HasKey(value => value.Id);
+        builder.Property(value => value.Id).HasColumnName("id").ValueGeneratedNever();
+        builder.Property(value => value.RecommendationId)
+            .HasColumnName("recommendation_id");
+        builder.Property(value => value.Kind).HasColumnName("kind").IsRequired();
+        builder.Property(value => value.Polarity)
+            .HasColumnName("polarity")
+            .IsRequired();
+        builder.Property(value => value.Statement)
+            .HasColumnName("statement")
+            .IsRequired();
+        builder.Property(value => value.Magnitude)
+            .HasColumnName("magnitude")
+            .HasPrecision(10, 4);
+        builder.Property(value => value.Ordinal).HasColumnName("ordinal");
+        builder.HasIndex(value => new { value.RecommendationId, value.Ordinal })
+            .IsUnique()
+            .HasDatabaseName("ux_recommendation_evidence_ordinal");
+        builder.HasOne<RecommendationRow>()
+            .WithMany(value => value.Evidence)
+            .HasForeignKey(value => value.RecommendationId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

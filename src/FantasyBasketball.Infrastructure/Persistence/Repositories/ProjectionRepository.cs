@@ -1,5 +1,6 @@
 using System.Text.Json;
 using FantasyBasketball.Application.Abstractions;
+using FantasyBasketball.Application.Projections;
 using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Domain.Projections;
 using FantasyBasketball.Domain.Provenance;
@@ -11,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 namespace FantasyBasketball.Infrastructure.Persistence.Repositories;
 
 public sealed class ProjectionRepository(FantasyDbContext database)
-    : IProjectionRepository
+    : IProjectionRepository, IProjectionQueryRepository
 {
     public async Task AddAsync(
         ObservedStats observed,
@@ -168,6 +169,66 @@ public sealed class ProjectionRepository(FantasyDbContext database)
                 row.PerGame,
                 row.SeasonTotal,
                 row.AdjustedProjectionId);
+    }
+
+    public async Task<ProjectionDecomposition?> GetLatestDecompositionAsync(
+        PlayerId playerId,
+        Guid leagueId,
+        CancellationToken cancellationToken)
+    {
+        var baselineId = await database.BaselineProjections
+            .AsNoTracking()
+            .Where(value => value.PlayerId == playerId.Value)
+            .OrderByDescending(value => value.ComputedAt)
+            .ThenByDescending(value => value.Id)
+            .Select(value => (Guid?)value.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (baselineId is null)
+        {
+            return null;
+        }
+
+        var adjustedId = await database.AdjustedProjections
+            .AsNoTracking()
+            .Where(value => value.BaselineProjectionId == baselineId.Value)
+            .OrderByDescending(value => value.ComputedAt)
+            .ThenByDescending(value => value.Id)
+            .Select(value => (Guid?)value.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (adjustedId is null)
+        {
+            return null;
+        }
+
+        var observed = await GetLatestObservedAsync(playerId, cancellationToken);
+        var baseline = await GetBaselineAsync(baselineId.Value, cancellationToken);
+        var adjusted = await GetAdjustedAsync(adjustedId.Value, cancellationToken);
+        var valueRow = await database.FantasyValues
+            .AsNoTracking()
+            .Where(value =>
+                value.PlayerId == playerId.Value
+                && value.FantasyLeagueId == leagueId
+                && value.AdjustedProjectionId == adjustedId.Value)
+            .OrderByDescending(value => value.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (observed is null
+            || baseline is null
+            || adjusted is null
+            || valueRow is null)
+        {
+            return null;
+        }
+
+        return new ProjectionDecomposition(
+            observed,
+            baseline,
+            adjusted,
+            new FantasyValue(
+                playerId,
+                leagueId,
+                valueRow.PerGame,
+                valueRow.SeasonTotal,
+                valueRow.AdjustedProjectionId));
     }
 
     private static SeasonStatLine Map(SeasonStatLineRow row) =>

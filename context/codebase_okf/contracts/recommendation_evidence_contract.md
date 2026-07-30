@@ -6,7 +6,7 @@ tags: [contract, explainability, recommendations]
 source_paths: [src/FantasyBasketball.Domain/Recommendations]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Recommendations]
 depends_on: [provenance_contract.md]
-status: partial
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: medium
@@ -102,6 +102,8 @@ row E-03's expectations.
 The canonical evidence kinds, polarities, confidence buckets, factor formula,
 deterministic ordering, and valid-by-construction `Recommendation` are
 implemented. E-01, E-02, E-03, and E-05 have Domain coverage, and every draft
-recommendation carries ordered evidence. E-04's stale/failed import factor and
-visible `DataQuality` item depend on source-health state from the later host
-slice, so this contract remains `partial`.
+recommendation carries ordered evidence. `DraftBoardService` derives freshness
+from persisted import health; stale or failed automated sources lower the
+factor and add a risk-polarity `DataQuality` item, completing E-04. The
+recommendation and its ordered evidence also round-trip as separate persisted
+records.

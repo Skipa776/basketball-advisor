@@ -51,6 +51,11 @@ public sealed class FantasyDbContext(DbContextOptions<FantasyDbContext> options)
 
     public DbSet<FantasyValueRow> FantasyValues => Set<FantasyValueRow>();
 
+    public DbSet<RecommendationRow> Recommendations => Set<RecommendationRow>();
+
+    public DbSet<RecommendationEvidenceRow> RecommendationEvidence =>
+        Set<RecommendationEvidenceRow>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(FantasyDbContext).Assembly);

@@ -1,4 +1,5 @@
 using FantasyBasketball.Application.Abstractions;
+using FantasyBasketball.Application.Common;
 using FantasyBasketball.Application.Context;
 using FantasyBasketball.Domain.Context;
 using FantasyBasketball.Domain.Players;
@@ -13,7 +14,7 @@ public sealed class ContextEventServiceTests
         new(2026, 7, 29, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
-    public async Task Create_verify_reject_override_and_expire_are_human_audited()
+    public async Task Create_verify_override_and_expire_are_human_audited()
     {
         var repository = new FakeContextEventRepository();
         var service = new ContextEventService(repository, new FixedTimeProvider(Now));
@@ -57,12 +58,7 @@ public sealed class ContextEventServiceTests
             contextEvent.Id,
             userId,
             TestContext.Current.CancellationToken);
-        await service.RejectAsync(
-            contextEvent.Id,
-            userId,
-            TestContext.Current.CancellationToken);
-
-        repository.Event!.Verification.ShouldBe(VerificationState.Rejected);
+        repository.Event!.Verification.ShouldBe(VerificationState.Verified);
         repository.Event.ReviewedByUserId.ShouldBe(userId);
         repository.Event.ExpectedExpiration.ShouldBe(Now);
         repository.Impact!.IsOverridden.ShouldBeTrue();
@@ -86,6 +82,73 @@ public sealed class ContextEventServiceTests
                 Guid.NewGuid(),
                 new PlayerId(Guid.NewGuid()),
                 new ContextImpactOverride(0m, 0m, 0m, 0m, 0m, 0m, 0m),
+                Guid.NewGuid(),
+                TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task A13_already_verified_or_rejected_event_conflicts()
+    {
+        var repository = new FakeContextEventRepository();
+        var service = new ContextEventService(repository, new FixedTimeProvider(Now));
+        var playerId = new PlayerId(Guid.NewGuid());
+        var first = ContextEvent.Create(
+            Guid.NewGuid(),
+            ContextEventType.RotationChange,
+            null,
+            playerId,
+            [playerId],
+            Now,
+            Now,
+            ContextDirection.Positive,
+            1m,
+            Confidence.High,
+            null,
+            "manual",
+            null,
+            "Rotation expanded");
+        await service.CreateAsync(
+            first,
+            [PlayerContextImpact.CreateDefault(Guid.NewGuid(), first, playerId)],
+            TestContext.Current.CancellationToken);
+        await service.VerifyAsync(
+            first.Id,
+            Guid.NewGuid(),
+            TestContext.Current.CancellationToken);
+
+        await Should.ThrowAsync<ResourceConflictException>(() =>
+            service.VerifyAsync(
+                first.Id,
+                Guid.NewGuid(),
+                TestContext.Current.CancellationToken));
+
+        var second = ContextEvent.Create(
+            Guid.NewGuid(),
+            ContextEventType.RotationChange,
+            null,
+            playerId,
+            [playerId],
+            Now,
+            Now,
+            ContextDirection.Positive,
+            1m,
+            Confidence.High,
+            null,
+            "manual",
+            null,
+            "Rotation contracted");
+        await service.CreateAsync(
+            second,
+            [PlayerContextImpact.CreateDefault(Guid.NewGuid(), second, playerId)],
+            TestContext.Current.CancellationToken);
+        await service.RejectAsync(
+            second.Id,
+            Guid.NewGuid(),
+            TestContext.Current.CancellationToken);
+
+        await Should.ThrowAsync<ResourceConflictException>(() =>
+            service.VerifyAsync(
+                second.Id,
                 Guid.NewGuid(),
                 TestContext.Current.CancellationToken));
     }

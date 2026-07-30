@@ -26,15 +26,17 @@ configuration, and a green executable quality gate. The canonical stat
 vocabulary, valid-by-construction league configuration, points scoring, and
 category scoring are implemented with all required scoring-matrix cases.
 
-**Build step 4 is partial.** EF Core now has generated forward migration and
+**Build step 4 is implemented.** EF Core has generated forward migration and
 snapshot files, explicit per-entity configuration, snake-case PostgreSQL
 storage, JSONB stat lines, string enums, numeric precision, uniqueness indexes,
 append-only baseline enforcement, and repositories that round-trip leagues,
-players, and season stat lines. Tests use isolated Testcontainers PostgreSQL 17
+players, season stat lines, draft state, recommendations, and evidence. Tests
+use isolated Testcontainers PostgreSQL 17
 instances and cover migration from empty, duplicate provider identity,
 baseline immutability, enum storage, dependency direction, repository shape,
 league/draft cascade versus player-history restriction, pending identity
-matches, and immutable import runs.
+matches, immutable import runs, idempotent draft picks, and recommendation
+round trips.
 
 **Build step 5 is implemented.** Exact player-name normalization, the six-tier
 identity ladder, canonical source names and confidence defaults, provenance
@@ -42,11 +44,11 @@ validation, ambiguity review records, and atomic player-import accounting are
 implemented. Rows N-01 through N-05 pass, including the real EF transaction and
 queryable import-run path.
 
-**Build step 6 is partial.** Named factory clients now share response caching,
+**Build step 6 is implemented.** Named factory clients share response caching,
 the platform resilience stack, and a singleton per-host token-bucket limiter.
 Failed and canceled imports roll back on a real PostgreSQL transaction; failures
-are recorded without escaping the use case. Health-driven confidence lowering
-waits for the health subsystem.
+are recorded without escaping the use case. Failed or stale automated sources
+lower recommendation confidence and add explicit data-quality risk evidence.
 
 **Build step 7 is implemented.** The balldontlie adapter maps teams, cursor-
 paginated players, and games from recorded JSON, resolves canonical teams,
@@ -74,10 +76,9 @@ exit check is not certified in this repository session because no operator API
 key was used and no scrape target was contacted; W-01 through W-03 belong to
 the later background-worker subsystem and also remain pending.
 
-The full gate passes 70 Domain, 20 Application, and 31 integration tests. Domain
-line coverage is 89.56%, Application line coverage is 87.64%, the build has zero
-warnings, and all 72 OKF concepts validate. Persistence remains `partial`
-because recommendation and evidence entities await the API slice.
+The full gate passes 70 Domain, 30 Application, and 36 integration tests. Domain
+line coverage is 88.42%, Application line coverage is 73.01%, the build has zero
+warnings, and all 72 OKF concepts validate.
 
 **Build step 10 is implemented.** League-average rate shrinkage, minutes and
 durability projection, ratio recomputation, zero-history behavior, and the
@@ -95,8 +96,14 @@ fallback, and every ranked recommendation carries structured evidence. A full
 catalog, proposed/verified/rejected human review, audited impact overrides, and
 computation-time expiry. Pure context application creates a separate adjusted
 projection without mutating its baseline, and the four projection records now
-round-trip through PostgreSQL. The single next action is epic E03: expose the
-implemented use cases through the API host, Blazor UI, and background workers.
+round-trip through PostgreSQL.
+
+**Build step 13's HTTP and persistence slice is implemented.** The envelope,
+validation, sanitized exception mapping, structured request logging, and all
+MVP league, player, import, draft, context, recommendation, and source-health
+routes run through the real Kestrel host and an isolated PostgreSQL database.
+The remaining E03 work is the unstyled Blazor surface and three recurring
+refresh workers.
 
 **Build prerequisites on the development machine:**
 
@@ -140,6 +147,27 @@ application-generated GUIDs. `DataImportRun` is stored append-only; the
 synchronous import use case writes its terminal snapshot once. The later API
 slice must preserve append-only storage when it exposes the contract's immediate
 `Running` response, rather than adding an update method.
+
+The API queue therefore holds only active `Running` snapshots in process and
+persists one terminal snapshot with the same identifier when work completes.
+A host restart can forget an in-flight display row, but it cannot rewrite or
+misreport persisted history. This is the smallest design that preserves the
+append-only contract; durable job recovery remains post-MVP.
+
+## API operational defaults not specified upstream
+
+Source health becomes stale after two days unless configuration overrides the
+duration. This is deliberately neutral across the three automated sources; the
+recurring-worker slice may configure a shorter cadence without changing the
+health contract. A source is degraded when it is stale or its latest failure is
+newer than its latest success.
+
+Import failure detail stores the exception type, not the exception message.
+Messages from remote clients and database providers can contain URLs, keys, or
+connection details; the type is sufficient for the operator-facing status
+surface while structured server logs retain the trace identifier. The public
+error envelope likewise returns a stable generic message for unexpected
+failures.
 
 ## ADP shapes and fallback inputs not specified upstream
 

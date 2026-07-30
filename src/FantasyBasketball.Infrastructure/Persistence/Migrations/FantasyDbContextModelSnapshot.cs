@@ -377,6 +377,14 @@ namespace FantasyBasketball.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("round_count");
 
+                    b.Property<int>("TeamCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("team_count");
+
+                    b.Property<int>("UserSlot")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_slot");
+
                     b.HasKey("Id");
 
                     b.HasIndex("FantasyLeagueId");
@@ -853,6 +861,81 @@ namespace FantasyBasketball.Infrastructure.Persistence.Migrations
                     b.ToTable("player", (string)null);
                 });
 
+            modelBuilder.Entity("FantasyBasketball.Infrastructure.Persistence.Entities.RecommendationEvidenceRow", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<decimal?>("Magnitude")
+                        .HasPrecision(10, 4)
+                        .HasColumnType("numeric(10,4)")
+                        .HasColumnName("magnitude");
+
+                    b.Property<int>("Ordinal")
+                        .HasColumnType("integer")
+                        .HasColumnName("ordinal");
+
+                    b.Property<string>("Polarity")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("polarity");
+
+                    b.Property<Guid>("RecommendationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("recommendation_id");
+
+                    b.Property<string>("Statement")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("statement");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecommendationId", "Ordinal")
+                        .IsUnique()
+                        .HasDatabaseName("ux_recommendation_evidence_ordinal");
+
+                    b.ToTable("recommendation_evidence", (string)null);
+                });
+
+            modelBuilder.Entity("FantasyBasketball.Infrastructure.Persistence.Entities.RecommendationRow", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("action");
+
+                    b.Property<string>("Confidence")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("confidence");
+
+                    b.Property<decimal>("Score")
+                        .HasPrecision(10, 4)
+                        .HasColumnType("numeric(10,4)")
+                        .HasColumnName("score");
+
+                    b.Property<Guid?>("SubjectPlayerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("subject_player_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubjectPlayerId");
+
+                    b.ToTable("recommendation", (string)null);
+                });
+
             modelBuilder.Entity("FantasyBasketball.Infrastructure.Persistence.Entities.RosterSlotRow", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1145,6 +1228,23 @@ namespace FantasyBasketball.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
                 });
 
+            modelBuilder.Entity("FantasyBasketball.Infrastructure.Persistence.Entities.RecommendationEvidenceRow", b =>
+                {
+                    b.HasOne("FantasyBasketball.Infrastructure.Persistence.Entities.RecommendationRow", null)
+                        .WithMany("Evidence")
+                        .HasForeignKey("RecommendationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("FantasyBasketball.Infrastructure.Persistence.Entities.RecommendationRow", b =>
+                {
+                    b.HasOne("FantasyBasketball.Infrastructure.Persistence.Entities.PlayerRow", null)
+                        .WithMany()
+                        .HasForeignKey("SubjectPlayerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("FantasyBasketball.Infrastructure.Persistence.Entities.RosterSlotRow", b =>
                 {
                     b.HasOne("FantasyBasketball.Infrastructure.Persistence.Entities.FantasyLeagueRow", null)
@@ -1182,6 +1282,11 @@ namespace FantasyBasketball.Infrastructure.Persistence.Migrations
                     b.Navigation("RosterSlots");
 
                     b.Navigation("ScoringRules");
+                });
+
+            modelBuilder.Entity("FantasyBasketball.Infrastructure.Persistence.Entities.RecommendationRow", b =>
+                {
+                    b.Navigation("Evidence");
                 });
 #pragma warning restore 612, 618
         }

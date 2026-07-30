@@ -1,4 +1,5 @@
 using FantasyBasketball.Application.Abstractions;
+using FantasyBasketball.Application.Common;
 using FantasyBasketball.Domain.Provenance;
 using FantasyBasketball.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -6,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace FantasyBasketball.Infrastructure.Persistence.Repositories;
 
 public sealed class DataImportRunRepository(FantasyDbContext database)
-    : IDataImportRunRepository
+    : IDataImportRunRepository, IImportRunQueryRepository
 {
     public async Task AddAsync(
         DataImportRun run,
@@ -33,16 +34,47 @@ public sealed class DataImportRunRepository(FantasyDbContext database)
             .AsNoTracking()
             .SingleOrDefaultAsync(value => value.Id == id, cancellationToken);
 
-        return row is null
-            ? null
-            : new DataImportRun(
-                row.Id,
-                row.Source,
-                Enum.Parse<DataImportRunStatus>(row.Status),
-                row.StartedAt,
-                row.FinishedAt,
-                row.RowsWritten,
-                row.PendingIdentityMatches,
-                row.FailureDetail);
+        return row is null ? null : Map(row);
     }
+
+    public async Task<PagedResult<DataImportRun>> ListAsync(
+        int page,
+        int limit,
+        CancellationToken cancellationToken)
+    {
+        var total = await database.DataImportRuns.CountAsync(cancellationToken);
+        var rows = await database.DataImportRuns
+            .AsNoTracking()
+            .OrderByDescending(value => value.StartedAt)
+            .ThenByDescending(value => value.Id)
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .ToArrayAsync(cancellationToken);
+        return new PagedResult<DataImportRun>(
+            rows.Select(Map).ToArray(),
+            total,
+            page,
+            limit);
+    }
+
+    public async Task<IReadOnlyList<DataImportRun>> ListRecentAsync(
+        CancellationToken cancellationToken) =>
+        (await database.DataImportRuns
+            .AsNoTracking()
+            .OrderByDescending(value => value.StartedAt)
+            .Take(500)
+            .ToArrayAsync(cancellationToken))
+        .Select(Map)
+        .ToArray();
+
+    private static DataImportRun Map(DataImportRunRow row) =>
+        new(
+            row.Id,
+            row.Source,
+            Enum.Parse<DataImportRunStatus>(row.Status),
+            row.StartedAt,
+            row.FinishedAt,
+            row.RowsWritten,
+            row.PendingIdentityMatches,
+            row.FailureDetail);
 }

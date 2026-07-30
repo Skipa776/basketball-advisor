@@ -73,4 +73,7 @@ return a failed run after rollback instead of leaking partial data.
 `ContextEventService` likewise orchestrates proposed creation and audited human
 verify, reject, expire, and override actions through a small repository
 abstraction and an injected `TimeProvider`; its unit tests use a hand-written
-fake. The remaining user-facing use cases keep this broader component `partial`.
+fake. League, player, draft lifecycle/board, decomposed projection, import,
+source-health, and paging services now expose the remaining HTTP use cases
+without Infrastructure dependencies. The recurring worker orchestration and
+remaining UI close-out keep this broader component `partial`.

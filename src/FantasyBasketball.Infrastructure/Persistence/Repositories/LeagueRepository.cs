@@ -60,4 +60,25 @@ public sealed class LeagueRepository(FantasyDbContext database) : ILeagueReposit
                     .ToArray(),
                 Enum.Parse<LineupCadence>(row.Cadence));
     }
+
+    public async Task SaveScoringAsync(
+        FantasyLeague league,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(league);
+        var existing = await database.FantasyLeagues
+            .Include(value => value.ScoringRules)
+            .SingleOrDefaultAsync(value => value.Id == league.Id, cancellationToken)
+            ?? throw new KeyNotFoundException(
+                $"League '{league.Id}' was not found.");
+        database.ScoringRules.RemoveRange(existing.ScoringRules);
+        existing.ScoringRules.Clear();
+        existing.ScoringRules.AddRange(league.ScoringRules.Select((rule, ordinal) =>
+            ScoringRuleRow.Create(
+                league.Id,
+                rule.Stat.ToString(),
+                rule.PointsPerUnit,
+                ordinal)));
+        await database.SaveChangesAsync(cancellationToken);
+    }
 }
