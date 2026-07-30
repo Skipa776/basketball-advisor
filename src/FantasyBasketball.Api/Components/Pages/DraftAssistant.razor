@@ -57,7 +57,7 @@ else if (session is null)
         </fieldset>
     </form>
     <EmptyState Title="No active draft"
-                Description="Start a session with a league ID to load the ranked board and pick entry instrument." />
+                Description="Pick a league above and start a session to load the ranked board and pick entry instrument." />
 }
 else
 {
@@ -186,7 +186,7 @@ else
         error = null;
         if (!Guid.TryParse(leagueText, out var leagueId))
         {
-            error = "Enter a valid league ID.";
+            error = "Select a league to draft for.";
             return;
         }
 
