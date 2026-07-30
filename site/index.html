@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fantasy Basketball Decision Engine</title>
+<meta name="description" content="A league-aware fantasy basketball decision engine in C# / ASP.NET Core. Explainable draft, waiver, streaming, and trade recommendations built on a spec layer where every invariant names its own check.">
+<style>
+  :root {
+    --bg: #fbfaf8;
+    --surface: #ffffff;
+    --surface-2: #f4f2ee;
+    --border: #ddd8d0;
+    --text: #1c1a17;
+    --muted: #5d574e;
+    --accent: #94571f;
+    --accent-soft: #f0e6d8;
+    --positive: #1f6b45;
+    --negative: #97331f;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16161a;
+      --surface: #1d1d22;
+      --surface-2: #24242b;
+      --border: #34343d;
+      --text: #ecebe7;
+      --muted: #a3a099;
+      --accent: #e3a869;
+      --accent-soft: #2c2419;
+      --positive: #6bbf8f;
+      --negative: #e08a76;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-feature-settings: "kern" 1;
+  }
+  .wrap { max-width: 62rem; margin: 0 auto; padding: 0 1.5rem; }
+  a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; }
+  a:hover { border-bottom-color: currentColor; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+
+  /* ---- header ---- */
+  header { border-bottom: 1px solid var(--border); background: var(--surface); }
+  .hero { padding: 4rem 0 3.25rem; }
+  .eyebrow {
+    font: 600 0.75rem/1 var(--mono);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 1rem;
+  }
+  h1 { font-size: clamp(1.9rem, 5vw, 3rem); line-height: 1.1; margin: 0 0 1rem; letter-spacing: -0.02em; }
+  .lede { font-size: clamp(1.05rem, 2.2vw, 1.2rem); color: var(--muted); max-width: 46rem; margin: 0 0 1.75rem; }
+  .badges { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.75rem; }
+  .badge {
+    font: 500 0.8rem/1 var(--mono); padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border); border-radius: 4px;
+    background: var(--surface-2); color: var(--muted);
+  }
+  .cta { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  .btn {
+    display: inline-block; padding: 0.6rem 1.05rem; border-radius: 5px;
+    font-weight: 600; font-size: 0.94rem; border: 1px solid var(--border);
+  }
+  .btn-primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .btn-primary:hover { border-bottom-color: var(--accent); filter: brightness(1.08); }
+  .btn-ghost { background: transparent; color: var(--text); }
+  .btn-ghost:hover { background: var(--surface-2); border-bottom-color: var(--border); }
+
+  /* ---- sections ---- */
+  section { padding: 3.25rem 0; border-bottom: 1px solid var(--border); }
+  section:last-of-type { border-bottom: 0; }
+  h2 { font-size: 1.45rem; margin: 0 0 0.5rem; letter-spacing: -0.01em; }
+  h2 + .sub { color: var(--muted); margin: 0 0 1.75rem; max-width: 46rem; }
+  h3 { font-size: 1rem; margin: 0 0 0.4rem; }
+
+  blockquote {
+    margin: 0; padding: 1.25rem 1.5rem;
+    background: var(--accent-soft); border-left: 3px solid var(--accent);
+    border-radius: 0 5px 5px 0; font-size: 1.05rem;
+  }
+  blockquote p { margin: 0; }
+
+  .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 1.1rem 1.2rem;
+  }
+  .card p { margin: 0; color: var(--muted); font-size: 0.93rem; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.93rem; }
+  .scroll { overflow-x: auto; }
+  th, td { text-align: left; padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font: 600 0.78rem/1.3 var(--mono); letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+  td.state { white-space: nowrap; font-family: var(--mono); font-size: 0.85rem; }
+  .done { color: var(--positive); font-weight: 600; }
+  .partial { color: var(--accent); font-weight: 600; }
+  .planned { color: var(--muted); }
+  code { font-family: var(--mono); font-size: 0.88em; background: var(--surface-2); padding: 0.1em 0.35em; border-radius: 3px; }
+
+  /* ---- roadmap ---- */
+  .chain { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: stretch; margin-bottom: 1.5rem; }
+  .step {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 5px;
+    padding: 0.6rem 0.85rem; font-size: 0.88rem; flex: 1 1 10rem;
+  }
+  .step .id { font: 600 0.72rem/1 var(--mono); color: var(--muted); display: block; margin-bottom: 0.25rem; }
+  .step.gate { border-color: var(--accent); background: var(--accent-soft); }
+  .lanes { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
+  .lane { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; padding: 0.85rem; }
+  .lane h3 { font: 600 0.72rem/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .lane ol { margin: 0.5rem 0 0; padding-left: 1.1rem; font-size: 0.88rem; }
+  .lane li { margin-bottom: 0.3rem; }
+
+  ul.tight { margin: 0; padding-left: 1.15rem; }
+  ul.tight li { margin-bottom: 0.55rem; }
+  ul.tight li:last-child { margin-bottom: 0; }
+
+  footer { padding: 2.5rem 0 3.5rem; color: var(--muted); font-size: 0.88rem; }
+  footer p { margin: 0 0 0.5rem; }
+
+  @media (max-width: 40rem) {
+    .hero { padding: 2.75rem 0 2.25rem; }
+    section { padding: 2.5rem 0; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap hero">
+    <p class="eyebrow">C# · ASP.NET Core · Blazor Server · PostgreSQL</p>
+    <h1>Fantasy Basketball Decision&nbsp;Engine</h1>
+    <p class="lede">
+      A league-aware decision engine that produces explainable draft, waiver, streaming,
+      and trade recommendations — built on a specification layer where every invariant
+      names the test that catches its violation.
+    </p>
+    <div class="badges">
+      <span class="badge">.NET 10</span>
+      <span class="badge">72 spec concepts</span>
+      <span class="badge">219 gated test rows</span>
+      <span class="badge">MIT</span>
+    </div>
+    <div class="cta">
+      <a class="btn btn-primary" href="https://github.com/Skipa776/basketball-advisor">View on GitHub</a>
+      <a class="btn btn-ghost" href="https://github.com/Skipa776/basketball-advisor/tree/main/docs/epics">The 12-epic roadmap</a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section>
+  <div class="wrap">
+    <h2>The question it answers</h2>
+    <p class="sub">Not “who has the highest average fantasy score.”</p>
+    <blockquote><p>
+      Given my exact league rules, roster, opponents, available players, schedule,
+      current NBA roles, and recent basketball context — what decision gives my team
+      the highest expected value?
+    </p></blockquote>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Three principles</h2>
+    <p class="sub">Each one is the reason a specific piece of the architecture looks the way it does.</p>
+    <div class="grid">
+      <div class="card">
+        <h3>Statistics are necessary but not sufficient</h3>
+        <p>
+          A player can post elite numbers and then walk into a trade, a new primary
+          facilitator, or a minutes restriction. The engine keeps quantitative production
+          and structured <em>context events</em> as parallel evidence, and never lets the
+          second overwrite the first — a projection always shows baseline, adjustment,
+          and final as three separate numbers.
+        </p>
+      </div>
+      <div class="card">
+        <h3>No data provider is load-bearing</h3>
+        <p>
+          The domain never learns whether a value came from an API, an HTML scrape, a CSV,
+          or a human typing it in. Manual entry always works, so a dead integration
+          lowers confidence and surfaces staleness rather than breaking the app.
+        </p>
+      </div>
+      <div class="card">
+        <h3>The statistics make the recommendation</h3>
+        <p>
+          A language model may propose a context event from a news article for a human to
+          review. It gets no tools, a schema-constrained output, and no path to a
+          recommendation. The worst outcome of a successful prompt injection is a rejected
+          proposal in a review queue.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Current state</h2>
+    <p class="sub">This describes what exists, not what is planned.</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Area</th><th>State</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Solution skeleton, pins, quality gate</td><td class="state done">implemented</td><td>Central package management, committed lock files, one gate script</td></tr>
+          <tr><td>Stat vocabulary, league configuration</td><td class="state done">implemented</td><td>The keystone catalog every parser and golden keys off</td></tr>
+          <tr><td>Points &amp; category scoring engines</td><td class="state done">implemented</td><td>Given a stat line and league rules, return value under <em>those</em> rules</td></tr>
+          <tr><td>Persistence (EF Core, PostgreSQL 17)</td><td class="state partial">partial</td><td>Append-only tables have no update surface by construction</td></tr>
+          <tr><td>Ingestion, projections, draft board, context engine</td><td class="state planned">specified</td><td>Epics E01–E03</td></tr>
+          <tr><td>Trends, categories, streaming, trades, auth, LLM, back-test, distribution</td><td class="state planned">specified</td><td>Epics E04–E12</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>The specification is the artifact</h2>
+    <p class="sub">
+      Written before the code, not after it — so a new contributor or an agent can build a
+      subsystem correctly without asking anyone.
+    </p>
+    <ul class="tight">
+      <li>
+        <strong>Every invariant names its own check.</strong> A rule paired with a test row,
+        a scan, or a validator assertion. Rules that are only prose are listed as
+        <em>knowingly unenforced</em> rather than presented as guarantees.
+      </li>
+      <li>
+        <strong>Every canonical value lives in exactly one file.</strong> Stat keys, formulas,
+        thresholds, enum members, weight constants. Everything else links to it, because
+        duplication is where drift starts.
+      </li>
+      <li>
+        <strong>Status is promoted only by evidence.</strong> <code>planned → partial →
+        implemented</code> requires code <em>and</em> passing tests in the same commit.
+        Documentation never promotes a status.
+      </li>
+      <li>
+        <strong>The bundle validates itself.</strong> A stdlib-only checker verifies
+        frontmatter, status values, dependency resolution, and every internal link —
+        and runs before any dependency is installed.
+      </li>
+    </ul>
+    <p style="margin:1.5rem 0 0;">
+      <a href="https://github.com/Skipa776/basketball-advisor/tree/main/context/codebase_okf">Browse the concept bundle →</a>
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Specification defects caught before the code existed</h2>
+    <p class="sub">
+      Seven so far. A cold read of a spec is dramatically cheaper than discovering these
+      in a debugger.
+    </p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Defect</th><th>Resolution</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Rolling 7/14/30-day windows were required, but the only source for per-game data is a <code>robots.txt</code>-disallowed path</td>
+            <td>Season pages for the MVP; per-game data via the permitted <code>/boxscores/</code> route as a rate-limited background import (~3.5h per season) rather than an interactive request</td>
+          </tr>
+          <tr>
+            <td>The draft formula added projected value, value-above-replacement, <em>and</em> the context adjustment — counting the same production up to three times</td>
+            <td>Addends separated from display-only decomposition fields; roster fit redefined to measure redundancy alone</td>
+          </tr>
+          <tr>
+            <td>The streaming score multiplied a summed per-day value by the count of usable days</td>
+            <td>Value is a sum across usable days; the count is reported to the user, never a multiplier on it</td>
+          </tr>
+          <tr>
+            <td>Category z-scores on raw percentages make a 2-for-2 free-throw shooter a maximal asset</td>
+            <td>Volume-weighted impact form, pinned by a required test asserting exactly that player scores near zero</td>
+          </tr>
+          <tr>
+            <td>“How many categories can you punt” was a matter of taste</td>
+            <td>It is derivable: winning 9 categories needs 5, so punting <em>k</em> is feasible only while <em>k</em> ≤ 4. Ceiling set at 3 for margin</td>
+          </tr>
+          <tr>
+            <td>Adding survival probability alongside the ADP proxy would have counted “the market says wait” twice</td>
+            <td>Opportunity cost <em>replaces</em> the market term; both contract and code change in one commit</td>
+          </tr>
+          <tr>
+            <td>“Supports category leagues” meant either scoring configuration or a full z-score analyzer</td>
+            <td>Split explicitly — two competent implementers would otherwise have built different products</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Build roadmap</h2>
+    <p class="sub">
+      Twelve phased epics. Each lands independently green with its own required test rows
+      and exit gate, so work can stop between any two.
+    </p>
+
+    <div class="chain">
+      <div class="step"><span class="id">E01</span>Ingestion pipeline &amp; data sources</div>
+      <div class="step"><span class="id">E02</span>Projection, draft &amp; context engines</div>
+      <div class="step gate"><span class="id">E03</span>API, UI, workers — <strong>MVP complete</strong></div>
+      <div class="step"><span class="id">E04</span>Accounts &amp; tenancy</div>
+    </div>
+
+    <p class="sub" style="margin-bottom:1rem;">
+      After E04 the remaining work splits into independent lanes. Auth runs fourth rather
+      than last on purpose: the tenant-isolation sweep enumerates owned routes by
+      reflection, so every later endpoint inherits coverage instead of needing a
+      twelve-endpoint retrofit.
+    </p>
+
+    <div class="lanes">
+      <div class="lane"><h3>Lane A</h3><ol>
+        <li>E06 — box-score importer &amp; trend engine</li>
+        <li>E11 — back-test &amp; weight calibration</li>
+      </ol></div>
+      <div class="lane"><h3>Lane B</h3><ol>
+        <li>E07 — category analyzer &amp; draft intelligence</li>
+        <li>E08 — streaming advisor &amp; trade analyzer</li>
+      </ol></div>
+      <div class="lane"><h3>Lane C</h3><ol>
+        <li>E09 — Yahoo, Sleeper &amp; CSV league import</li>
+      </ol></div>
+      <div class="lane"><h3>Lane D</h3><ol>
+        <li>E10 — LLM context proposer</li>
+      </ol></div>
+      <div class="lane"><h3>Lane E</h3><ol>
+        <li>E05 — design system &amp; accessibility</li>
+      </ol></div>
+    </div>
+
+    <div class="chain" style="margin-top:0.75rem;">
+      <div class="step gate"><span class="id">E12</span>Distribution, observability &amp; release — <strong>publishable</strong></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Data sources &amp; compliance</h2>
+    <p class="sub">
+      Scraping is a controlled infrastructure capability, not ad-hoc HTML parsing.
+    </p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Role</th><th>Source</th><th>Method</th></tr></thead>
+        <tbody>
+          <tr><td>Players, teams, schedule</td><td>balldontlie</td><td>Documented HTTP API, free tier</td></tr>
+          <tr><td>Season statistics</td><td>Basketball-Reference</td><td>HTML scrape, season pages only</td></tr>
+          <tr><td>Average draft position</td><td>FantasyPros</td><td>HTML scrape, plus CSV and manual entry</td></tr>
+          <tr><td>League rules &amp; rosters</td><td>Manual, CSV, Yahoo</td><td>ESPN is CSV / manual only — never an authenticated scrape</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:1.25rem;">
+      A per-host allowlist records exact permitted paths, disallowed patterns, crawl
+      delays, and the date each host’s robots directives were last verified. The
+      self-imposed ceiling is <strong>6 requests per minute</strong> — far below every
+      host’s threshold, because the cost of being slow is nothing and the cost of a ban is
+      losing the data source during draft season.
+    </p>
+    <p>
+      Terms-of-use compliance is a human judgment and stays the operator’s
+      responsibility — it is a line item on the release checklist rather than something
+      the code pretends to guarantee.
+    </p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>
+      <a href="https://github.com/Skipa776/basketball-advisor">Repository</a> ·
+      <a href="https://github.com/Skipa776/basketball-advisor/blob/main/docs/design/fantasy-basketball-decision-engine.md">Design document</a> ·
+      <a href="https://github.com/Skipa776/basketball-advisor/tree/main/docs/epics">Epics</a> ·
+      <a href="https://github.com/Skipa776/basketball-advisor/blob/main/LICENSE">MIT licence</a>
+    </p>
+    <p>
+      This project page is intentionally plain. The application’s own visual design is a
+      separate, deliberate exercise — see
+      <a href="https://github.com/Skipa776/basketball-advisor/blob/main/DESIGN_BRIEF.md">DESIGN_BRIEF.md</a>
+      — and nothing here is meant to preempt it.
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
