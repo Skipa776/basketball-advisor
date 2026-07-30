@@ -7,7 +7,8 @@ public static class HealthEndpoints
     public static IEndpointRouteBuilder MapHealthEndpoints(
         this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapGet("/api/health/data-sources", GetDataSourcesAsync);
+        endpoints.MapGet("/api/health/data-sources", GetDataSourcesAsync)
+            .RequireAuthorization();
         return endpoints;
     }
 

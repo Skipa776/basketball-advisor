@@ -6,7 +6,7 @@ tags: [component, auth, tenancy]
 source_paths: [src/FantasyBasketball.Infrastructure/Identity, src/FantasyBasketball.Api/Components/Pages/Account]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Auth]
 depends_on: [../contracts/auth_tenancy_contract.md, ../safety/tenancy_policy.md]
-status: partial
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: high
@@ -88,7 +88,9 @@ U-17.
 # Current evidence
 
 Identity uses the existing PostgreSQL context and migration history, with
-snake-case Identity tables and application-generated GUID user ids. The first
-forward migration adds every nullable ownership column without inventing an
-owner or losing pre-auth rows; U-17 verifies that boundary. The claim service,
-second migration, filters, authorization sweep, and account surface remain.
+snake-case Identity tables and application-generated GUID user ids. The two-step
+retrofit preserves the nullable claim boundary and makes required ownership
+non-null only after first-registration claiming. Marker-driven query filters,
+endpoint authorization, throwing worker context, account pages, portable account
+archives, and cascade deletion are implemented. U-01 reflects over all 10 owned
+routes and U-02 proves the sweep detects a planted leak; U-01 through U-17 pass.

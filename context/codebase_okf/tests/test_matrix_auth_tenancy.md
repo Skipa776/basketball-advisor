@@ -6,7 +6,7 @@ tags: [tests, auth, tenancy, security, matrix]
 source_paths: [src/FantasyBasketball.Infrastructure/Identity]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Auth]
 depends_on: [required_gates.md, ../contracts/auth_tenancy_contract.md, ../safety/tenancy_policy.md]
-status: partial
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 ---
@@ -66,8 +66,9 @@ the sweep finds it. A sweep that cannot fail is not a test.
 
 # Current evidence
 
-U-17 is implemented: a PostgreSQL migration-from-empty test proves the
-`fantasy_user` table and owned columns live in the existing
-`FantasyDbContext`/migration history, and reflection finds no second concrete
-context. The ownership column is still nullable at this intentionally staged
-boundary. U-01 through U-16 remain.
+U-01 through U-17 pass against PostgreSQL 17. U-01 discovers 10 owned routes from
+ASP.NET endpoint metadata, attacks each as user B, and observes only identifier-free
+`404` responses. U-02 plants a leaky owned fixture and records one sweep failure.
+The remaining rows cover shared versus personal filters, the two migration
+boundaries and claim step, Identity defaults, throwing worker context, deletion,
+portable 11-table export/import, and marker coverage.

@@ -4,6 +4,9 @@ using FantasyBasketball.Domain.Context;
 using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Domain.Provenance;
 using FantasyBasketball.Domain.Recommendations;
+using FantasyBasketball.Domain.Accounts;
+using FantasyBasketball.Infrastructure.Identity;
+using FantasyBasketball.Api.Middleware;
 
 namespace FantasyBasketball.Api.Endpoints;
 
@@ -30,10 +33,14 @@ public static class ContextEndpoints
         this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/context-events");
+        group.AddEndpointFilter<CookieAntiforgeryFilter>();
+        group.RequireAuthorization();
         group.MapGet("/", ListAsync);
         group.MapPost("/", CreateAsync);
-        group.MapPost("/{id:guid}/verify", VerifyAsync);
-        group.MapPost("/{id:guid}/reject", RejectAsync);
+        group.MapPost("/{id:guid}/verify", VerifyAsync)
+            .WithMetadata(new OwnedRouteMetadata("context-event", "id"));
+        group.MapPost("/{id:guid}/reject", RejectAsync)
+            .WithMetadata(new OwnedRouteMetadata("context-event", "id"));
         return endpoints;
     }
 
@@ -142,9 +149,15 @@ public static class ContextEndpoints
         Guid id,
         HumanReviewRequest request,
         ContextEventService service,
+        OwnedResourceAuthorizationService authorization,
+        IUserContext userContext,
         CancellationToken cancellationToken)
     {
-        await service.VerifyAsync(id, request.UserId, cancellationToken);
+        await authorization.RequireContextEventAsync(id, cancellationToken);
+        await service.VerifyAsync(
+            id,
+            userContext.CurrentUserId,
+            cancellationToken);
         return ApiResults.Success(new { Id = id, State = nameof(VerificationState.Verified) });
     }
 
@@ -152,9 +165,15 @@ public static class ContextEndpoints
         Guid id,
         HumanReviewRequest request,
         ContextEventService service,
+        OwnedResourceAuthorizationService authorization,
+        IUserContext userContext,
         CancellationToken cancellationToken)
     {
-        await service.RejectAsync(id, request.UserId, cancellationToken);
+        await authorization.RequireContextEventAsync(id, cancellationToken);
+        await service.RejectAsync(
+            id,
+            userContext.CurrentUserId,
+            cancellationToken);
         return ApiResults.Success(new { Id = id, State = nameof(VerificationState.Rejected) });
     }
 }

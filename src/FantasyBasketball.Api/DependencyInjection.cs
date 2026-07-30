@@ -1,5 +1,7 @@
 using FantasyBasketball.Api.Options;
+using FantasyBasketball.Api.Middleware;
 using FantasyBasketball.Application.Abstractions;
+using FantasyBasketball.Domain.Accounts;
 using FantasyBasketball.Application.Ingestion;
 using FantasyBasketball.Application.Projections;
 using FantasyBasketball.Application.Context;
@@ -12,6 +14,7 @@ using FantasyBasketball.Domain.Projections;
 using FantasyBasketball.Domain.Draft;
 using FantasyBasketball.Domain.Recommendations;
 using FantasyBasketball.Infrastructure.Http;
+using FantasyBasketball.Infrastructure.Identity;
 using FantasyBasketball.Infrastructure.Persistence;
 using FantasyBasketball.Infrastructure.Persistence.Repositories;
 using FantasyBasketball.Infrastructure.Providers.BallDontLie;
@@ -19,6 +22,10 @@ using FantasyBasketball.Infrastructure.Scrapers.BasketballReference;
 using FantasyBasketball.Infrastructure.Scrapers.FantasyPros;
 using FantasyBasketball.Infrastructure.Workers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 using Microsoft.Extensions.Options;
 
 namespace FantasyBasketball.Api;
@@ -62,8 +69,74 @@ public static class DependencyInjection
                 options => options.IsValid(),
                 "Refresh worker options are invalid.")
             .ValidateOnStart();
+        services.AddOptions<AuthOptions>()
+            .Bind(configuration.GetSection(AuthOptions.SectionName));
         services.AddDbContext<FantasyDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("Fantasy")));
+        services.AddIdentity<FantasyUser, IdentityRole<Guid>>(options =>
+            {
+                options.Password.RequiredLength = 12;
+                options.Password.RequireDigit = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+            })
+            .AddEntityFrameworkStores<FantasyDbContext>()
+            .AddDefaultTokenProviders();
+        services.AddAuthorization(options =>
+        {
+            options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build();
+        });
+        services.AddCascadingAuthenticationState();
+        services.AddHttpContextAccessor();
+        services.AddHttpsRedirection(options =>
+        {
+            options.HttpsPort = 443;
+            options.RedirectStatusCode = StatusCodes.Status307TemporaryRedirect;
+        });
+        services.AddAntiforgery(options =>
+        {
+            options.HeaderName = "X-CSRF-TOKEN";
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+            options.Cookie.SameSite = SameSiteMode.Lax;
+        });
+        services.AddScoped<CookieAntiforgeryFilter>();
+        services.AddRateLimiter(options =>
+        {
+            options.AddFixedWindowLimiter("account", limiter =>
+            {
+                limiter.PermitLimit = 10;
+                limiter.Window = TimeSpan.FromMinutes(1);
+                limiter.QueueLimit = 0;
+                limiter.AutoReplenishment = true;
+            });
+        });
+        services.AddScoped<IUserContext, HttpUserContext>();
+        services.ConfigureApplicationCookie(options =>
+        {
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.Cookie.SameSite = SameSiteMode.Lax;
+            options.LoginPath = "/account/login";
+            options.Events.OnRedirectToLogin = context =>
+            {
+                if (context.Request.Path.StartsWithSegments("/api"))
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                }
+                else
+                {
+                    context.Response.Redirect(context.RedirectUri);
+                }
+
+                return Task.CompletedTask;
+            };
+        });
         services.AddMemoryCache();
         services.AddSingleton(new HostRateLimiter(MinimumRequestInterval));
         services.AddSingleton(TimeProvider.System);
@@ -113,6 +186,9 @@ public static class DependencyInjection
         services.AddScoped<LeagueService>();
         services.AddScoped<PlayerQueryService>();
         services.AddScoped<DataSourceHealthService>();
+        services.AddScoped<RegistrationService>();
+        services.AddScoped<AccountDataService>();
+        services.AddScoped<OwnedResourceAuthorizationService>();
         services.AddScoped<BallDontLieProvider>();
         services.AddScoped<IPlayerDirectoryProvider>(serviceProvider =>
             serviceProvider.GetRequiredService<BallDontLieProvider>());

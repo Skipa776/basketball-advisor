@@ -6,7 +6,7 @@ tags: [safety, tenancy, authorization, privacy]
 source_paths: [src/FantasyBasketball.Infrastructure/Identity, src/FantasyBasketball.Infrastructure/Persistence]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Auth]
 depends_on: [../contracts/auth_tenancy_contract.md]
-status: planned
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: high
@@ -98,3 +98,12 @@ same commit.
 
 [test_matrix_auth_tenancy](../tests/test_matrix_auth_tenancy.md), rows U-01,
 U-02, U-03, U-11, U-12, U-13, U-14.
+
+# Current evidence
+
+Every mapped owned-resource route carries ownership metadata and is discovered by
+the U-01 endpoint-data-source sweep. All 10 return `404` with no user-A identifier
+when attacked as user B; the U-02 deliberately leaky fixture is detected.
+Marker-driven filters throw without a user, recurring workers enqueue only shared
+imports under a throwing context, user deletion preserves shared and other-user
+rows, and the complete 11-table owned graph exports and imports as portable JSON.

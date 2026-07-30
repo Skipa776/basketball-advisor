@@ -1,6 +1,8 @@
 using FantasyBasketball.Application.Leagues;
 using FantasyBasketball.Domain.Leagues;
 using FantasyBasketball.Domain.Stats;
+using FantasyBasketball.Infrastructure.Identity;
+using FantasyBasketball.Api.Middleware;
 
 namespace FantasyBasketball.Api.Endpoints;
 
@@ -24,9 +26,13 @@ public static class LeagueEndpoints
         this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/leagues");
+        group.AddEndpointFilter<CookieAntiforgeryFilter>();
+        group.RequireAuthorization();
         group.MapPost("/", CreateAsync);
-        group.MapGet("/{id:guid}", GetAsync);
-        group.MapPut("/{id:guid}/scoring", ReplaceScoringAsync);
+        group.MapGet("/{id:guid}", GetAsync)
+            .WithMetadata(new OwnedRouteMetadata("league", "id"));
+        group.MapPut("/{id:guid}/scoring", ReplaceScoringAsync)
+            .WithMetadata(new OwnedRouteMetadata("league", "id"));
         return endpoints;
     }
 
@@ -44,18 +50,35 @@ public static class LeagueEndpoints
     public static async Task<IResult> GetAsync(
         Guid id,
         LeagueService service,
+        OwnedResourceAuthorizationService authorization,
         CancellationToken cancellationToken) =>
-        ApiResults.Success(await service.GetAsync(id, cancellationToken));
+        ApiResults.Success(await RequireAndGetAsync(
+            id,
+            service,
+            authorization,
+            cancellationToken));
 
     public static async Task<IResult> ReplaceScoringAsync(
         Guid id,
         ReplaceScoringRequest request,
         LeagueService service,
+        OwnedResourceAuthorizationService authorization,
         CancellationToken cancellationToken)
     {
+        await authorization.RequireLeagueAsync(id, cancellationToken);
         var rules = ParseScoringRules(request.ScoringRules);
         return ApiResults.Success(
             await service.ReplaceScoringAsync(id, rules, cancellationToken));
+    }
+
+    private static async Task<FantasyLeague> RequireAndGetAsync(
+        Guid id,
+        LeagueService service,
+        OwnedResourceAuthorizationService authorization,
+        CancellationToken cancellationToken)
+    {
+        await authorization.RequireLeagueAsync(id, cancellationToken);
+        return await service.GetAsync(id, cancellationToken);
     }
 
     private static FantasyLeague BuildLeague(

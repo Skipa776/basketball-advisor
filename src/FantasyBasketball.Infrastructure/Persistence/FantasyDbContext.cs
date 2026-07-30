@@ -7,9 +7,26 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FantasyBasketball.Infrastructure.Persistence;
 
-public sealed class FantasyDbContext(DbContextOptions<FantasyDbContext> options)
-    : IdentityDbContext<FantasyUser, IdentityRole<Guid>, Guid>(options)
+public sealed class FantasyDbContext
+    : IdentityDbContext<FantasyUser, IdentityRole<Guid>, Guid>
 {
+    private readonly IUserContext userContext;
+
+    public FantasyDbContext(
+        DbContextOptions<FantasyDbContext> options,
+        IUserContext userContext)
+        : base(options)
+    {
+        this.userContext = userContext;
+    }
+
+    public FantasyDbContext(DbContextOptions<FantasyDbContext> options)
+        : this(options, MissingUserContext.Instance)
+    {
+    }
+
+    public Guid CurrentUserId => userContext.CurrentUserId;
+
     public DbSet<PlayerRow> Players => Set<PlayerRow>();
 
     public DbSet<NbaTeamRow> NbaTeams => Set<NbaTeamRow>();
@@ -66,6 +83,7 @@ public sealed class FantasyDbContext(DbContextOptions<FantasyDbContext> options)
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(FantasyDbContext).Assembly);
         ConfigureIdentityTables(modelBuilder);
         ConfigureNullableOwnership(modelBuilder);
+        ConfigureOwnershipFilters(modelBuilder);
         ConfigureSnakeCaseIdentityColumns(modelBuilder);
     }
 
@@ -85,6 +103,7 @@ public sealed class FantasyDbContext(DbContextOptions<FantasyDbContext> options)
 
     private void RejectImmutableUpdates()
     {
+        StampOwnedAdds();
         if (ChangeTracker.Entries<BaselineProjectionRow>()
             .Any(entry => entry.State is EntityState.Modified or EntityState.Deleted))
         {
@@ -101,6 +120,18 @@ public sealed class FantasyDbContext(DbContextOptions<FantasyDbContext> options)
             .Any(entry => entry.State is EntityState.Modified or EntityState.Deleted))
         {
             throw new InvalidOperationException("Data import runs are append-only.");
+        }
+    }
+
+    private void StampOwnedAdds()
+    {
+        foreach (var entry in ChangeTracker.Entries()
+            .Where(entry => entry.State == EntityState.Added
+                && entry.Entity is IOwnedResource
+                && entry.Entity is not IGlobalOrOwnedResource))
+        {
+            entry.Property(nameof(IOwnedResource.OwnerId)).CurrentValue =
+                CurrentUserId;
         }
     }
 
@@ -133,11 +164,50 @@ public sealed class FantasyDbContext(DbContextOptions<FantasyDbContext> options)
         {
             var builder = modelBuilder.Entity(entityType.ClrType);
             builder.Property(nameof(IOwnedResource.OwnerId))
-                .HasColumnName("owner_id");
+                .HasColumnName("owner_id")
+                .IsRequired(!typeof(IGlobalOrOwnedResource)
+                    .IsAssignableFrom(entityType.ClrType));
             builder.HasOne(typeof(FantasyUser))
                 .WithMany()
                 .HasForeignKey(nameof(IOwnedResource.OwnerId))
                 .OnDelete(DeleteBehavior.Cascade);
+        }
+    }
+
+    private void ConfigureOwnershipFilters(ModelBuilder modelBuilder)
+    {
+        var context = System.Linq.Expressions.Expression.Constant(this);
+        var currentUser = System.Linq.Expressions.Expression.Property(
+            context,
+            nameof(CurrentUserId));
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes()
+            .Where(entityType =>
+                typeof(IOwnedResource).IsAssignableFrom(entityType.ClrType)))
+        {
+            var parameter = System.Linq.Expressions.Expression.Parameter(
+                entityType.ClrType,
+                "resource");
+            var owner = System.Linq.Expressions.Expression.Property(
+                parameter,
+                nameof(IOwnedResource.OwnerId));
+            var userOwner = System.Linq.Expressions.Expression.Convert(
+                currentUser,
+                typeof(Guid?));
+            var body = System.Linq.Expressions.Expression.Equal(owner, userOwner);
+            if (typeof(IGlobalOrOwnedResource)
+                .IsAssignableFrom(entityType.ClrType))
+            {
+                body = System.Linq.Expressions.Expression.OrElse(
+                    System.Linq.Expressions.Expression.Equal(
+                        owner,
+                        System.Linq.Expressions.Expression.Constant(
+                            null,
+                            typeof(Guid?))),
+                    body);
+            }
+
+            modelBuilder.Entity(entityType.ClrType).HasQueryFilter(
+                System.Linq.Expressions.Expression.Lambda(body, parameter));
         }
     }
 

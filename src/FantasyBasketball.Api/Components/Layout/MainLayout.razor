@@ -9,6 +9,15 @@
         <a href="/draft">Draft Assistant</a>
         <a href="/context-review">Context Review</a>
         <a href="/data-sources">Data Sources</a>
+        <AuthorizeView>
+            <Authorized>
+                <a href="/account/logout">Log out</a>
+            </Authorized>
+            <NotAuthorized>
+                <a href="/account/login">Log in</a>
+                <a href="/account/register">Register</a>
+            </NotAuthorized>
+        </AuthorizeView>
     </nav>
 </header>
 

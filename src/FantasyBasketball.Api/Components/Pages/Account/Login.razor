@@ -1,0 +1,38 @@
+@page "/account/login"
+@attribute [AllowAnonymous]
+
+<PageTitle>Log in</PageTitle>
+<h1>Log in</h1>
+
+@if (Error == "invalid")
+{
+    <p role="alert">Email or password is incorrect.</p>
+}
+else if (Error == "locked")
+{
+    <p role="alert">The account is temporarily locked.</p>
+}
+
+<form method="post" action="/account/login">
+    <AntiforgeryToken />
+    <p>
+        <label for="login-email">Email</label>
+        <input id="login-email" name="email" type="email" autocomplete="username" required />
+    </p>
+    <p>
+        <label for="login-password">Password</label>
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required />
+    </p>
+    <p>
+        <label>
+            <input name="rememberMe" type="checkbox" value="true" />
+            Keep me signed in
+        </label>
+    </p>
+    <button type="submit">Log in</button>
+</form>
+
+@code {
+    [SupplyParameterFromQuery]
+    public string? Error { get; set; }
+}

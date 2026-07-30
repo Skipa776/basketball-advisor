@@ -100,6 +100,7 @@ public sealed class ProjectionRepository(FantasyDbContext database)
         ArgumentNullException.ThrowIfNull(adjusted);
         database.AdjustedProjections.Add(AdjustedProjectionRow.Create(
             adjusted.Id,
+            database.CurrentUserId,
             adjusted.PlayerId.Value,
             adjusted.BaselineProjectionId,
             Serialize(adjusted.ProjectedPerGame),

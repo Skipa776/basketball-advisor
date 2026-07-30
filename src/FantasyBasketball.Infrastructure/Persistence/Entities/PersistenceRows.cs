@@ -887,6 +887,7 @@ public sealed class AdjustedProjectionRow : IGlobalOrOwnedResource
 
     public static AdjustedProjectionRow Create(
         Guid id,
+        Guid? ownerId,
         Guid playerId,
         Guid baselineProjectionId,
         string projectedPerGame,
@@ -899,6 +900,7 @@ public sealed class AdjustedProjectionRow : IGlobalOrOwnedResource
         new()
         {
             Id = id,
+            OwnerId = ownerId,
             PlayerId = playerId,
             BaselineProjectionId = baselineProjectionId,
             ProjectedPerGame = projectedPerGame,

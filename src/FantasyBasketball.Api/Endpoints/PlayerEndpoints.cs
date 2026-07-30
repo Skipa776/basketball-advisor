@@ -1,6 +1,7 @@
 using FantasyBasketball.Application.Players;
 using FantasyBasketball.Application.Projections;
 using FantasyBasketball.Domain.Players;
+using FantasyBasketball.Infrastructure.Identity;
 
 namespace FantasyBasketball.Api.Endpoints;
 
@@ -12,7 +13,8 @@ public static class PlayerEndpoints
         var group = endpoints.MapGroup("/api/players");
         group.MapGet("/", ListAsync);
         group.MapGet("/{id:guid}", GetAsync);
-        group.MapGet("/{id:guid}/projection", GetProjectionAsync);
+        group.MapGet("/{id:guid}/projection", GetProjectionAsync)
+            .WithMetadata(new OwnedRouteMetadata("league", "query:leagueId"));
         return endpoints;
     }
 
@@ -51,9 +53,26 @@ public static class PlayerEndpoints
         Guid id,
         Guid leagueId,
         ProjectionDecompositionService service,
+        OwnedResourceAuthorizationService authorization,
         CancellationToken cancellationToken) =>
-        ApiResults.Success(await service.GetAsync(
+        ApiResults.Success(await RequireAndGetProjectionAsync(
+            id,
+            leagueId,
+            service,
+            authorization,
+            cancellationToken));
+
+    private static async Task<ProjectionDecomposition> RequireAndGetProjectionAsync(
+        Guid id,
+        Guid leagueId,
+        ProjectionDecompositionService service,
+        OwnedResourceAuthorizationService authorization,
+        CancellationToken cancellationToken)
+    {
+        await authorization.RequireLeagueAsync(leagueId, cancellationToken);
+        return await service.GetAsync(
             new PlayerId(id),
             leagueId,
-            cancellationToken));
+            cancellationToken);
+    }
 }

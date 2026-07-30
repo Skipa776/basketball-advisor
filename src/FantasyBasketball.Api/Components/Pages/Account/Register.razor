@@ -1,0 +1,49 @@
+@page "/account/register"
+@attribute [AllowAnonymous]
+@inject FantasyBasketball.Infrastructure.Persistence.FantasyDbContext Database
+@inject Microsoft.Extensions.Options.IOptions<FantasyBasketball.Infrastructure.Identity.AuthOptions> Auth
+
+<PageTitle>Register</PageTitle>
+<h1>Register</h1>
+
+@if (!registrationOpen)
+{
+    <p>The requested page was not found.</p>
+}
+else
+{
+    @if (Error == "invalid")
+    {
+        <p role="alert">The account could not be created. Use a valid email and a password of at least 12 characters.</p>
+    }
+    <form method="post" action="/account/register">
+        <AntiforgeryToken />
+        <p>
+            <label for="register-name">Display name</label>
+            <input id="register-name" name="displayName" autocomplete="name" required />
+        </p>
+        <p>
+            <label for="register-email">Email</label>
+            <input id="register-email" name="email" type="email" autocomplete="username" required />
+        </p>
+        <p>
+            <label for="register-password">Password</label>
+            <input id="register-password" name="password" type="password" minlength="12" autocomplete="new-password" required />
+        </p>
+        <button type="submit">Create account</button>
+    </form>
+}
+
+@code {
+    [SupplyParameterFromQuery]
+    public string? Error { get; set; }
+
+    private bool registrationOpen;
+
+    protected override async Task OnInitializedAsync()
+    {
+        registrationOpen = Auth.Value.OpenRegistration
+            || !await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions
+                .AnyAsync(Database.Users);
+    }
+}

@@ -1,10 +1,13 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Security.Claims;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using FantasyBasketball.Api;
 using FantasyBasketball.Application.Abstractions;
 using FantasyBasketball.Application.Ingestion;
 using FantasyBasketball.Domain.Context;
+using FantasyBasketball.Domain.Accounts;
 using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Domain.Projections;
 using FantasyBasketball.Domain.Provenance;
@@ -12,9 +15,11 @@ using FantasyBasketball.Domain.Recommendations;
 using FantasyBasketball.Domain.Stats;
 using FantasyBasketball.Infrastructure.Persistence;
 using FantasyBasketball.Infrastructure.Persistence.Repositories;
+using FantasyBasketball.Infrastructure.Identity;
 using FantasyBasketball.Infrastructure.Workers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
@@ -23,6 +28,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Shouldly;
 using Testcontainers.PostgreSql;
 
@@ -34,6 +41,7 @@ public sealed class ApiHttpTests : IAsyncLifetime
         new PostgreSqlBuilder("postgres:17").Build();
     private WebApplication app = null!;
     private HttpClient client = null!;
+    private readonly Guid ownerId = Guid.NewGuid();
 
     public async ValueTask InitializeAsync()
     {
@@ -51,6 +59,18 @@ public sealed class ApiHttpTests : IAsyncLifetime
                 ["ConnectionStrings:Fantasy"] = postgres.GetConnectionString(),
             });
         ApiHost.ConfigureServices(builder);
+        builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = TestAuthenticationHandler.SchemeName;
+                options.DefaultChallengeScheme = TestAuthenticationHandler.SchemeName;
+                options.DefaultScheme = TestAuthenticationHandler.SchemeName;
+            })
+            .AddScheme<AuthenticationSchemeOptions, TestAuthenticationHandler>(
+                TestAuthenticationHandler.SchemeName,
+                _ => { });
+        builder.Services.RemoveAll<IUserContext>();
+        builder.Services.AddSingleton<IUserContext>(
+            new FixedUserContext(ownerId));
         builder.Services.RemoveAll<IImportJobQueue>();
         builder.Services.RemoveAll<ImportJobQueue>();
         builder.Services.RemoveAll<IHostedService>();
@@ -64,6 +84,17 @@ public sealed class ApiHttpTests : IAsyncLifetime
             var database = scope.ServiceProvider
                 .GetRequiredService<FantasyDbContext>();
             await database.Database.MigrateAsync(
+                TestContext.Current.CancellationToken);
+            database.Users.Add(new FantasyUser
+            {
+                Id = ownerId,
+                UserName = "api-test",
+                NormalizedUserName = "API-TEST",
+                DisplayName = "API Test",
+                CreatedAt = DateTimeOffset.UnixEpoch,
+                IsInstanceOwner = true,
+            });
+            await database.SaveChangesAsync(
                 TestContext.Current.CancellationToken);
         }
 
@@ -649,5 +680,41 @@ public sealed class ApiHttpTests : IAsyncLifetime
         }
 
         public IReadOnlyList<DataImportRun> GetActive() => active;
+    }
+
+    private sealed class FixedUserContext(Guid userId) : IUserContext
+    {
+        public Guid CurrentUserId => userId;
+    }
+
+    private sealed class TestAuthenticationHandler(
+        IOptionsMonitor<AuthenticationSchemeOptions> options,
+        ILoggerFactory logger,
+        UrlEncoder encoder)
+        : AuthenticationHandler<AuthenticationSchemeOptions>(
+            options,
+            logger,
+            encoder)
+    {
+        public const string SchemeName = "ApiHttpTest";
+
+        protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+        {
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, TestOwnerId()),
+                new Claim(ClaimTypes.Name, "API Test"),
+                new Claim(ClaimTypes.Role, "Owner"),
+            };
+            var principal = new ClaimsPrincipal(
+                new ClaimsIdentity(claims, SchemeName));
+            return Task.FromResult(AuthenticateResult.Success(
+                new AuthenticationTicket(principal, SchemeName)));
+        }
+
+        private string TestOwnerId() =>
+            Context.RequestServices.GetRequiredService<IUserContext>()
+                .CurrentUserId
+                .ToString();
     }
 }

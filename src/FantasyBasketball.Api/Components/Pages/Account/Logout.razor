@@ -1,0 +1,10 @@
+@page "/account/logout"
+
+<PageTitle>Log out</PageTitle>
+<h1>Log out</h1>
+
+<form method="post" action="/account/logout">
+    <AntiforgeryToken />
+    <p>End this session?</p>
+    <button type="submit">Log out</button>
+</form>

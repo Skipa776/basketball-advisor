@@ -116,11 +116,14 @@ shutdown, registration, and configuration rows pass. All ten MVP stories now
 have implementation and automated evidence; live external-source certification
 still requires operator credentials and remains explicitly under-claimed.
 
-**E04 is partial at its first safe migration boundary.** Identity and nullable
-ownership columns share the existing context and migration history. No
-placeholder user is seeded and no pre-auth row is deleted or assigned yet; the
-next slice claims those rows during first registration before making required
-owners non-null.
+**Build step 16 and epic E04 are implemented.** Identity and ownership share the
+existing context and migration history. First registration atomically claims
+pre-auth rows before the second migration makes required ownership non-null.
+Marker-driven filters and explicit endpoint checks isolate every owned route;
+the reflection sweep covers 10 routes and its deliberately leaky fixture proves
+it can fail. Secure cookies, closed registration, lockout, anti-forgery, HTTPS,
+worker isolation, cascade deletion, and portable JSON export/import pass U-01
+through U-17.
 
 **Build prerequisites on the development machine:**
 
@@ -193,6 +196,19 @@ or near-term schedule change is included without widening the request window
 indefinitely. The NBA season end year rolls forward in July. ADP runs only from
 July through October by default; those active months, every cadence, startup
 delay, and schedule window are configuration values.
+
+Login and registration use a fixed-window limit of 10 attempts per IP per minute.
+The auth contract requires per-IP limiting but does not assign a numeric budget;
+this permits ordinary setup retries while bounding credential and registration
+bursts. Revisit if deployment telemetry shows legitimate setup flows exhausting
+the window.
+
+Account archives contain every table mapped by `IOwnedResource`, discovered from
+the EF model and ordered by its foreign-key graph. PostgreSQL `jsonb` composite
+record import keeps the format schema-complete without a second hand-maintained
+entity list. Primary and owned foreign keys are remapped on import so an archive
+can be restored into another empty account on the same instance; shared player
+and baseline identifiers remain references to the one global data set.
 
 ## ADP shapes and fallback inputs not specified upstream
 

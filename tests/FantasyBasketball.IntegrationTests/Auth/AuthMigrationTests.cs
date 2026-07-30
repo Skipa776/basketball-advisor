@@ -1,5 +1,7 @@
 using FantasyBasketball.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Shouldly;
 using Testcontainers.PostgreSql;
 
@@ -22,7 +24,8 @@ public sealed class AuthMigrationTests : IAsyncLifetime
             .Options;
         await using var database = new FantasyDbContext(options);
 
-        await database.Database.MigrateAsync(
+        await database.GetService<IMigrator>().MigrateAsync(
+            "20260730051545_IdentityAndNullableOwnership",
             TestContext.Current.CancellationToken);
 
         (await ScalarAsync<long>(

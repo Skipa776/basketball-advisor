@@ -1,5 +1,6 @@
 using FantasyBasketball.Application.Ingestion;
 using FantasyBasketball.Application.Players;
+using FantasyBasketball.Api.Middleware;
 
 namespace FantasyBasketball.Api.Endpoints;
 
@@ -15,6 +16,8 @@ public static class ImportEndpoints
         this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/imports");
+        group.AddEndpointFilter<CookieAntiforgeryFilter>();
+        group.RequireAuthorization(policy => policy.RequireRole("Owner"));
         group.MapPost("/players", ImportPlayersAsync);
         group.MapPost("/schedule", ImportScheduleAsync);
         group.MapPost("/season-stats", ImportSeasonStatsAsync);

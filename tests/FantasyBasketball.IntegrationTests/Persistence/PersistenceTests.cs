@@ -2,6 +2,7 @@ using FantasyBasketball.Application.Abstractions;
 using FantasyBasketball.Application.Common;
 using FantasyBasketball.Application.Draft;
 using FantasyBasketball.Application.Ingestion;
+using FantasyBasketball.Domain.Accounts;
 using FantasyBasketball.Domain.Context;
 using FantasyBasketball.Domain.Leagues;
 using FantasyBasketball.Domain.Players;
@@ -13,6 +14,7 @@ using FantasyBasketball.Domain.Stats;
 using FantasyBasketball.Infrastructure.Persistence;
 using FantasyBasketball.Infrastructure.Persistence.Entities;
 using FantasyBasketball.Infrastructure.Persistence.Repositories;
+using FantasyBasketball.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using Testcontainers.PostgreSql;
@@ -26,6 +28,7 @@ public sealed class PersistenceTests : IAsyncLifetime
         .Build();
 
     private DbContextOptions<FantasyDbContext> options = null!;
+    private readonly Guid ownerId = Guid.NewGuid();
 
     public async ValueTask InitializeAsync()
     {
@@ -34,11 +37,23 @@ public sealed class PersistenceTests : IAsyncLifetime
             .UseNpgsql(postgres.GetConnectionString())
             .Options;
 
-        await using var database = new FantasyDbContext(options);
+        await using var database = CreateDatabase();
         await database.Database.MigrateAsync();
+        database.Users.Add(new FantasyUser
+        {
+            Id = ownerId,
+            UserName = "persistence-test",
+            NormalizedUserName = "PERSISTENCE-TEST",
+            DisplayName = "Persistence Test",
+            CreatedAt = DateTimeOffset.UnixEpoch,
+        });
+        await database.SaveChangesAsync();
     }
 
     public async ValueTask DisposeAsync() => await postgres.DisposeAsync();
+
+    private FantasyDbContext CreateDatabase() =>
+        new(options, new FixedUserContext(ownerId));
 
     [Fact]
     public async Task Migration_from_empty_and_core_round_trip_succeed()
@@ -78,7 +93,7 @@ public sealed class PersistenceTests : IAsyncLifetime
             0.29m,
             provenance);
 
-        await using (var database = new FantasyDbContext(options))
+        await using (var database = CreateDatabase())
         {
             await new PlayerRepository(database).AddAsync(player, CancellationToken.None);
             await new LeagueRepository(database).AddAsync(league, CancellationToken.None);
@@ -86,7 +101,7 @@ public sealed class PersistenceTests : IAsyncLifetime
                 .AddAsync(season, CancellationToken.None);
         }
 
-        await using (var database = new FantasyDbContext(options))
+        await using (var database = CreateDatabase())
         {
             var storedPlayer = await new PlayerRepository(database)
                 .GetAsync(playerId, CancellationToken.None);
@@ -120,7 +135,7 @@ public sealed class PersistenceTests : IAsyncLifetime
         var first = new PlayerId(Guid.NewGuid());
         var second = new PlayerId(Guid.NewGuid());
 
-        await using var database = new FantasyDbContext(options);
+        await using var database = CreateDatabase();
         database.Players.AddRange(
             PlayerRow.Create(first.Value, "First", "first", [], null),
             PlayerRow.Create(second.Value, "Second", "second", [], null));
@@ -152,14 +167,14 @@ public sealed class PersistenceTests : IAsyncLifetime
             new DateTimeOffset(2026, 7, 29, 12, 0, 0, TimeSpan.Zero),
             "persistence-test-v1");
 
-        await using (var database = new FantasyDbContext(options))
+        await using (var database = CreateDatabase())
         {
             database.Players.Add(player);
             database.BaselineProjections.Add(baseline);
             await database.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
-        await using (var database = new FantasyDbContext(options))
+        await using (var database = CreateDatabase())
         {
             var stored = await database.BaselineProjections.SingleAsync(
                 value => value.Id == baseline.Id,
@@ -216,7 +231,7 @@ public sealed class PersistenceTests : IAsyncLifetime
     {
         var league = LeagueCatalog.CreateSeedPointsLeague(Guid.NewGuid());
 
-        await using var database = new FantasyDbContext(options);
+        await using var database = CreateDatabase();
         await new LeagueRepository(database).AddAsync(
             league,
             TestContext.Current.CancellationToken);
@@ -268,7 +283,7 @@ public sealed class PersistenceTests : IAsyncLifetime
             1m,
             new string('b', 64));
 
-        await using (var database = new FantasyDbContext(options))
+        await using (var database = CreateDatabase())
         {
             database.AddRange(player, league, session, pick, season);
             await database.SaveChangesAsync(TestContext.Current.CancellationToken);
@@ -282,7 +297,7 @@ public sealed class PersistenceTests : IAsyncLifetime
                 .ShouldBe(0);
         }
 
-        await using (var database = new FantasyDbContext(options))
+        await using (var database = CreateDatabase())
         {
             var storedPlayer = await database.Players.SingleAsync(
                 value => value.Id == player.Id,
@@ -321,7 +336,7 @@ public sealed class PersistenceTests : IAsyncLifetime
             DataSourceConfidence.OfficialApi,
             new string('c', 64));
 
-        await using var database = new FantasyDbContext(options);
+        await using var database = CreateDatabase();
         var repository = new PlayerRepository(database);
         await repository.AddAsync(first, TestContext.Current.CancellationToken);
         await repository.AddAsync(second, TestContext.Current.CancellationToken);
@@ -355,7 +370,7 @@ public sealed class PersistenceTests : IAsyncLifetime
     [Fact]
     public async Task Failed_import_rolls_back_real_database_writes_and_records_failed_run()
     {
-        await using var database = new FantasyDbContext(options);
+        await using var database = CreateDatabase();
         var repository = new InterruptingPlayerRepository(
             new PlayerRepository(database),
             beforeResolvedWrite: attempt =>
@@ -393,7 +408,7 @@ public sealed class PersistenceTests : IAsyncLifetime
     public async Task Canceled_import_rolls_back_real_database_writes()
     {
         using var cancellation = new CancellationTokenSource();
-        await using var database = new FantasyDbContext(options);
+        await using var database = CreateDatabase();
         var repository = new InterruptingPlayerRepository(
             new PlayerRepository(database),
             afterResolvedWrite: _ => cancellation.Cancel());
@@ -437,7 +452,7 @@ public sealed class PersistenceTests : IAsyncLifetime
             "Final",
             CreateProvenance("9001", 'a'));
 
-        await using var database = new FantasyDbContext(options);
+        await using var database = CreateDatabase();
         var teamRepository = new TeamRepository(database);
         await teamRepository.AddAsync(
             home,
@@ -493,7 +508,7 @@ public sealed class PersistenceTests : IAsyncLifetime
             1.1m,
             provenance);
 
-        await using (var database = new FantasyDbContext(options))
+        await using (var database = CreateDatabase())
         {
             await new PlayerRepository(database).AddAsync(
                 player,
@@ -503,7 +518,7 @@ public sealed class PersistenceTests : IAsyncLifetime
                 TestContext.Current.CancellationToken);
         }
 
-        await using (var database = new FantasyDbContext(options))
+        await using (var database = CreateDatabase())
         {
             var stored = await new AdpRepository(database).GetLatestAsync(
                 player.Id,
@@ -574,7 +589,7 @@ public sealed class PersistenceTests : IAsyncLifetime
             DateTimeOffset.UnixEpoch,
             "baseline-v1");
 
-        await using (var database = new FantasyDbContext(options))
+        await using (var database = CreateDatabase())
         {
             await new PlayerRepository(database).AddAsync(
                 player,
@@ -588,7 +603,7 @@ public sealed class PersistenceTests : IAsyncLifetime
                 TestContext.Current.CancellationToken);
         }
 
-        await using (var database = new FantasyDbContext(options))
+        await using (var database = CreateDatabase())
         {
             var repository = new ProjectionRepository(database);
             var storedObserved = await repository.GetLatestObservedAsync(
@@ -664,7 +679,7 @@ public sealed class PersistenceTests : IAsyncLifetime
             [impact],
             DateTimeOffset.UnixEpoch);
 
-        await using (var database = new FantasyDbContext(options))
+        await using (var database = CreateDatabase())
         {
             await new PlayerRepository(database).AddAsync(
                 player,
@@ -712,7 +727,7 @@ public sealed class PersistenceTests : IAsyncLifetime
                 TestContext.Current.CancellationToken);
         }
 
-        await using (var database = new FantasyDbContext(options))
+        await using (var database = CreateDatabase())
         {
             var contextRepository = new ContextEventRepository(database);
             var storedEvent = await contextRepository.GetAsync(
@@ -764,7 +779,7 @@ public sealed class PersistenceTests : IAsyncLifetime
             ["F"],
             null);
 
-        await using var database = new FantasyDbContext(options);
+        await using var database = CreateDatabase();
         var leagues = new LeagueRepository(database);
         await leagues.AddAsync(league, TestContext.Current.CancellationToken);
         var players = new PlayerRepository(database);
@@ -837,7 +852,7 @@ public sealed class PersistenceTests : IAsyncLifetime
                     null),
             ]);
 
-        await using (var database = new FantasyDbContext(options))
+        await using (var database = CreateDatabase())
         {
             await new PlayerRepository(database).AddAsync(
                 player,
@@ -847,7 +862,7 @@ public sealed class PersistenceTests : IAsyncLifetime
                 TestContext.Current.CancellationToken);
         }
 
-        await using (var database = new FantasyDbContext(options))
+        await using (var database = CreateDatabase())
         {
             var stored = await new RecommendationRepository(database).GetAsync(
                 recommendation.Id,
@@ -891,6 +906,11 @@ public sealed class PersistenceTests : IAsyncLifetime
     private sealed class FixedTimeProvider(DateTimeOffset value) : TimeProvider
     {
         public override DateTimeOffset GetUtcNow() => value;
+    }
+
+    private sealed class FixedUserContext(Guid userId) : IUserContext
+    {
+        public Guid CurrentUserId => userId;
     }
 
     private sealed class InterruptingPlayerRepository(

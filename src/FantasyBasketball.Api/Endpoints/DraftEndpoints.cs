@@ -1,5 +1,7 @@
 using FantasyBasketball.Application.Draft;
 using FantasyBasketball.Domain.Players;
+using FantasyBasketball.Infrastructure.Identity;
+using FantasyBasketball.Api.Middleware;
 
 namespace FantasyBasketball.Api.Endpoints;
 
@@ -18,33 +20,48 @@ public static class DraftEndpoints
         this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/drafts");
-        group.MapPost("/", CreateAsync);
-        group.MapGet("/{id:guid}/board", GetBoardAsync);
-        group.MapPost("/{id:guid}/picks", RecordPickAsync);
-        group.MapDelete("/{id:guid}/picks/{pickNumber:int}", UndoPickAsync);
-        group.MapGet("/{id:guid}/recommendations", GetRecommendationsAsync);
+        group.AddEndpointFilter<CookieAntiforgeryFilter>();
+        group.RequireAuthorization();
+        group.MapPost("/", CreateAsync)
+            .WithMetadata(new OwnedRouteMetadata("league", "body:leagueId"));
+        group.MapGet("/{id:guid}/board", GetBoardAsync)
+            .WithMetadata(new OwnedRouteMetadata("draft", "id"));
+        group.MapPost("/{id:guid}/picks", RecordPickAsync)
+            .WithMetadata(new OwnedRouteMetadata("draft", "id"));
+        group.MapDelete("/{id:guid}/picks/{pickNumber:int}", UndoPickAsync)
+            .WithMetadata(new OwnedRouteMetadata("draft", "id"));
+        group.MapGet("/{id:guid}/recommendations", GetRecommendationsAsync)
+            .WithMetadata(new OwnedRouteMetadata("draft", "id"));
         return endpoints;
     }
 
     public static async Task<IResult> CreateAsync(
         CreateDraftRequest request,
         DraftSessionService service,
-        CancellationToken cancellationToken) =>
-        ApiResults.Success(
+        OwnedResourceAuthorizationService authorization,
+        CancellationToken cancellationToken)
+    {
+        await authorization.RequireLeagueAsync(
+            request.LeagueId,
+            cancellationToken);
+        return ApiResults.Success(
             await service.CreateAsync(
                 request.LeagueId,
                 request.DraftPosition,
                 request.RoundCount,
                 cancellationToken),
             StatusCodes.Status201Created);
+    }
 
     public static async Task<IResult> GetBoardAsync(
         Guid id,
         Guid leagueId,
         DraftSessionService sessions,
         DraftBoardService boards,
+        OwnedResourceAuthorizationService authorization,
         CancellationToken cancellationToken)
     {
+        await authorization.RequireDraftAsync(id, cancellationToken);
         var session = await sessions.GetAsync(id, cancellationToken);
         if (session.LeagueId != leagueId)
         {
@@ -66,28 +83,40 @@ public static class DraftEndpoints
         Guid id,
         RecordDraftPickRequest request,
         DraftSessionService service,
-        CancellationToken cancellationToken) =>
-        ApiResults.Success(await service.RecordPickAsync(
+        OwnedResourceAuthorizationService authorization,
+        CancellationToken cancellationToken)
+    {
+        await authorization.RequireDraftAsync(id, cancellationToken);
+        return ApiResults.Success(await service.RecordPickAsync(
             id,
             request.PickNumber,
             new PlayerId(request.PlayerId),
             cancellationToken));
+    }
 
     public static async Task<IResult> UndoPickAsync(
         Guid id,
         int pickNumber,
         DraftSessionService service,
-        CancellationToken cancellationToken) =>
-        ApiResults.Success(await service.UndoPickAsync(
+        OwnedResourceAuthorizationService authorization,
+        CancellationToken cancellationToken)
+    {
+        await authorization.RequireDraftAsync(id, cancellationToken);
+        return ApiResults.Success(await service.UndoPickAsync(
             id,
             pickNumber,
             cancellationToken));
+    }
 
     public static async Task<IResult> GetRecommendationsAsync(
         Guid id,
         DraftBoardService service,
-        CancellationToken cancellationToken) =>
-        ApiResults.Success(await service.GetRecommendationsAsync(
+        OwnedResourceAuthorizationService authorization,
+        CancellationToken cancellationToken)
+    {
+        await authorization.RequireDraftAsync(id, cancellationToken);
+        return ApiResults.Success(await service.GetRecommendationsAsync(
             id,
             cancellationToken));
+    }
 }

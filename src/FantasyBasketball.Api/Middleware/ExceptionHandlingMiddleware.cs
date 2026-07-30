@@ -1,4 +1,6 @@
 using FantasyBasketball.Application.Common;
+using FantasyBasketball.Infrastructure.Identity;
+using Microsoft.AspNetCore.Antiforgery;
 
 namespace FantasyBasketball.Api.Middleware;
 
@@ -35,6 +37,19 @@ public sealed class ExceptionHandlingMiddleware(
                 "validation_failed",
                 validation.Message,
                 validation.Fields),
+            InvalidAccountArchiveException archive => (
+                StatusCodes.Status400BadRequest,
+                "validation_failed",
+                archive.Message,
+                new Dictionary<string, string[]>
+                {
+                    ["archive"] = [archive.Message],
+                }),
+            AntiforgeryValidationException => (
+                StatusCodes.Status400BadRequest,
+                "validation_failed",
+                "The anti-forgery token is invalid or missing.",
+                EmptyFields()),
             ResourceNotFoundException => (
                 StatusCodes.Status404NotFound,
                 "not_found",

@@ -17,6 +17,15 @@ public static class ApiHost
     {
         app.UseMiddleware<ExceptionHandlingMiddleware>();
         app.UseMiddleware<RequestLoggingMiddleware>();
+        if (!app.Environment.IsDevelopment())
+        {
+            app.UseHsts();
+            app.UseHttpsRedirection();
+        }
+
+        app.UseAuthentication();
+        app.UseAuthorization();
+        app.UseRateLimiter();
         app.UseStatusCodePages(async statusCodeContext =>
         {
             var response = statusCodeContext.HttpContext.Response;
@@ -44,6 +53,7 @@ public static class ApiHost
         app.MapDraftEndpoints();
         app.MapContextEndpoints();
         app.MapHealthEndpoints();
+        app.MapAccountEndpoints();
         app.MapFallback(
             "/api/{**path}",
             () => ApiResults.Failure(
