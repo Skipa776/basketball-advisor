@@ -40,26 +40,43 @@ public sealed class LeagueRepository(FantasyDbContext database) : ILeagueReposit
             .Include(value => value.RosterSlots)
             .SingleOrDefaultAsync(value => value.Id == id, cancellationToken);
 
-        return row is null
-            ? null
-            : new FantasyLeague(
-                row.Id,
-                row.Name,
-                Enum.Parse<LeagueType>(row.Type),
-                row.TeamCount,
-                row.ScoringRules
-                    .OrderBy(rule => rule.Ordinal)
-                    .Select(rule => new ScoringRule(
-                        Enum.Parse<StatKey>(rule.Stat),
-                        rule.PointsPerUnit))
-                    .ToArray(),
-                row.Categories.Select(Enum.Parse<StatKey>).ToArray(),
-                row.RosterSlots
-                    .OrderBy(slot => slot.Ordinal)
-                    .Select(slot => new RosterSlot(Enum.Parse<RosterSlotKind>(slot.Kind)))
-                    .ToArray(),
-                Enum.Parse<LineupCadence>(row.Cadence));
+        return row is null ? null : ToDomain(row);
     }
+
+    // The global tenancy filter already scopes this to the calling user, which
+    // is why no owner predicate appears here. Do not add an escape hatch: the
+    // filter is the only thing standing between this list and every tenant's.
+    public async Task<IReadOnlyList<FantasyLeague>> ListAsync(
+        CancellationToken cancellationToken)
+    {
+        var rows = await database.FantasyLeagues
+            .AsNoTracking()
+            .Include(value => value.ScoringRules)
+            .Include(value => value.RosterSlots)
+            .OrderBy(value => value.Name)
+            .ToListAsync(cancellationToken);
+
+        return rows.Select(ToDomain).ToArray();
+    }
+
+    private static FantasyLeague ToDomain(FantasyLeagueRow row) =>
+        new(
+            row.Id,
+            row.Name,
+            Enum.Parse<LeagueType>(row.Type),
+            row.TeamCount,
+            row.ScoringRules
+                .OrderBy(rule => rule.Ordinal)
+                .Select(rule => new ScoringRule(
+                    Enum.Parse<StatKey>(rule.Stat),
+                    rule.PointsPerUnit))
+                .ToArray(),
+            row.Categories.Select(Enum.Parse<StatKey>).ToArray(),
+            row.RosterSlots
+                .OrderBy(slot => slot.Ordinal)
+                .Select(slot => new RosterSlot(Enum.Parse<RosterSlotKind>(slot.Kind)))
+                .ToArray(),
+            Enum.Parse<LineupCadence>(row.Cadence));
 
     public async Task SaveScoringAsync(
         FantasyLeague league,

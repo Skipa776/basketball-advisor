@@ -489,6 +489,49 @@ test that parses HTML does not test the page.* When a subsystem gets a
 human-facing surface, at least one row must drive that surface the way a person
 would.
 
+# Walking the assembled app — the second request was never tested
+
+A manual walkthrough of the running app, after the suite was green at 193 rows,
+found four defects. Every one of them lived in the gap between *the request the
+test author wrote* and *the second request a user makes*.
+
+- **Every list route answered `400` with no query string.** `GET /api/players`,
+  `/api/context-events` and `/api/imports/runs` bound `page` and `limit` as
+  non-nullable `int`. A minimal-API value type the caller omits is a binding
+  failure, not a zero — so the handler's own `page == 0 ? 1 : page` normalisation
+  could never run. `api_surface.md` documents defaults of `page` 1 and `limit`
+  50, so the contract was violated on the most obvious call in the API. Every
+  functional row passed `?page=1&limit=50`; the rows that used the bare path
+  (`RouteIsolationTests`) asserted `401`/`404` and never reached the handler.
+  Now `A-35`.
+- **My League forgot the league the moment you left the page.** The component
+  held the league in a field set only by `CreateLeagueAsync`, and there was no
+  `OnInitializedAsync` and no "list my leagues" query anywhere in the stack. A
+  user created a league, navigated away, came back, and was told *No league
+  configured* while the row sat in the database. Now `A-36`.
+- **That break hard-blocked the draft**, which asked for a hand-typed League ID
+  GUID with the help text *Use the ID shown on My League* — an ID My League no
+  longer showed. The text input is now a `<select>` of the user's leagues, so
+  the flow needs no clipboard and no GUID.
+- **League validation named the bad token and then threw the name away.** The
+  parsers raise `Unknown scoring rule 'PTZ=1'.`; `catch (Exception)` replaced it
+  with `The league could not be created.` The one fact the user needed to fix
+  their input was the one fact the UI discarded.
+
+The pattern under all four: **a green suite proves the paths someone thought to
+write, and the path a user takes is usually the one nobody wrote.** This is the
+same failure recorded above for auth, one epic later, in a different subsystem.
+The standing counter-measure is the one already stated there — every
+human-facing surface needs at least one row that drives it the way a person
+would — plus a narrower rule these defects earn:
+
+> A row that supplies every optional parameter has not tested the defaults, and
+> a row that reads state in the render that wrote it has not tested persistence.
+
+`ILeagueRepository.ListAsync` relies on the global tenancy filter for scoping
+and adds no owner predicate, consistent with every other list query. `U-01`'s
+sweep is what keeps that honest.
+
 # Revisit triggers
 
 - The user's real league settings differ from the seed league → update
@@ -508,3 +551,5 @@ would.
   `test_matrix_llm.md` row M-02. Adding one needs no approval.
 - **An owned entity is added without `IOwnedResource`** → the U-01 sweep should catch
   it. If it did not, the sweep is the bug, not the entity.
+- **A new page or route ships** → walk it in a browser before calling the epic done.
+  Four defects survived a green suite because nobody made the second request.

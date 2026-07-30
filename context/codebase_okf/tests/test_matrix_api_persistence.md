@@ -37,7 +37,7 @@ database rules, and the HTTP contract.
 | `A-16` | Apply migrations to an empty database | Succeeds from scratch; no `EnsureCreated` anywhere | ✅ |
 | `A-17` | Reflect over repository interfaces | Return domain types; no `IQueryable` leaks outward | ✅ |
 
-# API (`A-10`–`A-15`, `A-18`, `A-19`)
+# API (`A-10`–`A-15`, `A-18`, `A-19`, `A-35`)
 
 | ID | Case | Expected | Required |
 |---|---|---|---|
@@ -49,13 +49,21 @@ database rules, and the HTTP contract.
 | `A-15` | Boot without `BallDontLie:ApiKey` | Startup fails, error names the key | ✅ |
 | `A-18` | Inspect DI registration | Only the Api project wires concrete Infrastructure types | ✅ |
 | `A-19` | Cancel a request mid-flight | Token propagates; no orphaned work | ✅ |
+| `A-35` | **`GET` each list route with no query string** | `200` with the documented defaults (`page` 1, `limit` 50) — not `400` | ✅ |
 
-# UI (`A-20`, `A-21`)
+# UI (`A-20`, `A-21`, `A-36`)
 
 | ID | Case | Expected | Required |
 |---|---|---|---|
 | `A-20` | Render a player projection | Shows baseline, adjustment, and final separately — never the final number alone (R8) | ✅ |
 | `A-21` | Render a number affected by an unverified event | Visibly marked as unverified | ✅ |
+| `A-36` | **Create a league, then request `/league` and `/draft` again** | Both show it: the summary carries the ID, the draft page offers it as an option | ✅ |
+
+`A-35` and `A-36` are both "the second request" rows. Every route in `A-14`'s sweep
+was called the way its author called it — `?page=1&limit=50`, or in the same render
+that created the data. The user's second visit is a different request, and until
+these rows existed nothing tested it: `/api/players` answered `400` and My League
+showed its empty state while the league sat in the database.
 
 # Self-host hardening and distribution (`A-22`–`A-34`) — R21, R22
 

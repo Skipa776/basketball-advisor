@@ -45,14 +45,15 @@ public static class ContextEndpoints
     }
 
     public static async Task<IResult> ListAsync(
-        int page,
-        int limit,
+        int? page,
+        int? limit,
         ContextEventQueryService service,
         CancellationToken cancellationToken)
     {
-        page = page == 0 ? 1 : page;
-        limit = limit == 0 ? Paging.DefaultLimit : limit;
-        var result = await service.ListAsync(page, limit, cancellationToken);
+        var result = await service.ListAsync(
+            page ?? 1,
+            limit ?? Paging.DefaultLimit,
+            cancellationToken);
         return ApiResults.Success(
             result.Items,
             meta: new ApiMeta(result.Total, result.Page, result.Limit));

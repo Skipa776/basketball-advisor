@@ -265,6 +265,11 @@ public sealed class SurfaceQueryServiceTests
             CancellationToken cancellationToken) =>
             Task.FromResult(leagues.GetValueOrDefault(id));
 
+        public Task<IReadOnlyList<FantasyLeague>> ListAsync(
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<FantasyLeague>>(
+                [.. leagues.Values.OrderBy(value => value.Name)]);
+
         public Task SaveScoringAsync(
             FantasyLeague league,
             CancellationToken cancellationToken)

@@ -108,6 +108,10 @@ public sealed class DraftSessionServiceTests
             CancellationToken cancellationToken) =>
             Task.FromResult(id == league.Id ? league : null);
 
+        public Task<IReadOnlyList<FantasyLeague>> ListAsync(
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<FantasyLeague>>([league]);
+
         public Task SaveScoringAsync(
             FantasyLeague value,
             CancellationToken cancellationToken) =>

@@ -3,6 +3,7 @@
 @inject DraftSessionService Drafts
 @inject DraftBoardService Boards
 @inject PlayerQueryService PlayersService
+@inject LeagueService Leagues
 @inject IJSRuntime JavaScript
 
 <PageTitle>Draft Assistant</PageTitle>
@@ -17,18 +18,32 @@
                 Recovery="Your current draft session is unchanged. Correct the input or retry the action." />
 }
 
-@if (session is null)
+@if (session is null && leagues.Count == 0)
+{
+    <EmptyState Title="No league to draft for"
+                Description="A draft needs league rules to rank against. Create one on My League, then come back.">
+        <Action>
+            <a class="button-link" href="/league">Create a league</a>
+        </Action>
+    </EmptyState>
+}
+else if (session is null)
 {
     <form @onsubmit="StartDraftAsync" @onsubmit:preventDefault>
         <fieldset aria-describedby="@(error is null ? null : "draft-error")">
             <legend>Start a draft</legend>
             <p>
-                <label for="draft-league">League ID</label>
-                <input id="draft-league"
-                       @bind="leagueText"
-                       required
-                       aria-describedby="draft-league-help" />
-                <small id="draft-league-help">Use the ID shown on My League.</small>
+                <label for="draft-league">League</label>
+                <select id="draft-league"
+                        @bind="leagueText"
+                        required
+                        aria-describedby="draft-league-help">
+                    @foreach (var option in leagues)
+                    {
+                        <option value="@option.Id">@option.Name</option>
+                    }
+                </select>
+                <small id="draft-league-help">Leagues you have created on My League.</small>
             </p>
             <p>
                 <label for="draft-slot">Your draft position</label>
@@ -87,6 +102,7 @@ else
     private string leagueText = string.Empty;
     private int userSlot = 1;
     private int roundCount = 13;
+    private IReadOnlyList<FantasyLeague> leagues = [];
     private DraftSession? session;
     private DraftBoardResult? board;
     private IReadOnlyList<Recommendation> recommendations = [];
@@ -142,6 +158,14 @@ else
                     recommendation?.Confidence ?? Confidence.Moderate);
             }).ToArray();
         }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        leagues = await Leagues.ListAsync(CancellationToken.None);
+        leagueText = leagues.Count == 0
+            ? string.Empty
+            : leagues[0].Id.ToString();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

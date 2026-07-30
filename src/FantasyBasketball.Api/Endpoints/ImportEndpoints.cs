@@ -71,14 +71,15 @@ public static class ImportEndpoints
             StatusCodes.Status202Accepted);
 
     public static async Task<IResult> ListRunsAsync(
-        int page,
-        int limit,
+        int? page,
+        int? limit,
         ImportRunQueryService service,
         CancellationToken cancellationToken)
     {
-        page = page == 0 ? 1 : page;
-        limit = limit == 0 ? Paging.DefaultLimit : limit;
-        var result = await service.ListAsync(page, limit, cancellationToken);
+        var result = await service.ListAsync(
+            page ?? 1,
+            limit ?? Paging.DefaultLimit,
+            cancellationToken);
         return ApiResults.Success(
             result.Items,
             meta: new ApiMeta(result.Total, result.Page, result.Limit));

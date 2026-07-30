@@ -22,19 +22,20 @@ public static class PlayerEndpoints
         string? search,
         string? team,
         string? position,
-        int page,
-        int limit,
+        int? page,
+        int? limit,
         PlayerQueryService service,
         CancellationToken cancellationToken)
     {
-        page = page == 0 ? 1 : page;
-        limit = limit == 0 ? Paging.DefaultLimit : limit;
+        // These are nullable because a non-nullable int the caller omits is a
+        // minimal-API binding failure, not a zero: GET /api/players with no
+        // query string answered 400 instead of the documented default page.
         var result = await service.ListAsync(
             search,
             team,
             position,
-            page,
-            limit,
+            page ?? 1,
+            limit ?? Paging.DefaultLimit,
             cancellationToken);
         return ApiResults.Success(
             result.Items,

@@ -9,6 +9,7 @@ using AngleSharp.Html.Parser;
 using FantasyBasketball.Api;
 using FantasyBasketball.Application.Abstractions;
 using FantasyBasketball.Application.Ingestion;
+using FantasyBasketball.Application.Players;
 using FantasyBasketball.Domain.Accounts;
 using FantasyBasketball.Domain.Context;
 using FantasyBasketball.Domain.Players;
@@ -345,6 +346,66 @@ public sealed class ApiHttpTests : IAsyncLifetime
                 .GetProperty("code")
                 .GetString()
                 .ShouldBe("internal_error");
+        }
+    }
+
+    [Fact]
+    public async Task A35_list_routes_page_themselves_without_a_query_string()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+
+        // Each of these answered 400 before the fix: a minimal-API `int page`
+        // the caller omits is a binding failure, not a zero. Every existing
+        // row passed "?page=1&limit=50", which is why the break survived a
+        // green suite -- so the bare path is the only thing asserted here.
+        string[] listRoutes =
+        [
+            "/api/players",
+            "/api/context-events",
+            "/api/imports/runs",
+        ];
+
+        foreach (var route in listRoutes)
+        {
+            using var response = await client.GetAsync(route, cancellationToken);
+            response.StatusCode.ShouldBe(
+                HttpStatusCode.OK,
+                $"GET {route} with no query string must apply the documented defaults.");
+            using var document = await ReadEnvelopeAsync(response, cancellationToken);
+            var meta = document.RootElement.GetProperty("meta");
+            meta.GetProperty("page").GetInt32().ShouldBe(1);
+            meta.GetProperty("limit").GetInt32().ShouldBe(Paging.DefaultLimit);
+        }
+    }
+
+    [Fact]
+    public async Task A36_league_survives_the_visit_that_created_it()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var leagueId = await CreateLeagueAsync(cancellationToken);
+
+        // A later GET is a different circuit from the one that created the
+        // league. My League held the league only in component state, so this
+        // request rendered "No league configured" while the row sat in the
+        // database -- and the draft page asked the user to paste "the ID
+        // shown on My League", which by then was shown nowhere.
+        using (var league = await client.GetAsync("/league", cancellationToken))
+        {
+            league.StatusCode.ShouldBe(HttpStatusCode.OK);
+            var html = await league.Content.ReadAsStringAsync(cancellationToken);
+            html.ShouldContain(leagueId.ToString());
+            html.Contains("No league configured", StringComparison.Ordinal)
+                .ShouldBeFalse("a league exists, so the empty state is a lie");
+        }
+
+        using (var draft = await client.GetAsync("/draft", cancellationToken))
+        {
+            draft.StatusCode.ShouldBe(HttpStatusCode.OK);
+            var html = await draft.Content.ReadAsStringAsync(cancellationToken);
+            var document = new HtmlParser().ParseDocument(html);
+            document.QuerySelectorAll("#draft-league option")
+                .Select(option => option.GetAttribute("value"))
+                .ShouldContain(leagueId.ToString());
         }
     }
 

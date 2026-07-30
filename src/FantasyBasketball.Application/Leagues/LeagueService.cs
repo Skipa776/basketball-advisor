@@ -21,6 +21,10 @@ public sealed class LeagueService(ILeagueRepository leagues)
         await leagues.GetAsync(id, cancellationToken)
             ?? throw new ResourceNotFoundException($"League '{id}' was not found.");
 
+    public async Task<IReadOnlyList<FantasyLeague>> ListAsync(
+        CancellationToken cancellationToken) =>
+        await leagues.ListAsync(cancellationToken);
+
     public async Task<FantasyLeague> ReplaceScoringAsync(
         Guid id,
         IReadOnlyList<ScoringRule> scoringRules,
