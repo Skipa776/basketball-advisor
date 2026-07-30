@@ -3,6 +3,7 @@ using FantasyBasketball.Application.Ingestion;
 using FantasyBasketball.Domain.Leagues;
 using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Domain.Provenance;
+using FantasyBasketball.Domain.Projections;
 using FantasyBasketball.Domain.Schedule;
 using FantasyBasketball.Domain.Stats;
 using FantasyBasketball.Infrastructure.Persistence;
@@ -140,7 +141,12 @@ public sealed class PersistenceTests : IAsyncLifetime
         var baseline = BaselineProjectionRow.Create(
             Guid.NewGuid(),
             player.Id,
-            new DateTimeOffset(2026, 7, 29, 12, 0, 0, TimeSpan.Zero));
+            0m,
+            "{}",
+            "{}",
+            0,
+            new DateTimeOffset(2026, 7, 29, 12, 0, 0, TimeSpan.Zero),
+            "persistence-test-v1");
 
         await using (var database = new FantasyDbContext(options))
         {
@@ -502,6 +508,95 @@ public sealed class PersistenceTests : IAsyncLifetime
             row.ExternalId.ShouldBe("jokic");
             row.ParserVersion.ShouldBe("manual-v1");
             row.RawRecordHash.ShouldBe(provenance.RawRecordHash);
+        }
+    }
+
+    [Fact]
+    public async Task P02_observed_and_baseline_round_trip_separately_at_four_decimals()
+    {
+        var player = new Player(
+            new PlayerId(Guid.NewGuid()),
+            "Projection Player",
+            "projection player",
+            null,
+            ["G"],
+            null);
+        var source = new SeasonStatLine(
+            player.Id,
+            2026,
+            40,
+            30m,
+            new StatLine(new Dictionary<StatKey, decimal>
+            {
+                [StatKey.PTS] = 10m,
+            }),
+            new StatLine(new Dictionary<StatKey, decimal>
+            {
+                [StatKey.MIN] = 1200m,
+                [StatKey.PTS] = 400m,
+            }),
+            null,
+            new DataProvenance(
+                DataSourceName.Manual,
+                "projection-player",
+                DateTimeOffset.UnixEpoch,
+                null,
+                "manual-v1",
+                DataSourceConfidence.ManualEntry,
+                new string('c', 64)));
+        var observed = new ObservedStats(
+            player.Id,
+            source,
+            DateTimeOffset.UnixEpoch);
+        var baseline = new BaselineProjection(
+            Guid.NewGuid(),
+            player.Id,
+            30.12345m,
+            new StatLine(new Dictionary<StatKey, decimal>
+            {
+                [StatKey.PTS] = 0.12345m,
+            }),
+            new StatLine(new Dictionary<StatKey, decimal>
+            {
+                [StatKey.MIN] = 30.12345m,
+                [StatKey.PTS] = 3.718271525m,
+            }),
+            60,
+            DateTimeOffset.UnixEpoch,
+            "baseline-v1");
+
+        await using (var database = new FantasyDbContext(options))
+        {
+            await new PlayerRepository(database).AddAsync(
+                player,
+                TestContext.Current.CancellationToken);
+            await new SeasonStatLineRepository(database).AddAsync(
+                source,
+                TestContext.Current.CancellationToken);
+            await new ProjectionRepository(database).AddAsync(
+                observed,
+                baseline,
+                TestContext.Current.CancellationToken);
+        }
+
+        await using (var database = new FantasyDbContext(options))
+        {
+            var repository = new ProjectionRepository(database);
+            var storedObserved = await repository.GetLatestObservedAsync(
+                player.Id,
+                TestContext.Current.CancellationToken);
+            var storedBaseline = await repository.GetBaselineAsync(
+                baseline.Id,
+                TestContext.Current.CancellationToken);
+
+            storedObserved.ShouldNotBeNull();
+            storedObserved.Source.SeasonEndYear.ShouldBe(2026);
+            storedObserved.Source.Totals[StatKey.PTS].ShouldBe(400m);
+            storedBaseline.ShouldNotBeNull();
+            storedBaseline.ProjectedMinutesPerGame.ShouldBe(30.1235m);
+            storedBaseline.PerMinuteRates[StatKey.PTS].ShouldBe(0.1235m);
+            storedBaseline.ProjectedPerGame[StatKey.PTS].ShouldBe(3.7183m);
+            storedBaseline.ComputedAt.ShouldBe(DateTimeOffset.UnixEpoch);
         }
     }
 

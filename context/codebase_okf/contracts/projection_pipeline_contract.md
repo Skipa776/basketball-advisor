@@ -6,7 +6,7 @@ tags: [contract, projections, math]
 source_paths: [src/FantasyBasketball.Domain/Projections, src/FantasyBasketball.Application/Projections]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Projections]
 depends_on: [stat_vocabulary.md, scoring_rules_catalog.md, context_event_catalog.md]
-status: planned
+status: partial
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: high
@@ -186,3 +186,13 @@ golden — including recomputing the worked example above by hand — in one com
 # Verification
 
 `test_matrix_projection_draft.md`, rows P-01 through P-08.
+
+# Implementation evidence
+
+The observed-to-baseline half is implemented. P-01 through P-04 and P-10 cover
+the worked math, persistence-only four-decimal half-away-from-zero rounding,
+derived ratios, deterministic projection, and the zero-minute case.
+`ObservedStats` and `BaselineProjection` persist as separate append-only rows
+through a forward migration, and neither repository nor DbContext permits an
+update path. `AdjustedProjection`, context application, and persisted
+`FantasyValue` remain, so the four-record pipeline stays `partial`.

@@ -70,4 +70,7 @@ also round-trips imported NBA teams and games with source provenance through
 the forward `ScheduleSource` migration. The forward `AdpEntries` migration and
 repository add provenance-complete, player-linked market data and latest-value
 reads. It remains `partial` because later projection, context, and
-recommendation entities in the contract are not implemented yet.
+recommendation entities in the contract are not implemented yet. The
+`ProjectionRecords` migration and repository now add immutable
+`ObservedStats` and full `BaselineProjection` persistence; adjusted
+projections and fantasy values remain.

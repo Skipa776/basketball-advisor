@@ -354,6 +354,41 @@ public sealed class BaselineProjectionConfiguration
     }
 }
 
+public sealed class ObservedStatsConfiguration
+    : IEntityTypeConfiguration<ObservedStatsRow>
+{
+    public void Configure(EntityTypeBuilder<ObservedStatsRow> builder)
+    {
+        builder.ToTable("observed_stats");
+        builder.HasKey(value => value.Id);
+        builder.Property(value => value.Id).HasColumnName("id").ValueGeneratedNever();
+        builder.Property(value => value.PlayerId).HasColumnName("player_id");
+        builder.Property(value => value.SeasonEndYear).HasColumnName("season_end_year");
+        builder.Property(value => value.Source).HasColumnName("source").IsRequired();
+        builder.Property(value => value.AsOf)
+            .HasColumnName("as_of")
+            .HasColumnType("timestamptz");
+        builder.HasIndex(value => new { value.PlayerId, value.AsOf })
+            .IsDescending(false, true)
+            .HasDatabaseName("ix_observed_stats_player_as_of");
+        builder.HasOne<SeasonStatLineRow>()
+            .WithMany()
+            .HasForeignKey(value => new
+            {
+                value.PlayerId,
+                value.SeasonEndYear,
+                value.Source,
+            })
+            .HasPrincipalKey(value => new
+            {
+                value.PlayerId,
+                value.SeasonEndYear,
+                value.Source,
+            })
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
 public sealed class DraftSessionConfiguration : IEntityTypeConfiguration<DraftSessionRow>
 {
     public void Configure(EntityTypeBuilder<DraftSessionRow> builder)

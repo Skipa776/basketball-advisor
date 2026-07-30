@@ -546,17 +546,53 @@ public sealed class BaselineProjectionRow
     public static BaselineProjectionRow Create(
         Guid id,
         Guid playerId,
-        DateTimeOffset computedAt) =>
+        decimal projectedMinutesPerGame,
+        string perMinuteRates,
+        string projectedPerGame,
+        int projectedGamesPlayed,
+        DateTimeOffset computedAt,
+        string modelVersion) =>
         new()
         {
             Id = id,
             PlayerId = playerId,
-            ProjectedMinutesPerGame = 0m,
-            PerMinuteRates = "{}",
-            ProjectedPerGame = "{}",
-            ProjectedGamesPlayed = 0,
-            ModelVersion = "persistence-test-v1",
+            ProjectedMinutesPerGame = projectedMinutesPerGame,
+            PerMinuteRates = perMinuteRates,
+            ProjectedPerGame = projectedPerGame,
+            ProjectedGamesPlayed = projectedGamesPlayed,
+            ModelVersion = modelVersion,
             ComputedAt = computedAt,
+        };
+}
+
+public sealed class ObservedStatsRow
+{
+    private ObservedStatsRow()
+    {
+    }
+
+    public Guid Id { get; private set; }
+
+    public Guid PlayerId { get; private set; }
+
+    public int SeasonEndYear { get; private set; }
+
+    public string Source { get; private set; } = string.Empty;
+
+    public DateTimeOffset AsOf { get; private set; }
+
+    public static ObservedStatsRow Create(
+        Guid playerId,
+        int seasonEndYear,
+        string source,
+        DateTimeOffset asOf) =>
+        new()
+        {
+            Id = Guid.NewGuid(),
+            PlayerId = playerId,
+            SeasonEndYear = seasonEndYear,
+            Source = source,
+            AsOf = asOf,
         };
 }
 

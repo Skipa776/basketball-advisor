@@ -92,3 +92,12 @@ and why.
 # Verification
 
 Rows A-04, A-05, P-05, P-09, C-01, I-07, E-04.
+
+# Implementation evidence
+
+`ObservedStats` and `BaselineProjection` now have append-only repository
+surfaces, and `FantasyDbContext` rejects tracked modification or deletion of
+either row type. A baseline stores its immutable source-independent math while
+the observed row references the exact provenance-carrying season stat line.
+Context verification, adjustment decomposition, and degraded-confidence
+evidence remain, so the broader policy stays `partial`.

@@ -1,7 +1,9 @@
 using FantasyBasketball.Api.Options;
 using FantasyBasketball.Application.Abstractions;
 using FantasyBasketball.Application.Ingestion;
+using FantasyBasketball.Application.Projections;
 using FantasyBasketball.Domain.Provenance;
+using FantasyBasketball.Domain.Projections;
 using FantasyBasketball.Infrastructure.Http;
 using FantasyBasketball.Infrastructure.Persistence;
 using FantasyBasketball.Infrastructure.Persistence.Repositories;
@@ -30,20 +32,32 @@ public static class DependencyInjection
                 options => !string.IsNullOrWhiteSpace(options.ApiKey),
                 "BallDontLie:ApiKey is required.")
             .ValidateOnStart();
+        services.AddOptions<ProjectionOptions>()
+            .Bind(configuration.GetSection(ProjectionOptions.SectionName))
+            .Validate(
+                options => options.IsValid(),
+                "Projection options are invalid.")
+            .ValidateOnStart();
         services.AddDbContext<FantasyDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("Fantasy")));
         services.AddMemoryCache();
         services.AddSingleton(new HostRateLimiter(MinimumRequestInterval));
         services.AddSingleton(TimeProvider.System);
+        services.AddSingleton(serviceProvider =>
+            serviceProvider.GetRequiredService<IOptions<ProjectionOptions>>().Value);
+        services.AddSingleton<MinutesProjector>();
+        services.AddSingleton<BaselineProjector>();
         services.AddScoped<IPlayerRepository, PlayerRepository>();
         services.AddScoped<ITeamRepository, TeamRepository>();
         services.AddScoped<IGameRepository, GameRepository>();
         services.AddScoped<IAdpRepository, AdpRepository>();
+        services.AddScoped<IProjectionRepository, ProjectionRepository>();
         services.AddScoped<IDataImportRunRepository, DataImportRunRepository>();
         services.AddScoped<IImportTransaction, EfImportTransaction>();
         services.AddScoped<PlayerIdentityResolver>();
         services.AddScoped<ImportPlayersService>();
         services.AddScoped<ImportAdpService>();
+        services.AddScoped<ProjectionService>();
         services.AddScoped<BallDontLieProvider>();
         services.AddScoped<IPlayerDirectoryProvider>(serviceProvider =>
             serviceProvider.GetRequiredService<BallDontLieProvider>());

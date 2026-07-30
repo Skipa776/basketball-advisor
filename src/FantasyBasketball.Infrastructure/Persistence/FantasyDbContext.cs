@@ -35,6 +35,8 @@ public sealed class FantasyDbContext(DbContextOptions<FantasyDbContext> options)
     public DbSet<BaselineProjectionRow> BaselineProjections =>
         Set<BaselineProjectionRow>();
 
+    public DbSet<ObservedStatsRow> ObservedStats => Set<ObservedStatsRow>();
+
     public DbSet<DraftSessionRow> DraftSessions => Set<DraftSessionRow>();
 
     public DbSet<DraftPickRow> DraftPicks => Set<DraftPickRow>();
@@ -64,6 +66,12 @@ public sealed class FantasyDbContext(DbContextOptions<FantasyDbContext> options)
             .Any(entry => entry.State is EntityState.Modified or EntityState.Deleted))
         {
             throw new InvalidOperationException("Baseline projections are append-only.");
+        }
+
+        if (ChangeTracker.Entries<ObservedStatsRow>()
+            .Any(entry => entry.State is EntityState.Modified or EntityState.Deleted))
+        {
+            throw new InvalidOperationException("Observed stats are append-only.");
         }
 
         if (ChangeTracker.Entries<DataImportRunRow>()

@@ -74,12 +74,17 @@ exit check is not certified in this repository session because no operator API
 key was used and no scrape target was contacted; W-01 through W-03 belong to
 the later background-worker subsystem and also remain pending.
 
-The full gate passes 41 Domain, 17 Application, and 29 integration tests. Domain
-line coverage is 87.25%, Application line coverage is 86.48%, the build has zero
+The full gate passes 45 Domain, 18 Application, and 30 integration tests. Domain
+line coverage is 87.92%, Application line coverage is 87.39%, the build has zero
 warnings, and all 72 OKF concepts validate. Persistence remains `partial`
-because later projection, context, and recommendation entities are absent. The
-single next action is build step 10: implement the projection engine from its
-worked contract example.
+because adjusted projection, context, and recommendation entities are absent.
+
+**Build step 10 is implemented.** League-average rate shrinkage, minutes and
+durability projection, ratio recomputation, zero-history behavior, and the
+worked scoring example are covered by pure Domain tests. Observed statistics
+and statistical baselines persist as separate append-only rows, with rounding
+only at the repository boundary. The single next action is build step 11:
+implement the live draft board and structured recommendation evidence.
 
 **Build prerequisites on the development machine:**
 

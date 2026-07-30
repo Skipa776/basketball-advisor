@@ -6,7 +6,7 @@ tags: [tests, projections, draft, matrix]
 source_paths: [src/FantasyBasketball.Domain/Projections, src/FantasyBasketball.Domain/Context, src/FantasyBasketball.Domain/Draft]
 test_paths: [tests/FantasyBasketball.Domain.Tests]
 depends_on: [required_gates.md, ../contracts/projection_pipeline_contract.md, ../contracts/draft_value_contract.md]
-status: planned
+status: partial
 last_updated: 2026-07-29
 owners: [engineering]
 ---
@@ -71,3 +71,12 @@ The cases gating build steps 10, 11, and 12 — requirements R7, R8, R9, R10.
 
 `dotnet test --filter "Projections|Context|Draft|Recommendations"`, inside the
 full gate.
+
+# Current evidence
+
+P-01 through P-04 and P-10 are implemented. The worked example, derived ratios,
+repeatability, and zero-minute behavior are Domain tests; P-02 crosses a fresh
+PostgreSQL migration and verifies four-decimal half-away-from-zero persistence
+without rounding projector intermediates. P-05 through P-09 await the context
+slice. Draft, context, and evidence rows remain pending, so this matrix is
+`partial`.

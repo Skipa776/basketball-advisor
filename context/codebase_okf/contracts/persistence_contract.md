@@ -120,5 +120,9 @@ auditable team-source rows, and provenance-complete games with unique
 `(source, external_id)` identity. The forward `AdpEntries` migration adds
 player-linked ADP values, optional variance, a latest-by-player index, and
 provenance-complete storage; a Testcontainers test migrates from empty and
-round-trips the entity. The contract remains `partial` until every entity in
-the list above is present and round-tripped.
+round-trips the entity. `ProjectionRecords` adds separate observed-stat
+references and full baseline rows, with latest-observed and baseline-id reads;
+repository serialization rounds projection decimals half-away-from-zero to
+four places and PostgreSQL tests migrate and round-trip them. The contract
+remains `partial` until every entity in the list above is present and
+round-tripped.

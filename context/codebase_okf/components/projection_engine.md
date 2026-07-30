@@ -6,7 +6,7 @@ tags: [component, projections, domain]
 source_paths: [src/FantasyBasketball.Domain/Projections, src/FantasyBasketball.Application/Projections]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Projections]
 depends_on: [../contracts/projection_pipeline_contract.md]
-status: planned
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: high
@@ -59,3 +59,14 @@ hand), this component, `ModelVersion`, and every projection golden — one commi
 
 [test_matrix_projection_draft](../tests/test_matrix_projection_draft.md), rows
 P-01 through P-10.
+
+# Implementation evidence
+
+`LeagueAverageRateCalculator`, `MinutesProjector`, and `BaselineProjector` are
+pure Domain code. The worked example reproduces per-game `33.0825`, season
+`1984.9500`, and 60 projected games exactly; tests also cover derived ratios,
+repeatability with a caller-supplied id, and zero prior minutes. All constants
+come from validated, options-bound `ProjectionOptions`. `ProjectionService`
+computes the pool average once, injects one UTC run timestamp, and persists one
+observed/baseline pair per player. This component's baseline-only done criteria
+are implemented.
