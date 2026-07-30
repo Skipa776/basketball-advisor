@@ -1,0 +1,58 @@
+# Runs the same gate a developer runs locally. Do not reimplement gate steps here —
+# a CI pipeline that differs from scripts/gate.sh is two gates that will disagree at
+# the worst possible moment. Epic E12 extends this with the image build and the
+# compose smoke test.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate-bundle:
+    # Stdlib-only and dependency-free, so it runs first and fails fast — a broken
+    # context bundle makes every later failure ambiguous.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate OKF bundle
+        run: python3 context/validate_okf.py
+
+  gate:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: ci-only-not-a-secret
+          POSTGRES_DB: fantasy
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Run the gate
+        run: scripts/gate.sh
+        env:
+          ConnectionStrings__Fantasy: Host=localhost;Database=fantasy;Username=postgres;Password=ci-only-not-a-secret
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: '**/TestResults/**/coverage.cobertura.xml'
+          if-no-files-found: ignore

@@ -1,93 +1,87 @@
 ---
 type: task
-title: Post-MVP Roadmap
-description: What is deliberately out of MVP scope, the constraints each item inherits, and the order to build them in.
+title: Post-MVP Roadmap and Permanent Non-Goals
+description: What is now scoped as an epic, what remains deferred, and what is deliberately never being built.
 tags: [task, roadmap, scope]
-source_paths: []
-test_paths: []
-depends_on: [../safety/scraping_policy.md]
+source_paths: [docs/epics]
 status: planned
 last_updated: 2026-07-29
 owners: [engineering]
+depends_on: [../safety/scraping_policy.md]
+test_paths: []
 ---
 
 # Responsibility
 
-Owns the boundary of the MVP. Everything here is **out of scope** for the
-current build. It is written down so that scope is explicit rather than
-remembered, and so the constraints already discovered are inherited rather than
-rediscovered.
+Owns the boundary of the project. Everything that was deferred at MVP has now
+either been **scoped as an epic** with full concepts and a build prompt, or is
+listed below as still-deferred or permanently out of scope.
 
-**Do not start any of this, and do not add abstractions in anticipation of it.**
-The design doc has full detail for each; this concept records only what the MVP
-work already established.
+# Now scoped — R11–R22
 
-# Deferred, with inherited constraints
+Requirements: [`PROJECT_REQUIREMENTS.md`](../../../PROJECT_REQUIREMENTS.md).
+Build prompts and the dependency graph: `docs/epics/`.
 
-### Rolling windows and the riser/faller engine
+| Was deferred | Now |
+|---|---|
+| Rolling windows / risers-fallers | R11 — [rolling_window_contract](../contracts/rolling_window_contract.md) |
+| Category analyzer | R12 — [category_value_contract](../contracts/category_value_contract.md) |
+| Draft intelligence (survival, tiers) | R13 — [draft_intelligence_contract](../contracts/draft_intelligence_contract.md) |
+| Streaming advisor | R14 — [streaming_contract](../contracts/streaming_contract.md) |
+| Trade analyzer | R15 — [trade_contract](../contracts/trade_contract.md) |
+| Provider integrations | R16 — [league_import_contract](../contracts/league_import_contract.md) |
+| News → context events via LLM | R17 — [llm_extraction_contract](../contracts/llm_extraction_contract.md) |
+| Weight calibration / accuracy | R18 — [backtest_contract](../contracts/backtest_contract.md) |
+| Auth | R20 — [auth_tenancy_contract](../contracts/auth_tenancy_contract.md) |
+| Deployment | R21 — [distribution_and_operations](../components/distribution_and_operations.md) |
 
-Needs per-game stat lines. **Basketball-Reference's `robots.txt` disallows
-`*/gamelog/`** — the obvious source. The permitted path is `/boxscores/`, which
-is roughly 1230 pages per season and, at the 6 requests/minute ceiling in
-[scraping_policy](../safety/scraping_policy.md), means a multi-hour rate-limited
-background import, not an interactive one. Design for that from the start or the
-feature is unbuildable as specified.
+The `/boxscores/` constraint that blocked rolling windows is resolved and owned by
+[boxscore_importer](../components/boxscore_importer.md): `*/gamelog/` is
+robots-disallowed, `/boxscores/` is permitted at roughly 3.5 hours per season, and
+that latency is designed for rather than worked around.
 
-The sustainable-vs-unsustainable distinction (minutes and usage moving vs.
-shooting percentage moving) is the actual product value here, not the rolling
-averages themselves.
+# Still deferred — not scoped, not refused
 
-### Category-league analyzer
+Worth building eventually; no concepts written, because writing them now would be
+specifying code nobody is about to write.
 
-The MVP *scores* categories; it does not *compare* them. Z-scores, league
-percentiles, matchup win probability, punt detection, and category-aware draft
-recommendations all live here. `TOV` inverts in every comparison — that rule is
-already recorded in
-[scoring_rules_catalog](../contracts/scoring_rules_catalog.md).
+- **Redis and horizontal scale.** A single-instance self-hosted app with an
+  in-process cache is the shipping target. Revisit if a hosted multi-tenant
+  deployment ever happens.
+- **Live draft co-op.** Multiple people watching one draft board. Blazor Server's
+  circuit makes it plausible; nobody has asked.
+- **Mobile-native app.** The responsive web UI covers the draft-night phone case.
+- **Injury-return and minutes ML models.** The per-minute heuristic plus context
+  events is the current answer; a real model needs the back-test harness first to
+  prove it beats the heuristic.
+- **Natural-language roster Q&A.** Considered and declined at scoping: the answer
+  path would have to be grounded strictly in engine output, and the explainability
+  guarantee is easier to keep with structured evidence than with generated prose.
 
-### Draft intelligence (design-doc phase 5)
+# Permanently out of scope
 
-Survival-to-next-pick probability, ADP variance, tier detection,
-recommended-now vs recommended-later. The MVP approximates this with
-`MarketValue` and the raw ADP gap; upgrading means adding terms to
-[draft_value_contract](../contracts/draft_value_contract.md) and re-checking the
-no-double-counting invariant.
+Not "later" — decided against.
 
-### Streaming advisor
+- **Automated transactions.** No submitting waiver claims, adds, drops, or trades to
+  any provider. This is why Yahoo integration requests **read-only** scope
+  ([league_import_contract](../contracts/league_import_contract.md)). A tool that
+  recommends and a tool that acts are different products with different failure
+  modes, and the failure mode of the second is losing someone's season to a bug.
+- **Authenticated or private-page scraping.** Any provider, any page, any
+  justification ([scraping_policy](../safety/scraping_policy.md)).
+- **An LLM in the recommendation path.** A model may extract context or phrase an
+  explanation. Statistical and optimization code makes every recommendation
+  ([llm_trust_boundary](../safety/llm_trust_boundary.md)).
+- **Cross-tenant aggregates.** No "other managers in your instance" anything
+  ([tenancy_policy](../safety/tenancy_policy.md)).
+- **Microservices and Kubernetes.** A modular monolith is the right shape for this
+  problem and this deployment target.
+- **Judging trade fairness for the other side.** No model of their needs exists, and
+  a verdict computed without one would be authoritative-looking noise
+  ([trade_contract](../contracts/trade_contract.md)).
 
-Usable games (not scheduled games), daily lineup capacity, acquisition limits,
-multi-transaction sequencing. Start with a greedy heuristic before reaching for
-dynamic or integer programming.
+# Verification
 
-### Trade analyzer
-
-Before/after roster value, replacement effects, category redistribution.
-Depends on the category analyzer for category leagues.
-
-### Provider integrations
-
-Yahoo OAuth first — it has a documented Fantasy Sports API covering basketball.
-Sleeper needs NBA support validated endpoint by endpoint; its docs describe
-NFL-only behavior in several places. ESPN stays an **optional adapter**, never a
-dependency, and private league pages are never scraped
-([scraping_policy](../safety/scraping_policy.md)).
-
-### News ingestion and LLM-proposed context events
-
-The [context_event_catalog](../contracts/context_event_catalog.md) vocabulary
-and the human-in-the-loop review workflow already exist so a proposer has a
-target. The rule that survives from the MVP: **statistical and optimization code
-makes the recommendation; a model may extract context or phrase an explanation,
-never decide.** Machine-proposed events land as `Proposed`; only a human writes
-`Verified`.
-
-### Production concerns
-
-Authentication, Redis, a job framework, containerized deployment, back-tested
-weight calibration.
-
-# Order
-
-Trends → category analyzer → streaming → draft intelligence → trades →
-providers → news/LLM → production. Each earns its place by making a real
-decision better, not by completing the design document.
+Nothing to verify — this concept exists so scope is written down rather than
+remembered. A feature request that is not in R1–R22 and not on the deferred list
+above is a scope change, and it gets discussed before it gets built.

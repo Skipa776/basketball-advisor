@@ -47,6 +47,16 @@ test_strategy = "testcontainers"     # integration tests get a throwaway contain
 "Testcontainers.PostgreSql"    = "4.13.0"
 "coverlet.collector"           = "10.0.1"
 
+[dependencies.epic]
+# Added by the epic that needs them, NOT up front. Each is unused until its
+# epic starts, and an unused pin is a dependency you are maintaining for free.
+# All versions verified present on nuget.org 2026-07-29.
+"CsvHelper"                                    = "33.1.0"   # E08 — CSV league/ADP import
+"Microsoft.AspNetCore.Identity.EntityFrameworkCore" = "10.0.10"  # E11 — auth
+"Anthropic"                                    = "12.39.0"  # E09 — official Anthropic SDK
+"OpenTelemetry.Extensions.Hosting"             = "1.17.0"   # E12 — observability
+"OpenTelemetry.Instrumentation.AspNetCore"     = "1.17.0"   # E12
+
 [dependencies.framework_references]
 # Provided by the SDK; never pinned as packages.
 api = ["Microsoft.AspNetCore.App"]
@@ -67,9 +77,12 @@ new_dependency_requires_approval = true
 "Newtonsoft.Json"    = "System.Text.Json is in the framework."
 "HtmlAgilityPack"    = "AngleSharp is the chosen parser; one HTML parser only."
 "Polly"              = "Consume it through Microsoft.Extensions.Http.Resilience, not directly."
-"Hangfire"           = "Post-MVP. BackgroundService covers the MVP cadences."
-"StackExchange.Redis" = "Post-MVP. IMemoryCache covers the MVP."
+"Hangfire"           = "BackgroundService covers every cadence this app has, including the box-score importer."
+"StackExchange.Redis" = "IMemoryCache covers a single-instance self-hosted deployment."
 "Moq"                = "Telemetry incident (SponsorLink). Hand-write fakes, or use NSubstitute with approval."
+"MathNet.Numerics"   = "Only erf and rank correlation are needed; both are ~5 lines with a test. See contracts/category_value_contract.md"
+"anthropic.sdk"      = "Community package. Use the official 'Anthropic' SDK instead."
+"OpenAI"             = "The LLM boundary targets Claude only. See safety/llm_trust_boundary.md"
 
 [forbidden.patterns]
 # Regex-scanned across src/. Each pattern maps to the concept that explains why.
@@ -96,6 +109,30 @@ application_line_coverage_min = 70
 build_warnings_allowed        = 0
 okf_validator_errors_allowed  = 0
 forbidden_pattern_hits_allowed = 0
+accessibility_violations_allowed = 0   # E04 — WCAG 2.2 AA on every shipped page
+tenant_isolation_failures_allowed = 0  # E11 — cross-user read/write is never acceptable
+
+[llm]
+# E09 only. The LLM proposes context events; it never makes a recommendation.
+# Contract: contracts/llm_extraction_contract.md  Safety: safety/llm_trust_boundary.md
+enabled_by_default = false             # self-hosters without a key get a fully working app
+provider           = "anthropic"
+model              = "claude-opus-5"   # configurable; effort is the cost lever, not the model
+effort             = "medium"
+max_output_tokens  = 8000
+structured_output  = true              # schema-constrained; free-text output is rejected
+tools_granted      = []                # the extractor gets no tools, ever
+daily_token_budget = 200000            # hard stop; refuses rather than overspending
+cache_system_prompt = true             # the catalog prompt is stable and >512 tokens
+
+[distribution]
+# E12. Self-hostable is the shipping target — see components/distribution_and_operations.md
+artifact        = "container-image"
+registry        = "ghcr.io"
+platforms       = ["linux/amd64", "linux/arm64"]
+quickstart      = "docker compose up"
+ci              = "github-actions"
+license         = "MIT"
 
 [scraping]
 # Canonical rate ceilings. safety/scraping_policy.md owns the path allowlist.

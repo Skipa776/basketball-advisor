@@ -57,7 +57,31 @@ database rules, and the HTTP contract.
 | `A-20` | Render a player projection | Shows baseline, adjustment, and final separately — never the final number alone (R8) | ✅ |
 | `A-21` | Render a number affected by an unverified event | Visibly marked as unverified | ✅ |
 
+# Self-host hardening and distribution (`A-22`–`A-34`) — R21, R22
+
+| ID | Case | Expected | Required |
+|---|---|---|---|
+| `A-22` | Boot with default configuration and no secrets | Serves on loopback; app is usable | ✅ |
+| `A-23` | Non-loopback bind with no TLS | Fails at boot, naming the setting | ✅ |
+| `A-24` | Inspect the built image | Non-root user, read-only root filesystem, no added capabilities | ✅ |
+| `A-25` | Parse the shipped `compose.yaml` | Postgres port is not published to the host | ✅ |
+| `A-26` | Demo data rendered anywhere | Labelled fictional; opt-in via flag | ✅ |
+| `A-27` | Apply migrations to a populated volume | Forward-only, no data loss; seeded rows survive | ✅ |
+| `A-28` | Request `/metrics` from off-host with defaults | Not reachable | ✅ |
+| `A-29` | **`docker compose up` from a clean clone, no keys** | Working app with demo data; `/health/ready` returns healthy | ✅ |
+| `A-30` | CI workflow | Invokes `scripts/gate.sh` — not a reimplementation of it | ✅ |
+| `A-31` | Built image | Multi-arch (`amd64`, `arm64`); no SDK in the runtime layer | ✅ |
+| `A-32` | Pending migrations | `/health/ready` fails; `/health/live` still succeeds | ✅ |
+| `A-33` | Scrape requests consumed against the ceiling | Exported as a metric | ✅ |
+| `A-34` | README configuration table vs the options classes | Match, by reflection — documentation drift caught by a test | ✅ |
+
+`A-29` is the whole distribution claim in one row: a stranger, one command, no keys.
+If it fails, nothing else about "publishable" is true.
+
+`A-34` exists because a README that documents an intention rather than the artifact
+is the most common defect in self-hosted software, and it is trivially checkable.
+
 # Verification
 
-`dotnet test --filter "Architecture|Persistence|Api"`, inside the full gate, with
-Docker running.
+`dotnet test --filter "Architecture|Persistence|Api|Configuration"`, inside the full
+gate, with Docker running. `A-29` and `A-31` require a Docker builder and run in CI.

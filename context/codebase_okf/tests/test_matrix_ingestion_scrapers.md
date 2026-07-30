@@ -62,12 +62,44 @@ The cases gating build steps 5 through 9 and 14 — requirements R2, R3, R4.
 | `W-02` | Host shutdown requested | Worker stops promptly on the token | ✅ |
 | `W-03` | Successive worker iterations | Fresh scoped provider and `DbContext` per run | ✅ |
 
+# Box-score importer (`S-30`–`S-34`) — R11
+
+| ID | Case | Expected | Required |
+|---|---|---|---|
+| `S-30` | Run the worker twice over the same schedule | Zero requests on the second pass — a completed game is never re-fetched | ✅ |
+| `S-31` | Kill and restart mid-season | Resumes from the database; at most one game re-fetched | ✅ |
+| `S-32` | Every parsed box-score row | Satisfies `REB = OREB + DREB` and ratios in `0..1` | ✅ |
+| `S-33` | One page returns malformed HTML | That game fails and is recorded; the run continues | ✅ |
+| `S-34` | Query while running | Progress and remaining count are readable | ✅ |
+
+The importer shares the global 6/min limiter (row `S-11`) and its URL builder is
+covered by the `/gamelog/` rejection in row `S-10`.
+
+# League import (`L-01`–`L-10`) — R16
+
+| ID | Case | Expected | Required |
+|---|---|---|---|
+| `L-01` | League with a scoring stat outside `StatKey` | `validation_failed` naming that stat; no league created; **never approximated** | ✅ |
+| `L-02` | Import over an existing league | Nothing changes until the diff is confirmed | ✅ |
+| `L-03` | Import that would revert a manual override | The override is flagged separately in the diff | ✅ |
+| `L-04` | **Every adapter unregistered** | Full MVP flow works through CSV and manual entry | ✅ |
+| `L-05` | Yahoo authorization URL | Contains read-only scope and no write scope | ✅ |
+| `L-06` | Captured logs and responses across a Yahoo flow | No access or refresh token present | ✅ |
+| `L-07` | Sleeper adapter's endpoint list | Equals the set of committed NBA fixtures | ✅ |
+| `L-08` | Any snapshot | Carries provenance; unresolved players become pending matches without failing the run | ✅ |
+| `L-09` | Scan outside the adapter assemblies | No branch on a provider name | ✅ |
+| `L-10` | Generated CSV template through the parser | Round-trips — template and parser share one schema | ✅ |
+
 # Fixtures
 
 Committed under `tests/FantasyBasketball.IntegrationTests/Fixtures/Html/`, named
 `{source}-{page}-{yyyy-MM-dd}.html`, trimmed to the relevant table plus
 surrounding structure. Capture procedure:
 [add_new_data_source](../tasks/add_new_data_source.md).
+
+Provider payloads live alongside as recorded JSON. A Sleeper endpoint with no
+committed NBA fixture is not implemented — row `L-07` makes that structural rather
+than aspirational.
 
 # Verification
 

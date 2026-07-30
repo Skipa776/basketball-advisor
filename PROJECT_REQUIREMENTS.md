@@ -4,9 +4,10 @@ The MVP is done when all ten stories below pass their acceptance criteria.
 Rationale for each lives in the design doc; this file is canonical for *what
 must be true*.
 
-Scope note: this is design-doc phases 0–4. Streaming, trades, category analysis,
-riser/faller trends, and provider OAuth are **out of scope** — see
-`context/codebase_okf/tasks/post_mvp_roadmap.md`.
+**R1–R10 are the MVP** (design-doc phases 0–4). **R11–R22, below, are the
+post-MVP epics** that take the project to a self-hostable, publishable product.
+Each is scoped as one epic with its own prompt in `docs/epics/`. Nothing outside
+R1–R22 is in scope — see `context/codebase_okf/tasks/post_mvp_roadmap.md`.
 
 ---
 
@@ -110,3 +111,120 @@ the app shows is computed under my rules, not a provider's defaults.*
 - **Manual override.** Rosters, scoring, picks, player status, context events,
   and projection adjustments are all user-overridable.
 - **Provenance.** Every imported row records where it came from and when.
+
+---
+
+# Beyond the MVP — the publishable product
+
+Ordered by dependency, not priority. Each maps to one epic prompt in
+`docs/epics/`.
+
+### R11 — In-season trends (risers and fallers)
+
+*As a manager mid-season, I want to know who is genuinely breaking out versus who
+is just shooting hot.*
+
+- Rolling 7/14/30-day and last-5/last-10-game windows per player.
+- Each trend decomposes production change into **opportunity** (minutes, usage)
+  versus **efficiency** (shooting percentages), and labels sustainability from
+  that split — not from the size of the production change.
+- Small samples are shrunk, not flagged after the fact.
+- Requires per-game stat lines, which requires the `/boxscores/` importer —
+  `*/gamelog/` is robots-disallowed. See `safety/scraping_policy.md`.
+- Owning concepts: `contracts/rolling_window_contract.md`, `components/trend_engine.md`, `components/boxscore_importer.md`
+
+### R12 — Category analyzer
+
+- Per-category z-scores across the player pool, with **ratio categories weighted
+  by volume** (a 90% free-throw shooter on two attempts is not an asset).
+- Team category profile as percentiles, expected weekly totals, and per-category
+  matchup win probability.
+- Punt detection: identify categories that are unreachable and recompute player
+  value with them excluded.
+- `TOV` inverts everywhere.
+- Owning concepts: `contracts/category_value_contract.md`, `components/category_analyzer.md`
+
+### R13 — Draft intelligence
+
+- Probability a player survives to the user's next pick, from ADP and its
+  variance — replacing the MVP's raw ADP gap.
+- Tier detection: value cliffs in the remaining pool.
+- Category-aware draft value for category leagues.
+- Owning concepts: `contracts/draft_intelligence_contract.md`, `components/draft_intelligence.md`
+
+### R14 — Streaming advisor
+
+- **Usable** games, not scheduled games: a game counts only if an eligible
+  lineup slot is actually open that day after better players are placed.
+- Multi-day add/drop sequences under a weekly acquisition limit.
+- Owning concepts: `contracts/streaming_contract.md`, `components/streaming_advisor.md`
+
+### R15 — Trade analyzer
+
+- Points leagues: before/after roster value including replacement backfill and
+  slot displacement.
+- Category leagues: before/after category profile and change in expected
+  matchup wins.
+- Multi-player and multi-team trades.
+- Owning concepts: `contracts/trade_contract.md`, `components/trade_analyzer.md`
+
+### R16 — Provider integrations
+
+- Yahoo OAuth import of league, roster, and scoring settings.
+- Sleeper after per-endpoint NBA validation; ESPN via CSV and manual only.
+- Every provider stays an **optional adapter**: with all of them disabled the app
+  is fully usable through manual entry.
+- Owning concepts: `contracts/league_import_contract.md`, `components/league_import_adapters.md`
+
+### R17 — LLM-proposed context events
+
+- An article becomes one or more **`Proposed`** context events typed against the
+  existing catalog, for a human to accept, edit, or reject.
+- Article text is untrusted input: the model gets no tools, a schema-constrained
+  output, and no path to `Verified`.
+- Disabled by default; the app is fully functional without an API key.
+- Owning concepts: `contracts/llm_extraction_contract.md`, `safety/llm_trust_boundary.md`, `components/llm_context_proposer.md`
+
+### R18 — Back-testing and calibration
+
+*The requirement that converts two documented guesses into measured numbers.*
+
+- Import multiple historical seasons; hold one out.
+- Report projection accuracy: MAE, RMSE, Spearman rank correlation, top-K hit
+  rate, and calibration by decile.
+- Fit the draft weights against realized outcomes and write the fitted values
+  into the shipped defaults, with the report committed alongside.
+- Owning concepts: `contracts/backtest_contract.md`, `components/backtest_harness.md`
+
+### R19 — Design system and accessibility
+
+- A documented design system — tokens, component inventory, interaction
+  budget — that the Blazor components are built from rather than styled ad hoc.
+- WCAG 2.2 AA as a gate, not an aspiration. Risk and confidence are never
+  conveyed by colour alone.
+- The draft board is keyboard-operable end to end.
+- Owning concepts: `contracts/design_system_contract.md`, `components/design_system.md`, `tasks/run_design_process.md`
+
+### R20 — Accounts and data ownership
+
+- ASP.NET Identity accounts. Leagues, drafts, and context events belong to a
+  user; players, stats, and schedules are shared reference data.
+- Every endpoint authorizes; cross-user access is impossible, proven by test.
+- First registration claims the instance as owner; open registration is a config
+  choice, closed by default.
+- Owning concepts: `contracts/auth_tenancy_contract.md`, `safety/tenancy_policy.md`, `components/identity_and_authorization.md`
+
+### R21 — Self-hostable distribution
+
+- Multi-arch container image plus a `docker compose up` quickstart that works
+  from a clean clone with no API keys.
+- README with screenshots, LICENSE, CI running the full gate, seeded demo data.
+- Documented upgrade path: migrations apply forward on an existing volume.
+- Owning concepts: `components/distribution_and_operations.md`, `tasks/release_checklist.md`, `safety/self_host_hardening.md`
+
+### R22 — Observability and operations
+
+- Structured logs, health endpoints, and metrics for import success, scrape rate
+  consumption, and recommendation latency.
+- A data-source health view an operator can act on.
+- Owning concepts: `components/distribution_and_operations.md`

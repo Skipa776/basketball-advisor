@@ -250,3 +250,192 @@ GET    /api/health/data-sources              per-source last success + staleness
 
 All responses use one envelope: `{ success, data, error, meta }`
 (`contracts/api_surface.md` owns its exact shape).
+
+---
+
+# Post-MVP subsystems (R11–R22)
+
+Added by the epic that needs them, in `docs/epics/` order. Same rule as above:
+these paths appear when their subsystem is built and tested.
+
+```text
+src/FantasyBasketball.Domain/
+  Trends/           RollingWindow.cs  WindowSpan.cs  TrendScore.cs
+                    ProductionDecomposition.cs  Sustainability.cs
+  Categories/       CategoryZScore.cs  TeamCategoryProfile.cs  PuntProfile.cs
+                    MatchupOutlook.cs  NormalDistribution.cs
+  Draft/            SurvivalProbability.cs  Tier.cs
+  Streaming/        UsableGame.cs  LineupDay.cs  StreamingPlan.cs  StreamingMove.cs
+  Trades/           TradeProposal.cs  TradeEvaluation.cs
+  Accounts/         UserId.cs  OwnedResource.cs
+
+src/FantasyBasketball.Application/
+  Trends/           TrendAnalysisService.cs  WindowBuilder.cs
+  Categories/       CategoryAnalyzerService.cs  PuntDetector.cs
+  Draft/            SurvivalModel.cs  TierDetector.cs
+  Streaming/        UsableGameCalculator.cs  StreamingPlanner.cs
+  Trades/           TradeEvaluationService.cs
+  Context/          ContextProposalService.cs        # reviews LLM proposals
+  Backtest/         BacktestRunner.cs  AccuracyMetrics.cs  WeightOptimizer.cs
+  Abstractions/     IContextEventProposer.cs  IUserContext.cs
+
+src/FantasyBasketball.Infrastructure/
+  Scrapers/BasketballReference/  BoxScoreScraper.cs  BoxScoreParser.cs
+  Providers/Yahoo/               YahooOAuthClient.cs  YahooLeagueProvider.cs
+  Providers/Sleeper/             SleeperLeagueProvider.cs
+  Import/                        CsvLeagueImporter.cs
+  Llm/                           ClaudeContextProposer.cs  ExtractionPrompt.cs
+                                 ProposalSchema.cs  TokenBudget.cs
+  Identity/                      FantasyUser.cs  IdentityDbConfiguration.cs
+  Workers/                       BoxScoreImportWorker.cs  TrendRefreshWorker.cs
+  Telemetry/                     Metrics.cs
+
+src/FantasyBasketball.Api/
+  Components/Pages/  Trends.razor  FreeAgents.razor  Streamers.razor
+                     Trades.razor  Matchup.razor  Account/*.razor
+  Components/Design/ Tokens.razor.css  <design-system components>
+
+tests/
+  FantasyBasketball.Domain.Tests/{Trends,Categories,Streaming,Trades}
+  FantasyBasketball.IntegrationTests/{Auth,Llm,Providers,Backtest}
+  FantasyBasketball.IntegrationTests/Fixtures/Articles/   # LLM extraction fixtures
+```
+
+## Post-MVP type shapes
+
+Values, formulas, and enum members stay in their `contracts/` catalogs.
+
+```csharp
+// --- Trends (R11) ------------------------------------------------------------
+// Windows and the trend formula: contracts/rolling_window_contract.md
+public sealed record RollingWindow(
+    PlayerId PlayerId, WindowSpan Span,
+    int GamesInWindow, decimal MinutesPerGame,
+    StatLine PerGame, decimal? UsageRate, DateOnly Through);
+
+public sealed record ProductionDecomposition(
+    decimal TotalChange,          // change in fantasy points per game
+    decimal FromMinutes,          // additive contributions; sum to TotalChange
+    decimal FromUsage,
+    decimal FromEfficiency,
+    decimal OpportunityShare);    // (FromMinutes + FromUsage) / |TotalChange|
+
+public sealed record TrendScore(
+    PlayerId PlayerId, WindowSpan Span, decimal Score,
+    Sustainability Sustainability, ProductionDecomposition Decomposition,
+    decimal SampleWeight,
+    IReadOnlyList<RecommendationEvidence> Evidence);
+
+// --- Categories (R12) --------------------------------------------------------
+// Z-score math, volume weighting, punt rules: contracts/category_value_contract.md
+public sealed record CategoryZScore(StatKey Category, decimal Z, decimal Weight);
+
+public sealed record TeamCategoryProfile(
+    Guid LeagueId, Guid RosterId,
+    IReadOnlyDictionary<StatKey, decimal> ExpectedWeeklyTotal,
+    IReadOnlyDictionary<StatKey, decimal> Percentile,
+    IReadOnlyDictionary<StatKey, decimal> WinProbability,
+    PuntProfile Punt);
+
+public sealed record PuntProfile(
+    IReadOnlyList<StatKey> Punted, bool UserChosen, string Rationale);
+
+// --- Draft intelligence (R13) ------------------------------------------------
+// Survival model and tier rule: contracts/draft_intelligence_contract.md
+public sealed record SurvivalProbability(
+    PlayerId PlayerId, int AtPick, decimal Probability, decimal AdpStdDev);
+
+public sealed record Tier(int Rank, decimal TopValue, decimal BottomValue, int Size);
+
+// --- Streaming (R14) ---------------------------------------------------------
+// Usable-game algorithm: contracts/streaming_contract.md
+public sealed record LineupDay(
+    DateOnly Date, int OpenSlots, int LeagueWideGameCount);
+
+public sealed record UsableGame(
+    PlayerId PlayerId, DateOnly Date, bool Usable, decimal ExpectedValue,
+    string Reason);                       // why it is or is not usable
+
+public sealed record StreamingMove(
+    DateOnly Date, PlayerId? Add, PlayerId? Drop, decimal ExpectedGain);
+
+public sealed record StreamingPlan(
+    Guid LeagueId, DateOnly From, DateOnly To,
+    IReadOnlyList<StreamingMove> Moves,
+    decimal ExpectedIncrementalValue, int AcquisitionsUsed,
+    IReadOnlyList<RecommendationEvidence> Evidence);
+
+// --- Trades (R15) ------------------------------------------------------------
+public sealed record TradeProposal(
+    Guid LeagueId, Guid ProposingRosterId,
+    IReadOnlyList<PlayerId> Sending, IReadOnlyList<PlayerId> Receiving);
+
+public sealed record TradeEvaluation(
+    TradeProposal Proposal,
+    decimal ValueBefore, decimal ValueAfter,
+    decimal ReplacementBackfill,
+    TeamCategoryProfile? CategoriesBefore, TeamCategoryProfile? CategoriesAfter,
+    decimal ExpectedWinsDelta,
+    Confidence Confidence,
+    IReadOnlyList<RecommendationEvidence> Evidence);
+
+// --- LLM proposals (R17) -----------------------------------------------------
+// Prompt, schema, and boundary: contracts/llm_extraction_contract.md
+public sealed record ArticleSource(
+    string Url, string Title, string Text, DateTimeOffset PublishedAt,
+    string ContentHash);
+
+public sealed record ProposedContextEvent(
+    ContextEventType Type,
+    string? TeamExternalName, string? PrimaryPlayerName,
+    IReadOnlyList<string> AffectedPlayerNames,
+    ContextDirection Direction, decimal Magnitude, Confidence Confidence,
+    string Summary, string SupportingQuote);   // quote must appear in the article
+
+public sealed record ExtractionResult(
+    ArticleSource Source, IReadOnlyList<ProposedContextEvent> Proposals,
+    string ModelId, int InputTokens, int OutputTokens, DateTimeOffset ExtractedAt);
+
+// --- Back-testing (R18) ------------------------------------------------------
+// Metric definitions and protocol: contracts/backtest_contract.md
+public sealed record AccuracyMetrics(
+    int SeasonEndYear, int PlayerCount,
+    decimal MeanAbsoluteError, decimal RootMeanSquaredError,
+    decimal SpearmanRho, decimal TopKHitRate, int K,
+    IReadOnlyList<decimal> CalibrationByDecile);
+
+public sealed record WeightCandidate(
+    decimal Scarcity, decimal Fit, decimal Market, decimal Risk,
+    decimal RealizedRosterValue);
+
+// --- Accounts (R20) ---------------------------------------------------------
+// Ownership and authorization rules: contracts/auth_tenancy_contract.md
+public readonly record struct UserId(Guid Value);
+public interface IUserContext { UserId CurrentUser { get; } }
+```
+
+Owned resources (`FantasyLeague`, `DraftSession`, `ContextEvent`,
+`Recommendation`) gain a non-nullable `OwnerId`. Reference data (`Player`,
+`NbaTeam`, `SeasonStatLine`, `NbaGame`, `AdpEntry`, `RollingWindow`,
+`BaselineProjection`) is **global and unowned** — see
+`safety/tenancy_policy.md` for why that split is the whole design.
+
+## Post-MVP API additions
+
+```text
+GET    /api/players/{id}/trends?span=            R11
+GET    /api/leagues/{id}/free-agents             R11
+GET    /api/leagues/{id}/categories              R12
+GET    /api/leagues/{id}/matchup                 R12
+GET    /api/drafts/{id}/survival?pick=           R13
+GET    /api/drafts/{id}/tiers                    R13
+POST   /api/leagues/{id}/streaming-plan          R14
+POST   /api/leagues/{id}/trades/evaluate         R15
+POST   /api/imports/league                       R16  provider or CSV
+POST   /api/context-events/propose               R17  article in, proposals out
+GET    /api/backtest/reports                     R18
+POST   /api/account/{register,login,logout}      R20
+GET    /health/{live,ready}                      R22
+GET    /metrics                                  R22
+```
+

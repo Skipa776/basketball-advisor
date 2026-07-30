@@ -115,6 +115,62 @@ and punt analyzer. Split explicitly: the **scoring engine** handles both league
 types in the MVP; the **category analyzer** is post-MVP. Without this split, two
 competent agents would have built materially different things.
 
+# Post-MVP scoping decisions — 2026-07-29
+
+The project was scoped from MVP to a publishable, self-hostable product. R11–R22 in
+[`PROJECT_REQUIREMENTS.md`](../../PROJECT_REQUIREMENTS.md); build order and prompts in
+`docs/epics/`.
+
+| Decision | Chosen | Why | Revisit when |
+|---|---|---|---|
+| Shipping shape | Self-hostable product | A container image and a one-command quickstart; no hosted service to operate | Someone wants a hosted instance |
+| Auth | **Full ASP.NET Identity** with real per-user ownership | Chosen deliberately over a single-user password. It only earns its place if ownership is real, so the data model is genuinely multi-tenant and reference data is shared rather than duplicated | Never — half-tenancy would be worse than either end |
+| Auth ordering | Epic **E04**, fourth | The isolation sweep enumerates routes by reflection, so every later endpoint is covered automatically. Landing auth last means retrofitting a dozen endpoints at once | Never |
+| Front-end | Blazor Server, invest in the design system | No second toolchain; the SignalR circuit already gives live draft re-rank | A public non-authenticated UI is wanted |
+| Design process | Structure specified, taste elicited | Tokens, inventory, and the a11y floor need no human; the aesthetic does. `DESIGN_BRIEF.md` → `/design-consultation` → `DESIGN.md` | Never |
+| LLM scope | News → **`Proposed`** context events only | The human-in-the-loop seam already existed. Statistical code still makes every recommendation | Never — see [llm_trust_boundary](safety/llm_trust_boundary.md) |
+| LLM default | **Disabled**, no key required | A self-hoster without a key must get a complete application | Never |
+| LLM provider | Official `Anthropic` SDK, `claude-opus-5` | Structured outputs constrain the response to the event schema; effort is the cost lever. The community `anthropic.sdk` package is forbidden | Model or SDK deprecation |
+| Statistics dependencies | None — implement `Φ` and rank correlation | Two functions of a few lines each, one test each. `MathNet.Numerics` is forbidden | A third non-trivial statistic appears |
+| Automated transactions | **Permanently out of scope** | Yahoo integration requests read-only scope. A tool that recommends and a tool that acts have different failure modes, and the second one loses someone's season to a bug | Never |
+| Trade fairness for the other side | **Not offered** | No model of their needs exists; a verdict without one is authoritative-looking noise | Never |
+
+# Red-team findings from the post-MVP cold read
+
+Four more spec defects caught before any of this code existed.
+
+### 4. The streaming score double-counted usable games *(resolved)*
+
+The design doc's formula multiplies `ExpectedPerGameValue × UsableGames × …`. Summing
+per-day value and *then* multiplying by the count of usable days counts every day
+twice. Resolved in [streaming_contract](contracts/streaming_contract.md): the value is
+a **sum across usable days**, and `UsableGames` is the cardinality of that sum —
+reported to the user, never a multiplier on it.
+
+### 5. Category z-scores on raw percentages are wrong *(resolved)*
+
+The obvious implementation z-scores `FG_PCT` and `FT_PCT` directly, which makes a
+player who took two free throws and made both a maximal free-throw asset. Resolved in
+[category_value_contract](contracts/category_value_contract.md) with the volume-weighted
+*impact* form, and pinned by a required test (row Y-01) that asserts exactly that
+player scores near zero.
+
+### 6. The punt ceiling is arithmetic, not taste *(resolved)*
+
+"How many categories can you punt" has a derivable answer: winning 9 categories
+requires 5, so punting `k` leaves `9 − k` from which 5 must come — feasible only while
+`k ≤ 4`. `PUNT_MAX = 3` leaves one category of margin. Recorded with the derivation so
+nobody re-argues it from intuition.
+
+### 7. Survival probability would have double-counted `MarketValue` *(resolved)*
+
+Adding a survival term alongside the MVP's `(ADP − pick)` proxy would have counted
+"the market says wait" twice. Resolved in
+[draft_intelligence_contract](contracts/draft_intelligence_contract.md): `OpportunityCost`
+**replaces** `MarketValue`, and E07 edits
+[draft_value_contract](contracts/draft_value_contract.md) in the same commit. A rename
+that leaves the old term callable is not a replacement.
+
 # Knowingly unenforced (prose-only)
 
 Stated out loud rather than assumed. Each is a candidate for promotion to a
@@ -124,16 +180,39 @@ real check.
   paths and crawl rates are machine-checked; ToU compliance is a human judgment
   and stays a human responsibility. **Before running any scraper against a live
   host, the operator should read that host's current terms.** Personal,
-  non-commercial use is the assumed posture.
+  non-commercial use is the assumed posture. Now also a line item in
+  [release_checklist](tasks/release_checklist.md), so someone owns it per release.
 - **Draft weight calibration.** The weights in
   [draft_value_contract](contracts/draft_value_contract.md) are transparent
   constants chosen by judgment, not back-tested. They are configuration, not
   code, precisely so they can be tuned. A wrong weight produces a bad
   recommendation, not a failing test — no check can catch it until there is
-  historical validation data.
+  historical validation data. **Scoped for resolution: epic E11**
+  ([backtest_contract](contracts/backtest_contract.md)).
 - **Projection accuracy.** Nothing verifies the projections are *good*, only
-  that they are computed as specified and decomposed correctly. Accuracy
-  back-testing is post-MVP.
+  that they are computed as specified and decomposed correctly. **Scoped for
+  resolution: epic E11.** Note the honesty rule there — if the fitted weights do
+  not beat these judgment defaults on holdout, the defaults ship and this entry
+  stays, citing the report that says so.
+- **Trend weights** in [rolling_window_contract](contracts/rolling_window_contract.md)
+  are judgment values on the same footing, and subject to the same rule.
+- **No fuzzy player matching**, by choice
+  ([player_identity_contract](contracts/player_identity_contract.md)). There is no
+  fuzzy matcher to test; the invariant is the absence of one.
+- **Prompt wording** is not a security control
+  ([llm_trust_boundary](safety/llm_trust_boundary.md)). The tested controls are the
+  absent tools, the constrained schema, the grounding check, and the unreachable
+  `Verified` state — the prompt is the part an attacker gets to argue with.
+
+# Conflict with the global C# rules
+
+`~/.claude/rules/csharp/testing.md` recommends **FluentAssertions** and **Moq**. Both
+are on this project's forbidden list in
+[`stack_config.toml`](../../stack_config.toml): FluentAssertions moved to a commercial
+licence at v8, and Moq shipped a telemetry component. The rules file predates both
+changes. This project uses **Shouldly** and hand-written fakes; NSubstitute is
+available with approval. Where the global rules and `stack_config.toml` disagree,
+`stack_config.toml` wins — it is the machine-checked one.
 
 # Build decisions
 
@@ -157,3 +236,12 @@ pure and avoids placeholder identifiers or false season totals.
   identity/schedule source before the draft season.
 - A build agent had to invent a design decision → that is a bundle gap. Record
   it here and write it into the owning concept.
+- **A back-test run completes** → update the two calibration entries above with the
+  measured result, whichever way it came out.
+- **Anthropic deprecates the model or changes the SDK surface** → the `[llm]` model is
+  a config value, but a parameter-shape change needs the `claude-api` skill re-read
+  before editing the adapter.
+- **A new prompt-injection shape is thought of** → add an adversarial fixture to
+  `test_matrix_llm.md` row M-02. Adding one needs no approval.
+- **An owned entity is added without `IOwnedResource`** → the U-01 sweep should catch
+  it. If it did not, the sweep is the bug, not the entity.

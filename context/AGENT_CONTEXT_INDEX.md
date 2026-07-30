@@ -24,9 +24,35 @@ Index rows route; concepts own. Nothing here restates a concept's content.
 | Handle an API key, token, or password | `codebase_okf/safety/secrets_policy.md` |
 | Run the checks before committing | `codebase_okf/tasks/run_quality_gates.md`, `codebase_okf/tests/required_gates.md` |
 | Start an unattended build of this project | `codebase_okf/tasks/one_shot_build_plan.md` |
-| Work on streaming, trades, categories, or trends | `codebase_okf/tasks/post_mvp_roadmap.md` — these are **out of MVP scope** |
 | Understand a decision I disagree with | `codebase_okf/assumptions.md`, then the design doc |
 | Add or edit a concept file | `codebase_okf/okf_schema.md` |
+| Know what is in scope at all | `codebase_okf/tasks/post_mvp_roadmap.md` — scoped, deferred, and permanently refused |
+
+## Post-MVP (R11–R22) — build order and prompts in `docs/epics/`
+
+| I am about to… | Read first |
+|---|---|
+| Compute or change a rolling window or trend | `codebase_okf/contracts/rolling_window_contract.md`, `codebase_okf/components/trend_engine.md` |
+| Import per-game box scores | `codebase_okf/components/boxscore_importer.md`, `codebase_okf/safety/scraping_policy.md` |
+| Touch category z-scores, profiles, or punts | `codebase_okf/contracts/category_value_contract.md`, `codebase_okf/components/category_analyzer.md` |
+| Compute a normal distribution or rank correlation | `codebase_okf/contracts/category_value_contract.md` — one implementation, shared |
+| Change survival probability, tiers, or the market term | `codebase_okf/contracts/draft_intelligence_contract.md` — **and `draft_value_contract.md` in the same commit** |
+| Work on usable games or a streaming plan | `codebase_okf/contracts/streaming_contract.md`, `codebase_okf/components/streaming_advisor.md` |
+| Evaluate a trade | `codebase_okf/contracts/trade_contract.md`, `codebase_okf/components/trade_analyzer.md` |
+| Compute an optimal starting lineup | `codebase_okf/components/streaming_advisor.md` — one implementation, shared with trades |
+| Import a league from a provider or CSV | `codebase_okf/contracts/league_import_contract.md`, `codebase_okf/components/league_import_adapters.md` |
+| Handle an OAuth token | `codebase_okf/safety/secrets_policy.md`, `codebase_okf/contracts/league_import_contract.md` |
+| Write any code that calls a language model | `codebase_okf/safety/llm_trust_boundary.md` **first**, then `codebase_okf/contracts/llm_extraction_contract.md` |
+| Change what the model may receive, be granted, or produce | `codebase_okf/safety/llm_trust_boundary.md` — `stable_contract`, needs approval |
+| Measure projection accuracy or fit a weight | `codebase_okf/contracts/backtest_contract.md`, `codebase_okf/tasks/run_backtest.md` |
+| Add an entity that belongs to a user | `codebase_okf/contracts/auth_tenancy_contract.md`, `codebase_okf/safety/tenancy_policy.md` — **the filter and the sweep row are not optional** |
+| Add or change an endpoint after auth lands | `codebase_okf/contracts/auth_tenancy_contract.md` — every endpoint authorizes |
+| Style anything, or add a component | `codebase_okf/contracts/design_system_contract.md`, `codebase_okf/components/design_system.md` |
+| Run the design process or produce `DESIGN.md` | `codebase_okf/tasks/run_design_process.md` — steps 1–3 need a human |
+| Build a chart | Load the `dataviz` skill, then `codebase_okf/tasks/run_design_process.md` step 5 |
+| Change a shipping default, compose file, or Dockerfile | `codebase_okf/safety/self_host_hardening.md` |
+| Add observability or a health endpoint | `codebase_okf/components/distribution_and_operations.md` |
+| Publish a version | `codebase_okf/tasks/release_checklist.md` |
 
 ## Reading the bundle cold
 

@@ -35,9 +35,20 @@ every invariant in this bundle cites the row that would catch its violation.
 | Prefix | Range | Matrix |
 |---|---|---|
 | `S-01`–`S-08` | scoring | [test_matrix_scoring](test_matrix_scoring.md) |
-| `P-`, `D-`, `C-`, `E-` | projection, draft, context, evidence | [test_matrix_projection_draft](test_matrix_projection_draft.md) |
-| `I-`, `N-`, `S-10`–`S-14`, `W-` | ingestion, identity, scrapers, workers | [test_matrix_ingestion_scrapers](test_matrix_ingestion_scrapers.md) |
-| `A-` | architecture, persistence, API | [test_matrix_api_persistence](test_matrix_api_persistence.md) |
+| `P-`, `C-`, `E-`, `D-01`–`D-09` | projection, context, evidence, draft | [test_matrix_projection_draft](test_matrix_projection_draft.md) |
+| `I-`, `N-`, `L-`, `W-`, `S-10`–`S-14`, `S-30`–`S-34` | ingestion, identity, league import, workers, scrapers, box scores | [test_matrix_ingestion_scrapers](test_matrix_ingestion_scrapers.md) |
+| `A-` | architecture, persistence, API, distribution | [test_matrix_api_persistence](test_matrix_api_persistence.md) |
+| `T-` | trends | [test_matrix_trends](test_matrix_trends.md) |
+| `Y-`, `X-`, `R-`, `S-20`–`S-29`, `S-35`–`S-36` | categories, draft intelligence, trades, streaming | [test_matrix_advanced_decisions](test_matrix_advanced_decisions.md) |
+| `U-` | auth and tenancy | [test_matrix_auth_tenancy](test_matrix_auth_tenancy.md) |
+| `M-` | LLM extraction | [test_matrix_llm](test_matrix_llm.md) |
+| `B-` | back-testing | [test_matrix_backtest](test_matrix_backtest.md) |
+| `D-10`–`D-21` | UI and design system | [test_matrix_ui_design](test_matrix_ui_design.md) |
+
+`S-` and `D-` are split by numeric range across matrices rather than renamed,
+because the ranges are disjoint and every citation names its matrix file. The
+audit in [run_quality_gates](../tasks/run_quality_gates.md) fails if any single
+ID is ever defined in two matrices.
 
 Adding an invariant to any concept means adding its row here, in the same
 commit. An invariant with no row is prose — and prose belongs in
