@@ -6,7 +6,7 @@ tags: [component, auth, tenancy]
 source_paths: [src/FantasyBasketball.Infrastructure/Identity, src/FantasyBasketball.Api/Components/Pages/Account]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Auth]
 depends_on: [../contracts/auth_tenancy_contract.md, ../safety/tenancy_policy.md]
-status: planned
+status: partial
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: high
@@ -84,3 +84,11 @@ owned entity without the marker.**
 
 [test_matrix_auth_tenancy](../tests/test_matrix_auth_tenancy.md), rows U-01 through
 U-17.
+
+# Current evidence
+
+Identity uses the existing PostgreSQL context and migration history, with
+snake-case Identity tables and application-generated GUID user ids. The first
+forward migration adds every nullable ownership column without inventing an
+owner or losing pre-auth rows; U-17 verifies that boundary. The claim service,
+second migration, filters, authorization sweep, and account surface remain.

@@ -76,7 +76,7 @@ exit check is not certified in this repository session because no operator API
 key was used and no scrape target was contacted; W-01 through W-03 belong to
 the later background-worker subsystem and also remain pending.
 
-The full gate passes 70 Domain, 30 Application, and 46 integration tests. Domain
+The full gate passes 70 Domain, 30 Application, and 47 integration tests. Domain
 line coverage is 88.42%, Application line coverage is 73.01%, the build has zero
 warnings, and all 72 OKF concepts validate.
 
@@ -115,6 +115,12 @@ shared import queue's fresh scope per run. Worker failure, continuation,
 shutdown, registration, and configuration rows pass. All ten MVP stories now
 have implementation and automated evidence; live external-source certification
 still requires operator credentials and remains explicitly under-claimed.
+
+**E04 is partial at its first safe migration boundary.** Identity and nullable
+ownership columns share the existing context and migration history. No
+placeholder user is seeded and no pre-auth row is deleted or assigned yet; the
+next slice claims those rows during first registration before making required
+owners non-null.
 
 **Build prerequisites on the development machine:**
 

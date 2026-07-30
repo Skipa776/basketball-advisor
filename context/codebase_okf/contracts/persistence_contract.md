@@ -131,3 +131,7 @@ all four new record types. `DraftSessionState` completes persisted snake-draft
 state needed to reconstruct picks, and `RecommendationPersistence` stores every
 recommendation with ordered structured evidence and string enums. PostgreSQL
 round-trip tests now cover every entity in this contract.
+`IdentityAndNullableOwnership` begins the required auth retrofit without
+rewriting history: Identity shares this context, and every owned table gains a
+nullable user foreign key so pre-auth data can be claimed before the later
+non-null migration.

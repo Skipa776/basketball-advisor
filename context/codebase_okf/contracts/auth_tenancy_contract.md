@@ -6,7 +6,7 @@ tags: [contract, auth, tenancy, security]
 source_paths: [src/FantasyBasketball.Infrastructure/Identity, src/FantasyBasketball.Domain/Accounts]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Auth]
 depends_on: [persistence_contract.md, ../safety/tenancy_policy.md]
-status: planned
+status: partial
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: high
@@ -145,3 +145,13 @@ codebase**, which is why the sweep enumerates rather than lists.
 
 [test_matrix_auth_tenancy](../tests/test_matrix_auth_tenancy.md), rows U-01
 through U-10.
+
+# Current evidence
+
+`FantasyUser : IdentityUser<Guid>` and the `Owner` role schema share the existing
+`FantasyDbContext` and migration history. The first forward retrofit migration
+adds Identity plus nullable `owner_id` columns and user foreign keys to every
+owned row listed above, including nullable ownership on adjusted projections.
+U-17 proves the one-context shape and nullable first phase on PostgreSQL.
+Claiming, non-null enforcement, query filters, endpoint authorization, and
+account workflows remain before this contract can become `implemented`.

@@ -1,3 +1,5 @@
+using FantasyBasketball.Domain.Accounts;
+
 namespace FantasyBasketball.Infrastructure.Persistence.Entities;
 
 public sealed class PlayerRow
@@ -227,13 +229,15 @@ public sealed class DataImportRunRow
         };
 }
 
-public sealed class FantasyLeagueRow
+public sealed class FantasyLeagueRow : IOwnedResource
 {
     private FantasyLeagueRow()
     {
     }
 
     public Guid Id { get; private set; }
+
+    public Guid? OwnerId { get; private set; }
 
     public string Name { get; private set; } = string.Empty;
 
@@ -267,13 +271,15 @@ public sealed class FantasyLeagueRow
         };
 }
 
-public sealed class ScoringRuleRow
+public sealed class ScoringRuleRow : IOwnedResource
 {
     private ScoringRuleRow()
     {
     }
 
     public Guid Id { get; private set; }
+
+    public Guid? OwnerId { get; private set; }
 
     public Guid FantasyLeagueId { get; private set; }
 
@@ -298,13 +304,15 @@ public sealed class ScoringRuleRow
         };
 }
 
-public sealed class RosterSlotRow
+public sealed class RosterSlotRow : IOwnedResource
 {
     private RosterSlotRow()
     {
     }
 
     public Guid Id { get; private set; }
+
+    public Guid? OwnerId { get; private set; }
 
     public Guid FantasyLeagueId { get; private set; }
 
@@ -596,13 +604,15 @@ public sealed class ObservedStatsRow
         };
 }
 
-public sealed class DraftSessionRow
+public sealed class DraftSessionRow : IOwnedResource
 {
     private DraftSessionRow()
     {
     }
 
     public Guid Id { get; private set; }
+
+    public Guid? OwnerId { get; private set; }
 
     public Guid FantasyLeagueId { get; private set; }
 
@@ -628,13 +638,15 @@ public sealed class DraftSessionRow
         };
 }
 
-public sealed class DraftPickRow
+public sealed class DraftPickRow : IOwnedResource
 {
     private DraftPickRow()
     {
     }
 
     public Guid Id { get; private set; }
+
+    public Guid? OwnerId { get; private set; }
 
     public Guid DraftSessionId { get; private set; }
 
@@ -656,13 +668,15 @@ public sealed class DraftPickRow
         };
 }
 
-public sealed class ContextEventRow
+public sealed class ContextEventRow : IOwnedResource
 {
     private ContextEventRow()
     {
     }
 
     public Guid Id { get; private set; }
+
+    public Guid? OwnerId { get; private set; }
 
     public string Type { get; private set; } = string.Empty;
 
@@ -758,13 +772,15 @@ public sealed class ContextEventRow
     }
 }
 
-public sealed class PlayerContextImpactRow
+public sealed class PlayerContextImpactRow : IOwnedResource
 {
     private PlayerContextImpactRow()
     {
     }
 
     public Guid Id { get; private set; }
+
+    public Guid? OwnerId { get; private set; }
 
     public Guid ContextEventId { get; private set; }
 
@@ -841,13 +857,15 @@ public sealed class PlayerContextImpactRow
     }
 }
 
-public sealed class AdjustedProjectionRow
+public sealed class AdjustedProjectionRow : IGlobalOrOwnedResource
 {
     private AdjustedProjectionRow()
     {
     }
 
     public Guid Id { get; private set; }
+
+    public Guid? OwnerId { get; private set; }
 
     public Guid PlayerId { get; private set; }
 
@@ -893,13 +911,15 @@ public sealed class AdjustedProjectionRow
         };
 }
 
-public sealed class FantasyValueRow
+public sealed class FantasyValueRow : IOwnedResource
 {
     private FantasyValueRow()
     {
     }
 
     public Guid Id { get; private set; }
+
+    public Guid? OwnerId { get; private set; }
 
     public Guid PlayerId { get; private set; }
 
@@ -929,13 +949,15 @@ public sealed class FantasyValueRow
         };
 }
 
-public sealed class RecommendationRow
+public sealed class RecommendationRow : IOwnedResource
 {
     private RecommendationRow()
     {
     }
 
     public Guid Id { get; private set; }
+
+    public Guid? OwnerId { get; private set; }
 
     public string Action { get; private set; } = string.Empty;
 
@@ -963,13 +985,15 @@ public sealed class RecommendationRow
         };
 }
 
-public sealed class RecommendationEvidenceRow
+public sealed class RecommendationEvidenceRow : IOwnedResource
 {
     private RecommendationEvidenceRow()
     {
     }
 
     public Guid Id { get; private set; }
+
+    public Guid? OwnerId { get; private set; }
 
     public Guid RecommendationId { get; private set; }
 
