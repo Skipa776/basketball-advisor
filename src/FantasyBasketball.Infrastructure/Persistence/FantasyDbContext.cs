@@ -10,6 +10,8 @@ public sealed class FantasyDbContext(DbContextOptions<FantasyDbContext> options)
 
     public DbSet<NbaTeamRow> NbaTeams => Set<NbaTeamRow>();
 
+    public DbSet<NbaTeamSourceRow> NbaTeamSources => Set<NbaTeamSourceRow>();
+
     public DbSet<ExternalPlayerIdentityRow> ExternalPlayerIdentities =>
         Set<ExternalPlayerIdentityRow>();
 
@@ -25,6 +27,8 @@ public sealed class FantasyDbContext(DbContextOptions<FantasyDbContext> options)
     public DbSet<RosterSlotRow> RosterSlots => Set<RosterSlotRow>();
 
     public DbSet<SeasonStatLineRow> SeasonStatLines => Set<SeasonStatLineRow>();
+
+    public DbSet<NbaGameRow> NbaGames => Set<NbaGameRow>();
 
     public DbSet<BaselineProjectionRow> BaselineProjections =>
         Set<BaselineProjectionRow>();

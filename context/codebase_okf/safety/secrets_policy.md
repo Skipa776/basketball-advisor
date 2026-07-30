@@ -6,7 +6,7 @@ tags: [safety, secrets, configuration]
 source_paths: [src/FantasyBasketball.Api/Options, src/FantasyBasketball.Api/Program.cs]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Configuration]
 depends_on: []
-status: planned
+status: partial
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: high
@@ -71,3 +71,12 @@ are never reused for anything reachable from a network.
 # Verification
 
 `test_matrix_api_persistence.md` row A-15, plus the secret scan in the gate.
+
+# Implementation evidence
+
+`BallDontLieOptions` binds the documented section, validates on start, and the
+named client reads the key through `IOptions` only when constructed. The test
+with an empty configuration asserts the failure names `BallDontLie:ApiKey`;
+recorded provider tests use a terminal fixture handler and no real key. Response
+and log redaction tests remain, so this safety concept is `partial`. No secret
+handling rule was weakened.

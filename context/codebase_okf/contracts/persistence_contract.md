@@ -115,5 +115,7 @@ The initial schema plus the forward `IdentityResolution` and `ImportRuns`
 migrations now cover the identity entities and immutable import history.
 Provider links are unique both by `(provider, external_id)` and by
 `(player_id, provider)`, which makes the N-05 append-only conflict rule a
-database invariant. The contract remains `partial` until every entity in the
-list above is present and round-tripped.
+database invariant. `ScheduleSource` adds canonical NBA-team uniqueness,
+auditable team-source rows, and provenance-complete games with unique
+`(source, external_id)` identity. The contract remains `partial` until every
+entity in the list above is present and round-tripped.

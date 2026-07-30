@@ -4,7 +4,10 @@ using FantasyBasketball.Api;
 using FantasyBasketball.Domain.Provenance;
 using FantasyBasketball.Infrastructure.Http;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using FantasyBasketball.Api.Options;
 using Shouldly;
 
 namespace FantasyBasketball.IntegrationTests.Ingestion;
@@ -70,7 +73,7 @@ public sealed class HttpPipelineTests
     {
         var terminal = new RecordingHandler(HttpStatusCode.InternalServerError);
         var services = new ServiceCollection();
-        services.AddExternalDataHttpClients();
+        services.AddExternalDataHttpClients(CreateConfiguration());
         services.AddSingleton(new HostRateLimiter(TimeSpan.FromMilliseconds(1)));
         services.AddHttpClient(DataSourceName.BallDontLie)
             .ConfigurePrimaryHttpMessageHandler(() => terminal);
@@ -86,6 +89,27 @@ public sealed class HttpPipelineTests
         terminal.SendCount.ShouldBeGreaterThan(1);
         client.BaseAddress.ShouldBe(new Uri("https://api.balldontlie.io"));
     }
+
+    [Fact]
+    public void A15_missing_api_key_names_the_configuration_key()
+    {
+        var services = new ServiceCollection();
+        services.AddExternalDataHttpClients(new ConfigurationBuilder().Build());
+        using var serviceProvider = services.BuildServiceProvider();
+
+        var exception = Should.Throw<OptionsValidationException>(() =>
+            serviceProvider.GetRequiredService<IOptions<BallDontLieOptions>>().Value);
+
+        exception.Message.ShouldContain("BallDontLie:ApiKey");
+    }
+
+    private static IConfiguration CreateConfiguration() =>
+        new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["BallDontLie:ApiKey"] = "test",
+            })
+            .Build();
 
     private sealed class RecordingHandler(
         HttpStatusCode statusCode = HttpStatusCode.OK) : HttpMessageHandler

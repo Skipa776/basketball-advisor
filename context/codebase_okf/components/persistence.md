@@ -66,5 +66,7 @@ The forward `IdentityResolution` and `ImportRuns` migrations add
 `PendingIdentityMatch`, the one-provider-link-per-player constraint, and
 append-only `DataImportRun` storage. The identity resolver's player/link/pending
 write and its successful run record commit in one EF transaction. Persistence
-remains `partial` because later projection, context, recommendation, game, and
-ADP entities in the contract are not implemented yet.
+also round-trips imported NBA teams and games with source provenance through
+the forward `ScheduleSource` migration. It remains `partial` because later
+projection, context, recommendation, and ADP entities in the contract are not
+implemented yet.

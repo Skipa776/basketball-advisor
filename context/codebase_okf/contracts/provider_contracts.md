@@ -6,7 +6,7 @@ tags: [contract, providers, abstractions]
 source_paths: [src/FantasyBasketball.Application/Abstractions]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Providers]
 depends_on: [provenance_contract.md, player_identity_contract.md]
-status: planned
+status: partial
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: medium
@@ -135,3 +135,13 @@ a role.
 Contract tests replay recorded provider payloads through each adapter and assert
 the canonical model output — `test_matrix_ingestion_scrapers.md`, rows I-01
 through I-09.
+
+# Implementation evidence
+
+`BallDontLieProvider` is the concrete API implementation of
+`IPlayerDirectoryProvider` and `IScheduleProvider`. Recorded multi-page JSON
+fixtures cover teams, players, games, cursor pagination, canonical team
+resolution, UTC timestamps, provider-id preservation, provenance, and stable
+hashes with no network access. The provider is registered under the canonical
+name and reads its key only through validated options. Scraper and ADP
+implementations remain, so the broader provider contract is `partial`.

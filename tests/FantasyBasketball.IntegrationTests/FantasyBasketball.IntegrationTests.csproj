@@ -25,6 +25,9 @@
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Fixtures/**/*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../../src/FantasyBasketball.Api/FantasyBasketball.Api.csproj" />
     <ProjectReference Include="../../src/FantasyBasketball.Infrastructure/FantasyBasketball.Infrastructure.csproj" />
   </ItemGroup>

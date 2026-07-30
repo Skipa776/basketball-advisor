@@ -194,6 +194,28 @@ public sealed class PlayerIdentityResolverTests
     }
 
     [Fact]
+    public async Task I06_provider_failure_returns_a_queryable_failed_run()
+    {
+        var repository = new FakePlayerRepository();
+        var runs = new FakeDataImportRunRepository();
+        var service = new ImportPlayersService(
+            CreateResolver(repository),
+            runs,
+            new SnapshotImportTransaction(repository, runs),
+            new FixedTimeProvider(DateTimeOffset.UnixEpoch));
+
+        var run = await service.ImportFromAsync(
+            new FailingPlayerDirectoryProvider(),
+            TestContext.Current.CancellationToken);
+
+        run.Status.ShouldBe(DataImportRunStatus.Failed);
+        run.FailureDetail.ShouldNotBeNull();
+        run.FailureDetail.ShouldContain(nameof(HttpRequestException));
+        (await runs.GetAsync(run.Id, TestContext.Current.CancellationToken)).ShouldBe(run);
+        repository.WriteCount.ShouldBe(0);
+    }
+
+    [Fact]
     public async Task I09_cancellation_rolls_back_partial_import()
     {
         using var cancellation = new CancellationTokenSource();
@@ -403,5 +425,20 @@ public sealed class PlayerIdentityResolverTests
                 throw;
             }
         }
+    }
+
+    private sealed class FailingPlayerDirectoryProvider : IPlayerDirectoryProvider
+    {
+        public string Name => DataSourceName.BallDontLie;
+
+        public DataSourceKind Kind => DataSourceKind.Api;
+
+        public Task<IReadOnlyList<ExternalPlayer>> GetPlayersAsync(
+            CancellationToken cancellationToken) =>
+            throw new HttpRequestException("Simulated 500 response.");
+
+        public Task<IReadOnlyList<ExternalTeam>> GetTeamsAsync(
+            CancellationToken cancellationToken) =>
+            throw new HttpRequestException("Simulated 500 response.");
     }
 }

@@ -1,0 +1,22 @@
+{
+  "data": [
+    {
+      "id": 9001,
+      "season": 2025,
+      "datetime": "2026-01-15T00:30:00Z",
+      "status": "Final",
+      "home_team_score": 112,
+      "visitor_team_score": 108,
+      "home_team": {
+        "id": 1,
+        "full_name": "Atlanta Hawks",
+        "abbreviation": "ATL"
+      },
+      "visitor_team": {
+        "id": 2,
+        "full_name": "Boston Celtics",
+        "abbreviation": "BOS"
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "data": [
+    {
+      "id": 15,
+      "first_name": "Nikola",
+      "last_name": "Jokic",
+      "position": "C",
+      "team": {
+        "id": 1,
+        "full_name": "Atlanta Hawks",
+        "abbreviation": "ATL"
+      }
+    },
+    {
+      "id": 22,
+      "first_name": "Example",
+      "last_name": "Wing",
+      "position": "G-F",
+      "team": {
+        "id": 2,
+        "full_name": "Boston Celtics",
+        "abbreviation": "BOS"
+      }
+    }
+  ],
+  "meta": {
+    "next_cursor": "page-2"
+  }
+}

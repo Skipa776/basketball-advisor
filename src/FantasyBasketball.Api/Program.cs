@@ -1,7 +1,7 @@
 using FantasyBasketball.Api;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddExternalDataHttpClients();
+builder.Services.AddExternalDataHttpClients(builder.Configuration);
 var app = builder.Build();
 
 app.Run();

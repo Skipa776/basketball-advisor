@@ -68,6 +68,8 @@ A-10, A-14, A-15, A-18, A-19.
 # Implementation evidence
 
 `DependencyInjection.cs` is now the sole composition root for the three named
-external-data clients and their cache, rate-limit, and standard resilience
-handlers. The endpoint, middleware, validated-options, and Blazor host surface
-remain unimplemented, so this component is `partial`.
+external-data clients, their handlers, current repositories, import service,
+and balldontlie provider. `BallDontLieOptions` is bound and validated on start;
+the missing-key test names `BallDontLie:ApiKey`. The endpoint, middleware, other
+validated options, and Blazor host surface remain unimplemented, so this
+component is `partial`.

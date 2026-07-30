@@ -1,0 +1,18 @@
+{
+  "data": [
+    {
+      "id": 23,
+      "first_name": "Second",
+      "last_name": "Page",
+      "position": "F",
+      "team": {
+        "id": 1,
+        "full_name": "Atlanta Hawks",
+        "abbreviation": "ATL"
+      }
+    }
+  ],
+  "meta": {
+    "next_cursor": null
+  }
+}

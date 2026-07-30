@@ -48,12 +48,18 @@ Failed and canceled imports roll back on a real PostgreSQL transaction; failures
 are recorded without escaping the use case. Health-driven confidence lowering
 waits for the health subsystem.
 
-The full gate passes 37 Domain, 14 Application, and 13 integration tests. Domain
-line coverage is 88.48%, Application line coverage is 96.23%, the build has zero
+**Build step 7 is implemented.** The balldontlie adapter maps teams, cursor-
+paginated players, and games from recorded JSON, resolves canonical teams,
+converts timestamps to UTC, hashes raw fragments, and persists teams and games
+with provenance. Its named client reads the validated API key from options and
+shares the safe HTTP pipeline. No real key or network call is used in tests.
+
+The full gate passes 39 Domain, 16 Application, and 19 integration tests. Domain
+line coverage is 88.48%, Application line coverage is 95.34%, the build has zero
 warnings, and OKF validation is clean. Persistence remains `partial` because
-later projection, context, recommendation, game, and ADP entities are absent.
-The single next action is E01 step 7: the fixture-tested balldontlie teams,
-players, and games adapter.
+later projection, context, recommendation, and ADP entities are absent. The
+single next action is E01 step 8: Basketball-Reference URL enforcement and the
+three-table season parser from committed HTML fixtures.
 
 **Build prerequisites on the development machine:**
 
@@ -107,6 +113,18 @@ non-negotiable six-per-minute ceiling. The implemented and now-documented order
 keeps the cache outermost but places resilience outside the per-host limiter, so
 every actual send—including every retry—must acquire a permit. This strengthens
 the scraping safety boundary; it does not change the retry budget or allowlist.
+
+## Canonical schedule and team-source persistence shapes
+
+The provider contract names `ExternalTeam` and `NbaGame` without defining their
+properties. `ExternalTeam` carries the source id, raw name and abbreviation,
+and provenance. `NbaGame` has an application-generated GUID, season end year,
+UTC start, canonical home/away team ids, nullable scores, source status, and
+provenance; the provider id lives only in provenance. Teams are resolved by
+their unique NBA abbreviation. A separate `nba_team_source` audit row stores
+the team import's source id and full provenance without adding source fields to
+the canonical `NbaTeam` shape or backfilling invented provenance onto existing
+teams.
 
 # Red-team findings from the pre-build cold read
 

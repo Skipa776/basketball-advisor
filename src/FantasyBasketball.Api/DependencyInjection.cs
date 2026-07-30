@@ -1,5 +1,13 @@
+using FantasyBasketball.Api.Options;
+using FantasyBasketball.Application.Abstractions;
+using FantasyBasketball.Application.Ingestion;
 using FantasyBasketball.Domain.Provenance;
 using FantasyBasketball.Infrastructure.Http;
+using FantasyBasketball.Infrastructure.Persistence;
+using FantasyBasketball.Infrastructure.Persistence.Repositories;
+using FantasyBasketball.Infrastructure.Providers.BallDontLie;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace FantasyBasketball.Api;
 
@@ -11,10 +19,32 @@ public static class DependencyInjection
         "FantasyBasketballDecisionEngine/0.1 (personal project; contact via repository)";
 
     public static IServiceCollection AddExternalDataHttpClients(
-        this IServiceCollection services)
+        this IServiceCollection services,
+        IConfiguration configuration)
     {
+        services.AddOptions<BallDontLieOptions>()
+            .Bind(configuration.GetSection(BallDontLieOptions.SectionName))
+            .Validate(
+                options => !string.IsNullOrWhiteSpace(options.ApiKey),
+                "BallDontLie:ApiKey is required.")
+            .ValidateOnStart();
+        services.AddDbContext<FantasyDbContext>(options =>
+            options.UseNpgsql(configuration.GetConnectionString("Fantasy")));
         services.AddMemoryCache();
         services.AddSingleton(new HostRateLimiter(MinimumRequestInterval));
+        services.AddSingleton(TimeProvider.System);
+        services.AddScoped<IPlayerRepository, PlayerRepository>();
+        services.AddScoped<ITeamRepository, TeamRepository>();
+        services.AddScoped<IGameRepository, GameRepository>();
+        services.AddScoped<IDataImportRunRepository, DataImportRunRepository>();
+        services.AddScoped<IImportTransaction, EfImportTransaction>();
+        services.AddScoped<PlayerIdentityResolver>();
+        services.AddScoped<ImportPlayersService>();
+        services.AddScoped<BallDontLieProvider>();
+        services.AddScoped<IPlayerDirectoryProvider>(serviceProvider =>
+            serviceProvider.GetRequiredService<BallDontLieProvider>());
+        services.AddScoped<IScheduleProvider>(serviceProvider =>
+            serviceProvider.GetRequiredService<BallDontLieProvider>());
 
         AddSourceClient(
             services,
@@ -39,10 +69,20 @@ public static class DependencyInjection
     {
         var clientBuilder = services.AddHttpClient(
                 name,
-                client =>
+                (serviceProvider, client) =>
                 {
                     client.BaseAddress = baseAddress;
                     client.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
+                    if (name == DataSourceName.BallDontLie)
+                    {
+                        var apiKey = serviceProvider
+                            .GetRequiredService<IOptions<BallDontLieOptions>>()
+                            .Value
+                            .ApiKey;
+                        client.DefaultRequestHeaders.TryAddWithoutValidation(
+                            "Authorization",
+                            apiKey);
+                    }
                 })
             .AddHttpMessageHandler(serviceProvider =>
                 new ResponseCacheHandler(

@@ -9,6 +9,30 @@ public sealed class ImportPlayersService(
     IImportTransaction transaction,
     TimeProvider timeProvider)
 {
+    public async Task<DataImportRun> ImportFromAsync(
+        IPlayerDirectoryProvider provider,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(provider);
+        var startedAt = timeProvider.GetUtcNow();
+
+        try
+        {
+            var externalPlayers = await provider.GetPlayersAsync(cancellationToken);
+            return await ImportAsync(provider.Name, externalPlayers, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            var failedRun = CreateFailedRun(provider.Name, startedAt, exception);
+            await runs.AddAsync(failedRun, cancellationToken);
+            return failedRun;
+        }
+    }
+
     public async Task<DataImportRun> ImportAsync(
         string source,
         IReadOnlyList<ExternalPlayer> externalPlayers,
@@ -75,15 +99,7 @@ public sealed class ImportPlayersService(
         }
         catch (Exception exception)
         {
-            var failedRun = new DataImportRun(
-                Guid.NewGuid(),
-                source,
-                DataImportRunStatus.Failed,
-                startedAt,
-                timeProvider.GetUtcNow(),
-                0,
-                0,
-                $"{exception.GetType().Name}: {exception.Message}");
+            var failedRun = CreateFailedRun(source, startedAt, exception);
             await runs.AddAsync(failedRun, cancellationToken);
             return failedRun;
         }
@@ -91,4 +107,18 @@ public sealed class ImportPlayersService(
         return completedRun
             ?? throw new InvalidOperationException("The import transaction did not complete.");
     }
+
+    private DataImportRun CreateFailedRun(
+        string source,
+        DateTimeOffset startedAt,
+        Exception exception) =>
+        new(
+            Guid.NewGuid(),
+            source,
+            DataImportRunStatus.Failed,
+            startedAt,
+            timeProvider.GetUtcNow(),
+            0,
+            0,
+            $"{exception.GetType().Name}: {exception.Message}");
 }

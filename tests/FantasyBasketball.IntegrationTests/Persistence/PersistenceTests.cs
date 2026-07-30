@@ -3,6 +3,7 @@ using FantasyBasketball.Application.Ingestion;
 using FantasyBasketball.Domain.Leagues;
 using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Domain.Provenance;
+using FantasyBasketball.Domain.Schedule;
 using FantasyBasketball.Domain.Stats;
 using FantasyBasketball.Infrastructure.Persistence;
 using FantasyBasketball.Infrastructure.Persistence.Entities;
@@ -401,6 +402,65 @@ public sealed class PersistenceTests : IAsyncLifetime
         (await database.DataImportRuns.AsNoTracking().CountAsync(
             TestContext.Current.CancellationToken)).ShouldBe(0);
     }
+
+    [Fact]
+    public async Task Imported_team_and_game_round_trip_with_non_null_provenance()
+    {
+        var home = new NbaTeam(new NbaTeamId(Guid.NewGuid()), "Atlanta Hawks", "ATL");
+        var away = new NbaTeam(new NbaTeamId(Guid.NewGuid()), "Boston Celtics", "BOS");
+        var homeProvenance = CreateProvenance("1", 'e');
+        var awayProvenance = CreateProvenance("2", 'f');
+        var game = new NbaGame(
+            Guid.NewGuid(),
+            2026,
+            new DateTimeOffset(2026, 1, 15, 0, 30, 0, TimeSpan.Zero),
+            home.Id,
+            away.Id,
+            112,
+            108,
+            "Final",
+            CreateProvenance("9001", 'a'));
+
+        await using var database = new FantasyDbContext(options);
+        var teamRepository = new TeamRepository(database);
+        await teamRepository.AddAsync(
+            home,
+            homeProvenance,
+            TestContext.Current.CancellationToken);
+        await teamRepository.AddAsync(
+            away,
+            awayProvenance,
+            TestContext.Current.CancellationToken);
+        var gameRepository = new GameRepository(database);
+        await gameRepository.AddAsync(game, TestContext.Current.CancellationToken);
+
+        var storedHome = await teamRepository.FindByAbbreviationAsync(
+            "ATL",
+            TestContext.Current.CancellationToken);
+        var storedGame = await gameRepository.GetBySourceAsync(
+            DataSourceName.BallDontLie,
+            "9001",
+            TestContext.Current.CancellationToken);
+
+        storedHome.ShouldBe(home);
+        storedGame.ShouldBe(game);
+        var sourceRow = await database.NbaTeamSources.AsNoTracking().SingleAsync(
+            source => source.ExternalId == "1",
+            TestContext.Current.CancellationToken);
+        sourceRow.Source.ShouldBe(DataSourceName.BallDontLie);
+        sourceRow.ParserVersion.ShouldBe("balldontlie-v1");
+        sourceRow.RawRecordHash.ShouldBe(homeProvenance.RawRecordHash);
+    }
+
+    private static DataProvenance CreateProvenance(string externalId, char hashCharacter) =>
+        new(
+            DataSourceName.BallDontLie,
+            externalId,
+            DateTimeOffset.UnixEpoch,
+            null,
+            "balldontlie-v1",
+            DataSourceConfidence.OfficialApi,
+            new string(hashCharacter, 64));
 
     private static ExternalPlayer CreateExternalPlayer(string externalId, string fullName) =>
         new(

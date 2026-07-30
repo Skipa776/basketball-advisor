@@ -33,6 +33,44 @@ public sealed class NbaTeamConfiguration : IEntityTypeConfiguration<NbaTeamRow>
         builder.Property(value => value.Id).HasColumnName("id").ValueGeneratedNever();
         builder.Property(value => value.Name).HasColumnName("name").IsRequired();
         builder.Property(value => value.Abbreviation).HasColumnName("abbreviation").IsRequired();
+        builder.HasIndex(value => value.Abbreviation)
+            .IsUnique()
+            .HasDatabaseName("ux_nba_team_abbreviation");
+    }
+}
+
+public sealed class NbaTeamSourceConfiguration : IEntityTypeConfiguration<NbaTeamSourceRow>
+{
+    public void Configure(EntityTypeBuilder<NbaTeamSourceRow> builder)
+    {
+        builder.ToTable("nba_team_source");
+        builder.HasKey(value => value.Id);
+        builder.Property(value => value.Id).HasColumnName("id").ValueGeneratedNever();
+        builder.Property(value => value.NbaTeamId).HasColumnName("nba_team_id");
+        builder.Property(value => value.Source).HasColumnName("source").IsRequired();
+        builder.Property(value => value.ExternalId).HasColumnName("external_id").IsRequired();
+        builder.Property(value => value.FetchedAt)
+            .HasColumnName("fetched_at")
+            .HasColumnType("timestamptz");
+        builder.Property(value => value.SourceTimestamp)
+            .HasColumnName("source_timestamp")
+            .HasColumnType("timestamptz");
+        builder.Property(value => value.ParserVersion)
+            .HasColumnName("parser_version")
+            .IsRequired();
+        builder.Property(value => value.Confidence)
+            .HasColumnName("confidence")
+            .HasPrecision(10, 4);
+        builder.Property(value => value.RawRecordHash)
+            .HasColumnName("raw_record_hash")
+            .IsRequired();
+        builder.HasIndex(value => new { value.Source, value.ExternalId })
+            .IsUnique()
+            .HasDatabaseName("ux_nba_team_source_source_external_id");
+        builder.HasOne<NbaTeamRow>()
+            .WithMany()
+            .HasForeignKey(value => value.NbaTeamId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
 
@@ -194,6 +232,53 @@ public sealed class SeasonStatLineConfiguration : IEntityTypeConfiguration<Seaso
         builder.HasOne<PlayerRow>()
             .WithMany()
             .HasForeignKey(value => value.PlayerId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public sealed class NbaGameConfiguration : IEntityTypeConfiguration<NbaGameRow>
+{
+    public void Configure(EntityTypeBuilder<NbaGameRow> builder)
+    {
+        builder.ToTable("nba_game");
+        builder.HasKey(value => value.Id);
+        builder.Property(value => value.Id).HasColumnName("id").ValueGeneratedNever();
+        builder.Property(value => value.SeasonEndYear).HasColumnName("season_end_year");
+        builder.Property(value => value.StartsAt)
+            .HasColumnName("starts_at")
+            .HasColumnType("timestamptz");
+        builder.Property(value => value.HomeTeamId).HasColumnName("home_team_id");
+        builder.Property(value => value.AwayTeamId).HasColumnName("away_team_id");
+        builder.Property(value => value.HomeScore).HasColumnName("home_score");
+        builder.Property(value => value.AwayScore).HasColumnName("away_score");
+        builder.Property(value => value.Status).HasColumnName("status").IsRequired();
+        builder.Property(value => value.Source).HasColumnName("source").IsRequired();
+        builder.Property(value => value.ExternalId).HasColumnName("external_id").IsRequired();
+        builder.Property(value => value.FetchedAt)
+            .HasColumnName("fetched_at")
+            .HasColumnType("timestamptz");
+        builder.Property(value => value.SourceTimestamp)
+            .HasColumnName("source_timestamp")
+            .HasColumnType("timestamptz");
+        builder.Property(value => value.ParserVersion)
+            .HasColumnName("parser_version")
+            .IsRequired();
+        builder.Property(value => value.Confidence)
+            .HasColumnName("confidence")
+            .HasPrecision(10, 4);
+        builder.Property(value => value.RawRecordHash)
+            .HasColumnName("raw_record_hash")
+            .IsRequired();
+        builder.HasIndex(value => new { value.Source, value.ExternalId })
+            .IsUnique()
+            .HasDatabaseName("ux_nba_game_source_external_id");
+        builder.HasOne<NbaTeamRow>()
+            .WithMany()
+            .HasForeignKey(value => value.HomeTeamId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<NbaTeamRow>()
+            .WithMany()
+            .HasForeignKey(value => value.AwayTeamId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

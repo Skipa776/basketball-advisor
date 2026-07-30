@@ -43,6 +43,8 @@ public sealed class PersistenceDomainTests
 
         var team = new NbaTeam(teamId, "Team", "TM");
         team.Abbreviation.ShouldBe("TM");
+        Should.Throw<ArgumentException>(() => new NbaTeam(teamId, "", "TM"));
+        Should.Throw<ArgumentException>(() => new NbaTeam(teamId, "Team", ""));
         var identity = new ExternalPlayerIdentity(
             player.Id,
             DataSourceName.Manual,

@@ -47,6 +47,61 @@ public sealed class NbaTeamRow
     public string Name { get; private set; } = string.Empty;
 
     public string Abbreviation { get; private set; } = string.Empty;
+
+    public static NbaTeamRow Create(Guid id, string name, string abbreviation) =>
+        new()
+        {
+            Id = id,
+            Name = name,
+            Abbreviation = abbreviation,
+        };
+}
+
+public sealed class NbaTeamSourceRow
+{
+    private NbaTeamSourceRow()
+    {
+    }
+
+    public Guid Id { get; private set; }
+
+    public Guid NbaTeamId { get; private set; }
+
+    public string Source { get; private set; } = string.Empty;
+
+    public string ExternalId { get; private set; } = string.Empty;
+
+    public DateTimeOffset FetchedAt { get; private set; }
+
+    public DateTimeOffset? SourceTimestamp { get; private set; }
+
+    public string ParserVersion { get; private set; } = string.Empty;
+
+    public decimal Confidence { get; private set; }
+
+    public string RawRecordHash { get; private set; } = string.Empty;
+
+    public static NbaTeamSourceRow Create(
+        Guid nbaTeamId,
+        string source,
+        string externalId,
+        DateTimeOffset fetchedAt,
+        DateTimeOffset? sourceTimestamp,
+        string parserVersion,
+        decimal confidence,
+        string rawRecordHash) =>
+        new()
+        {
+            Id = Guid.NewGuid(),
+            NbaTeamId = nbaTeamId,
+            Source = source,
+            ExternalId = externalId,
+            FetchedAt = fetchedAt,
+            SourceTimestamp = sourceTimestamp,
+            ParserVersion = parserVersion,
+            Confidence = confidence,
+            RawRecordHash = rawRecordHash,
+        };
 }
 
 public sealed class ExternalPlayerIdentityRow
@@ -328,6 +383,78 @@ public sealed class SeasonStatLineRow
             PerGame = perGame,
             Totals = totals,
             UsageRate = usageRate,
+            Source = source,
+            ExternalId = externalId,
+            FetchedAt = fetchedAt,
+            SourceTimestamp = sourceTimestamp,
+            ParserVersion = parserVersion,
+            Confidence = confidence,
+            RawRecordHash = rawRecordHash,
+        };
+}
+
+public sealed class NbaGameRow
+{
+    private NbaGameRow()
+    {
+    }
+
+    public Guid Id { get; private set; }
+
+    public int SeasonEndYear { get; private set; }
+
+    public DateTimeOffset StartsAt { get; private set; }
+
+    public Guid HomeTeamId { get; private set; }
+
+    public Guid AwayTeamId { get; private set; }
+
+    public int? HomeScore { get; private set; }
+
+    public int? AwayScore { get; private set; }
+
+    public string Status { get; private set; } = string.Empty;
+
+    public string Source { get; private set; } = string.Empty;
+
+    public string ExternalId { get; private set; } = string.Empty;
+
+    public DateTimeOffset FetchedAt { get; private set; }
+
+    public DateTimeOffset? SourceTimestamp { get; private set; }
+
+    public string ParserVersion { get; private set; } = string.Empty;
+
+    public decimal Confidence { get; private set; }
+
+    public string RawRecordHash { get; private set; } = string.Empty;
+
+    public static NbaGameRow Create(
+        Guid id,
+        int seasonEndYear,
+        DateTimeOffset startsAt,
+        Guid homeTeamId,
+        Guid awayTeamId,
+        int? homeScore,
+        int? awayScore,
+        string status,
+        string source,
+        string externalId,
+        DateTimeOffset fetchedAt,
+        DateTimeOffset? sourceTimestamp,
+        string parserVersion,
+        decimal confidence,
+        string rawRecordHash) =>
+        new()
+        {
+            Id = id,
+            SeasonEndYear = seasonEndYear,
+            StartsAt = startsAt,
+            HomeTeamId = homeTeamId,
+            AwayTeamId = awayTeamId,
+            HomeScore = homeScore,
+            AwayScore = awayScore,
+            Status = status,
             Source = source,
             ExternalId = externalId,
             FetchedAt = fetchedAt,

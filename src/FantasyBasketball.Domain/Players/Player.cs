@@ -73,7 +73,24 @@ public sealed record Player
     public DateOnly? BirthDate { get; }
 }
 
-public sealed record NbaTeam(NbaTeamId Id, string Name, string Abbreviation);
+public sealed record NbaTeam
+{
+    public NbaTeam(NbaTeamId id, string name, string abbreviation)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(abbreviation);
+
+        Id = id;
+        Name = name.Trim();
+        Abbreviation = abbreviation.Trim().ToUpperInvariant();
+    }
+
+    public NbaTeamId Id { get; }
+
+    public string Name { get; }
+
+    public string Abbreviation { get; }
+}
 
 public sealed record ExternalPlayerIdentity
 {

@@ -114,6 +114,8 @@ queryable `DataImportRun` repository in `PersistenceTests`. I-09 and I-13 have
 both fake and real PostgreSQL rollback coverage; I-12 proves the second GET
 makes no send; S-11 proves two handler instances share one host limiter. A
 controlled terminal handler also proves the named factory's resilience path
-retries 500s without network access. I-06 remains partial until an actual
-provider failure reaches the failed-run path and downstream confidence, while
-the other I-, S-, and W- rows await their E01 slices.
+retries 500s without network access. Recorded balldontlie fixtures implement
+I-01 through I-03 and I-10, including cursor pagination; I-06's provider-failure
+path returns a queryable failed run, while downstream health-driven confidence
+remains. I-07 now has a PostgreSQL round trip for imported teams and games. The
+other I-, S-, and W- rows await their E01 slices.
