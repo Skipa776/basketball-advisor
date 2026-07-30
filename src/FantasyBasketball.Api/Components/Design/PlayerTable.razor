@@ -1,0 +1,32 @@
+<div class="player-table" data-player-table>
+    <table>
+        <caption>@Caption</caption>
+        <thead>
+            <tr>
+                <th scope="col">Rank</th>
+                <th scope="col">Player</th>
+                <th scope="col">Pos</th>
+                <th scope="col" class="numeric">Value</th>
+                <th scope="col" class="numeric">VAR</th>
+                <th scope="col" class="numeric">ADP</th>
+                <th scope="col"><span class="visually-hidden">Recommendation</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            <Virtualize Items="@Rows"
+                        Context="row"
+                        ItemSize="28"
+                        SpacerElement="tr">
+                <PlayerRow Item="@row" Rank="@(Rows.IndexOf(row) + 1)" @key="row.Id" />
+            </Virtualize>
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public IList<PlayerTableItem> Rows { get; set; } = [];
+
+    [Parameter]
+    public string Caption { get; set; } = "Available fantasy basketball players";
+}

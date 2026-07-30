@@ -1,0 +1,24 @@
+<section class="empty-state" aria-labelledby="@HeadingId">
+    <span class="state-mark" aria-hidden="true">◇</span>
+    <div>
+        <h2 id="@HeadingId">@Title</h2>
+        <p>@Description</p>
+        @if (Action is not null)
+        {
+            <div class="action">@Action</div>
+        }
+    </div>
+</section>
+
+@code {
+    private readonly string HeadingId = $"empty-{Guid.NewGuid():N}";
+
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Description { get; set; } = string.Empty;
+
+    [Parameter]
+    public RenderFragment? Action { get; set; }
+}

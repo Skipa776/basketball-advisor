@@ -1,0 +1,54 @@
+<section class="category-profile" aria-labelledby="@HeadingId">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">League-relative output</p>
+            <h2 id="@HeadingId">@Title</h2>
+        </div>
+        <p class="scale-note">shared scale −@ScaleMaximum to +@ScaleMaximum</p>
+    </div>
+    <ul>
+        @foreach (var item in Items)
+        {
+            var position = Position(item.ZScore);
+            <li data-direction="@Direction(item.ZScore)" data-punted="@item.IsPunted">
+                <span class="category">@item.Category</span>
+                <span class="plot" aria-hidden="true">
+                    <span class="axis"></span>
+                    <span class="point" style="@($"--point-position: {position.ToString("0.##", CultureInfo.InvariantCulture)}%")"></span>
+                </span>
+                <strong data-numeric>@item.ZScore.ToString("+0.00;-0.00;0.00", CultureInfo.InvariantCulture)</strong>
+                @if (item.IsPunted)
+                {
+                    <span class="punted">excluded · punt</span>
+                }
+            </li>
+        }
+    </ul>
+</section>
+
+@code {
+    private readonly string HeadingId = $"category-{Guid.NewGuid():N}";
+
+    [Parameter]
+    public string Title { get; set; } = "Category profile";
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<CategoryProfileItem> Items { get; set; } = [];
+
+    [Parameter]
+    public decimal ScaleMaximum { get; set; } = 3m;
+
+    private decimal Position(decimal value)
+    {
+        var maximum = Math.Max(ScaleMaximum, 0.01m);
+        return ((Math.Clamp(value, -maximum, maximum) + maximum)
+            / (maximum * 2m)) * 100m;
+    }
+
+    private static string Direction(decimal value) => value switch
+    {
+        > 0m => "positive",
+        < 0m => "negative",
+        _ => "neutral",
+    };
+}

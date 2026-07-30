@@ -1,0 +1,41 @@
+<tr class="player-row"
+    data-player-id="@Item.Id.Value"
+    data-recommended="@Item.IsRecommended"
+    data-unverified="@Item.HasUnverifiedContext">
+    <td class="rank" data-numeric>
+        @if (Item.IsRecommended)
+        {
+            <span class="take-marker" aria-hidden="true">▸</span>
+            <span class="visually-hidden">Recommended pick</span>
+        }
+        @Rank
+    </td>
+    <th scope="row" class="player">
+        <span>@Item.Name</span>
+        @if (Item.HasUnverifiedContext)
+        {
+            <span class="unverified">△ unverified</span>
+        }
+    </th>
+    <td class="position">@Item.Positions</td>
+    <StatCell Label="Value" Value="@Item.Value" />
+    <StatCell Label="Value above replacement"
+              Value="@Item.ValueAboveReplacement"
+              Format="+0.##;-0.##;0" />
+    <StatCell Label="Average draft position"
+              Value="@Item.AverageDraftPosition" />
+    <td class="recommendation">
+        @if (Item.IsRecommended)
+        {
+            <span>take</span>
+        }
+    </td>
+</tr>
+
+@code {
+    [Parameter, EditorRequired]
+    public PlayerTableItem Item { get; set; } = null!;
+
+    [Parameter]
+    public int Rank { get; set; }
+}

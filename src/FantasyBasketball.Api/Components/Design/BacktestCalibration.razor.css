@@ -1,0 +1,51 @@
+.calibration {
+    padding-block: var(--space-6);
+    border-block: thin solid var(--color-rule);
+}
+
+.eyebrow,
+h2,
+p {
+    margin: 0;
+}
+
+.eyebrow {
+    margin-block-end: var(--space-2);
+    color: var(--color-text-muted);
+    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+h2 {
+    font-size: var(--text-base);
+}
+
+svg {
+    display: block;
+    width: min(100%, 28rem);
+    margin-block-start: var(--space-6);
+    border: thin solid var(--color-rule);
+    background: var(--color-surface);
+}
+
+.reference {
+    stroke: var(--color-text-muted);
+    stroke-dasharray: 3 3;
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+}
+
+circle {
+    fill: var(--color-accent);
+    stroke: var(--color-accent-contrast);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+}
+
+.chart-note {
+    max-width: 58ch;
+    margin-block-start: var(--space-4);
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+}

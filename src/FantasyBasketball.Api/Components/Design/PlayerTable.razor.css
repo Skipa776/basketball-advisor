@@ -1,0 +1,52 @@
+.player-table {
+    max-height: min(65vh, 46rem);
+    overflow: auto;
+    border-block: thin solid var(--color-rule);
+    background: var(--color-surface);
+    scrollbar-gutter: stable;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+caption {
+    position: absolute;
+    width: var(--space-1);
+    height: var(--space-1);
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+thead {
+    position: sticky;
+    z-index: 1;
+    inset-block-start: 0;
+    background: var(--color-surface);
+}
+
+th {
+    height: var(--board-row-height);
+    padding: var(--space-2) var(--space-5);
+    border-block-end: thin solid var(--color-border-strong);
+    color: var(--color-text-muted);
+    font: 600 var(--text-2xs)/1 var(--font-sans);
+    letter-spacing: 0.06em;
+    text-align: start;
+    text-transform: uppercase;
+}
+
+.numeric {
+    text-align: end;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: var(--space-1);
+    height: var(--space-1);
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}

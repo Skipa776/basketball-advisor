@@ -1,0 +1,52 @@
+<section class="draft-board" data-draft-board="@BoardId" aria-labelledby="@HeadingId">
+    <div class="board-heading">
+        <div>
+            <p class="eyebrow">Live rankings</p>
+            <h2 id="@HeadingId">@Title</h2>
+        </div>
+        <p class="count" data-numeric>@Items.Count available</p>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(Banner))
+    {
+        <p class="banner"><span aria-hidden="true">△</span> @Banner</p>
+    }
+    <PlayerTable Rows="@PlayerRows" Caption="Live draft rankings" />
+    @if (TopItem is { } top)
+    {
+        <aside class="recommendation" aria-labelledby="@RecommendationHeadingId">
+            <div class="recommendation-heading">
+                <div>
+                    <p class="eyebrow">Top recommendation</p>
+                    <h3 id="@RecommendationHeadingId">@top.Player.Name</h3>
+                </div>
+                <ConfidenceChip Confidence="@top.Confidence" />
+            </div>
+            <EvidenceList Items="@top.Player.Evidence" Compact="true" />
+        </aside>
+    }
+</section>
+
+@code {
+    private readonly string HeadingId = $"draft-board-{Guid.NewGuid():N}";
+    private readonly string RecommendationHeadingId =
+        $"draft-recommendation-{Guid.NewGuid():N}";
+
+    [Parameter]
+    public string BoardId { get; set; } = "live-draft-board";
+
+    [Parameter]
+    public string Title { get; set; } = "Ranked board";
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<DraftBoardItem> Items { get; set; } = [];
+
+    [Parameter]
+    public string? Banner { get; set; }
+
+    private IList<PlayerTableItem> PlayerRows =>
+        Items.Select(item => item.Player).ToList();
+
+    private DraftBoardItem? TopItem =>
+        Items.FirstOrDefault(item => item.Player.IsRecommended)
+        ?? Items.FirstOrDefault();
+}

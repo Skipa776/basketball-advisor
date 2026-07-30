@@ -1,0 +1,74 @@
+<span class="trend-badge" data-direction="@Direction">
+    <svg viewBox="0 0 96 24"
+         role="img"
+         aria-label="@AccessibleLabel"
+         preserveAspectRatio="none">
+        <polyline points="@Points" />
+    </svg>
+    <span class="trend-copy">
+        <span class="direction-icon" aria-hidden="true">@DirectionIcon</span>
+        <strong data-numeric>@Value.ToString("+0.##;-0.##;0", CultureInfo.InvariantCulture)</strong>
+        <span>@Label</span>
+    </span>
+</span>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<TrendPoint> PointsData { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public decimal ScaleMinimum { get; set; }
+
+    [Parameter, EditorRequired]
+    public decimal ScaleMaximum { get; set; }
+
+    [Parameter]
+    public decimal Value { get; set; }
+
+    [Parameter]
+    public string Label { get; set; } = "trend";
+
+    private string Direction => Value switch
+    {
+        > 0m => "positive",
+        < 0m => "negative",
+        _ => "neutral",
+    };
+
+    private string DirectionIcon => Value switch
+    {
+        > 0m => "↑",
+        < 0m => "↓",
+        _ => "→",
+    };
+
+    private string AccessibleLabel =>
+        $"{Label}: {Direction}, {Value.ToString("+0.##;-0.##;0", CultureInfo.InvariantCulture)}";
+
+    private string Points
+    {
+        get
+        {
+            if (PointsData.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            var range = Math.Max(ScaleMaximum - ScaleMinimum, 0.0001m);
+            return string.Join(
+                " ",
+                PointsData.Select((point, index) =>
+                {
+                    var x = PointsData.Count == 1
+                        ? 48m
+                        : index * 96m / (PointsData.Count - 1);
+                    var normalized = Math.Clamp(
+                        (point.Value - ScaleMinimum) / range,
+                        0m,
+                        1m);
+                    var y = 22m - (normalized * 20m);
+                    return FormattableString.Invariant($"{x:0.##},{y:0.##}");
+                }));
+        }
+    }
+}

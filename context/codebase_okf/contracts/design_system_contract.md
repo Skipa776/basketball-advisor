@@ -6,8 +6,8 @@ tags: [contract, design, ui, accessibility]
 source_paths: [src/FantasyBasketball.Api/Components/Design, DESIGN.md]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Api]
 depends_on: [recommendation_evidence_contract.md, ../components/web_ui_blazor.md]
-status: planned
-last_updated: 2026-07-29
+status: partial
+last_updated: 2026-07-30
 owners: [engineering]
 risk_level: medium
 edit_policy: stable_contract
@@ -135,6 +135,7 @@ aspiration.
 
 `PlayerTable`, `PlayerRow`, `StatCell`, `ProjectionDecomposition`,
 `EvidenceList`, `ConfidenceChip`, `TrendBadge`, `CategoryProfile`,
+`BacktestCalibration`,
 `DraftBoard`, `PickEntry`, `SourceHealthCard`, `EmptyState`, `ErrorState`,
 `PageHeader`, `ThemeToggle`.
 

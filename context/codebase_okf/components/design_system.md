@@ -6,8 +6,8 @@ tags: [component, ui, design, blazor]
 source_paths: [src/FantasyBasketball.Api/Components/Design, DESIGN.md]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Api]
 depends_on: [../contracts/design_system_contract.md, web_ui_blazor.md]
-status: planned
-last_updated: 2026-07-29
+status: partial
+last_updated: 2026-07-30
 owners: [engineering]
 risk_level: medium
 done_criteria:

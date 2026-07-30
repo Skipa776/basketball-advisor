@@ -1,0 +1,34 @@
+<article class="source-health" data-state="@State">
+    <div>
+        <p class="source">@Item.Source</p>
+        <p class="detail">@Item.Detail</p>
+    </div>
+    <div class="status">
+        <span class="state-icon" aria-hidden="true">@StateIcon</span>
+        <strong>@StateLabel</strong>
+        <span>@Item.Age</span>
+    </div>
+</article>
+
+@code {
+    [Parameter, EditorRequired]
+    public SourceHealthItem Item { get; set; } = null!;
+
+    private string State => Item.IsDegraded
+        ? "degraded"
+        : Item.IsStale
+            ? "stale"
+            : "healthy";
+
+    private string StateLabel => Item.IsDegraded
+        ? "Degraded"
+        : Item.IsStale
+            ? "Stale"
+            : "Healthy";
+
+    private string StateIcon => Item.IsDegraded
+        ? "!"
+        : Item.IsStale
+            ? "△"
+            : "✓";
+}

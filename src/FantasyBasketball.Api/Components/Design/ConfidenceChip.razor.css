@@ -1,0 +1,23 @@
+.confidence-chip {
+    display: inline-flex;
+    min-height: var(--target-min);
+    align-items: center;
+    gap: var(--space-3);
+    padding-inline: var(--space-3);
+    border: thin solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-mono);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.label {
+    color: var(--color-text-muted);
+}
+
+.confidence-chip[data-confidence="low"]::before,
+.confidence-chip[data-confidence="speculative"]::before {
+    content: "△";
+    color: var(--color-caution);
+}
