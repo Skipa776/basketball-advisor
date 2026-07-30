@@ -23,7 +23,7 @@ else if (Error == "locked")
             Description="FantasyBasketball keeps each account's leagues and draft sessions isolated.">
     <Action>
         <form method="post"
-              action="/account/login"
+              action="/account/login/submit"
               aria-describedby="@(Error is null ? null : "login-error")">
             <AntiforgeryToken />
             <p>

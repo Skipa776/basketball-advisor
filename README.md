@@ -61,8 +61,37 @@ docker compose up -d --wait     # PostgreSQL 17
 scripts/gate.sh                 # format, build, test, and the bundle validator
 ```
 
-A one-command self-hosted quickstart, a container image, and screenshots arrive with
-epic E12.
+### Actually running it
+
+There is no committed `appsettings.json` — this is deliberate, so no shipped
+artifact carries a credential — which means the app reads everything it needs from
+the environment.
+
+```bash
+export ConnectionStrings__Fantasy="Host=localhost;Port=5432;Database=fantasy_basketball;Username=fantasy;Password=fantasy_local"
+export BallDontLie__ApiKey="your-key"   # required at startup; any non-empty value boots
+export ASPNETCORE_ENVIRONMENT=Development
+export ASPNETCORE_URLS="http://localhost:5280"
+
+# Apply migrations. --connection is required: the design-time factory hardcodes a
+# separate `fantasy_design` database for scaffolding, and `database update` prefers
+# it over the startup project's configuration.
+dotnet tool install --global dotnet-ef --version 10.0.10
+dotnet ef database update \
+  --project src/FantasyBasketball.Infrastructure \
+  --startup-project src/FantasyBasketball.Api \
+  --connection "$ConnectionStrings__Fantasy"
+
+dotnet run --project src/FantasyBasketball.Api
+```
+
+Then open <http://localhost:5280> and register. **The first account registered
+becomes the instance owner and closes registration** — a second attempt gets a
+`404`, by design (`U-06`/`U-07`).
+
+A fresh instance has no players, no league, and no imports; every page shows its
+empty state until you import from **Data Sources**. A one-command quickstart, a
+container image, and screenshots arrive with epic E12.
 
 ## How this repository is organised
 

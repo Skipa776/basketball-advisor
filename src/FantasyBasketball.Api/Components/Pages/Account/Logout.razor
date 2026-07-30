@@ -8,7 +8,7 @@
 <EmptyState Title="End this session?"
             Description="Your imported data, leagues, and draft history remain stored locally.">
     <Action>
-        <form method="post" action="/account/logout">
+        <form method="post" action="/account/logout/submit">
             <AntiforgeryToken />
             <button type="submit">Log out</button>
         </form>

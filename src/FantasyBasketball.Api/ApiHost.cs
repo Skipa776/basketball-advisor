@@ -61,8 +61,16 @@ public static class ApiHost
                 "not_found",
                 "The requested resource was not found."));
         app.UseAntiforgery();
+
+        // Static assets are endpoints, so the RequireAuthenticatedUser fallback
+        // policy applies to them unless they opt out. Without this the login page
+        // -- the first screen a new self-hoster ever sees -- 302s its own
+        // stylesheet, theme script, and blazor.web.js to itself and renders
+        // completely unstyled with no interactivity. Nothing here is user data:
+        // it is the CSS and JS that make the anonymous pages usable at all.
         app.MapStaticAssets(
-            "FantasyBasketball.Api.staticwebassets.endpoints.json");
+                "FantasyBasketball.Api.staticwebassets.endpoints.json")
+            .AllowAnonymous();
         app.MapRazorComponents<App>()
             .AddInteractiveServerRenderMode();
     }

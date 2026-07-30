@@ -29,7 +29,7 @@ else
                 Description="The first account controls this local installation.">
         <Action>
             <form method="post"
-                  action="/account/register"
+                  action="/account/register/submit"
                   aria-describedby="@(Error is null ? null : "register-error")">
                 <AntiforgeryToken />
                 <p>

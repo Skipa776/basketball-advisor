@@ -38,15 +38,20 @@ public static class AccountEndpoints
             .RequireAuthorization();
         group.MapDelete("/", DeleteAsync)
             .RequireAuthorization();
-        endpoints.MapPost("/account/register", RegisterFormAsync)
+        // These must NOT reuse the page's own path. A Razor component route
+        // answers every HTTP method, so MapPost("/account/login") is a second
+        // candidate for POST /account/login and routing throws
+        // AmbiguousMatchException before either handler runs -- which made
+        // logging in through the UI impossible while the JSON API kept working.
+        endpoints.MapPost("/account/register/submit", RegisterFormAsync)
             .AllowAnonymous()
             .RequireRateLimiting("account")
             .AddEndpointFilter<CookieAntiforgeryFilter>();
-        endpoints.MapPost("/account/login", LoginFormAsync)
+        endpoints.MapPost("/account/login/submit", LoginFormAsync)
             .AllowAnonymous()
             .RequireRateLimiting("account")
             .AddEndpointFilter<CookieAntiforgeryFilter>();
-        endpoints.MapPost("/account/logout", LogoutFormAsync)
+        endpoints.MapPost("/account/logout/submit", LogoutFormAsync)
             .RequireAuthorization()
             .AddEndpointFilter<CookieAntiforgeryFilter>();
         return endpoints;

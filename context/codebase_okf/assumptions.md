@@ -457,6 +457,38 @@ forces a decision instead of silently widening the blind spot. `--color-border`
 was deleted in the same pass: unused, byte-identical to `--color-rule`, and a
 third unlabelled name for the value that must never touch an interactive edge.
 
+### First run of the assembled app — two outages the suite could not see
+
+Starting the app by hand for the first time (2026-07-30) found two defects that
+192 passing tests had no way to catch. Both are the same shape: **the tests drove
+a path no human takes.**
+
+1. **Login was impossible through the UI.** A Razor component route answers every
+   HTTP method, so `MapPost("/account/login", …)` on the page's own path made
+   routing throw `AmbiguousMatchException` before either candidate ran. Every auth
+   test posted JSON to `/api/account/*`, which has no page route and therefore no
+   collision, so the whole suite stayed green while the product could not be
+   logged into. Form handlers now live at `/account/{login,register,logout}/submit`.
+
+2. **Every static asset was behind the auth fallback policy.** `MapStaticAssets`
+   registers endpoints, so `RequireAuthenticatedUser` applied to the stylesheet,
+   `theme.js`, `draft-board.js`, and `blazor.web.js`. An anonymous visitor got a
+   `302` for each, so the login page — the first screen a new self-hoster ever
+   sees — rendered in Times New Roman with blue underlined links and no Blazor.
+   D-17 and D-18 parse the returned HTML and never fetch what it links to, so a
+   green a11y scan sat on top of a page with no CSS at all.
+
+Row `U-18` now registers and logs in through the **rendered form**, reading the
+`action` out of the markup rather than hard-coding it, and asserts the stylesheet
+and `blazor.web.js` are reachable anonymously. Both defects were reproduced
+against it before the fixes were trusted.
+
+The generalisable lesson, and the one worth carrying into E06–E12: *a test that
+authenticates by the convenient path does not cover the path users take, and a
+test that parses HTML does not test the page.* When a subsystem gets a
+human-facing surface, at least one row must drive that surface the way a person
+would.
+
 # Revisit triggers
 
 - The user's real league settings differ from the seed league → update

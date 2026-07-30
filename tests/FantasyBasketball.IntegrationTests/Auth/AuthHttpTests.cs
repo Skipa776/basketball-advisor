@@ -200,6 +200,116 @@ public sealed class AuthHttpTests : IAsyncLifetime
         await production.StopAsync(TestContext.Current.CancellationToken);
     }
 
+    /// <summary>
+    /// Row U-18 — the path a human actually takes. Every other row here posts JSON
+    /// to /api/account/*, which left the rendered form untested: a Razor page route
+    /// answers every HTTP method, so a MapPost on the page's own path made routing
+    /// throw AmbiguousMatchException before either handler ran. Logging in through
+    /// the UI was impossible while the whole API suite stayed green.
+    /// </summary>
+    [Fact]
+    public async Task U18_register_and_log_in_through_the_rendered_html_form()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+
+        // Anonymous static assets first: without them the login page renders with
+        // no stylesheet and Blazor never boots, which is the same outage wearing a
+        // different hat -- and invisible to any test that only parses the HTML.
+        foreach (var asset in new[]
+            {
+                "/FantasyBasketball.Api.styles.css",
+                "/_framework/blazor.web.js",
+            })
+        {
+            using var assetResponse = await client.GetAsync(asset, cancellationToken);
+            assetResponse.StatusCode.ShouldBe(
+                HttpStatusCode.OK,
+                $"{asset} must be reachable without authentication");
+        }
+
+        var (registerAction, registerToken, registerCookie) =
+            await ReadFormAsync("/account/register", cancellationToken);
+        using var registered = await PostFormAsync(
+            registerAction,
+            registerCookie,
+            new Dictionary<string, string>
+            {
+                ["displayName"] = "Form User",
+                ["email"] = "form-user@local.test",
+                ["password"] = "form-password-1234",
+                ["__RequestVerificationToken"] = registerToken,
+            },
+            cancellationToken);
+        registered.StatusCode.ShouldBe(
+            HttpStatusCode.Redirect,
+            "the register form's own action must reach its handler");
+
+        var (loginAction, loginToken, loginCookie) =
+            await ReadFormAsync("/account/login", cancellationToken);
+        using var loggedIn = await PostFormAsync(
+            loginAction,
+            loginCookie,
+            new Dictionary<string, string>
+            {
+                ["email"] = "form-user@local.test",
+                ["password"] = "form-password-1234",
+                ["__RequestVerificationToken"] = loginToken,
+            },
+            cancellationToken);
+        loggedIn.StatusCode.ShouldBe(HttpStatusCode.Redirect);
+        loggedIn.Headers.Location!.OriginalString.ShouldBe("/");
+
+        var authCookie = loggedIn.Headers.GetValues("Set-Cookie")
+            .Select(header => header.Split(';')[0])
+            .First(header => header.StartsWith(".AspNetCore.Identity", StringComparison.Ordinal));
+        using var dashboard = new HttpRequestMessage(HttpMethod.Get, "/");
+        dashboard.Headers.Add("Cookie", authCookie);
+        using var dashboardResponse = await client.SendAsync(dashboard, cancellationToken);
+        dashboardResponse.StatusCode.ShouldBe(
+            HttpStatusCode.OK,
+            "the cookie the form issued must authenticate a page request");
+    }
+
+    /// <summary>
+    /// Reads the form's declared action and anti-forgery token straight out of the
+    /// rendered page, so the test follows whatever path the markup posts to rather
+    /// than a path hard-coded here that could drift away from it.
+    /// </summary>
+    private async Task<(string Action, string Token, string Cookie)> ReadFormAsync(
+        string path,
+        CancellationToken cancellationToken)
+    {
+        using var response = await client.GetAsync(path, cancellationToken);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var cookie = response.Headers.GetValues("Set-Cookie")
+            .Select(header => header.Split(';')[0])
+            .First(header => header.StartsWith(".AspNetCore.Antiforgery", StringComparison.Ordinal));
+        var document = new AngleSharp.Html.Parser.HtmlParser().ParseDocument(
+            await response.Content.ReadAsStringAsync(cancellationToken));
+        var form = document.QuerySelector("form[method=post]")
+            ?? throw new InvalidOperationException($"{path} rendered no post form.");
+        var action = form.GetAttribute("action")
+            ?? throw new InvalidOperationException($"{path} form declares no action.");
+        var token = form.QuerySelector("input[name=__RequestVerificationToken]")
+            ?.GetAttribute("value")
+            ?? throw new InvalidOperationException($"{path} form has no token.");
+        return (action, token, cookie);
+    }
+
+    private async Task<HttpResponseMessage> PostFormAsync(
+        string path,
+        string antiforgeryCookieHeader,
+        Dictionary<string, string> fields,
+        CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, path)
+        {
+            Content = new FormUrlEncodedContent(fields),
+        };
+        request.Headers.Add("Cookie", antiforgeryCookieHeader);
+        return await client.SendAsync(request, cancellationToken);
+    }
+
     private async Task GetAntiforgeryAsync()
     {
         using var response = await client.GetAsync(
