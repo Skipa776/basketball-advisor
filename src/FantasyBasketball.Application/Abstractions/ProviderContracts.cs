@@ -36,12 +36,59 @@ public interface IPlayerStatsProvider : IDataSource
         CancellationToken cancellationToken);
 }
 
+public interface IAdpProvider : IDataSource
+{
+    Task<IReadOnlyList<AdpEntry>> GetAdpAsync(
+        CancellationToken cancellationToken);
+}
+
 public interface IScheduleProvider : IDataSource
 {
     Task<IReadOnlyList<NbaGame>> GetGamesAsync(
         DateOnly from,
         DateOnly to,
         CancellationToken cancellationToken);
+}
+
+public sealed record AdpEntry
+{
+    public AdpEntry(
+        string externalId,
+        string playerName,
+        decimal averageDraftPosition,
+        decimal? standardDeviation,
+        DataProvenance provenance)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(externalId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(playerName);
+        ArgumentNullException.ThrowIfNull(provenance);
+
+        if (averageDraftPosition <= 0m)
+        {
+            throw new ArgumentOutOfRangeException(nameof(averageDraftPosition));
+        }
+
+        if (standardDeviation < 0m)
+        {
+            throw new ArgumentOutOfRangeException(nameof(standardDeviation));
+        }
+
+        ExternalId = externalId.Trim();
+        PlayerName = playerName.Trim();
+        AverageDraftPosition = averageDraftPosition;
+        StandardDeviation = standardDeviation;
+        Provenance = provenance;
+    }
+
+    public string ExternalId { get; }
+
+    public string PlayerName { get; }
+
+    public decimal AverageDraftPosition { get; }
+
+    public decimal? StandardDeviation { get; }
+
+    public DataProvenance Provenance { get; }
 }
 
 public sealed record ExternalTeam

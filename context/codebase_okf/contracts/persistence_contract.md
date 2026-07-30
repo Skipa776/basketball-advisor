@@ -117,5 +117,8 @@ Provider links are unique both by `(provider, external_id)` and by
 `(player_id, provider)`, which makes the N-05 append-only conflict rule a
 database invariant. `ScheduleSource` adds canonical NBA-team uniqueness,
 auditable team-source rows, and provenance-complete games with unique
-`(source, external_id)` identity. The contract remains `partial` until every
-entity in the list above is present and round-tripped.
+`(source, external_id)` identity. The forward `AdpEntries` migration adds
+player-linked ADP values, optional variance, a latest-by-player index, and
+provenance-complete storage; a Testcontainers test migrates from empty and
+round-trips the entity. The contract remains `partial` until every entity in
+the list above is present and round-tripped.

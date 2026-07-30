@@ -6,7 +6,7 @@ tags: [safety, scraping, compliance]
 source_paths: [src/FantasyBasketball.Infrastructure/Scrapers, src/FantasyBasketball.Infrastructure/Http]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Scrapers]
 depends_on: [../contracts/provider_contracts.md]
-status: partial
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: high
@@ -135,6 +135,9 @@ uses the contract's 10-second minimum interval and honest User-Agent. URL
 enforcement is now implemented for Basketball-Reference: `BbrefUrlBuilder`
 accepts only the three season pages and player metadata shape on the canonical
 HTTPS host, rejects query strings, fragments, foreign hosts, and all other
-paths, and is covered by the S-10 gamelog rejection test. FantasyPros URL
-enforcement remains pending, so the policy is `partial`; no permitted or
-disallowed path was changed.
+paths, and is covered by the S-10 gamelog rejection test.
+`FantasyProsUrlBuilder` accepts only the canonical HTTPS host and exact
+`/nba/adp/overall.php` path, rejecting API, gamelog, query, fragment, alternate
+port, user-info, and foreign-host forms. Both scrapers use their builders and
+the shared process-wide limiter, so the policy's done criteria are implemented;
+no permitted or disallowed path was changed.

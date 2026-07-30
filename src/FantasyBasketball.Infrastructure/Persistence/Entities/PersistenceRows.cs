@@ -465,6 +465,62 @@ public sealed class NbaGameRow
         };
 }
 
+public sealed class AdpEntryRow
+{
+    private AdpEntryRow()
+    {
+    }
+
+    public Guid Id { get; private set; }
+
+    public Guid PlayerId { get; private set; }
+
+    public decimal AverageDraftPosition { get; private set; }
+
+    public decimal? StandardDeviation { get; private set; }
+
+    public string Source { get; private set; } = string.Empty;
+
+    public string ExternalId { get; private set; } = string.Empty;
+
+    public DateTimeOffset FetchedAt { get; private set; }
+
+    public DateTimeOffset? SourceTimestamp { get; private set; }
+
+    public string ParserVersion { get; private set; } = string.Empty;
+
+    public decimal Confidence { get; private set; }
+
+    public string RawRecordHash { get; private set; } = string.Empty;
+
+    public static AdpEntryRow Create(
+        Guid id,
+        Guid playerId,
+        decimal averageDraftPosition,
+        decimal? standardDeviation,
+        string source,
+        string externalId,
+        DateTimeOffset fetchedAt,
+        DateTimeOffset? sourceTimestamp,
+        string parserVersion,
+        decimal confidence,
+        string rawRecordHash) =>
+        new()
+        {
+            Id = id,
+            PlayerId = playerId,
+            AverageDraftPosition = averageDraftPosition,
+            StandardDeviation = standardDeviation,
+            Source = source,
+            ExternalId = externalId,
+            FetchedAt = fetchedAt,
+            SourceTimestamp = sourceTimestamp,
+            ParserVersion = parserVersion,
+            Confidence = confidence,
+            RawRecordHash = rawRecordHash,
+        };
+}
+
 public sealed class BaselineProjectionRow
 {
     private BaselineProjectionRow()

@@ -99,5 +99,9 @@ non-null columns, with integration round trips; unchanged provider fragments
 produce stable SHA-256 hashes. Basketball-Reference season rows use the
 canonical source, injected UTC time, HTML-scraper confidence,
 `basketball-reference-v1`, the external player slug, and a SHA-256 hash of the
-three raw row fragments. The concept remains `partial` until every scraper,
-CSV, and manual adapter persists its output and I-11 passes.
+three raw row fragments. FantasyPros, CSV ADP, and manual ADP stamp their
+canonical source, source-kind confidence, parser version, UTC import time,
+external player id, and stable SHA-256 input hash; canonical ADP persistence
+round-trips that block through non-null source, external-id, parser-version,
+confidence, and hash columns. I-11's user-entered roster or context event
+remains unimplemented, so this contract stays `partial`.

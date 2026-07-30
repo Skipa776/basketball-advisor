@@ -121,5 +121,9 @@ remains. I-07 now has a PostgreSQL round trip for imported teams and games.
 Basketball-Reference fixtures implement I-04 and I-05, including canonical
 `SeasonStatLine` construction after identity resolution. Its URL builder,
 pure parser, and loud schema-drift tests cover the Basketball-Reference portion
-of S-10, S-13, S-14, and the rebound-identity row. The FantasyPros portion of
-S-10 and the other I-, S-, and W- rows await their E01 slices.
+of S-10, S-13, S-14, and the rebound-identity row. FantasyPros fixtures and its
+exact-path URL gate complete the second scraper's S-10, S-13, and S-14
+coverage. I-08 proves both CSV and manual ADP providers produce validated,
+provenance-complete values with no scraper registered; the generic import
+service resolves and persists every rung as one canonical ADP entity. I-11 and
+the W- rows await their later subsystems, so this matrix remains `partial`.

@@ -62,12 +62,24 @@ rows and schema drift, and stamps stable scraper provenance. Its URL builder
 rejects gamelog paths, foreign hosts, query strings, fragments, and every path
 outside the stable scraping policy.
 
-The full gate passes 40 Domain, 16 Application, and 23 integration tests. Domain
-line coverage is 88.92%, Application line coverage is 95.34%, the build has zero
-warnings, and OKF validation is clean. Persistence remains `partial` because
-later projection, context, recommendation, and ADP entities are absent. The
-single next action is E01 step 9: implement FantasyPros ADP plus CSV and manual
-fallbacks through one canonical ADP contract.
+**Build step 9 is implemented.** FantasyPros HTML, CSV, and manual ADP providers
+produce one validated provider record with source-appropriate provenance.
+FantasyPros uses an exact-path URL gate and a pure fixture-backed parser; CSV
+and manual work with the scraper absent. `ImportAdpService` resolves player
+identity and writes one canonical, provenance-complete ADP entity through a
+forward EF migration and append-only repository surface.
+
+**E01's implementation slices, build steps 5–9, are complete.** Its live-import
+exit check is not certified in this repository session because no operator API
+key was used and no scrape target was contacted; W-01 through W-03 belong to
+the later background-worker subsystem and also remain pending.
+
+The full gate passes 41 Domain, 17 Application, and 29 integration tests. Domain
+line coverage is 87.25%, Application line coverage is 86.48%, the build has zero
+warnings, and all 72 OKF concepts validate. Persistence remains `partial`
+because later projection, context, and recommendation entities are absent. The
+single next action is build step 10: implement the projection engine from its
+worked contract example.
 
 **Build prerequisites on the development machine:**
 
@@ -111,6 +123,23 @@ application-generated GUIDs. `DataImportRun` is stored append-only; the
 synchronous import use case writes its terminal snapshot once. The later API
 slice must preserve append-only storage when it exposes the contract's immediate
 `Running` response, rather than adding an update method.
+
+## ADP shapes and fallback inputs not specified upstream
+
+The provider contract named `AdpEntry` and the persistence contract listed an
+entity with the same name, but neither defined its properties. The provider
+boundary now carries external id, raw player name, positive average draft
+position, optional non-negative standard deviation, and provenance. The
+canonical Domain entity replaces raw identity with `PlayerId`, adds its
+application-generated GUID, and retains the value, optional variance, and
+provenance. `ImportAdpService` is the only mapping point between them.
+
+The CSV rung uses the fixed header
+`external_id,player_name,adp,standard_deviation`; the last field may be blank.
+Manual input uses the same four values. This keeps all rungs isomorphic and
+avoids provider-specific branches downstream. The full CsvHelper dependency
+remains reserved for the later league-import epic, where multiple schemas and
+template round-tripping justify it.
 
 ## Retry attempts are individually rate-limited
 

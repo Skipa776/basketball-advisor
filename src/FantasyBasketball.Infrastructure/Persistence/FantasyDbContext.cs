@@ -30,6 +30,8 @@ public sealed class FantasyDbContext(DbContextOptions<FantasyDbContext> options)
 
     public DbSet<NbaGameRow> NbaGames => Set<NbaGameRow>();
 
+    public DbSet<AdpEntryRow> AdpEntries => Set<AdpEntryRow>();
+
     public DbSet<BaselineProjectionRow> BaselineProjections =>
         Set<BaselineProjectionRow>();
 

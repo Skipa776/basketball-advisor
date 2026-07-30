@@ -11,6 +11,7 @@ using FantasyBasketball.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using Testcontainers.PostgreSql;
+using CanonicalAdpEntry = FantasyBasketball.Domain.Draft.AdpEntry;
 
 namespace FantasyBasketball.IntegrationTests.Persistence;
 
@@ -450,6 +451,58 @@ public sealed class PersistenceTests : IAsyncLifetime
         sourceRow.Source.ShouldBe(DataSourceName.BallDontLie);
         sourceRow.ParserVersion.ShouldBe("balldontlie-v1");
         sourceRow.RawRecordHash.ShouldBe(homeProvenance.RawRecordHash);
+    }
+
+    [Fact]
+    public async Task Adp_entry_round_trips_with_non_null_provenance()
+    {
+        var player = new Player(
+            new PlayerId(Guid.NewGuid()),
+            "Nikola Jokic",
+            PlayerName.Normalize("Nikola Jokic"),
+            null,
+            ["C"],
+            null);
+        var provenance = new DataProvenance(
+            DataSourceName.Manual,
+            "jokic",
+            DateTimeOffset.UnixEpoch,
+            null,
+            "manual-v1",
+            DataSourceConfidence.ManualEntry,
+            new string('b', 64));
+        var entry = new CanonicalAdpEntry(
+            Guid.NewGuid(),
+            player.Id,
+            2.3m,
+            1.1m,
+            provenance);
+
+        await using (var database = new FantasyDbContext(options))
+        {
+            await new PlayerRepository(database).AddAsync(
+                player,
+                TestContext.Current.CancellationToken);
+            await new AdpRepository(database).AddAsync(
+                entry,
+                TestContext.Current.CancellationToken);
+        }
+
+        await using (var database = new FantasyDbContext(options))
+        {
+            var stored = await new AdpRepository(database).GetLatestAsync(
+                player.Id,
+                TestContext.Current.CancellationToken);
+
+            stored.ShouldBe(entry);
+            var row = await database.AdpEntries.AsNoTracking().SingleAsync(
+                candidate => candidate.Id == entry.Id,
+                TestContext.Current.CancellationToken);
+            row.Source.ShouldBe(DataSourceName.Manual);
+            row.ExternalId.ShouldBe("jokic");
+            row.ParserVersion.ShouldBe("manual-v1");
+            row.RawRecordHash.ShouldBe(provenance.RawRecordHash);
+        }
     }
 
     private static DataProvenance CreateProvenance(string externalId, char hashCharacter) =>

@@ -283,6 +283,49 @@ public sealed class NbaGameConfiguration : IEntityTypeConfiguration<NbaGameRow>
     }
 }
 
+public sealed class AdpEntryConfiguration : IEntityTypeConfiguration<AdpEntryRow>
+{
+    public void Configure(EntityTypeBuilder<AdpEntryRow> builder)
+    {
+        builder.ToTable("adp_entry");
+        builder.HasKey(value => value.Id);
+        builder.Property(value => value.Id).HasColumnName("id").ValueGeneratedNever();
+        builder.Property(value => value.PlayerId).HasColumnName("player_id");
+        builder.Property(value => value.AverageDraftPosition)
+            .HasColumnName("average_draft_position")
+            .HasPrecision(10, 4);
+        builder.Property(value => value.StandardDeviation)
+            .HasColumnName("standard_deviation")
+            .HasPrecision(10, 4);
+        builder.Property(value => value.Source).HasColumnName("source").IsRequired();
+        builder.Property(value => value.ExternalId)
+            .HasColumnName("external_id")
+            .IsRequired();
+        builder.Property(value => value.FetchedAt)
+            .HasColumnName("fetched_at")
+            .HasColumnType("timestamptz");
+        builder.Property(value => value.SourceTimestamp)
+            .HasColumnName("source_timestamp")
+            .HasColumnType("timestamptz");
+        builder.Property(value => value.ParserVersion)
+            .HasColumnName("parser_version")
+            .IsRequired();
+        builder.Property(value => value.Confidence)
+            .HasColumnName("confidence")
+            .HasPrecision(10, 4);
+        builder.Property(value => value.RawRecordHash)
+            .HasColumnName("raw_record_hash")
+            .IsRequired();
+        builder.HasIndex(value => new { value.PlayerId, value.FetchedAt })
+            .IsDescending(false, true)
+            .HasDatabaseName("ix_adp_entry_player_fetched_at");
+        builder.HasOne<PlayerRow>()
+            .WithMany()
+            .HasForeignKey(value => value.PlayerId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
 public sealed class BaselineProjectionConfiguration
     : IEntityTypeConfiguration<BaselineProjectionRow>
 {

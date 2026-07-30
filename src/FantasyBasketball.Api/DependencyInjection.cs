@@ -7,6 +7,7 @@ using FantasyBasketball.Infrastructure.Persistence;
 using FantasyBasketball.Infrastructure.Persistence.Repositories;
 using FantasyBasketball.Infrastructure.Providers.BallDontLie;
 using FantasyBasketball.Infrastructure.Scrapers.BasketballReference;
+using FantasyBasketball.Infrastructure.Scrapers.FantasyPros;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -37,10 +38,12 @@ public static class DependencyInjection
         services.AddScoped<IPlayerRepository, PlayerRepository>();
         services.AddScoped<ITeamRepository, TeamRepository>();
         services.AddScoped<IGameRepository, GameRepository>();
+        services.AddScoped<IAdpRepository, AdpRepository>();
         services.AddScoped<IDataImportRunRepository, DataImportRunRepository>();
         services.AddScoped<IImportTransaction, EfImportTransaction>();
         services.AddScoped<PlayerIdentityResolver>();
         services.AddScoped<ImportPlayersService>();
+        services.AddScoped<ImportAdpService>();
         services.AddScoped<BallDontLieProvider>();
         services.AddScoped<IPlayerDirectoryProvider>(serviceProvider =>
             serviceProvider.GetRequiredService<BallDontLieProvider>());
@@ -49,6 +52,9 @@ public static class DependencyInjection
         services.AddScoped<BasketballReferenceStatsScraper>();
         services.AddScoped<IPlayerStatsProvider>(serviceProvider =>
             serviceProvider.GetRequiredService<BasketballReferenceStatsScraper>());
+        services.AddScoped<FantasyProsAdpScraper>();
+        services.AddScoped<IAdpProvider>(serviceProvider =>
+            serviceProvider.GetRequiredService<FantasyProsAdpScraper>());
 
         AddSourceClient(
             services,

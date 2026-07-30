@@ -6,7 +6,7 @@ tags: [contract, providers, abstractions]
 source_paths: [src/FantasyBasketball.Application/Abstractions]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Providers]
 depends_on: [provenance_contract.md, player_identity_contract.md]
-status: partial
+status: implemented
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: medium
@@ -89,6 +89,12 @@ public interface IFantasyLeagueProvider : IDataSource
 carrying an `ExternalId` plus raw names — they are resolved to canonical models
 by [player_identity_contract](player_identity_contract.md), not by the provider.
 
+The provider-shaped `Application.Abstractions.AdpEntry` carries `ExternalId`,
+`PlayerName`, positive `AverageDraftPosition`, optional non-negative
+`StandardDeviation`, and `DataProvenance`. `ImportAdpService` resolves it to the
+player-linked `Domain.Draft.AdpEntry` shape owned by
+[`ARCHITECTURE.md`](../../../ARCHITECTURE.md).
+
 # MVP implementations
 
 | Interface | Implementation | Notes |
@@ -146,5 +152,9 @@ hashes with no network access. The provider is registered under the canonical
 name and reads its key only through validated options.
 `BasketballReferenceStatsScraper` is the concrete `IPlayerStatsProvider`; its
 recorded HTML contract test maps the three permitted season pages to canonical
-`SeasonStatLine` values after identity resolution. ADP implementations remain,
-so the broader provider contract is `partial`.
+`SeasonStatLine` values after identity resolution. `FantasyProsAdpScraper`,
+`CsvAdpImporter`, and `ManualAdpProvider` all implement `IAdpProvider` and
+produce the same validated provider record; the import service maps every rung
+to the same canonical persisted entity. I-08 proves CSV and manual remain
+usable with the scraper absent. All MVP provider categories now meet this
+contract's done criteria.

@@ -128,6 +128,14 @@ public sealed record SeasonStatLine(
     decimal? UsageRate,
     DataProvenance Provenance);
 
+// --- Draft market data ----------------------------------------------------
+public sealed record AdpEntry(
+    Guid Id,
+    PlayerId PlayerId,
+    decimal AverageDraftPosition,
+    decimal? StandardDeviation,
+    DataProvenance Provenance);
+
 // --- Leagues --------------------------------------------------------------
 // LeagueType members and the seed league: contracts/scoring_rules_catalog.md
 public sealed record ScoringRule(StatKey Stat, decimal PointsPerUnit);
@@ -438,4 +446,3 @@ POST   /api/account/{register,login,logout}      R20
 GET    /health/{live,ready}                      R22
 GET    /metrics                                  R22
 ```
-

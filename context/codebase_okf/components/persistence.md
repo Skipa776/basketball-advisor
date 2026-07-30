@@ -67,6 +67,7 @@ The forward `IdentityResolution` and `ImportRuns` migrations add
 append-only `DataImportRun` storage. The identity resolver's player/link/pending
 write and its successful run record commit in one EF transaction. Persistence
 also round-trips imported NBA teams and games with source provenance through
-the forward `ScheduleSource` migration. It remains `partial` because later
-projection, context, recommendation, and ADP entities in the contract are not
-implemented yet.
+the forward `ScheduleSource` migration. The forward `AdpEntries` migration and
+repository add provenance-complete, player-linked market data and latest-value
+reads. It remains `partial` because later projection, context, and
+recommendation entities in the contract are not implemented yet.
