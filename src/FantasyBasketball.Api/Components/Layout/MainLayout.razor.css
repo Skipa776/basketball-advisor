@@ -1,0 +1,281 @@
+* {
+    box-sizing: border-box;
+}
+
+.app-frame {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: minmax(11rem, 14rem) minmax(0, 1fr);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: 400 var(--text-base)/var(--leading-normal) var(--font-sans);
+}
+
+.skip-link {
+    position: fixed;
+    z-index: 10;
+    inset-block-start: var(--space-4);
+    inset-inline-start: var(--space-4);
+    padding: var(--space-3) var(--space-5);
+    transform: translateY(-200%);
+    border-radius: var(--radius-sm);
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+}
+
+.skip-link:focus {
+    transform: translateY(0);
+}
+
+.sidebar {
+    position: sticky;
+    inset-block-start: 0;
+    min-height: 100vh;
+    max-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-7);
+    padding: var(--space-6);
+    overflow-y: auto;
+    border-inline-end: thin solid var(--color-rule);
+    background: var(--color-surface);
+}
+
+.wordmark {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    color: var(--color-text);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.wordmark-mark {
+    display: inline-grid;
+    width: var(--target-min);
+    height: var(--target-min);
+    place-items: center;
+    border: thin solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    font: 600 var(--text-2xs)/1 var(--font-mono);
+    letter-spacing: 0.04em;
+}
+
+nav {
+    display: grid;
+    gap: var(--space-2);
+}
+
+nav ::deep a,
+.sidebar-footer ::deep a {
+    min-height: var(--target-min);
+    display: flex;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+    border-inline-start: var(--space-1) solid transparent;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+    text-decoration: none;
+}
+
+nav ::deep a.active {
+    border-inline-start-color: var(--color-text);
+    background: var(--color-surface-raised);
+    color: var(--color-text);
+}
+
+nav ::deep a:focus-visible,
+.sidebar-footer ::deep a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+.sidebar-footer {
+    margin-block-start: auto;
+    display: grid;
+    gap: var(--space-3);
+}
+
+.workspace {
+    min-width: 0;
+}
+
+.instrument-bar {
+    min-height: var(--target-min);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-3) var(--space-7);
+    border-block-end: thin solid var(--color-rule);
+    color: var(--color-text-muted);
+    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-mono);
+    letter-spacing: 0.06em;
+}
+
+.instrument-state::before {
+    content: "●";
+    margin-inline-end: var(--space-3);
+    color: var(--color-positive);
+}
+
+main {
+    width: min(100%, var(--content-max));
+    margin-inline: auto;
+    padding: var(--space-7);
+}
+
+main:focus {
+    outline: none;
+}
+
+main ::deep h1,
+main ::deep h2,
+main ::deep h3,
+main ::deep p {
+    margin-block-start: 0;
+}
+
+main ::deep h1 {
+    font-size: var(--text-xl);
+    line-height: var(--leading-tight);
+}
+
+main ::deep h2 {
+    font-size: var(--text-lg);
+    line-height: var(--leading-tight);
+}
+
+main ::deep h3 {
+    font-size: var(--text-base);
+    line-height: var(--leading-tight);
+}
+
+main ::deep section,
+main ::deep article,
+main ::deep form {
+    margin-block-end: var(--space-7);
+}
+
+main ::deep fieldset {
+    display: grid;
+    gap: var(--space-5);
+    padding: var(--space-6);
+    border: thin solid var(--color-rule);
+    border-radius: var(--radius-md);
+}
+
+main ::deep legend,
+main ::deep label {
+    color: var(--color-text);
+    font-size: var(--text-sm);
+    font-weight: 600;
+}
+
+main ::deep input,
+main ::deep select,
+main ::deep button {
+    min-height: var(--target-min);
+    border: thin solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    font: inherit;
+}
+
+main ::deep input,
+main ::deep select {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-surface);
+    color: var(--color-text);
+}
+
+main ::deep button {
+    padding: var(--space-3) var(--space-5);
+    background: var(--color-surface-raised);
+    color: var(--color-text);
+    cursor: pointer;
+}
+
+main ::deep input:focus-visible,
+main ::deep select:focus-visible,
+main ::deep button:focus-visible,
+main ::deep a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+main ::deep table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+main ::deep th {
+    color: var(--color-text-muted);
+    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-sans);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+main ::deep th,
+main ::deep td {
+    padding: var(--space-3) var(--space-5);
+    border-block-end: thin solid var(--color-rule);
+    text-align: start;
+}
+
+main ::deep code,
+main ::deep time,
+main ::deep [data-numeric] {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    nav ::deep a:hover,
+    .sidebar-footer ::deep a:hover,
+    main ::deep button:hover {
+        background: var(--color-surface-raised);
+        color: var(--color-text);
+    }
+}
+
+@media (max-width: 52rem) {
+    .app-frame {
+        display: block;
+    }
+
+    .sidebar {
+        position: static;
+        min-height: auto;
+        max-height: none;
+        padding: var(--space-4);
+        border-inline-end: 0;
+        border-block-end: thin solid var(--color-rule);
+    }
+
+    .sidebar nav {
+        display: flex;
+        overflow-x: auto;
+    }
+
+    .sidebar-footer {
+        display: flex;
+        align-items: center;
+        margin-block-start: 0;
+    }
+
+    .instrument-bar {
+        padding-inline: var(--space-5);
+    }
+
+    main {
+        padding: var(--space-5);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .skip-link {
+        transition: none;
+    }
+}

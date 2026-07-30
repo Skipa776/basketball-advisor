@@ -45,6 +45,9 @@ One source, `Components/Design/Tokens.razor.css`, as CSS custom properties.
 --radius-sm / -md / -lg
 --motion-fast (120ms) / --motion-base (200ms)
 --focus-ring
+--font-sans / --font-mono
+--color-rule / --color-border-strong
+--board-row-height / --target-min / --content-max
 ```
 
 **Light and dark are both required**, via `prefers-color-scheme` plus a manual
