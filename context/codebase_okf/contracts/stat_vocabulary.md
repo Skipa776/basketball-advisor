@@ -133,3 +133,11 @@ fixture expectation, every scoring golden, and any API DTO that names stats.
   asserts no stat-name string literal appears outside this file and the enum.
 - Parser tests assert `REB == OREB + DREB` and the `0..1` ratio range on every
   fixture row.
+
+# Implementation evidence
+
+`StatSourceColumnMap.SeasonTableCounting` is the single code map used by the
+Basketball-Reference parser for every source counting column. A domain test
+pins it to this table; fixture tests pin `USG%` boundary conversion and reject
+any row where `REB != OREB + DREB`. Ratio stats continue to be derived by
+`StatLine` from their counting components rather than accepted as source truth.

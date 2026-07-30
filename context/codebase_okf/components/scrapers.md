@@ -6,7 +6,7 @@ tags: [component, scrapers, parsing]
 source_paths: [src/FantasyBasketball.Infrastructure/Scrapers]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Scrapers, tests/FantasyBasketball.IntegrationTests/Fixtures/Html]
 depends_on: [../safety/scraping_policy.md, ../contracts/stat_vocabulary.md]
-status: planned
+status: partial
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: high
@@ -77,3 +77,13 @@ prevent.
 
 [test_matrix_ingestion_scrapers](../tests/test_matrix_ingestion_scrapers.md),
 rows S-10 through S-14.
+
+# Implementation evidence
+
+`BasketballReferenceStatsScraper` fetches only the three season URLs produced by
+`BbrefUrlBuilder`, parses saved per-game, totals, and advanced fixtures through
+the pure `SeasonTableParser`, resolves canonical player identity, and stamps
+`basketball-reference-v1` provenance. Tests cover comment-wrapped tables,
+repeatable parsing, `USG%` conversion, rebound identities, a renamed required
+column, and rejection of both a disallowed gamelog path and a foreign host.
+FantasyPros remains for the ADP slice, so this component is `partial`.

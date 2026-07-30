@@ -33,6 +33,31 @@ public sealed class StatVocabularyTests
     }
 
     [Fact]
+    public void Season_source_columns_match_the_canonical_counting_map()
+    {
+        StatSourceColumnMap.SeasonTableCounting.ShouldBe(
+            new Dictionary<string, StatKey>(StringComparer.Ordinal)
+            {
+                ["MP"] = StatKey.MIN,
+                ["PTS"] = StatKey.PTS,
+                ["ORB"] = StatKey.OREB,
+                ["DRB"] = StatKey.DREB,
+                ["TRB"] = StatKey.REB,
+                ["AST"] = StatKey.AST,
+                ["STL"] = StatKey.STL,
+                ["BLK"] = StatKey.BLK,
+                ["TOV"] = StatKey.TOV,
+                ["FG"] = StatKey.FGM,
+                ["FGA"] = StatKey.FGA,
+                ["3P"] = StatKey.FG3M,
+                ["3PA"] = StatKey.FG3A,
+                ["FT"] = StatKey.FTM,
+                ["FTA"] = StatKey.FTA,
+                ["PF"] = StatKey.PF,
+            });
+    }
+
+    [Fact]
     public void Missing_stat_reads_as_zero()
     {
         var line = new StatLine(new Dictionary<StatKey, decimal>

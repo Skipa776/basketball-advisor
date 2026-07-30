@@ -117,5 +117,9 @@ controlled terminal handler also proves the named factory's resilience path
 retries 500s without network access. Recorded balldontlie fixtures implement
 I-01 through I-03 and I-10, including cursor pagination; I-06's provider-failure
 path returns a queryable failed run, while downstream health-driven confidence
-remains. I-07 now has a PostgreSQL round trip for imported teams and games. The
-other I-, S-, and W- rows await their E01 slices.
+remains. I-07 now has a PostgreSQL round trip for imported teams and games.
+Basketball-Reference fixtures implement I-04 and I-05, including canonical
+`SeasonStatLine` construction after identity resolution. Its URL builder,
+pure parser, and loud schema-drift tests cover the Basketball-Reference portion
+of S-10, S-13, S-14, and the rebound-identity row. The FantasyPros portion of
+S-10 and the other I-, S-, and W- rows await their E01 slices.

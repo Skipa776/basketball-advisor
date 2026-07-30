@@ -1,6 +1,7 @@
 using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Domain.Provenance;
 using FantasyBasketball.Domain.Schedule;
+using FantasyBasketball.Domain.Stats;
 
 namespace FantasyBasketball.Application.Abstractions;
 
@@ -25,6 +26,13 @@ public interface IPlayerDirectoryProvider : IDataSource
         CancellationToken cancellationToken);
 
     Task<IReadOnlyList<ExternalTeam>> GetTeamsAsync(
+        CancellationToken cancellationToken);
+}
+
+public interface IPlayerStatsProvider : IDataSource
+{
+    Task<IReadOnlyList<SeasonStatLine>> GetSeasonStatsAsync(
+        int seasonEndYear,
         CancellationToken cancellationToken);
 }
 

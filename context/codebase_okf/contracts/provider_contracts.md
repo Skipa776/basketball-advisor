@@ -143,5 +143,8 @@ through I-09.
 fixtures cover teams, players, games, cursor pagination, canonical team
 resolution, UTC timestamps, provider-id preservation, provenance, and stable
 hashes with no network access. The provider is registered under the canonical
-name and reads its key only through validated options. Scraper and ADP
-implementations remain, so the broader provider contract is `partial`.
+name and reads its key only through validated options.
+`BasketballReferenceStatsScraper` is the concrete `IPlayerStatsProvider`; its
+recorded HTML contract test maps the three permitted season pages to canonical
+`SeasonStatLine` values after identity resolution. ADP implementations remain,
+so the broader provider contract is `partial`.

@@ -132,5 +132,9 @@ The process-wide per-host limiter is implemented with
 `System.Threading.RateLimiting`, registered once in the API composition root,
 and tested with 20 requests split across two handlers. Production registration
 uses the contract's 10-second minimum interval and honest User-Agent. URL
-builders and their allowlist-rejection tests remain pending, so the policy is
-`partial`; no permitted or disallowed path was changed.
+enforcement is now implemented for Basketball-Reference: `BbrefUrlBuilder`
+accepts only the three season pages and player metadata shape on the canonical
+HTTPS host, rejects query strings, fragments, foreign hosts, and all other
+paths, and is covered by the S-10 gamelog rejection test. FantasyPros URL
+enforcement remains pending, so the policy is `partial`; no permitted or
+disallowed path was changed.

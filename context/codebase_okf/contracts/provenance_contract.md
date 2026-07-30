@@ -96,5 +96,8 @@ non-UTC timestamps, out-of-range confidence, and non-SHA-256 hashes.
 `ExternalPlayer` and `ExternalTeam` require provenance at construction.
 Imported team source rows and NBA games persist every provenance field as
 non-null columns, with integration round trips; unchanged provider fragments
-produce stable SHA-256 hashes. The concept remains `partial` until every
-scraper, CSV, and manual adapter persists its output and I-11 passes.
+produce stable SHA-256 hashes. Basketball-Reference season rows use the
+canonical source, injected UTC time, HTML-scraper confidence,
+`basketball-reference-v1`, the external player slug, and a SHA-256 hash of the
+three raw row fragments. The concept remains `partial` until every scraper,
+CSV, and manual adapter persists its output and I-11 passes.

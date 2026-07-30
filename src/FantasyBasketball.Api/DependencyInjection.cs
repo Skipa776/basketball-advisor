@@ -6,6 +6,7 @@ using FantasyBasketball.Infrastructure.Http;
 using FantasyBasketball.Infrastructure.Persistence;
 using FantasyBasketball.Infrastructure.Persistence.Repositories;
 using FantasyBasketball.Infrastructure.Providers.BallDontLie;
+using FantasyBasketball.Infrastructure.Scrapers.BasketballReference;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -45,6 +46,9 @@ public static class DependencyInjection
             serviceProvider.GetRequiredService<BallDontLieProvider>());
         services.AddScoped<IScheduleProvider>(serviceProvider =>
             serviceProvider.GetRequiredService<BallDontLieProvider>());
+        services.AddScoped<BasketballReferenceStatsScraper>();
+        services.AddScoped<IPlayerStatsProvider>(serviceProvider =>
+            serviceProvider.GetRequiredService<BasketballReferenceStatsScraper>());
 
         AddSourceClient(
             services,

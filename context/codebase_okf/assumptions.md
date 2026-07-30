@@ -54,12 +54,20 @@ converts timestamps to UTC, hashes raw fragments, and persists teams and games
 with provenance. Its named client reads the validated API key from options and
 shares the safe HTTP pipeline. No real key or network call is used in tests.
 
-The full gate passes 39 Domain, 16 Application, and 19 integration tests. Domain
-line coverage is 88.48%, Application line coverage is 95.34%, the build has zero
+**Build step 8 is implemented.** The Basketball-Reference adapter fetches only
+the three allowlisted season pages, parses comment-wrapped tables from recorded
+HTML, maps the canonical counting-stat vocabulary, resolves player identity,
+converts usage percentage points at the boundary, rejects inconsistent rebound
+rows and schema drift, and stamps stable scraper provenance. Its URL builder
+rejects gamelog paths, foreign hosts, query strings, fragments, and every path
+outside the stable scraping policy.
+
+The full gate passes 40 Domain, 16 Application, and 23 integration tests. Domain
+line coverage is 88.92%, Application line coverage is 95.34%, the build has zero
 warnings, and OKF validation is clean. Persistence remains `partial` because
 later projection, context, recommendation, and ADP entities are absent. The
-single next action is E01 step 8: Basketball-Reference URL enforcement and the
-three-table season parser from committed HTML fixtures.
+single next action is E01 step 9: implement FantasyPros ADP plus CSV and manual
+fallbacks through one canonical ADP contract.
 
 **Build prerequisites on the development machine:**
 
