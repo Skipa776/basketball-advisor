@@ -34,38 +34,59 @@ public sealed class ImportPlayersService(
         var startedAt = timeProvider.GetUtcNow();
         DataImportRun? completedRun = null;
 
-        await transaction.ExecuteAsync(
-            async token =>
-            {
-                var rowsWritten = 0;
-                var pendingIdentityMatches = 0;
-
-                foreach (var externalPlayer in externalPlayers)
+        try
+        {
+            await transaction.ExecuteAsync(
+                async token =>
                 {
-                    token.ThrowIfCancellationRequested();
-                    var resolution = await resolver.ResolveAsync(externalPlayer, token);
-                    if (resolution.PendingMatch is null)
-                    {
-                        rowsWritten++;
-                    }
-                    else
-                    {
-                        pendingIdentityMatches++;
-                    }
-                }
+                    var rowsWritten = 0;
+                    var pendingIdentityMatches = 0;
 
-                completedRun = new DataImportRun(
-                    Guid.NewGuid(),
-                    source,
-                    DataImportRunStatus.Succeeded,
-                    startedAt,
-                    timeProvider.GetUtcNow(),
-                    rowsWritten,
-                    pendingIdentityMatches,
-                    null);
-                await runs.AddAsync(completedRun, token);
-            },
-            cancellationToken);
+                    foreach (var externalPlayer in externalPlayers)
+                    {
+                        token.ThrowIfCancellationRequested();
+                        var resolution = await resolver.ResolveAsync(externalPlayer, token);
+                        if (resolution.PendingMatch is null)
+                        {
+                            rowsWritten++;
+                        }
+                        else
+                        {
+                            pendingIdentityMatches++;
+                        }
+                    }
+
+                    completedRun = new DataImportRun(
+                        Guid.NewGuid(),
+                        source,
+                        DataImportRunStatus.Succeeded,
+                        startedAt,
+                        timeProvider.GetUtcNow(),
+                        rowsWritten,
+                        pendingIdentityMatches,
+                        null);
+                    await runs.AddAsync(completedRun, token);
+                },
+                cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            var failedRun = new DataImportRun(
+                Guid.NewGuid(),
+                source,
+                DataImportRunStatus.Failed,
+                startedAt,
+                timeProvider.GetUtcNow(),
+                0,
+                0,
+                $"{exception.GetType().Name}: {exception.Message}");
+            await runs.AddAsync(failedRun, cancellationToken);
+            return failedRun;
+        }
 
         return completedRun
             ?? throw new InvalidOperationException("The import transaction did not complete.");

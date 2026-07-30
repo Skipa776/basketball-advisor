@@ -63,3 +63,11 @@ fakes, and an endpoint if it is user-reachable — one commit.
 
 `test_matrix_api_persistence.md` row A-03, `test_matrix_ingestion_scrapers.md`
 rows I-06 and I-09, plus per-service unit tests.
+
+# Implementation evidence
+
+`ImportPlayersService` is constructor-injected over Application abstractions,
+passes cancellation through every await, and is covered with hand-written
+fakes. Cancellation escapes promptly after transaction rollback; other failures
+return a failed run after rollback instead of leaking partial data. The
+remaining MVP use cases keep this broader component `partial`.

@@ -27,9 +27,13 @@ adapter. Rate ceilings and the host allowlist are owned by
 Ordered handler chain, per named `HttpClient` (one per host):
 
 ```text
-request → cache lookup → per-host rate limiter → resilience (retry + backoff
-        + circuit breaker) → send → hash + record → cache store
+request → cache lookup → resilience (retry + backoff + circuit breaker)
+        → per-host rate limiter → send → hash + record → cache store
 ```
+
+The limiter is inside the resilience handler so **every retry attempt** acquires
+a permit. Putting resilience inside the limiter would throttle only the first
+attempt and let its retries exceed the safety ceiling.
 
 - **Rate limiting** uses `System.Threading.RateLimiting` from the shared
   framework, keyed by host, registered as a singleton. Per-instance limiters
@@ -78,8 +82,11 @@ rows I-06 through I-13 and S-11, S-12.
 
 # Implementation evidence
 
-The identity slice establishes immutable `DataImportRun` recording and an EF
-transaction boundary that commits player links, pending matches, and the
-successful run record together. HTTP clients, resilience, the process-wide
-limiter, cache, and failed-run degraded behavior remain unimplemented, so this
-component remains `partial`.
+The API host registers one named `IHttpClientFactory` client per canonical HTTP
+source. Cache, singleton per-host token-bucket limiting, and the platform
+standard resilience handler are ordered ahead of every send. Offline tests
+prove cache hits make zero sends and 20 requests across two handlers share one
+limiter. Real PostgreSQL tests prove failed and canceled imports roll back every
+partial identity write; non-cancellation failures become immutable failed
+`DataImportRun` rows. Health-driven confidence degradation and provider-level
+I-06 coverage remain, so this component remains `partial`.

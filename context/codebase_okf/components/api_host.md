@@ -6,7 +6,7 @@ tags: [component, api, aspnetcore]
 source_paths: [src/FantasyBasketball.Api]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Api]
 depends_on: [../contracts/api_surface.md, ../safety/secrets_policy.md]
-status: planned
+status: partial
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: medium
@@ -64,3 +64,10 @@ entry if semantics are non-obvious, and an integration test — one commit.
 
 [test_matrix_api_persistence](../tests/test_matrix_api_persistence.md), rows
 A-10, A-14, A-15, A-18, A-19.
+
+# Implementation evidence
+
+`DependencyInjection.cs` is now the sole composition root for the three named
+external-data clients and their cache, rate-limit, and standard resilience
+handlers. The endpoint, middleware, validated-options, and Blazor host surface
+remain unimplemented, so this component is `partial`.

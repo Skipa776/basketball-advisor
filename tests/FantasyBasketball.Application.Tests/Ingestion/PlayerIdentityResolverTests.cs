@@ -156,6 +156,72 @@ public sealed class PlayerIdentityResolverTests
         repository.Identities.Count.ShouldBe(3);
     }
 
+    [Fact]
+    public async Task I13_failed_import_rolls_back_partial_writes_and_records_failure()
+    {
+        var existing = CreatePlayer("Existing Player");
+        var existingIdentity = new ExternalPlayerIdentity(
+            existing.Id,
+            DataSourceName.BallDontLie,
+            "existing",
+            DateTimeOffset.UnixEpoch,
+            false);
+        var repository = new FakePlayerRepository(existing)
+        {
+            FailOnResolvedWrite = 2,
+        };
+        repository.Identities.Add(existingIdentity);
+        var runs = new FakeDataImportRunRepository();
+        var service = new ImportPlayersService(
+            CreateResolver(repository),
+            runs,
+            new SnapshotImportTransaction(repository, runs),
+            new FixedTimeProvider(DateTimeOffset.UnixEpoch));
+
+        var run = await service.ImportAsync(
+            DataSourceName.BallDontLie,
+            [
+                CreateExternalPlayer("first", "First New Player"),
+                CreateExternalPlayer("second", "Second New Player"),
+            ],
+            TestContext.Current.CancellationToken);
+
+        run.Status.ShouldBe(DataImportRunStatus.Failed);
+        repository.Players.ShouldBe([existing]);
+        repository.Identities.ShouldBe([existingIdentity]);
+        repository.PendingMatches.ShouldBeEmpty();
+        (await runs.GetAsync(run.Id, TestContext.Current.CancellationToken)).ShouldBe(run);
+    }
+
+    [Fact]
+    public async Task I09_cancellation_rolls_back_partial_import()
+    {
+        using var cancellation = new CancellationTokenSource();
+        var repository = new FakePlayerRepository
+        {
+            AfterResolvedWrite = cancellation.Cancel,
+        };
+        var runs = new FakeDataImportRunRepository();
+        var service = new ImportPlayersService(
+            CreateResolver(repository),
+            runs,
+            new SnapshotImportTransaction(repository, runs),
+            new FixedTimeProvider(DateTimeOffset.UnixEpoch));
+
+        await Should.ThrowAsync<OperationCanceledException>(() => service.ImportAsync(
+            DataSourceName.BallDontLie,
+            [
+                CreateExternalPlayer("first", "First New Player"),
+                CreateExternalPlayer("second", "Second New Player"),
+            ],
+            cancellation.Token));
+
+        repository.Players.ShouldBeEmpty();
+        repository.Identities.ShouldBeEmpty();
+        repository.PendingMatches.ShouldBeEmpty();
+        runs.Items.ShouldBeEmpty();
+    }
+
     private static PlayerIdentityResolver CreateResolver(IPlayerRepository repository) =>
         new(
             repository,
@@ -204,6 +270,12 @@ public sealed class PlayerIdentityResolverTests
 
         public int WriteCount { get; private set; }
 
+        public int? FailOnResolvedWrite { get; init; }
+
+        public Action? AfterResolvedWrite { get; init; }
+
+        private int resolvedWriteAttempts;
+
         public Task AddAsync(Player player, CancellationToken cancellationToken)
         {
             Players.Add(player);
@@ -245,6 +317,12 @@ public sealed class PlayerIdentityResolverTests
             bool addPlayer,
             CancellationToken cancellationToken)
         {
+            resolvedWriteAttempts++;
+            if (resolvedWriteAttempts == FailOnResolvedWrite)
+            {
+                throw new InvalidOperationException("Simulated provider write failure.");
+            }
+
             if (addPlayer)
             {
                 Players.Add(player);
@@ -252,6 +330,7 @@ public sealed class PlayerIdentityResolverTests
 
             Identities.Add(identity);
             WriteCount++;
+            AfterResolvedWrite?.Invoke();
             return Task.CompletedTask;
         }
 
@@ -272,18 +351,18 @@ public sealed class PlayerIdentityResolverTests
 
     private sealed class FakeDataImportRunRepository : IDataImportRunRepository
     {
-        private readonly List<DataImportRun> runs = [];
+        public List<DataImportRun> Items { get; } = [];
 
         public Task AddAsync(DataImportRun run, CancellationToken cancellationToken)
         {
-            runs.Add(run);
+            Items.Add(run);
             return Task.CompletedTask;
         }
 
         public Task<DataImportRun?> GetAsync(
             Guid id,
             CancellationToken cancellationToken) =>
-            Task.FromResult(runs.SingleOrDefault(run => run.Id == id));
+            Task.FromResult(Items.SingleOrDefault(run => run.Id == id));
     }
 
     private sealed class PassThroughImportTransaction : IImportTransaction
@@ -292,5 +371,37 @@ public sealed class PlayerIdentityResolverTests
             Func<CancellationToken, Task> action,
             CancellationToken cancellationToken) =>
             action(cancellationToken);
+    }
+
+    private sealed class SnapshotImportTransaction(
+        FakePlayerRepository players,
+        FakeDataImportRunRepository runs) : IImportTransaction
+    {
+        public async Task ExecuteAsync(
+            Func<CancellationToken, Task> action,
+            CancellationToken cancellationToken)
+        {
+            var playerCount = players.Players.Count;
+            var identityCount = players.Identities.Count;
+            var pendingCount = players.PendingMatches.Count;
+            var runCount = runs.Items.Count;
+
+            try
+            {
+                await action(cancellationToken);
+            }
+            catch
+            {
+                players.Players.RemoveRange(playerCount, players.Players.Count - playerCount);
+                players.Identities.RemoveRange(
+                    identityCount,
+                    players.Identities.Count - identityCount);
+                players.PendingMatches.RemoveRange(
+                    pendingCount,
+                    players.PendingMatches.Count - pendingCount);
+                runs.Items.RemoveRange(runCount, runs.Items.Count - runCount);
+                throw;
+            }
+        }
     }
 }

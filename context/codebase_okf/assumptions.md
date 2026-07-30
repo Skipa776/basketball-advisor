@@ -36,18 +36,24 @@ baseline immutability, enum storage, dependency direction, repository shape,
 league/draft cascade versus player-history restriction, pending identity
 matches, and immutable import runs.
 
-**Build step 5 is partial.** Exact player-name normalization, the six-tier
+**Build step 5 is implemented.** Exact player-name normalization, the six-tier
 identity ladder, canonical source names and confidence defaults, provenance
 validation, ambiguity review records, and atomic player-import accounting are
 implemented. Rows N-01 through N-05 pass, including the real EF transaction and
 queryable import-run path.
 
-The full gate passes 37 Domain, 12 Application, and 8 integration tests. Domain
-line coverage is 88.48%, Application line coverage is 95.90%, the build has zero
+**Build step 6 is partial.** Named factory clients now share response caching,
+the platform resilience stack, and a singleton per-host token-bucket limiter.
+Failed and canceled imports roll back on a real PostgreSQL transaction; failures
+are recorded without escaping the use case. Health-driven confidence lowering
+waits for the health subsystem.
+
+The full gate passes 37 Domain, 14 Application, and 13 integration tests. Domain
+line coverage is 88.48%, Application line coverage is 96.23%, the build has zero
 warnings, and OKF validation is clean. Persistence remains `partial` because
 later projection, context, recommendation, game, and ADP entities are absent.
-The single next action is E01's HTTP ingestion pipeline: failed-run degraded
-behavior, cancellation rollback, process-wide per-host limiting, and caching.
+The single next action is E01 step 7: the fixture-tested balldontlie teams,
+players, and games adapter.
 
 **Build prerequisites on the development machine:**
 
@@ -91,6 +97,16 @@ application-generated GUIDs. `DataImportRun` is stored append-only; the
 synchronous import use case writes its terminal snapshot once. The later API
 slice must preserve append-only storage when it exposes the contract's immediate
 `Running` response, rather than adding an update method.
+
+## Retry attempts are individually rate-limited
+
+The ingestion diagram originally placed the rate-limit handler outside
+resilience. In an `HttpMessageHandler` chain that throttles only the logical
+request; retry attempts invoke the inner handler directly and can exceed the
+non-negotiable six-per-minute ceiling. The implemented and now-documented order
+keeps the cache outermost but places resilience outside the per-host limiter, so
+every actual send—including every retry—must acquire a permit. This strengthens
+the scraping safety boundary; it does not change the retry budget or allowlist.
 
 # Red-team findings from the pre-build cold read
 

@@ -110,6 +110,10 @@ Docker running.
 
 Rows N-01 through N-05 are implemented in
 `PlayerIdentityResolverTests`; N-04 also crosses the real EF transaction and
-queryable `DataImportRun` repository in `PersistenceTests`. The I-, S-, and W-
-rows remain pending their corresponding E01 slices, so this matrix remains
-`partial`.
+queryable `DataImportRun` repository in `PersistenceTests`. I-09 and I-13 have
+both fake and real PostgreSQL rollback coverage; I-12 proves the second GET
+makes no send; S-11 proves two handler instances share one host limiter. A
+controlled terminal handler also proves the named factory's resilience path
+retries 500s without network access. I-06 remains partial until an actual
+provider failure reaches the failed-run path and downstream confidence, while
+the other I-, S-, and W- rows await their E01 slices.

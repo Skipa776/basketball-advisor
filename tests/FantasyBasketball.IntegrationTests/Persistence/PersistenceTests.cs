@@ -335,8 +335,145 @@ public sealed class PersistenceTests : IAsyncLifetime
             TestContext.Current.CancellationToken)).ShouldBe(0);
     }
 
+    [Fact]
+    public async Task Failed_import_rolls_back_real_database_writes_and_records_failed_run()
+    {
+        await using var database = new FantasyDbContext(options);
+        var repository = new InterruptingPlayerRepository(
+            new PlayerRepository(database),
+            beforeResolvedWrite: attempt =>
+            {
+                if (attempt == 2)
+                {
+                    throw new InvalidOperationException("Simulated write failure.");
+                }
+            });
+        var runs = new DataImportRunRepository(database);
+        var service = new ImportPlayersService(
+            new PlayerIdentityResolver(repository, new FixedTimeProvider(DateTimeOffset.UnixEpoch)),
+            runs,
+            new EfImportTransaction(database),
+            new FixedTimeProvider(DateTimeOffset.UnixEpoch));
+
+        var run = await service.ImportAsync(
+            DataSourceName.BallDontLie,
+            [
+                CreateExternalPlayer("first", "First Player"),
+                CreateExternalPlayer("second", "Second Player"),
+            ],
+            TestContext.Current.CancellationToken);
+
+        run.Status.ShouldBe(DataImportRunStatus.Failed);
+        (await database.Players.AsNoTracking().CountAsync(
+            TestContext.Current.CancellationToken)).ShouldBe(0);
+        (await database.ExternalPlayerIdentities.AsNoTracking().CountAsync(
+            TestContext.Current.CancellationToken)).ShouldBe(0);
+        (await database.DataImportRuns.AsNoTracking().CountAsync(
+            TestContext.Current.CancellationToken)).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Canceled_import_rolls_back_real_database_writes()
+    {
+        using var cancellation = new CancellationTokenSource();
+        await using var database = new FantasyDbContext(options);
+        var repository = new InterruptingPlayerRepository(
+            new PlayerRepository(database),
+            afterResolvedWrite: _ => cancellation.Cancel());
+        var service = new ImportPlayersService(
+            new PlayerIdentityResolver(repository, new FixedTimeProvider(DateTimeOffset.UnixEpoch)),
+            new DataImportRunRepository(database),
+            new EfImportTransaction(database),
+            new FixedTimeProvider(DateTimeOffset.UnixEpoch));
+
+        await Should.ThrowAsync<OperationCanceledException>(() => service.ImportAsync(
+            DataSourceName.BallDontLie,
+            [
+                CreateExternalPlayer("first", "First Player"),
+                CreateExternalPlayer("second", "Second Player"),
+            ],
+            cancellation.Token));
+
+        (await database.Players.AsNoTracking().CountAsync(
+            TestContext.Current.CancellationToken)).ShouldBe(0);
+        (await database.ExternalPlayerIdentities.AsNoTracking().CountAsync(
+            TestContext.Current.CancellationToken)).ShouldBe(0);
+        (await database.DataImportRuns.AsNoTracking().CountAsync(
+            TestContext.Current.CancellationToken)).ShouldBe(0);
+    }
+
+    private static ExternalPlayer CreateExternalPlayer(string externalId, string fullName) =>
+        new(
+            externalId,
+            fullName,
+            null,
+            ["G"],
+            null,
+            new DataProvenance(
+                DataSourceName.BallDontLie,
+                externalId,
+                DateTimeOffset.UnixEpoch,
+                null,
+                "balldontlie-v1",
+                DataSourceConfidence.OfficialApi,
+                new string('d', 64)));
+
     private sealed class FixedTimeProvider(DateTimeOffset value) : TimeProvider
     {
         public override DateTimeOffset GetUtcNow() => value;
+    }
+
+    private sealed class InterruptingPlayerRepository(
+        IPlayerRepository inner,
+        Action<int>? beforeResolvedWrite = null,
+        Action<int>? afterResolvedWrite = null) : IPlayerRepository
+    {
+        private int resolvedWriteAttempts;
+
+        public Task AddAsync(Player player, CancellationToken cancellationToken) =>
+            inner.AddAsync(player, cancellationToken);
+
+        public Task<Player?> GetAsync(
+            PlayerId id,
+            CancellationToken cancellationToken) =>
+            inner.GetAsync(id, cancellationToken);
+
+        public Task<Player?> FindByExternalIdentityAsync(
+            string provider,
+            string externalId,
+            CancellationToken cancellationToken) =>
+            inner.FindByExternalIdentityAsync(provider, externalId, cancellationToken);
+
+        public Task<IReadOnlyList<Player>> FindByNormalizedNameAsync(
+            string normalizedName,
+            CancellationToken cancellationToken) =>
+            inner.FindByNormalizedNameAsync(normalizedName, cancellationToken);
+
+        public Task<ExternalPlayerIdentity?> FindIdentityAsync(
+            PlayerId playerId,
+            string provider,
+            CancellationToken cancellationToken) =>
+            inner.FindIdentityAsync(playerId, provider, cancellationToken);
+
+        public async Task AddResolvedIdentityAsync(
+            Player player,
+            ExternalPlayerIdentity identity,
+            bool addPlayer,
+            CancellationToken cancellationToken)
+        {
+            resolvedWriteAttempts++;
+            beforeResolvedWrite?.Invoke(resolvedWriteAttempts);
+            await inner.AddResolvedIdentityAsync(
+                player,
+                identity,
+                addPlayer,
+                cancellationToken);
+            afterResolvedWrite?.Invoke(resolvedWriteAttempts);
+        }
+
+        public Task AddPendingIdentityMatchAsync(
+            PendingIdentityMatch pendingMatch,
+            CancellationToken cancellationToken) =>
+            inner.AddPendingIdentityMatchAsync(pendingMatch, cancellationToken);
     }
 }

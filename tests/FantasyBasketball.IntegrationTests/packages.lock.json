@@ -886,6 +886,14 @@
           "xunit.v3.runner.common": "[3.2.2]"
         }
       },
+      "fantasybasketball.api": {
+        "type": "Project",
+        "dependencies": {
+          "FantasyBasketball.Application": "[1.0.0, )",
+          "FantasyBasketball.Domain": "[1.0.0, )",
+          "FantasyBasketball.Infrastructure": "[1.0.0, )"
+        }
+      },
       "fantasybasketball.application": {
         "type": "Project",
         "dependencies": {
@@ -902,6 +910,7 @@
           "FantasyBasketball.Application": "[1.0.0, )",
           "FantasyBasketball.Domain": "[1.0.0, )",
           "Microsoft.EntityFrameworkCore": "[10.0.10, )",
+          "Microsoft.Extensions.Caching.Memory": "[10.0.10, )",
           "Microsoft.Extensions.Hosting": "[10.0.10, )",
           "Microsoft.Extensions.Http.Resilience": "[10.8.0, )",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "[10.0.3, )"

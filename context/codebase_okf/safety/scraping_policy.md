@@ -6,7 +6,7 @@ tags: [safety, scraping, compliance]
 source_paths: [src/FantasyBasketball.Infrastructure/Scrapers, src/FantasyBasketball.Infrastructure/Http]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Scrapers]
 depends_on: [../contracts/provider_contracts.md]
-status: planned
+status: partial
 last_updated: 2026-07-29
 owners: [engineering]
 risk_level: high
@@ -125,3 +125,12 @@ knowingly-unenforced in [assumptions](../assumptions.md).
 # Verification
 
 `test_matrix_ingestion_scrapers.md`, rows S-10 through S-12.
+
+# Implementation evidence
+
+The process-wide per-host limiter is implemented with
+`System.Threading.RateLimiting`, registered once in the API composition root,
+and tested with 20 requests split across two handlers. Production registration
+uses the contract's 10-second minimum interval and honest User-Agent. URL
+builders and their allowlist-rejection tests remain pending, so the policy is
+`partial`; no permitted or disallowed path was changed.
