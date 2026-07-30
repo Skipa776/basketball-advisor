@@ -1,8 +1,10 @@
+/* No transform or position transition, deliberately: the board holds still by
+   scroll-anchoring in draft-board.js, not by animating rows into place. A row
+   that translates would fight that correction. Colour is the only thing that
+   moves here, which is why there is no reduced-motion override below. */
 .player-row {
     height: var(--board-row-height);
-    transition:
-        transform var(--motion-base) var(--ease-out),
-        background-color var(--motion-fast) var(--ease-out);
+    transition: background-color var(--motion-fast) var(--ease-out);
 }
 
 .player-row[data-recommended="True"] {
@@ -59,10 +61,4 @@ a {
     overflow: hidden;
     clip: rect(0 0 0 0);
     white-space: nowrap;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .player-row {
-        transition: none;
-    }
 }

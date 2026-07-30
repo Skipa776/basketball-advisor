@@ -42,7 +42,7 @@ Ratios are computed, not estimated.
 | `--color-surface` | `#16181C` | Panels, table body | — |
 | `--color-surface-raised` | `#1E2126` | Hover, selected row, popovers | 1.19:1 on bg |
 | `--color-rule` | `#2E333B` | **Decorative** separators only | 1.40:1 — see note |
-| `--color-border-strong` | `#606874` | **Interactive** boundaries: inputs, buttons | **3.40:1** on bg |
+| `--color-border-strong` | `#68707D` | **Interactive** boundaries: inputs, buttons | **3.84:1** bg · **3.56:1** surface · **3.23:1** raised |
 | `--color-text` | `#E6E8EB` | Body | **15.61:1** |
 | `--color-text-muted` | `#9BA3AE` | Secondary, labels, units | **7.52:1** |
 | `--color-accent` | `#E8A33D` | Recommended pick, focus ring | **8.89:1** |
@@ -58,7 +58,7 @@ Ratios are computed, not estimated.
 | `--color-surface` | `#FFFFFF` | Panels, table body | — |
 | `--color-surface-raised` | `#F2F3F5` | Hover, selected row, popovers | 1.06:1 on bg |
 | `--color-rule` | `#E3E6EA` | Decorative separators only | 1.25:1 |
-| `--color-border-strong` | `#767D87` | Interactive boundaries | **3.98:1** on bg |
+| `--color-border-strong` | `#767D87` | Interactive boundaries | **3.98:1** bg · **4.16:1** surface · **3.74:1** raised |
 | `--color-text` | `#15171B` | Body | **17.19:1** |
 | `--color-text-muted` | `#5A626D` | Secondary, labels, units | **5.91:1** |
 | `--color-accent` | `#8A5310` | Recommended pick, focus ring | **6.05:1** |
@@ -76,7 +76,10 @@ accessibility failure. One token could not serve both, so:
 - **`--color-rule`** — row separators, section dividers. Purely decorative, exempt
   by construction. Rows must remain distinguishable without it.
 - **`--color-border-strong`** — anything the user can focus, type into, or click.
-  **Never below 3:1.**
+  **Never below 3:1 against any surface it can sit on** — including
+  `--color-surface-raised`, which is the one that gets missed: a bordered
+  control whose own fill is the raised surface has its boundary measured
+  against that fill, not against the page.
 
 Using `--color-rule` on an interactive boundary is a bug.
 
@@ -114,6 +117,7 @@ That includes table cells, the evidence magnitudes, and the clock. Prose renders
 | `--text-base` | 15px / 1.55 | Prose, forms, review queue |
 | `--text-lg` | 18px / 1.4 | Panel titles |
 | `--text-xl` | 24px / 1.25 | Page titles |
+| `--text-2xl` | 32px / 1.25 | Reserved — the one display size, unused so far |
 
 Only one weight pair: 400 and 600. No 500, no 700 — a scale with four weights drifts
 within a week.
@@ -130,7 +134,7 @@ within a week.
 --radius-sm: 3px  --radius-md: 5px   --radius-lg: 8px
 
 --motion-fast: 120ms   --motion-base: 200ms
---easing: cubic-bezier(0.2, 0, 0, 1)
+--ease-out: cubic-bezier(0.2, 0, 0, 1)
 ```
 
 Small radii deliberately. Rounded corners read as friendly; this should read as
@@ -184,9 +188,12 @@ Rules this implies:
   labelled chip in one of four values — never a percentage, never a bar.
 - **Risks are always visible.** No disclosure triangle. A recommendation whose risks
   are collapsed is a recommendation without risks.
-- **The row under the cursor never moves.** Fixed row height, rows animate position
-  over `--motion-base`, and nothing is inserted above the current scroll position
-  mid-interaction. Under `prefers-reduced-motion` the move is instant, never absent.
+- **The row under the cursor never moves.** Fixed row height, and after a re-rank
+  the scroll position is corrected so every surviving row keeps the same offset
+  inside the viewport. Rows do **not** animate into their new rank: a row that
+  translates fights the correction, and the correction is what the requirement
+  actually asks for. The consequence is that this board has no motion for
+  `prefers-reduced-motion` to reduce — re-rank is already instant for everyone.
 
 ---
 

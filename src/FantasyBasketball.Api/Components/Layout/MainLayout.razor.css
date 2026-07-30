@@ -23,6 +23,9 @@
     color: var(--color-accent-contrast);
 }
 
+/* Untransitioned on purpose. A skip link is the first thing a keyboard user
+   reaches; sliding it in delays the only affordance telling them where they
+   are. Instant is correct here for every motion preference. */
 .skip-link:focus {
     transform: translateY(0);
 }
@@ -419,11 +422,5 @@ main ::deep .visually-hidden {
     main ::deep .instrument-grid,
     main ::deep .inline-form {
         grid-template-columns: 1fr;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .skip-link {
-        transition: none;
     }
 }

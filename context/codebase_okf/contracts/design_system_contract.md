@@ -36,7 +36,7 @@ One source, `Components/Design/Tokens.razor.css`, as CSS custom properties.
 **No component hardcodes a colour, spacing, radius, or duration.**
 
 ```text
---color-bg, --color-surface, --color-surface-raised, --color-border
+--color-bg, --color-surface, --color-surface-raised
 --color-text, --color-text-muted
 --color-accent, --color-accent-contrast
 --color-positive, --color-negative, --color-caution      # semantic, never decorative
@@ -89,9 +89,15 @@ per pick, and the user is also watching a draft room elsewhere.
 
 Layout stability is the one most likely to be missed and the most damaging: a
 board that reflows the instant a rank changes will cause a misclick on the wrong
-player during a live draft. Rows animate position over `--motion-base`; row height
-is fixed; nothing appears or disappears above the viewport's current scroll
-position mid-interaction.
+player during a live draft. Row height is fixed; after a re-rank the scroll
+position is corrected so every surviving row keeps its offset inside the
+viewport; nothing appears or disappears above that position mid-interaction.
+
+**Rows do not animate into their new rank.** Correcting the scroll is what the
+requirement asks for, and a row transitioning `transform` at the same time fights
+that correction. The board therefore has no movement for `prefers-reduced-motion`
+to reduce — re-rank is instant for everyone, by construction rather than by
+media query.
 
 # Evidence and confidence
 
@@ -114,7 +120,7 @@ data; this owns the presentation:
 
 | Requirement | Rule |
 |---|---|
-| Contrast | 4.5:1 body, 3:1 large text and UI boundaries, **in both themes** |
+| Contrast | 4.5:1 body, 3:1 large text and UI boundaries, **in both themes, against every surface the token can land on** — including `--color-surface-raised`, since a bordered control that paints its own raised fill has its boundary measured against that fill, not against the page |
 | Keyboard | Every action reachable; the draft board fully operable without a mouse |
 | Focus | Visible always; `--focus-ring` is never removed |
 | Targets | 24×24 CSS px minimum (WCAG 2.2 2.5.8) |
@@ -150,18 +156,26 @@ actually sees first, and it is the one most often left unstyled.
   `.razor` and `.razor.css` for hex colours, raw `px` spacing, and `ms`
   durations outside the token file.*
 - **Contrast passes in both themes.** *Check: row D-11 computes contrast for every
-  token pair in use.*
+  foreground token against every surface token, and fails if the token file
+  defines a colour no pair covers and no exemption names.*
 - **Risk is never colour-only.** *Check: row D-12 asserts each evidence item
   renders an icon and a text label.*
 - **The board is keyboard-operable and focus returns after a pick.** *Check: row D-13.*
 - **The board does not shift on re-rank.** *Check: row D-14 records row offsets
   before and after a pick and asserts no reflow above the scroll position.*
-- **`prefers-reduced-motion` disables row animation.** *Check: row D-15.*
+- **Board rows declare no motion to reduce.** *Check: row D-15 asserts no board row
+  transitions a geometry property and the scroll correction never animates.*
 - **Live regions announce the pick and the top-recommendation change only.**
   *Check: row D-16.*
 - **Every page has a styled empty and error state.** *Check: row D-17 renders each
   page with no data.*
 - **Automated a11y scan is clean on every page.** *Check: row D-18.*
+- **Design components are presentational.** *Check: row D-19 asserts no type under
+  `Components/Design` takes a service or repository dependency.*
+- **Pages compose the inventory and define no styles of their own.** *Check: row
+  D-20.*
+- **The full player pool renders a bounded DOM.** *Check: row D-21 asserts the
+  table virtualizes.*
 
 # Change procedure
 
@@ -173,4 +187,4 @@ does not touch this file.
 # Verification
 
 [test_matrix_ui_design](../tests/test_matrix_ui_design.md), rows D-10 through
-D-18.
+D-21.

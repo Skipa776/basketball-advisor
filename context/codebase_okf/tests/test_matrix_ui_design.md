@@ -28,9 +28,9 @@ draft.
 
 | ID | Case | Expected | Required |
 |---|---|---|---|
-| `D-11` | Every token pair in use, **both themes** | 4.5:1 body, 3:1 large text and UI boundaries | ✅ |
+| `D-11` | Every foreground token × every surface token, **both themes** | 4.5:1 body, 3:1 UI boundaries; **and** no colour token exists that no pair covers and no exemption names | ✅ |
 | `D-12` | Every evidence item | Renders an icon **and** a text label — never colour alone | ✅ |
-| `D-15` | `prefers-reduced-motion: reduce` | Row animation becomes instant | ✅ |
+| `D-15` | Board row stylesheet and the scroll-anchor script | No row transitions a geometry property and the correction never animates — re-rank is instant by construction, so there is no motion left to reduce | ✅ |
 | `D-16` | Live regions on the draft board | Announce the pick made and a top-recommendation change; **not** every re-ranked row | ✅ |
 | `D-17` | Every page rendered with no data | A styled empty state — the first thing a new self-hoster sees | ✅ |
 | `D-18` | Automated a11y scan, every page, both themes | Zero violations (`accessibility_violations_allowed = 0`) | ✅ |
@@ -46,6 +46,21 @@ draft.
 `D-14` exists because a board that reflows the instant a rank changes will cause a
 misclick on the wrong player during a live draft. It is the highest-consequence UI
 bug available in this product and it is invisible to an accessibility scanner.
+
+# What the D-18 scan is
+
+Not axe-core. It is a rule set implemented directly against the server-rendered
+DOM (AngleSharp), so the whole suite stays offline and dependency-free. It
+asserts: document language; exactly one `main` and one `h1`; no duplicate `id`;
+every `aria-describedby` / `aria-labelledby` / `aria-controls` resolves to a real
+element; `alt` on every image; an accessible label on every form control; an
+accessible name on every button and link; a caption and header cells on every
+table; a label on every `nav`; and the live-region count required for that page.
+
+What it structurally cannot see, because it never lays the page out: colour
+contrast (that is `D-11`, computed from the tokens instead), focus visibility,
+and any state that only exists after Blazor becomes interactive. Read a green
+`D-18` as "the markup contract holds", not as "axe found nothing".
 
 # What the scan does not cover
 

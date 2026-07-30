@@ -421,6 +421,42 @@ now includes `BacktestCalibration` before the component implementation. It remai
 presentational and accepts calibration points; producing those points stays in E11,
 so E05 does not fabricate historical results or pull post-MVP computation forward.
 
+### E05 review — the board has no motion, deliberately
+
+Reviewing E05 against a motion-design rubric surfaced that three of the four
+`prefers-reduced-motion` blocks in the UI guarded transitions that animated
+nothing, and the one real geometry transition (`transform` on a board row) was
+never triggered because Blazor re-renders row *content* while `draft-board.js`
+holds the viewport still by correcting `scrollTop`.
+
+That is the right mechanism — it is what D-14 actually asks for, and an animated
+row would fight it — so the implementation stayed and the specs were corrected to
+describe it. The board and the shell now animate colour only. `D-15` was rewritten
+from "a reduced-motion block exists" (which passed while guarding dead CSS) to
+"no board row transitions a geometry property and the scroll correction never
+animates", which fails if a future change reintroduces movement.
+
+**If positional row animation is ever wanted**, it is a
+[design_system_contract](contracts/design_system_contract.md) change first, and it
+has to state how the animation and the scroll anchor coexist. Do not add it to the
+stylesheet alone.
+
+### E05 review — contrast against the raised surface
+
+`--color-border-strong` was `#606874`, verified at 3.40:1 against `--color-bg` and
+never against `--color-surface-raised`, where it measured **2.87:1** — below the
+WCAG 1.4.11 floor for an interactive boundary. `.button-link` paints both on the
+same element, so the failure was live in the dark theme, not hypothetical. The
+token is now `#68707D` (3.84 / 3.56 / 3.23 across the three dark surfaces).
+
+The reason D-11 missed it is instructive: it checked a hand-written list of pairs,
+so a surface nobody thought to list was a surface nobody tested. It now takes the
+cross product of foregrounds × surfaces and additionally fails if the token file
+defines a colour that no pair covers and no exemption names — so adding a token
+forces a decision instead of silently widening the blind spot. `--color-border`
+was deleted in the same pass: unused, byte-identical to `--color-rule`, and a
+third unlabelled name for the value that must never touch an interactive edge.
+
 # Revisit triggers
 
 - The user's real league settings differ from the seed league → update

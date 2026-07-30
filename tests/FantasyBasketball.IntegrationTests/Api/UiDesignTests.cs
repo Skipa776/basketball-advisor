@@ -58,26 +58,49 @@ public sealed partial class UiDesignTests
         var stylesheet = File.ReadAllText(
             Path.Combine(DesignRoot, "Tokens.razor.css"));
         var themes = ParseThemeColours(stylesheet);
-        var bodyPairs = new[]
-        {
-            ("color-text", "color-bg"),
-            ("color-text", "color-surface"),
-            ("color-text-muted", "color-bg"),
-            ("color-text-muted", "color-surface"),
-            ("color-accent", "color-bg"),
-            ("color-accent", "color-surface"),
-            ("color-positive", "color-surface"),
-            ("color-negative", "color-surface"),
-            ("color-caution", "color-surface"),
-            ("color-accent-contrast", "color-accent"),
-        };
-        var boundaryPairs = new[]
-        {
-            ("color-border-strong", "color-bg"),
-            ("color-border-strong", "color-surface"),
-        };
+        // Every surface a foreground can land on, including surface-raised --
+        // the recommended row, hover states, popovers, and .button-link all
+        // paint their own fill with it, so a boundary drawn on such a control
+        // is measured against that fill and not against the page behind it.
+        string[] surfaces = ["color-bg", "color-surface", "color-surface-raised"];
+        string[] foregrounds =
+        [
+            "color-text",
+            "color-text-muted",
+            "color-accent",
+            "color-positive",
+            "color-negative",
+            "color-caution",
+        ];
+        var bodyPairs = foregrounds
+            .SelectMany(foreground => surfaces.Select(
+                surface => (foreground, surface)))
+            .Append(("color-accent-contrast", "color-accent"))
+            .ToArray();
+        var boundaryPairs = surfaces
+            .Select(surface => ("color-border-strong", surface))
+            .ToArray();
 
         themes.Keys.ShouldBe(["dark", "light"], ignoreOrder: true);
+
+        // A colour token nobody checks is a contrast failure waiting to be
+        // introduced. Decorative-only tokens are exempt by name, never by
+        // omission -- adding a token now forces a decision about which it is.
+        string[] decorativeOnly = ["color-rule"];
+        var checkedTokens = bodyPairs
+            .Concat(boundaryPairs)
+            .SelectMany(pair => new[] { pair.Item1, pair.Item2 })
+            .Concat(decorativeOnly)
+            .ToHashSet(StringComparer.Ordinal);
+        foreach (var theme in themes)
+        {
+            theme.Value.Keys
+                .Where(token => !checkedTokens.Contains(token))
+                .ShouldBeEmpty(
+                    $"{theme.Key} defines colour tokens that no contrast pair "
+                    + "covers; add them to a pair or to decorativeOnly");
+        }
+
         foreach (var theme in themes)
         {
             foreach (var pair in bodyPairs)
@@ -137,13 +160,46 @@ public sealed partial class UiDesignTests
     }
 
     [Fact]
-    public void D15_reduced_motion_disables_player_row_animation()
+    public void D15_board_rows_declare_no_motion_to_reduce()
     {
+        // The board holds still by scroll-anchoring in draft-board.js, not by
+        // animating rows into their new rank, so re-rank is already instant
+        // under every motion preference. This asserts that stays true. A
+        // geometry transition added to a row would both fight the anchor
+        // correction and reintroduce movement that nothing turns off -- and
+        // the old assertion (a reduced-motion block exists) could not tell the
+        // difference, because it passed while guarding a transition that
+        // animated nothing.
+        string[] movementProperties =
+            ["transform", "translate", "top", "inset", "margin", "height"];
         var stylesheet = File.ReadAllText(
             Path.Combine(DesignRoot, "PlayerRow.razor.css"));
 
-        stylesheet.ShouldContain("@media (prefers-reduced-motion: reduce)");
-        stylesheet.ShouldContain("transition: none");
+        foreach (var declaration in TransitionValue()
+            .Matches(stylesheet)
+            .Cast<Match>())
+        {
+            var value = declaration.Groups["value"].Value;
+            foreach (var property in movementProperties)
+            {
+                value.Contains(property, StringComparison.Ordinal)
+                    .ShouldBeFalse(
+                        $"a board row must not transition '{property}'");
+            }
+        }
+
+        // The anchor correction assigns scrollTop outright. A smooth scroll or
+        // a Web Animations call here would animate the very displacement D-14
+        // exists to cancel.
+        var script = File.ReadAllText(Path.Combine(
+            RepositoryRoot,
+            "src",
+            "FantasyBasketball.Api",
+            "wwwroot",
+            "draft-board.js"));
+
+        script.ShouldNotContain("behavior");
+        script.ShouldNotContain(".animate(");
     }
 
     [Fact]
@@ -354,4 +410,7 @@ public sealed partial class UiDesignTests
     [GeneratedRegex(
         @"--(?<name>color-[a-z-]+):\s*#(?<hex>[0-9a-fA-F]{6});")]
     private static partial Regex ColourToken();
+
+    [GeneratedRegex(@"transition:\s*(?<value>[^;]*);")]
+    private static partial Regex TransitionValue();
 }
