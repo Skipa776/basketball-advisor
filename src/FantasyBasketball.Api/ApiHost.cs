@@ -1,6 +1,8 @@
 using FantasyBasketball.Api.Endpoints;
 using FantasyBasketball.Api.Middleware;
 using FantasyBasketball.Api.Components;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Routing;
 
 namespace FantasyBasketball.Api;
 
@@ -72,6 +74,23 @@ public static class ApiHost
                 "FantasyBasketball.Api.staticwebassets.endpoints.json")
             .AllowAnonymous();
         app.MapRazorComponents<App>()
-            .AddInteractiveServerRenderMode();
+            .AddInteractiveServerRenderMode()
+            // The SignalR transport is an endpoint too, so the
+            // RequireAuthenticatedUser fallback caught it: an anonymous visitor's
+            // negotiate 302'd to the login page and the client tried to parse
+            // that HTML as JSON. Only the /_blazor transport opts out -- page
+            // routes keep the fallback policy, and a circuit opened without a
+            // user is an anonymous circuit that can still only render what
+            // AuthorizeView lets it.
+            .Add(endpoint =>
+            {
+                if (endpoint is RouteEndpointBuilder route
+                    && route.RoutePattern.RawText?.StartsWith(
+                        "/_blazor",
+                        StringComparison.Ordinal) is true)
+                {
+                    endpoint.Metadata.Add(new AllowAnonymousAttribute());
+                }
+            });
     }
 }

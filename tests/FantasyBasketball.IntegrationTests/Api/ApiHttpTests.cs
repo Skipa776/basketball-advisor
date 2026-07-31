@@ -499,8 +499,12 @@ public sealed class ApiHttpTests : IAsyncLifetime
             TestContext.Current.CancellationToken);
         var document = new HtmlParser().ParseDocument(html);
 
-        document.QuerySelector(".empty-state").ShouldNotBeNull(
-            $"{path} must render its first-run empty state in {theme}");
+        // A styled first-run surface, not one specific component: the auth
+        // pages render an AuthPanel, which is the same guarantee -- nothing
+        // arrives as an unstyled blank screen -- without wrapping a login form
+        // in an empty state to satisfy a selector.
+        document.QuerySelector(".empty-state, .auth-card").ShouldNotBeNull(
+            $"{path} must render a styled first-run surface in {theme}");
         AccessibilityViolations(document, path).ShouldBeEmpty(
             $"{path} has accessibility violations in {theme}");
     }

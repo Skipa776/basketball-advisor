@@ -16,15 +16,34 @@ owners: [engineering]
 Gates R19. Row `D-14` is the one that decides whether this is usable during a live
 draft.
 
-# Token discipline (`D-10`, `D-19`, `D-20`)
+# Token discipline (`D-10`, `D-19`, `D-20`, `D-23`)
 
 | ID | Case | Expected | Required |
 |---|---|---|---|
 | `D-10` | Scan `.razor` and `.razor.css` | No hex colour, raw `px` spacing, or `ms` duration outside the token file | ✅ |
 | `D-19` | `Components/Design` types | No service or repository dependency — components are presentational | ✅ |
-| `D-20` | Every page | Composed from inventory components; defines no page-level styles | ✅ |
+| `D-20` | Every page | Composed from inventory components; defines no page-level styles. `PageHeader` **or** `AuthPanel` supplies the heading | ✅ |
+| `D-23` | Every rule using `--color-accent` in a board stylesheet | Every comma-separated selector part names the recommendation. Orange is free elsewhere and rationed here | ✅ |
 
-# Accessibility (`D-11`, `D-12`, `D-15`–`D-18`)
+`D-23` is the executable half of the accent rule. The accent became the brand
+colour when the marketing surfaces landed, and a brand colour sprayed across the
+board would cost the recommended row the only job it has: being the one thing the
+eye finds with four minutes on the clock. Selector parts are checked individually,
+so `.anything, .recommendation` cannot smuggle a rule past it.
+
+# Public surfaces (`D-25`, `D-26`)
+
+| ID | Case | Expected | Required |
+|---|---|---|---|
+| `D-25` | `GET /` with no session | `200` with the landing content, and **none** of the dashboard's owned-data sections | ✅ |
+| `D-26` | Landing page with the demo flag off, then on | Off: no badge and none of the invented players. On: the content **and** its fictional label | ✅ |
+
+`D-25` asserts the absence of the owned sections rather than the presence of a
+guard, because the page's own catch would swallow a `CurrentUserId` throw and
+serve the same `200` either way. What a signed-out visitor can see is the thing
+worth pinning.
+
+# Accessibility (`D-11`, `D-12`, `D-15`–`D-18`, `D-22`, `D-24`, `D-27`)
 
 | ID | Case | Expected | Required |
 |---|---|---|---|
@@ -32,8 +51,17 @@ draft.
 | `D-12` | Every evidence item | Renders an icon **and** a text label — never colour alone | ✅ |
 | `D-15` | Board row stylesheet and the scroll-anchor script | No row transitions a geometry property and the correction never animates — re-rank is instant by construction, so there is no motion left to reduce | ✅ |
 | `D-16` | Live regions on the draft board | Announce the pick made and a top-recommendation change; **not** every re-ranked row | ✅ |
-| `D-17` | Every page rendered with no data | A styled empty state — the first thing a new self-hoster sees | ✅ |
+| `D-17` | Every page rendered with no data | A styled first-run surface — `EmptyState` or `AuthPanel`. Pages populated in every state are exempt **by name**, never by omission | ✅ |
 | `D-18` | Automated a11y scan, every page, both themes | Zero violations (`accessibility_violations_allowed = 0`) | ✅ |
+| `D-22` | Every pair **inside `.on-dark`**, plus the island's own token values | Meets its floor against the island's surfaces, and matches the dark set exactly | ✅ |
+| `D-24` | Carousel script and markup | Reduced-motion guard, operable pause, hover and focus suspension, and slides that do not announce themselves (WCAG 2.2.2) | ✅ |
+| `D-27` | Every rule applying `--font-display` | Never lands on a numeric selector; `[data-numeric]` stays mono and tabular | ✅ |
+
+`D-22` exists because `.on-dark` renders the same fill in both themes, so nothing
+about the ambient theme predicts what is legible inside it. The pair that fails
+without it is the light rank teal on the island: **2.86:1**. The row also asserts
+the island equals the dark set, because a light set pasted there would satisfy
+every contrast pair while rendering a panel indistinguishable from the page.
 
 # Draft-board interaction budget (`D-13`, `D-14`, `D-21`)
 

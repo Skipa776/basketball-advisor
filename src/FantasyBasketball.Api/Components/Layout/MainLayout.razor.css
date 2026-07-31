@@ -11,6 +11,30 @@
     font: 400 var(--text-base)/var(--leading-normal) var(--font-sans);
 }
 
+.public-frame {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: 400 var(--text-base)/var(--leading-normal) var(--font-sans);
+}
+
+/* The marketing surfaces run edge to edge: a hero constrained to --content-max
+   with workspace padding around it reads as a panel, not a page. Sections do
+   their own inner spacing. */
+.public-frame main {
+    width: 100%;
+    max-width: none;
+    flex: 1;
+    padding: 0;
+}
+
+.public-frame ::deep .public-section {
+    width: min(100%, var(--content-max));
+    margin-inline: auto;
+}
+
 .skip-link {
     position: fixed;
     z-index: 10;

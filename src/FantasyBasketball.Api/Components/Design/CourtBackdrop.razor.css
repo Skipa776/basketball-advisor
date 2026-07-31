@@ -1,0 +1,28 @@
+.court-backdrop {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.court {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 2;
+    opacity: 0.16;
+}
+
+/* Silhouettes sit under the headline, so they stay well below the contrast of
+   anything that carries meaning. They are texture, not information. */
+.figure {
+    fill: var(--color-accent);
+    opacity: 0.2;
+}
+
+.ball {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 3;
+    opacity: 0.34;
+}

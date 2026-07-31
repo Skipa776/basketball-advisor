@@ -1,16 +1,36 @@
+/* Self-hosted, latin subset, 12KB. DESIGN.md banned webfonts because "a
+   self-hosted tool should not make a network request to render, and the CSP on
+   any sensible deployment would block it anyway" -- serving it ourselves keeps
+   both of those true. Display face only: headlines and the wordmark. Numbers
+   never render in it, because tabular alignment on the board is load-bearing.
+   SIL OFL, licence committed at wwwroot/fonts/OFL.txt. */
+@font-face {
+    font-family: "Anton";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("fonts/anton-latin.woff2") format("woff2");
+}
+
+/* Light is the default now: the first screen anyone sees is the landing page,
+   and it is off-white. Dark is still fully supported and equally tested -- a
+   draft still happens at night. Every ratio in DESIGN.md was computed against
+   these exact values; changing one re-runs that check in both themes. */
 .tokens {
-    --color-bg: #0E0F12;
-    --color-surface: #16181C;
-    --color-surface-raised: #1E2126;
-    --color-rule: #2E333B;
-    --color-border-strong: #68707D;
-    --color-text: #E6E8EB;
-    --color-text-muted: #9BA3AE;
-    --color-accent: #E8A33D;
-    --color-accent-contrast: #0E0F12;
-    --color-positive: #5FBF8E;
-    --color-negative: #E8836F;
-    --color-caution: #D9A441;
+    --color-bg: #FAF8F4;
+    --color-surface: #FFFFFF;
+    --color-surface-raised: #F0ECE4;
+    --color-rule: #E4DED3;
+    --color-border-strong: #77716A;
+    --color-text: #16161A;
+    --color-text-muted: #57544F;
+    --color-accent: #D96612;
+    --color-accent-ink: #B8460F;
+    --color-accent-contrast: #16161A;
+    --color-rank: #1C6A72;
+    --color-positive: #1B6B45;
+    --color-negative: #A8341F;
+    --color-caution: #7A5806;
     --space-1: 2px;
     --space-2: 4px;
     --space-3: 6px;
@@ -26,6 +46,9 @@
     --text-lg: 18px;
     --text-xl: 24px;
     --text-2xl: 32px;
+    --text-3xl: 44px;
+    --text-4xl: 60px;
+    --text-hero: 88px;
     --leading-tight: 1.25;
     --leading-normal: 1.55;
     --radius-sm: 3px;
@@ -34,47 +57,83 @@
     --rule-width: 1px;
     --motion-fast: 120ms;
     --motion-base: 200ms;
+    --motion-slow: 400ms;
     --ease-out: cubic-bezier(0.2, 0, 0, 1);
     --focus-ring: 0 0 0 3px var(--color-accent);
     --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --font-display: "Anton", "Arial Narrow", var(--font-sans);
     --board-row-height: 28px;
     --target-min: 24px;
     --content-max: 1440px;
+    --hero-min-height: 620px;
+    --carousel-interval: 6000ms;
     min-height: 100vh;
-    color-scheme: dark;
-}
-
-.tokens[data-theme="light"] {
-    --color-bg: #FAFAFA;
-    --color-surface: #FFFFFF;
-    --color-surface-raised: #F2F3F5;
-    --color-rule: #E3E6EA;
-    --color-border-strong: #767D87;
-    --color-text: #15171B;
-    --color-text-muted: #5A626D;
-    --color-accent: #8A5310;
-    --color-accent-contrast: #FFFFFF;
-    --color-positive: #1B7A4E;
-    --color-negative: #A8341F;
-    --color-caution: #7A5806;
     color-scheme: light;
 }
 
-@media (prefers-color-scheme: light) {
+.tokens[data-theme="dark"] {
+    --color-bg: #111114;
+    --color-surface: #17171A;
+    --color-surface-raised: #212127;
+    --color-rule: #2A2A31;
+    --color-border-strong: #767069;
+    --color-text: #F2EFE9;
+    --color-text-muted: #A5A099;
+    --color-accent: #E2711D;
+    --color-accent-ink: #F0904A;
+    --color-accent-contrast: #16161A;
+    --color-rank: #5FC2CC;
+    --color-positive: #5FBF8E;
+    --color-negative: #E8836F;
+    --color-caution: #D9A441;
+    color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
     .tokens:not([data-theme]) {
-        --color-bg: #FAFAFA;
-        --color-surface: #FFFFFF;
-        --color-surface-raised: #F2F3F5;
-        --color-rule: #E3E6EA;
-        --color-border-strong: #767D87;
-        --color-text: #15171B;
-        --color-text-muted: #5A626D;
-        --color-accent: #8A5310;
-        --color-accent-contrast: #FFFFFF;
-        --color-positive: #1B7A4E;
-        --color-negative: #A8341F;
-        --color-caution: #7A5806;
-        color-scheme: light;
+        --color-bg: #111114;
+        --color-surface: #17171A;
+        --color-surface-raised: #212127;
+        --color-rule: #2A2A31;
+        --color-border-strong: #767069;
+        --color-text: #F2EFE9;
+        --color-text-muted: #A5A099;
+        --color-accent: #E2711D;
+        --color-accent-ink: #F0904A;
+        --color-accent-contrast: #16161A;
+        --color-rank: #5FC2CC;
+        --color-positive: #5FBF8E;
+        --color-negative: #E8836F;
+        --color-caution: #D9A441;
+        color-scheme: dark;
     }
+}
+
+/* An always-dark island. The player panel renders on the dark surface in BOTH
+   themes, so every token inside it flips to the dark set -- otherwise the light
+   rank teal lands at 2.86:1 against that fill and fails. This is the same trap
+   DESIGN.md documents for --color-surface-raised, one level deeper: a token is
+   measured against what it actually sits on, not against the page.
+
+   ::deep because scoped CSS would otherwise pin this to Tokens' own markup and
+   it would never match the component that actually uses it. */
+.tokens ::deep .on-dark {
+    --color-bg: #111114;
+    --color-surface: #17171A;
+    --color-surface-raised: #212127;
+    --color-rule: #2A2A31;
+    --color-border-strong: #767069;
+    --color-text: #F2EFE9;
+    --color-text-muted: #A5A099;
+    --color-accent: #E2711D;
+    --color-accent-ink: #F0904A;
+    --color-accent-contrast: #16161A;
+    --color-rank: #5FC2CC;
+    --color-positive: #5FBF8E;
+    --color-negative: #E8836F;
+    --color-caution: #D9A441;
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    color-scheme: dark;
 }

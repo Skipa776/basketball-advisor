@@ -48,3 +48,47 @@ public sealed record SourceHealthItem(
     bool IsStale,
     string Age,
     string Detail);
+
+public enum MoveDirection
+{
+    Riser,
+    Faller,
+}
+
+public sealed record MoverItem(
+    string Name,
+    string Team,
+    string Positions,
+    int Rank,
+    int PreviousRank,
+    MoveDirection Direction,
+    string Reason)
+{
+    public int RankDelta => PreviousRank - Rank;
+}
+
+public sealed record MoverBoard(
+    string Title,
+    string ScoringLabel,
+    IReadOnlyList<MoverItem> Movers);
+
+public sealed record RankedPlayerItem(
+    int Rank,
+    string Name,
+    string Team,
+    string Positions,
+    decimal Value);
+
+public sealed record CoverageItem(
+    string Headline,
+    string Outlet,
+    string Age,
+    string Summary);
+
+public sealed record ImportPlatformItem(
+    string Name,
+    string Support);
+
+public sealed record OnboardingStepItem(
+    string Title,
+    string Description);

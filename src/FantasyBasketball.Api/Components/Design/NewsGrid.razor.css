@@ -1,0 +1,67 @@
+.news {
+    padding: var(--space-8);
+}
+
+header {
+    margin-block-end: var(--space-7);
+    padding-block-end: var(--space-5);
+    border-block-end: var(--rule-width) solid var(--color-rule);
+}
+
+h2 {
+    margin: 0;
+    font: 400 var(--text-2xl)/var(--leading-tight) var(--font-display);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.eyebrow {
+    margin: 0 0 var(--space-2);
+    color: var(--color-text-muted);
+    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    gap: var(--space-6);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+li {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    border: var(--rule-width) solid var(--color-rule);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    /* A hairline of accent on the leading edge: enough to tie the card to the
+       brand without the accent carrying any meaning here. */
+    border-inline-start: var(--space-1) solid var(--color-accent);
+}
+
+h3 {
+    margin: 0;
+    font-size: var(--text-lg);
+    line-height: var(--leading-tight);
+}
+
+.outlet {
+    display: flex;
+    gap: var(--space-3);
+    margin: 0;
+    color: var(--color-text-muted);
+    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.summary {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+}

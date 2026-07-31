@@ -1,0 +1,161 @@
+.carousel {
+    padding: var(--space-8) var(--space-8) var(--space-7);
+}
+
+.carousel-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: var(--space-6);
+    margin-block-end: var(--space-7);
+    padding-block-end: var(--space-5);
+    border-block-end: var(--rule-width) solid var(--color-rule);
+}
+
+h2 {
+    margin: 0;
+    font: 400 var(--text-2xl)/var(--leading-tight) var(--font-display);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.eyebrow {
+    margin: 0 0 var(--space-2);
+    color: var(--color-text-muted);
+    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.carousel-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+}
+
+.dots {
+    display: flex;
+    gap: var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.dots button,
+.toggle {
+    min-height: var(--target-min);
+    padding: var(--space-2) var(--space-5);
+    border: var(--rule-width) solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--color-text-muted);
+    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.dots button[aria-current="true"] {
+    border-color: var(--color-accent);
+    background-color: var(--color-accent);
+    color: var(--color-accent-contrast);
+}
+
+.toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.movers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: var(--space-6);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mover {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-6);
+    border: var(--rule-width) solid var(--color-rule);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+}
+
+.mover p {
+    margin: 0;
+}
+
+.mover-name {
+    font-size: var(--text-lg);
+    font-weight: 600;
+}
+
+.mover-meta,
+.mover-reason {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+}
+
+.mover-meta {
+    display: flex;
+    gap: var(--space-3);
+}
+
+.mover-reason {
+    margin-block-start: var(--space-2);
+}
+
+.mover-rank {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+    margin-block-start: var(--space-5);
+    padding-block-start: var(--space-4);
+    border-block-start: var(--rule-width) solid var(--color-rule);
+}
+
+.rank-label {
+    color: var(--color-text-muted);
+    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+/* The rank sits in the cool tone, not the brand orange, so the numbers do not
+   compete with the calls to action anywhere else on the page. */
+.rank {
+    color: var(--color-rank);
+    font: 600 var(--text-2xl)/1 var(--font-mono);
+    font-variant-numeric: tabular-nums;
+}
+
+.delta {
+    font: 600 var(--text-xs)/1 var(--font-mono);
+}
+
+.is-riser {
+    color: var(--color-positive);
+}
+
+.is-faller {
+    color: var(--color-negative);
+}
+
+.visually-hidden {
+    position: absolute;
+    width: var(--space-1);
+    height: var(--space-1);
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+button:focus-visible {
+    box-shadow: var(--focus-ring);
+    outline: none;
+}

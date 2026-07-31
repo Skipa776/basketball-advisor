@@ -207,6 +207,126 @@ public sealed class AuthHttpTests : IAsyncLifetime
     /// throw AmbiguousMatchException before either handler ran. Logging in through
     /// the UI was impossible while the whole API suite stayed green.
     /// </summary>
+    /// <summary>
+    /// D-25. The landing page is the one page an anonymous visitor reaches, and
+    /// the dashboard behind the same route reads owned tables. HttpUserContext
+    /// throws rather than returning empty without a request user, so a query
+    /// left un-branched turns the front door into a 500.
+    /// </summary>
+    [Fact]
+    public async Task D25_landing_page_renders_anonymously_without_touching_owned_data()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+
+        using var response = await client.GetAsync("/", cancellationToken);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var html = await response.Content.ReadAsStringAsync(cancellationToken);
+        html.ShouldContain("Draft with evidence");
+        html.ShouldContain("Bring your league from");
+        // Nominative use, and the disclaimer travels with it.
+        html.ShouldContain("Not affiliated with");
+
+        // The dashboard's own sections read owned tables. Their absence is what
+        // makes this a landing page rather than a dashboard that happened to
+        // survive; it is also the observable half of the guard, because the
+        // page's catch would otherwise swallow the CurrentUserId throw and
+        // render the same 200 either way.
+        foreach (var authenticatedOnly in new[]
+            {
+                "Data freshness",
+                "Recent imports",
+                "Data status could not be loaded",
+            })
+        {
+            html.Contains(authenticatedOnly, StringComparison.Ordinal)
+                .ShouldBeFalse(
+                    $"'{authenticatedOnly}' reads owned data and must not reach "
+                    + "an anonymous visitor");
+        }
+
+        logs.Messages.ShouldAllBe(message =>
+            !message.Contains(
+                "Owned data requires an authenticated request user",
+                StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// D-26. Row A-26 requires demo data to be labelled fictional and opt-in.
+    /// This fixture leaves the flag off, so the landing page must carry neither
+    /// the badge nor any of the invented players.
+    /// </summary>
+    [Fact]
+    public async Task D26_sample_content_is_absent_until_the_demo_flag_is_set()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+
+        using var response = await client.GetAsync("/", cancellationToken);
+        var html = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        html.Contains("data-demo-label", StringComparison.Ordinal)
+            .ShouldBeFalse("the sample badge must not render with the flag off");
+        foreach (var invented in new[] { "Dario Vance", "Emeka Baptiste", "Example Wire" })
+        {
+            html.Contains(invented, StringComparison.Ordinal)
+                .ShouldBeFalse($"'{invented}' is demo content and the flag is off");
+        }
+    }
+
+    /// <summary>
+    /// D-26, the other half: with the flag on, every surface that renders
+    /// invented content also renders the label that says so.
+    /// </summary>
+    [Fact]
+    public async Task D26_sample_content_is_labelled_fictional_when_enabled()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+        {
+            EnvironmentName = Environments.Development,
+        });
+        builder.Logging.ClearProviders();
+        builder.WebHost.ConfigureKestrel(options =>
+            options.Listen(IPAddress.Loopback, 0));
+        builder.Configuration.AddInMemoryCollection(
+            new Dictionary<string, string?>
+            {
+                ["BallDontLie:ApiKey"] = "fixture-api-key",
+                ["ConnectionStrings:Fantasy"] = postgres.GetConnectionString(),
+                ["Demo:Enabled"] = "true",
+            });
+        ApiHost.ConfigureServices(builder);
+        builder.Services.RemoveAll<IHostedService>();
+        var demoApp = builder.Build();
+        ApiHost.Configure(demoApp);
+        await demoApp.StartAsync(cancellationToken);
+
+        try
+        {
+            using var demoClient = new HttpClient(new HttpClientHandler
+            {
+                AllowAutoRedirect = false,
+                UseCookies = false,
+            })
+            {
+                BaseAddress = Address(demoApp),
+            };
+
+            using var response = await demoClient.GetAsync("/", cancellationToken);
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            var html = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            html.ShouldContain("Dario Vance");
+            html.ShouldContain("data-demo-label");
+            html.ShouldContain("Fictional players and headlines");
+        }
+        finally
+        {
+            await demoApp.StopAsync(cancellationToken);
+            await demoApp.DisposeAsync();
+        }
+    }
+
     [Fact]
     public async Task U18_register_and_log_in_through_the_rendered_html_form()
     {

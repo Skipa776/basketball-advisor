@@ -71,6 +71,11 @@ public static class DependencyInjection
             .ValidateOnStart();
         services.AddOptions<AuthOptions>()
             .Bind(configuration.GetSection(AuthOptions.SectionName));
+        services.AddOptions<Components.Design.DemoContentOptions>()
+            .Bind(configuration.GetSection(
+                Components.Design.DemoContentOptions.SectionName));
+        services.AddOptions<GoogleSignInOptions>()
+            .Bind(configuration.GetSection(GoogleSignInOptions.SectionName));
         services.AddDbContext<FantasyDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("Fantasy")));
         services.AddIdentity<FantasyUser, IdentityRole<Guid>>(options =>

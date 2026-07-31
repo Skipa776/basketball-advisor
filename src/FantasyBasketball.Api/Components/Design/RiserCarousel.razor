@@ -1,0 +1,105 @@
+@* role=group with aria-roledescription is the pattern for a carousel that is
+   not a tab set. Slide content is never announced automatically: an auto-
+   advancing live region interrupts a screen reader mid-sentence. *@
+<section class="carousel"
+         id="@Id"
+         data-carousel
+         data-carousel-interval="@IntervalMilliseconds"
+         role="group"
+         aria-roledescription="carousel"
+         aria-labelledby="@($"{Id}-title")">
+    <header class="carousel-head">
+        <div>
+            <p class="eyebrow">@Eyebrow</p>
+            <h2 id="@($"{Id}-title")">@Title</h2>
+        </div>
+        <div class="carousel-controls">
+            <ul class="dots" role="list">
+                @for (var index = 0; index < Boards.Count; index++)
+                {
+                    var board = Boards[index];
+                    <li>
+                        <button type="button"
+                                data-carousel-dot
+                                aria-current="@(index == 0 ? "true" : "false")">
+                            @board.ScoringLabel
+                        </button>
+                    </li>
+                }
+            </ul>
+            @* Rendered hidden and revealed by the script: without JS nothing
+               moves, so a pause button would control nothing. *@
+            <button type="button"
+                    class="toggle"
+                    data-carousel-toggle
+                    aria-pressed="false"
+                    hidden>
+                <span aria-hidden="true">⏸</span>
+                <span data-carousel-toggle-label>Pause</span>
+                <span class="visually-hidden"> automatic rotation</span>
+            </button>
+        </div>
+    </header>
+
+    @for (var index = 0; index < Boards.Count; index++)
+    {
+        var board = Boards[index];
+        <div class="slide"
+             data-carousel-slide
+             role="group"
+             aria-roledescription="slide"
+             aria-label="@($"{board.Title}, {index + 1} of {Boards.Count}")"
+             hidden="@(index != 0)">
+            <ul class="movers" role="list">
+                @foreach (var mover in board.Movers)
+                {
+                    <li class="mover">
+                        <p class="mover-name">@mover.Name</p>
+                        <p class="mover-meta">
+                            <span>@mover.Team</span>
+                            <span aria-hidden="true">·</span>
+                            <span>@mover.Positions</span>
+                        </p>
+                        <p class="mover-reason">@mover.Reason</p>
+                        <p class="mover-rank">
+                            <span class="rank-label">Rank</span>
+                            <strong class="rank" data-numeric>@mover.Rank</strong>
+                            @* Direction is never colour alone: the arrow and the
+                               word both carry it, per D-12. *@
+                            <span class="delta @DirectionClass(mover)">
+                                <span aria-hidden="true">@DirectionMark(mover)</span>
+                                @DirectionWord(mover) @Math.Abs(mover.RankDelta)
+                            </span>
+                        </p>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<MoverBoard> Boards { get; set; } = [];
+
+    [Parameter]
+    public string Id { get; set; } = "movers";
+
+    [Parameter]
+    public string Title { get; set; } = "Risers and fallers";
+
+    [Parameter]
+    public string Eyebrow { get; set; } = "Last seven days";
+
+    [Parameter]
+    public int IntervalMilliseconds { get; set; } = 6000;
+
+    private static string DirectionClass(MoverItem mover) =>
+        mover.Direction == MoveDirection.Riser ? "is-riser" : "is-faller";
+
+    private static string DirectionMark(MoverItem mover) =>
+        mover.Direction == MoveDirection.Riser ? "▲" : "▼";
+
+    private static string DirectionWord(MoverItem mover) =>
+        mover.Direction == MoveDirection.Riser ? "up" : "down";
+}

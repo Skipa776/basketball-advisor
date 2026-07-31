@@ -38,17 +38,30 @@ One source, `Components/Design/Tokens.razor.css`, as CSS custom properties.
 ```text
 --color-bg, --color-surface, --color-surface-raised
 --color-text, --color-text-muted
---color-accent, --color-accent-contrast
+--color-accent, --color-accent-ink, --color-accent-contrast
+--color-rank                                             # cool tone, rank numbers
 --color-positive, --color-negative, --color-caution      # semantic, never decorative
 --space-1 … --space-8            geometric scale, one base unit
---text-xs … --text-2xl           type scale + --leading-tight / --leading-normal
+--text-2xs … --text-hero         type scale + --leading-tight / --leading-normal
 --radius-sm / -md / -lg
---motion-fast (120ms) / --motion-base (200ms)
+--motion-fast (120ms) / --motion-base (200ms) / --motion-slow (400ms)
 --focus-ring
---font-sans / --font-mono
+--font-sans / --font-mono / --font-display
 --color-rule / --color-border-strong
 --board-row-height / --target-min / --content-max
+--hero-min-height / --carousel-interval
 ```
+
+**Two accent tokens, not one.** `--color-accent` is held to 3:1 and is for fills,
+CTAs and display type; `--color-accent-ink` is held to 4.5:1 and is the only one
+allowed to be orange small text. A single orange cannot do both jobs across an
+off-white page and a dark panel — the arithmetic is in `DESIGN.md`.
+
+**`.on-dark` is an always-dark island.** It re-declares the full dark token set
+regardless of the ambient theme, for surfaces that are dark in both. Anything
+rendered inside it is measured against *its* surfaces, not the page's. Row `D-22`.
+
+**`--font-display` never renders a number.** Row `D-27`.
 
 **Light and dark are both required**, via `prefers-color-scheme` plus a manual
 override the choice of which persists. Not a preference: a live draft happens at
@@ -60,9 +73,26 @@ justify Tailwind or Bootstrap, and either would put a second styling vocabulary
 next to the tokens. Charts use the `dataviz` skill's guidance, with series colours
 drawn from these tokens rather than a chart library's defaults.
 
+# Two surface classes
+
+The product has two kinds of screen and they do not share a density or an accent
+budget:
+
+| | Marketing and auth | The instrument |
+|---|---|---|
+| Pages | landing, sign in, sign up, `/welcome` | board, players, league, review, sources |
+| Read | once, while deciding | repeatedly, under a clock |
+| Type | display face, hero sizes | system stacks, `--text-sm` rows |
+| Accent | used freely | **recommended pick only** (`D-23`) |
+| Motion | one paused carousel (`D-24`) | none |
+
+Both classes draw from the same token file. A component belongs to one class or
+the other and does not migrate: the hero has no place on the board, and the board's
+28px row has no place on a landing page.
+
 # Density
 
-This is a decision-density tool, not a marketing site. The draft board shows fifty
+On the instrument this is a decision-density tool. The draft board shows fifty
 rows a user scans under time pressure.
 
 - Tables are the primary layout for player data. Cards are for single-subject
@@ -145,9 +175,23 @@ aspiration.
 `DraftBoard`, `PickEntry`, `SourceHealthCard`, `EmptyState`, `ErrorState`,
 `PageHeader`, `ThemeToggle`.
 
+Marketing and auth class: `SiteHeader`, `SiteFooter`, `HeroBanner`,
+`CourtBackdrop`, `PlatformRow`, `RiserCarousel`, `RankList`, `NewsGrid`,
+`AuthPanel`, `OnboardingStepper`, `DemoDataBadge`.
+
 `EmptyState` and `ErrorState` are on the list because a self-hosted app's **first
 run is empty** — no players, no league, no imports. That is the state a new user
-actually sees first, and it is the one most often left unstyled.
+actually sees first, and it is the one most often left unstyled. `AuthPanel`
+counts as a first-run surface for the same reason and satisfies rows D-17 and
+D-20 in place of `EmptyState`/`PageHeader`: it renders its own heading, and
+requiring both would put two level-one headings on the sign-in page.
+
+`PlatformRow` renders its own no-affiliation line. That text is part of the
+component, not of the page, so a third-party name cannot be rendered without it.
+
+`DemoDataBadge` is a component rather than a string for the same reason: the
+label that says content is fictional cannot be forgotten by whatever renders the
+sample content next.
 
 # Invariants
 
@@ -176,6 +220,21 @@ actually sees first, and it is the one most often left unstyled.
   D-20.*
 - **The full player pool renders a bounded DOM.** *Check: row D-21 asserts the
   table virtualizes.*
+- **The always-dark island is measured against its own surfaces, and is actually
+  dark.** *Check: row D-22 runs every contrast pair inside `.on-dark` and asserts
+  it matches the dark set exactly.*
+- **Only the recommended row uses the accent on the board.** *Check: row D-23
+  splits each accent rule's selector on commas and requires every part to name
+  the recommendation.*
+- **The carousel is pausable and still under reduced motion.** *Check: row D-24
+  asserts the reduced-motion guard, the pause control, hover and focus
+  suspension, and that slides do not announce themselves as they rotate.*
+- **The landing page renders for a signed-out visitor without reading owned
+  data.** *Check: row D-25 requests `/` anonymously and asserts the dashboard's
+  owned-data sections are absent.*
+- **Sample content is opt-in and labelled fictional.** *Check: row D-26 asserts
+  it is absent with the flag off and carries its label with the flag on.*
+- **Numbers never render in the display face.** *Check: row D-27.*
 
 # Change procedure
 
@@ -187,4 +246,4 @@ does not touch this file.
 # Verification
 
 [test_matrix_ui_design](../tests/test_matrix_ui_design.md), rows D-10 through
-D-21.
+D-27.

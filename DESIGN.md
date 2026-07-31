@@ -17,15 +17,29 @@ judge whether a trade is fair to the other manager. It has to look like somethin
 that reports rather than something that sells — **comfortable putting the words
 "low confidence" directly beside a number, without that reading as an error.**
 
-Three consequences that drive every value below:
+There are now **two surface classes**, and they are deliberately different:
 
-1. **Dark is the primary theme.** Drafts and waiver decisions happen at night. Light
-   is fully supported and equally tested, but dark is the one designed first.
+- **Marketing and auth** — the landing page, sign in, sign up, first-run setup.
+  These are read once, by someone deciding whether to bother. Big display type,
+  full-bleed art, the accent used freely.
+- **The instrument** — the board, tables, review queues. Read under time
+  pressure, repeatedly. Dense, quiet, and the accent is rationed.
+
+Four consequences that drive every value below:
+
+1. **Off-white is the primary theme.** The first screen anyone sees is the landing
+   page. Dark is fully supported and equally tested — a draft still happens at
+   night — but light is the one designed first now.
 2. **Numbers are the interface.** Tabular figures, right-aligned, monospace. A column
-   of misaligned decimals is unreadable at the speed a draft demands.
-3. **Decoration is subtractive.** Hairline rules instead of boxes; one accent colour,
-   spent almost entirely on a single thing — the recommended pick. If the accent is
-   everywhere, it says nothing.
+   of misaligned decimals is unreadable at the speed a draft demands. The display
+   face never touches a number (row `D-27`).
+3. **Decoration is subtractive *on the instrument*.** Hairline rules instead of
+   boxes. The accent is spent on a single thing there — the recommended pick — and
+   row `D-23` enforces that nothing else on the board may use it. Outside the
+   board it is the brand colour and may be used freely.
+4. **Nothing is measured against the page it is near.** A token is measured against
+   the fill it actually sits on. This is what produces both the two border tokens
+   and the always-dark island below.
 
 ---
 
@@ -34,37 +48,73 @@ Three consequences that drive every value below:
 Every pair below was verified against WCAG 2.2 AA before being written down.
 Ratios are computed, not estimated.
 
-### Dark (primary)
+Ratios below are quoted **bg · surface · raised**.
+
+### Light (primary)
 
 | Token | Value | Role | Contrast |
 |---|---|---|---|
-| `--color-bg` | `#0E0F12` | Page | — |
-| `--color-surface` | `#16181C` | Panels, table body | — |
-| `--color-surface-raised` | `#1E2126` | Hover, selected row, popovers | 1.19:1 on bg |
-| `--color-rule` | `#2E333B` | **Decorative** separators only | 1.40:1 — see note |
-| `--color-border-strong` | `#68707D` | **Interactive** boundaries: inputs, buttons | **3.84:1** bg · **3.56:1** surface · **3.23:1** raised |
-| `--color-text` | `#E6E8EB` | Body | **15.61:1** |
-| `--color-text-muted` | `#9BA3AE` | Secondary, labels, units | **7.52:1** |
-| `--color-accent` | `#E8A33D` | Recommended pick, focus ring | **8.89:1** |
-| `--color-positive` | `#5FBF8E` | Supporting evidence, gains | **8.51:1** |
-| `--color-negative` | `#E8836F` | Risk evidence, losses | **7.22:1** |
-| `--color-caution` | `#D9A441` | Stale data, unverified context | **8.52:1** |
-
-### Light
-
-| Token | Value | Role | Contrast |
-|---|---|---|---|
-| `--color-bg` | `#FAFAFA` | Page | — |
+| `--color-bg` | `#FAF8F4` | Page — warm off-white | — |
 | `--color-surface` | `#FFFFFF` | Panels, table body | — |
-| `--color-surface-raised` | `#F2F3F5` | Hover, selected row, popovers | 1.06:1 on bg |
-| `--color-rule` | `#E3E6EA` | Decorative separators only | 1.25:1 |
-| `--color-border-strong` | `#767D87` | Interactive boundaries | **3.98:1** bg · **4.16:1** surface · **3.74:1** raised |
-| `--color-text` | `#15171B` | Body | **17.19:1** |
-| `--color-text-muted` | `#5A626D` | Secondary, labels, units | **5.91:1** |
-| `--color-accent` | `#8A5310` | Recommended pick, focus ring | **6.05:1** |
-| `--color-positive` | `#1B7A4E` | Supporting evidence | **5.11:1** |
-| `--color-negative` | `#A8341F` | Risk evidence | **6.33:1** |
-| `--color-caution` | `#7A5806` | Stale, unverified | **6.24:1** |
+| `--color-surface-raised` | `#F0ECE4` | Hover, selected row, popovers | — |
+| `--color-rule` | `#E4DED3` | **Decorative** separators only | exempt — see note |
+| `--color-border-strong` | `#77716A` | **Interactive** boundaries: inputs, buttons | **4.55 · 4.82 · 4.09** |
+| `--color-text` | `#16161A` | Body | **17.01 · 18.04 · 15.32** |
+| `--color-text-muted` | `#57544F` | Secondary, labels, units | **7.11 · 7.54 · 6.40** |
+| `--color-accent` | `#D96612` | Fills, CTAs, display type | **3.38 · 3.58 · 3.04** — UI and large text only |
+| `--color-accent-ink` | `#B8460F` | Orange **as small text** | **5.05 · 5.36 · 4.55** |
+| `--color-accent-contrast` | `#16161A` | Label **on** an orange fill | **5.03** on accent |
+| `--color-rank` | `#1C6A72` | Carousel and list rank numbers | **5.90 · 6.26 · 5.31** |
+| `--color-positive` | `#1B6B45` | Supporting evidence, gains | **6.12 · 6.49 · 5.51** |
+| `--color-negative` | `#A8341F` | Risk evidence, losses | **6.23 · 6.61 · 5.61** |
+| `--color-caution` | `#7A5806` | Stale data, unverified context | **6.14 · 6.51 · 5.52** |
+
+### Dark
+
+| Token | Value | Role | Contrast |
+|---|---|---|---|
+| `--color-bg` | `#111114` | Page | — |
+| `--color-surface` | `#17171A` | Panels, table body | — |
+| `--color-surface-raised` | `#212127` | Hover, selected row, popovers | — |
+| `--color-rule` | `#2A2A31` | Decorative separators only | exempt |
+| `--color-border-strong` | `#767069` | Interactive boundaries | **3.85 · 3.66 · 3.27** |
+| `--color-text` | `#F2EFE9` | Body | **16.42 · 15.59 · 13.95** |
+| `--color-text-muted` | `#A5A099` | Secondary, labels, units | **7.26 · 6.89 · 6.17** |
+| `--color-accent` | `#E2711D` | Fills, CTAs, display type | **5.94 · 5.63 · 5.04** |
+| `--color-accent-ink` | `#F0904A` | Orange as small text | **7.89 · 7.49 · 6.70** |
+| `--color-accent-contrast` | `#16161A` | Label on an orange fill | **5.68** on accent |
+| `--color-rank` | `#5FC2CC` | Rank numbers | **9.04 · 8.58 · 7.68** |
+| `--color-positive` | `#5FBF8E` | Supporting evidence | **8.37 · 7.95 · 7.11** |
+| `--color-negative` | `#E8836F` | Risk evidence | **7.10 · 6.74 · 6.03** |
+| `--color-caution` | `#D9A441` | Stale, unverified | **8.38 · 7.95 · 7.12** |
+
+### Why there are two orange tokens
+
+One orange cannot carry small text on both an off-white page and a dark panel.
+Measured: `#E2711D` is **3.00:1** on the light page — fine as a fill, illegal as
+body text — while `#C2410C`, which passes there at 4.89:1, drops to **3.45:1** on
+the dark panel. So:
+
+- **`--color-accent`** — fills, CTAs, and display type ≥24px. Held to 3:1.
+  `#D96612` is the boldest orange clearing that on *all three* light surfaces;
+  the obvious `#E2711D` fails at **2.99** on bg and **2.70** on raised.
+- **`--color-accent-ink`** — the darker orange, for the cases where orange has to
+  be small text. Held to 4.5:1.
+
+**Labels on an orange fill are near-black, never white**: `#16161A` scores 5.03
+against the fill, white only 3.58.
+
+### The always-dark island
+
+`.on-dark` renders the dark token set regardless of the ambient theme. The player
+panel uses it, which is what makes it read as a slab cut out of the page.
+
+It exists because a token is measured against the fill it sits on: the light
+rank teal on that panel is **2.86:1** and fails. Inside the island every pair is
+re-checked against the island's own surfaces — off-white text **15.59**, accent
+**4.99**, rank **8.58**, positive **7.95**, negative **6.74**. Row `D-22` also
+asserts the island matches the dark set exactly, because a light set copied there
+would pass the pairs while rendering a panel indistinguishable from the page.
 
 ### Why there are two border tokens
 
@@ -85,9 +135,15 @@ Using `--color-rule` on an interactive boundary is a bug.
 
 ### The accent rule
 
-`--color-accent` marks **the recommended pick and nothing else** on the draft board.
-Not headings, not links in tables, not the active nav item. Its entire job is to be
-the one thing your eye lands on with four minutes left on the clock.
+**On the draft board, `--color-accent` marks the recommended pick and nothing
+else.** Not headings, not links in tables, not the active nav item. Its entire job
+there is to be the one thing your eye lands on with four minutes left on the
+clock. Row `D-23` scans the board's stylesheets and fails on any other selector.
+
+**Everywhere else it is simply the brand colour** — the hero, CTAs, the nav
+wordmark, card edges. That split is the whole reason the board still works: the
+accent is loud on surfaces you read once and rationed on the surface you read
+under pressure.
 
 `--color-positive` / `--color-negative` are for **evidence polarity only**, and
 always accompanied by an icon and a text label — never carrying the meaning alone
@@ -98,12 +154,24 @@ always accompanied by an icon and a text label — never carrying the meaning al
 ## Type
 
 ```
---font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif
---font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace
+--font-sans:    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif
+--font-mono:    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace
+--font-display: "Anton", "Arial Narrow", var(--font-sans)
 ```
 
-System stacks. No webfont — a self-hosted tool should not make a network request to
-render, and the CSP on any sensible deployment would block it anyway.
+Body and numbers use system stacks. **One display face is self-hosted** — Anton,
+SIL OFL, latin subset, 12KB, served from `wwwroot/fonts/` with its licence beside
+it.
+
+This narrows the old rule rather than reversing it. The reason for that rule was
+that "a self-hosted tool should not make a network request to render, and the CSP
+would block it anyway" — serving the font ourselves keeps both true. **No
+third-party font host, ever.**
+
+The display face is for the wordmark, hero headline, and section headings only.
+**It never renders a number**, because Anton is condensed and non-tabular and a
+column of misaligned decimals is the one thing the board cannot afford. Row `D-27`
+enforces it.
 
 **Every number renders in `--font-mono` with `font-variant-numeric: tabular-nums`.**
 That includes table cells, the evidence magnitudes, and the clock. Prose renders in
@@ -117,7 +185,10 @@ That includes table cells, the evidence magnitudes, and the clock. Prose renders
 | `--text-base` | 15px / 1.55 | Prose, forms, review queue |
 | `--text-lg` | 18px / 1.4 | Panel titles |
 | `--text-xl` | 24px / 1.25 | Page titles |
-| `--text-2xl` | 32px / 1.25 | Reserved — the one display size, unused so far |
+| `--text-2xl` | 32px / 1.25 | Section headings on marketing surfaces |
+| `--text-3xl` | 44px / 1.25 | Hero accent line |
+| `--text-4xl` | 60px / 1.25 | Hero headline below 56rem |
+| `--text-hero` | 88px / 0.9 | The hero headline. One place, one size |
 
 Only one weight pair: 400 and 600. No 500, no 700 — a scale with four weights drifts
 within a week.
@@ -215,10 +286,34 @@ unstyled.
 
 ---
 
+## The public surfaces
+
+A landing page, a sign-in page, and a first-run setup flow now exist. This
+reverses an earlier decision in this file, deliberately: the tool had no surface
+that explained itself to someone who had not already been sold on it.
+
+- **Landing** — hero, risers/fallers carousel, the always-dark rank panel,
+  coverage, footer. Renders at `/` for anyone signed out.
+- **Auth** — full-bleed court art, one centred card. No site chrome; there is
+  nothing to navigate to yet.
+- **Illustration** — drawn, never photographed. `CourtBackdrop` is SVG court
+  geometry and non-identifiable silhouettes, so no real player's likeness is
+  used and there is no binary asset to license.
+- **Third-party names** — ESPN, Yahoo and Sleeper appear as *import formats*,
+  in plain type, with a no-affiliation line that ships inside the component so a
+  page cannot render the names without it. No logos, no sponsors row.
+- **Motion** — the carousel auto-advances, has a visible pause, stops on hover
+  and focus, and does not move at all under `prefers-reduced-motion` (row `D-24`,
+  WCAG 2.2.2). It is the only auto-motion in the product.
+
+Sample content on these surfaces is **opt-in via `Demo:Enabled` and always
+labelled fictional** (rows `A-26`, `D-26`). With the flag off the landing page
+shows its own empty state rather than invented numbers.
+
 ## Out of scope
 
-No landing page, no onboarding tour, no illustration system, no mascot. The favicon
-and a serviceable wordmark are the whole brand.
+No mascot, no illustration system beyond the court backdrop, no marketing
+animation. The favicon, the wordmark, and one display face are the whole brand.
 
 ---
 

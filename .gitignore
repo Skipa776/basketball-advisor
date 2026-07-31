@@ -16,3 +16,6 @@ secrets/
 .claude/skills/
 .agents/skills/
 skills-lock.json
+
+# Reference material: third-party screenshots and saved pages, not ours to redistribute
+inspiration-resources/

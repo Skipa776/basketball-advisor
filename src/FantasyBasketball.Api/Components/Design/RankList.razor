@@ -1,0 +1,35 @@
+@* Renders on the always-dark island: the .on-dark class flips every token to
+   the dark set, because a light-theme rank teal on that fill measures 2.86:1. *@
+<section class="rank-panel on-dark" id="@Id" aria-labelledby="@($"{Id}-title")">
+    <header>
+        <p class="eyebrow">@Eyebrow</p>
+        <h2 id="@($"{Id}-title")">@Title</h2>
+    </header>
+    <ol class="ranks">
+        @foreach (var player in Players)
+        {
+            <li>
+                <span class="rank" data-numeric>@player.Rank</span>
+                <span class="name">@player.Name</span>
+                <span class="meta">@player.Team · @player.Positions</span>
+                <span class="value" data-numeric>
+                    @player.Value.ToString("0.#", CultureInfo.InvariantCulture)
+                </span>
+            </li>
+        }
+    </ol>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<RankedPlayerItem> Players { get; set; } = [];
+
+    [Parameter]
+    public string Id { get; set; } = "rankings";
+
+    [Parameter]
+    public string Title { get; set; } = "Top of the board";
+
+    [Parameter]
+    public string Eyebrow { get; set; } = "Points league, per game";
+}

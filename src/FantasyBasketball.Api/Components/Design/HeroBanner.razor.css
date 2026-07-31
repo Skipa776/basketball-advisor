@@ -1,0 +1,121 @@
+.hero {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: var(--hero-min-height);
+    padding: var(--space-8) var(--space-6);
+    overflow: hidden;
+    background-color: var(--color-bg);
+    text-align: center;
+}
+
+.hero-body {
+    position: relative;
+    max-width: var(--content-max);
+}
+
+.eyebrow {
+    margin: 0 0 var(--space-5);
+    color: var(--color-text-muted);
+    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+h1 {
+    margin: 0;
+    font: 400 var(--text-hero)/0.9 var(--font-display);
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    /* The angular italic of the reference, applied to an upright face. Skewing
+       the block rather than the glyphs keeps the letterforms undistorted. */
+    transform: skewX(-6deg);
+}
+
+.slogan {
+    margin: var(--space-7) 0 0;
+    font: 400 var(--text-xl)/var(--leading-tight) var(--font-display);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+/* Large display type, so --color-accent at 3.38:1 clears the 3:1 floor that
+   applies at this size. Small orange text uses --color-accent-ink instead. */
+.accent-line {
+    margin: var(--space-4) 0 0;
+    color: var(--color-accent-ink);
+    font: 400 var(--text-3xl)/var(--leading-tight) var(--font-display);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-6);
+    margin-block-start: var(--space-8);
+}
+
+.cta {
+    padding: var(--space-5) var(--space-8);
+    clip-path: polygon(var(--space-6) 0, 100% 0, calc(100% - var(--space-6)) 100%, 0 100%);
+    background-color: var(--color-accent);
+    color: var(--color-accent-contrast);
+    font: 400 var(--text-xl)/1 var(--font-display);
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+.cta:hover {
+    background-color: var(--color-accent-ink);
+    color: var(--color-bg);
+}
+
+.secondary {
+    align-self: center;
+    color: var(--color-text);
+    font-size: var(--text-base);
+    text-underline-offset: var(--space-2);
+}
+
+.hero-platforms {
+    margin-block-start: var(--space-8);
+}
+
+.scroll-hint {
+    position: relative;
+    display: grid;
+    gap: var(--space-2);
+    justify-items: center;
+    color: var(--color-text-muted);
+    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-mono);
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+.chevron {
+    font-size: var(--text-lg);
+}
+
+a:focus-visible {
+    border-radius: var(--radius-sm);
+    box-shadow: var(--focus-ring);
+    outline: none;
+}
+
+@media (max-width: 56rem) {
+    h1 {
+        font-size: var(--text-4xl);
+    }
+
+    .accent-line {
+        font-size: var(--text-2xl);
+    }
+
+    .slogan {
+        font-size: var(--text-lg);
+    }
+}

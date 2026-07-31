@@ -1,27 +1,27 @@
 @page "/account/login"
 @attribute [AllowAnonymous]
+@layout EmptyLayout
+@inject IOptions<GoogleSignInOptions> Google
 
 <PageTitle>Log in</PageTitle>
-<PageHeader Title="Log in"
-            Eyebrow="Local account"
-            Description="Resume your private leagues, projections, and draft sessions." />
 
-@if (Error == "invalid")
-{
-    <ErrorState Id="login-error"
-                Message="Email or password is incorrect."
-                Recovery="Check both fields and try again." />
-}
-else if (Error == "locked")
-{
-    <ErrorState Id="login-error"
-                Message="The account is temporarily locked."
-                Recovery="Wait before trying again." />
-}
+<AuthPanel Title="Sign in"
+           Description="Resume your private leagues, projections, and draft sessions."
+           ShowFederated="@Google.Value.IsConfigured">
+    <ChildContent>
+        @if (Error == "invalid")
+        {
+            <ErrorState Id="login-error"
+                        Message="Email or password is incorrect."
+                        Recovery="Check both fields and try again." />
+        }
+        else if (Error == "locked")
+        {
+            <ErrorState Id="login-error"
+                        Message="The account is temporarily locked."
+                        Recovery="Wait before trying again." />
+        }
 
-<EmptyState Title="Authentication required"
-            Description="FantasyBasketball keeps each account's leagues and draft sessions isolated.">
-    <Action>
         <form method="post"
               action="/account/login/submit"
               aria-describedby="@(Error is null ? null : "login-error")">
@@ -34,16 +34,32 @@ else if (Error == "locked")
                 <label for="login-password">Password</label>
                 <input id="login-password" name="password" type="password" autocomplete="current-password" required />
             </p>
-            <p>
+            <p class="checkbox-row">
                 <label>
                     <input name="rememberMe" type="checkbox" value="true" />
                     Keep me signed in
                 </label>
             </p>
-            <button type="submit">Log in</button>
+            <button class="submit" type="submit">Sign in</button>
         </form>
-    </Action>
-</EmptyState>
+    </ChildContent>
+
+    @* Rendered only when an operator has configured a client ID. A provider
+       button that cannot complete a sign-in is worse than no button. *@
+    <Federated>
+        @if (Google.Value.IsConfigured)
+        {
+            <a class="provider" href="/account/external/google">
+                <span class="provider-mark" aria-hidden="true">G</span>
+                Continue with Google
+            </a>
+        }
+    </Federated>
+
+    <Secondary>
+        <a href="/account/register">Create account</a>
+    </Secondary>
+</AuthPanel>
 
 @code {
     [SupplyParameterFromQuery]

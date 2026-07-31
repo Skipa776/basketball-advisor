@@ -1,40 +1,49 @@
 @inherits LayoutComponentBase
 
 <a class="skip-link" href="#main-content">Skip to content</a>
-<div class="app-frame">
-    <aside class="sidebar">
-        <a class="wordmark" href="/" aria-label="FantasyBasketball dashboard">
-            <span class="wordmark-mark" aria-hidden="true">FB</span>
-            <span>FantasyBasketball</span>
-        </a>
-        <nav aria-label="Primary navigation">
-            <NavLink href="/" Match="NavLinkMatch.All">Dashboard</NavLink>
-            <NavLink href="/league">My League</NavLink>
-            <NavLink href="/players">Players</NavLink>
-            <NavLink href="/draft">Draft Assistant</NavLink>
-            <NavLink href="/context-review">Context Review</NavLink>
-            <NavLink href="/data-sources">Data Sources</NavLink>
-        </nav>
-        <div class="sidebar-footer">
-            <ThemeToggle />
-            <AuthorizeView>
-                <Authorized>
+<AuthorizeView>
+    <Authorized>
+        @* Signed in: the instrument. Sidebar, dense workspace, no marketing
+           chrome -- this is the surface with a clock on it. *@
+        <div class="app-frame">
+            <aside class="sidebar">
+                <a class="wordmark" href="/" aria-label="FantasyBasketball dashboard">
+                    <span class="wordmark-mark" aria-hidden="true">FB</span>
+                    <span>FantasyBasketball</span>
+                </a>
+                <nav aria-label="Primary navigation">
+                    <NavLink href="/" Match="NavLinkMatch.All">Dashboard</NavLink>
+                    <NavLink href="/league">My League</NavLink>
+                    <NavLink href="/players">Players</NavLink>
+                    <NavLink href="/draft">Draft Assistant</NavLink>
+                    <NavLink href="/context-review">Context Review</NavLink>
+                    <NavLink href="/data-sources">Data Sources</NavLink>
+                </nav>
+                <div class="sidebar-footer">
+                    <ThemeToggle />
                     <a href="/account/logout">Log out</a>
-                </Authorized>
-                <NotAuthorized>
-                    <a href="/account/login">Log in</a>
-                    <a href="/account/register">Register</a>
-                </NotAuthorized>
-            </AuthorizeView>
+                </div>
+            </aside>
+            <div class="workspace">
+                <header class="instrument-bar">
+                    <span>LOCAL DECISION INSTRUMENT</span>
+                    <span class="instrument-state">SYSTEM READY</span>
+                </header>
+                <main id="main-content" tabindex="-1">
+                    @Body
+                </main>
+            </div>
         </div>
-    </aside>
-    <div class="workspace">
-        <header class="instrument-bar">
-            <span>LOCAL DECISION INSTRUMENT</span>
-            <span class="instrument-state">SYSTEM READY</span>
-        </header>
-        <main id="main-content" tabindex="-1">
-            @Body
-        </main>
-    </div>
-</div>
+    </Authorized>
+    <NotAuthorized>
+        @* Signed out: the public site. Nobody who has not arrived yet needs a
+           sidebar full of pages they cannot open. *@
+        <div class="public-frame">
+            <SiteHeader />
+            <main id="main-content" tabindex="-1">
+                @Body
+            </main>
+            <SiteFooter />
+        </div>
+    </NotAuthorized>
+</AuthorizeView>

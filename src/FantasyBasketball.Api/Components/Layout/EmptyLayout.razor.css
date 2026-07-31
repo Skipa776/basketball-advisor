@@ -1,0 +1,132 @@
+* {
+    box-sizing: border-box;
+}
+
+main {
+    min-height: 100vh;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: 400 var(--text-base)/var(--leading-normal) var(--font-sans);
+}
+
+main:focus {
+    outline: none;
+}
+
+.skip-link {
+    position: fixed;
+    z-index: 10;
+    inset-block-start: var(--space-4);
+    inset-inline-start: var(--space-4);
+    padding: var(--space-3) var(--space-5);
+    transform: translateY(-200%);
+    border-radius: var(--radius-sm);
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+}
+
+.skip-link:focus {
+    transform: translateY(0);
+}
+
+main ::deep form {
+    display: grid;
+    gap: var(--space-5);
+}
+
+main ::deep form p {
+    margin: 0;
+}
+
+main ::deep label {
+    display: block;
+    margin-block-end: var(--space-3);
+    font-size: var(--text-sm);
+    font-weight: 600;
+}
+
+main ::deep input {
+    width: 100%;
+    min-height: var(--target-min);
+    padding: var(--space-4);
+    border: var(--rule-width) solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-raised);
+    color: var(--color-text);
+    font: inherit;
+}
+
+main ::deep .checkbox-row label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin: 0;
+    font-weight: 400;
+}
+
+main ::deep input[type="checkbox"] {
+    width: var(--target-min);
+    min-height: var(--target-min);
+}
+
+main ::deep .submit {
+    width: 100%;
+    min-height: var(--target-min);
+    padding: var(--space-4) var(--space-6);
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+    font: 400 var(--text-lg)/1 var(--font-display);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+main ::deep .provider {
+    display: flex;
+    min-height: var(--target-min);
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    border: var(--rule-width) solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    font-size: var(--text-sm);
+    text-decoration: none;
+}
+
+main ::deep .provider-mark {
+    font-weight: 600;
+}
+
+main ::deep .secondary a {
+    color: var(--color-accent-ink);
+    font-size: var(--text-sm);
+}
+
+main ::deep small {
+    display: block;
+    margin-block-start: var(--space-2);
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+}
+
+main ::deep input:focus-visible,
+main ::deep button:focus-visible,
+main ::deep a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    main ::deep .submit:hover {
+        background: var(--color-accent-ink);
+        color: var(--color-bg);
+    }
+
+    main ::deep .provider:hover {
+        background: var(--color-surface-raised);
+    }
+}

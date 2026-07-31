@@ -1,86 +1,155 @@
 @page "/"
+@attribute [AllowAnonymous]
 @inject DataSourceHealthService HealthService
 @inject ImportRunQueryService ImportRuns
 @inject TimeProvider Clock
+@inject IOptions<DemoContentOptions> Demo
 
-<PageTitle>Dashboard</PageTitle>
-<PageHeader Title="Dashboard"
-            Eyebrow="System overview"
-            Description="Data readiness and the latest ingestion activity for this local decision engine.">
-    <Actions>
-        <a class="button-link" href="/data-sources">Manage imports</a>
-        <a class="button-link primary" href="/draft">Open draft assistant</a>
-    </Actions>
-</PageHeader>
+<AuthorizeView>
+    <NotAuthorized>
+        <PageTitle>FantasyBasketball</PageTitle>
 
-@if (error is not null)
-{
-    <ErrorState Message="@error"
-                Recovery="Check the database connection, then reload this page." />
-}
-else if (health is null || runs is null)
-{
-    <EmptyState Title="Loading system status"
-                Description="The local data-health checks are still running." />
-}
-else
-{
-    <section aria-labelledby="freshness-heading">
-        <h2 id="freshness-heading">Data freshness</h2>
-        <div class="status-list">
-            @foreach (var source in health)
-            {
-                <SourceHealthCard Item="@ToHealthItem(source)" />
-            }
-        </div>
-    </section>
-
-    <section aria-labelledby="imports-heading">
-        <h2 id="imports-heading">Recent imports</h2>
-        @if (runs.Items.Count == 0)
+        @if (Demo.Value.Enabled)
         {
-            <EmptyState Title="No imports yet"
-                        Description="Run the player import first, then add schedules, season statistics, and ADP.">
-                <Action>
-                    <a class="button-link" href="/data-sources">Go to data sources</a>
-                </Action>
-            </EmptyState>
+            <DemoDataBadge />
+        }
+
+        <HeroBanner Title="Draft with evidence"
+                    Eyebrow="Local decision instrument"
+                    Slogan="The league-aware fantasy basketball decision engine"
+                    AccentLine="Every pick shows its reasons"
+                    ActionLabel="Get started"
+                    ActionHref="/account/register"
+                    SecondaryLabel="I already have an account"
+                    SecondaryHref="/account/login"
+                    ScrollTarget="#movers">
+            <Platforms>
+                <PlatformRow Platforms="@DemoContent.Platforms" />
+            </Platforms>
+        </HeroBanner>
+
+        @if (Demo.Value.Enabled)
+        {
+            <div class="public-section">
+                <RiserCarousel Boards="@DemoContent.Movers" />
+            </div>
+            <RankList Players="@DemoContent.Rankings" />
+            <div class="public-section">
+                <NewsGrid Items="@DemoContent.Coverage" />
+            </div>
         }
         else
         {
-            <table>
-                <caption>Ten most recent data imports</caption>
-                <thead>
-                    <tr>
-                        <th scope="col">Source</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Rows</th>
-                        <th scope="col">Started</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var run in runs.Items)
-                    {
-                        <tr>
-                            <th scope="row">@run.Source</th>
-                            <td>@run.Status</td>
-                            <td data-numeric>@run.RowsWritten</td>
-                            <td><time datetime="@run.StartedAt.ToString("O")">@Age(run.StartedAt)</time></td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+            <div class="public-section">
+                <EmptyState Title="Nothing to show yet"
+                            Description="This instance has no imported data. Sign in and import a player pool, or enable sample content with Demo:Enabled to see the layout populated.">
+                    <Action>
+                        <a class="button-link primary" href="/account/register">Get started</a>
+                    </Action>
+                </EmptyState>
+            </div>
         }
-    </section>
-}
+    </NotAuthorized>
+
+    <Authorized>
+        <PageTitle>Dashboard</PageTitle>
+        <PageHeader Title="Dashboard"
+                    Eyebrow="System overview"
+                    Description="Data readiness and the latest ingestion activity for this local decision engine.">
+            <Actions>
+                <a class="button-link" href="/data-sources">Manage imports</a>
+                <a class="button-link primary" href="/draft">Open draft assistant</a>
+            </Actions>
+        </PageHeader>
+
+        @if (error is not null)
+        {
+            <ErrorState Message="@error"
+                        Recovery="Check the database connection, then reload this page." />
+        }
+        else if (health is null || runs is null)
+        {
+            <EmptyState Title="Loading system status"
+                        Description="The local data-health checks are still running." />
+        }
+        else
+        {
+            <section aria-labelledby="freshness-heading">
+                <h2 id="freshness-heading">Data freshness</h2>
+                <div class="status-list">
+                    @foreach (var source in health)
+                    {
+                        <SourceHealthCard Item="@ToHealthItem(source)" />
+                    }
+                </div>
+            </section>
+
+            <section aria-labelledby="imports-heading">
+                <h2 id="imports-heading">Recent imports</h2>
+                @if (runs.Items.Count == 0)
+                {
+                    <EmptyState Title="No imports yet"
+                                Description="Run the player import first, then add schedules, season statistics, and ADP.">
+                        <Action>
+                            <a class="button-link" href="/data-sources">Go to data sources</a>
+                        </Action>
+                    </EmptyState>
+                }
+                else
+                {
+                    <table>
+                        <caption>Ten most recent data imports</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Source</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Rows</th>
+                                <th scope="col">Started</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var run in runs.Items)
+                            {
+                                <tr>
+                                    <th scope="row">@run.Source</th>
+                                    <td>@run.Status</td>
+                                    <td data-numeric>@run.RowsWritten</td>
+                                    <td><time datetime="@run.StartedAt.ToString("O")">@Age(run.StartedAt)</time></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </section>
+        }
+    </Authorized>
+</AuthorizeView>
 
 @code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
     private IReadOnlyList<DataSourceHealth>? health;
     private PagedResult<DataImportRun>? runs;
     private string? error;
 
     protected override async Task OnInitializedAsync()
     {
+        // Both of these read owned tables, and HttpUserContext.CurrentUserId
+        // throws rather than returning empty when there is no request user. The
+        // landing page is the one page an anonymous visitor reaches, so the
+        // query has to be skipped here rather than caught downstream.
+        if (AuthenticationState is null)
+        {
+            return;
+        }
+
+        var state = await AuthenticationState;
+        if (state.User.Identity?.IsAuthenticated is not true)
+        {
+            return;
+        }
+
         try
         {
             health = await HealthService.GetAsync(CancellationToken.None);

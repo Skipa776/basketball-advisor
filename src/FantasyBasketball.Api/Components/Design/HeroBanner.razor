@@ -1,0 +1,56 @@
+<section class="hero" aria-labelledby="hero-title">
+    <CourtBackdrop />
+    <div class="hero-body">
+        <p class="eyebrow">@Eyebrow</p>
+        <h1 id="hero-title">@Title</h1>
+        <p class="slogan">@Slogan</p>
+        <p class="accent-line">@AccentLine</p>
+        <div class="hero-actions">
+            <a class="cta" href="@ActionHref">@ActionLabel</a>
+            @if (!string.IsNullOrWhiteSpace(SecondaryHref))
+            {
+                <a class="secondary" href="@SecondaryHref">@SecondaryLabel</a>
+            }
+        </div>
+        @if (Platforms is not null)
+        {
+            <div class="hero-platforms">@Platforms</div>
+        }
+    </div>
+    <a class="scroll-hint" href="@ScrollTarget">
+        <span>Scroll to browse</span>
+        <span class="chevron" aria-hidden="true">⌄</span>
+    </a>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Slogan { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string AccentLine { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Eyebrow { get; set; } = string.Empty;
+
+    [Parameter]
+    public string ActionLabel { get; set; } = "Get started";
+
+    [Parameter]
+    public string ActionHref { get; set; } = "/account/register";
+
+    [Parameter]
+    public string? SecondaryLabel { get; set; }
+
+    [Parameter]
+    public string? SecondaryHref { get; set; }
+
+    [Parameter]
+    public string ScrollTarget { get; set; } = "#movers";
+
+    [Parameter]
+    public RenderFragment? Platforms { get; set; }
+}
