@@ -37,14 +37,25 @@
             <legend>Season statistics</legend>
             <p>
                 <label for="season-year">Season end year</label>
-                <input id="season-year" type="number" min="1947" max="2199" @bind="seasonEndYear" />
+                <input id="season-year"
+                       type="number"
+                       min="1947"
+                       max="2199"
+                       @bind="seasonEndYear"
+                       aria-describedby="season-year-help" />
+                <small id="season-year-help">The year the season finishes: 2026 for the 2025–26 season.</small>
             </p>
             <button type="button" @onclick="() => QueueAsync(ImportJobKind.SeasonStats)">Import season stats</button>
         </fieldset>
     </div>
+    @* The run id was the whole message here, and it is the one part of it a
+       person cannot act on. Announced, because it appears after a click. *@
     @if (queuedRun is not null)
     {
-        <p class="notice">Queued @queuedRun.Source import <code>@queuedRun.Id</code>.</p>
+        <p class="notice" role="status">
+            Queued the @queuedRun.Source import. It runs in the background;
+            reload this page to see the result in source health.
+        </p>
     }
 </section>
 

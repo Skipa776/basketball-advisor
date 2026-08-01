@@ -7,7 +7,7 @@
 
 <AuthorizeView>
     <NotAuthorized>
-        <PageTitle>FantasyBasketball</PageTitle>
+        <PageTitle>Fastbreak</PageTitle>
 
         @if (Demo.Value.Enabled)
         {
@@ -15,14 +15,14 @@
         }
 
         <HeroBanner Title="Draft with evidence"
-                    Eyebrow="Local decision instrument"
+                    Eyebrow="Self-hosted decision instrument"
                     Slogan="The league-aware fantasy basketball decision engine"
                     AccentLine="Every pick shows its reasons"
-                    ActionLabel="Get started"
+                    ActionLabel="Create account"
                     ActionHref="/account/register"
-                    SecondaryLabel="I already have an account"
+                    SecondaryLabel="Sign in"
                     SecondaryHref="/account/login"
-                    ScrollTarget="#movers">
+                    ScrollTarget="@(Demo.Value.Enabled ? "#movers" : null)">
             <Platforms>
                 <PlatformRow Platforms="@DemoContent.Platforms" />
             </Platforms>
@@ -41,10 +41,10 @@
         else
         {
             <div class="public-section">
-                <EmptyState Title="Nothing to show yet"
-                            Description="This instance has no imported data. Sign in and import a player pool, or enable sample content with Demo:Enabled to see the layout populated.">
+                <EmptyState Title="Nothing has been imported here yet"
+                            Description="This instance is running but has no players, leagues, or projections. Create an account to set one up, or sign in if you already have one.">
                     <Action>
-                        <a class="button-link primary" href="/account/register">Get started</a>
+                        <a class="button-link primary" href="/account/register">Create account</a>
                     </Action>
                 </EmptyState>
             </div>
@@ -55,22 +55,22 @@
         <PageTitle>Dashboard</PageTitle>
         <PageHeader Title="Dashboard"
                     Eyebrow="System overview"
-                    Description="Data readiness and the latest ingestion activity for this local decision engine.">
+                    Description="How fresh this instance's data is, and what it has imported recently.">
             <Actions>
-                <a class="button-link" href="/data-sources">Manage imports</a>
-                <a class="button-link primary" href="/draft">Open draft assistant</a>
+                <a class="button-link" href="/data-sources">Open Data Sources</a>
+                <a class="button-link primary" href="/draft">Open Draft Assistant</a>
             </Actions>
         </PageHeader>
 
         @if (error is not null)
         {
             <ErrorState Message="@error"
-                        Recovery="Check the database connection, then reload this page." />
+                        Recovery="Reload the page. If it keeps failing, whoever runs this instance should check that the database is reachable." />
         }
         else if (health is null || runs is null)
         {
             <EmptyState Title="Loading system status"
-                        Description="The local data-health checks are still running." />
+                        Description="Checking when each source last imported successfully." />
         }
         else
         {
@@ -89,9 +89,9 @@
                 @if (runs.Items.Count == 0)
                 {
                     <EmptyState Title="No imports yet"
-                                Description="Run the player import first, then add schedules, season statistics, and ADP.">
+                                Description="Import teams and players first. Schedule, season statistics, and ADP can follow in any order.">
                         <Action>
-                            <a class="button-link" href="/data-sources">Go to data sources</a>
+                            <a class="button-link" href="/data-sources">Open Data Sources</a>
                         </Action>
                     </EmptyState>
                 }

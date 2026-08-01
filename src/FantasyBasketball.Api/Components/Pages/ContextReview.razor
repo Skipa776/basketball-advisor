@@ -23,7 +23,11 @@
             <legend>Create a proposed context event</legend>
             <p>
                 <label for="context-player">Affected player ID</label>
-                <input id="context-player" @bind="playerText" required />
+                <input id="context-player"
+                       @bind="playerText"
+                       required
+                       aria-describedby="context-player-help" />
+                <small id="context-player-help">Open the player from Players; the id is in the address bar.</small>
             </p>
             <p>
                 <label for="context-summary">Summary</label>
@@ -73,7 +77,9 @@
                        step="0.1"
                        min="-1"
                        max="1"
-                       @bind="confidenceDelta" />
+                       @bind="confidenceDelta"
+                       aria-describedby="confidence-delta-help" />
+                <small id="confidence-delta-help">Between -1 and 1. Negative lowers confidence in the projections this event touches.</small>
             </p>
             <button type="submit">Save impact override</button>
         </fieldset>
@@ -115,10 +121,17 @@
                         <td>@contextEvent.Verification</td>
                         <td>@contextEvent.Direction</td>
                         <td>
+                            @* Every row's buttons read "Verify" and "Reject" out
+                               of context, so the accessible name carries the
+                               subject the visible label gets from its row. *@
                             @if (contextEvent.Verification == VerificationState.Proposed)
                             {
-                                <button type="button" @onclick="() => ReviewAsync(contextEvent.Id, true)">Verify</button>
-                                <button type="button" @onclick="() => ReviewAsync(contextEvent.Id, false)">Reject</button>
+                                <button type="button"
+                                        aria-label="@($"Verify: {contextEvent.Summary}")"
+                                        @onclick="() => ReviewAsync(contextEvent.Id, true)">Verify</button>
+                                <button type="button"
+                                        aria-label="@($"Reject: {contextEvent.Summary}")"
+                                        @onclick="() => ReviewAsync(contextEvent.Id, false)">Reject</button>
                             }
                             else
                             {

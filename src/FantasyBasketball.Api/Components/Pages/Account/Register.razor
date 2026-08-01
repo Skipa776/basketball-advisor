@@ -5,17 +5,17 @@
 @inject IOptions<FantasyBasketball.Infrastructure.Identity.AuthOptions> Auth
 @inject IOptions<GoogleSignInOptions> Google
 
-<PageTitle>Register</PageTitle>
+<PageTitle>Create account</PageTitle>
 
 @if (!registrationOpen)
 {
-    <AuthPanel Title="Registration closed"
-               Description="This instance already has an owner and open registration is disabled.">
+    <AuthPanel Title="Registration is closed"
+               Description="This instance already has an owner and is not accepting new accounts.">
         <ChildContent>
             <p class="closed-note">
                 A self-hosted instance is claimed by its first account. If that
-                account is yours, sign in; if it is not, ask whoever runs this
-                instance to enable open registration.
+                account is yours, sign in. If it is not, ask whoever runs this
+                instance to open registration or create an account for you.
             </p>
             <a class="submit-link" href="/account/login">Sign in instead</a>
         </ChildContent>
@@ -23,15 +23,20 @@
 }
 else
 {
+    @* The claim sentence is only true for the first account. Once an owner
+       exists and the operator has opened registration, repeating it tells a
+       league-mate something false about what they are about to do. *@
     <AuthPanel Title="Create account"
-               Description="The first account claims this instance and closes registration."
+               Description="@(isFirstAccount
+                   ? "The first account claims this instance and closes registration."
+                   : "Your leagues, drafts, and context events stay private to your account.")"
                ShowFederated="@Google.Value.IsConfigured">
         <ChildContent>
             @if (Error == "invalid")
             {
                 <ErrorState Id="register-error"
                             Message="The account could not be created."
-                            Recovery="Use a valid email and a password of at least 12 characters." />
+                            Recovery="Use a password of at least 12 characters, and an email address that does not already have an account here." />
             }
 
             <form method="post"
@@ -71,7 +76,7 @@ else
         </Federated>
 
         <Secondary>
-            <a href="/account/login">I already have an account</a>
+            <a href="/account/login">Sign in instead</a>
         </Secondary>
     </AuthPanel>
 }
@@ -81,11 +86,12 @@ else
     public string? Error { get; set; }
 
     private bool registrationOpen;
+    private bool isFirstAccount;
 
     protected override async Task OnInitializedAsync()
     {
-        registrationOpen = Auth.Value.OpenRegistration
-            || !await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions
-                .AnyAsync(Database.Users);
+        isFirstAccount = !await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions
+            .AnyAsync(Database.Users);
+        registrationOpen = Auth.Value.OpenRegistration || isFirstAccount;
     }
 }

@@ -57,13 +57,13 @@ else if (session is null)
         </fieldset>
     </form>
     <EmptyState Title="No active draft"
-                Description="Pick a league above and start a session to load the ranked board and pick entry instrument." />
+                Description="Choose a league above and start a session to load the ranked board and begin entering picks." />
 }
 else
 {
     <section aria-label="Draft status">
         <strong data-numeric>Pick @session.CurrentPick</strong>
-        <span> · @session.PicksUntilNextTurn picks until your next turn</span>
+        <span> · @TurnLabel</span>
     </section>
 
     <div class="draft-workspace">
@@ -111,6 +111,15 @@ else
     private string? pickAnnouncement;
     private string? topRecommendationAnnouncement;
     private string? error;
+
+    // "1 picks until your next turn" is the kind of thing this product cannot
+    // afford to print, and zero is not a countdown at all -- it is your turn.
+    private string TurnLabel => session?.PicksUntilNextTurn switch
+    {
+        null or 0 => "your turn to pick",
+        1 => "1 pick until your next turn",
+        var count => $"{count} picks until your next turn",
+    };
 
     private IReadOnlyList<PickEntryItem> AvailablePlayers
     {

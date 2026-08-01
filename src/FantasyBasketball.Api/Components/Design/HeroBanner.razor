@@ -17,10 +17,15 @@
             <div class="hero-platforms">@Platforms</div>
         }
     </div>
-    <a class="scroll-hint" href="@ScrollTarget">
-        <span>Scroll to browse</span>
-        <span class="chevron" aria-hidden="true">⌄</span>
-    </a>
+    @* No target means the page below the fold is empty, and a hint that scrolls
+       nowhere is a broken promise. *@
+    @if (!string.IsNullOrWhiteSpace(ScrollTarget))
+    {
+        <a class="scroll-hint" href="@ScrollTarget">
+            <span>Scroll to browse</span>
+            <span class="chevron" aria-hidden="true">⌄</span>
+        </a>
+    }
 </section>
 
 @code {
@@ -49,7 +54,7 @@
     public string? SecondaryHref { get; set; }
 
     [Parameter]
-    public string ScrollTarget { get; set; } = "#movers";
+    public string? ScrollTarget { get; set; } = "#movers";
 
     [Parameter]
     public RenderFragment? Platforms { get; set; }

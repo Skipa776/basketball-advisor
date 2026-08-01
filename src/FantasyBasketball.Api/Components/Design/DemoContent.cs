@@ -30,7 +30,10 @@ public static class DemoContent
     [
         new("Choose a platform", "Tells the next step which scoring shapes to offer."),
         new("Set scoring", "Points, categories, or a Sleeper variant."),
-        new("Import players", "Fills the board so recommendations have something to rank."),
+        // Named for what the third screen actually shows. It used to say
+        // "Import players", which is a later step on a different page, so the
+        // current-step marker disagreed with the heading beside it.
+        new("Copy into My League", "The wizard previews settings; My League saves them."),
     ];
 
     public static IReadOnlyList<MoverBoard> Movers { get; } =

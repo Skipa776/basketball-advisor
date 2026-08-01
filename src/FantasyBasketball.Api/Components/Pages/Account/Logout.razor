@@ -1,16 +1,15 @@
 @page "/account/logout"
 
-<PageTitle>Log out</PageTitle>
-<PageHeader Title="Log out"
-            Eyebrow="Local account"
-            Description="End this authenticated browser session." />
+<PageTitle>Sign out</PageTitle>
+<PageHeader Title="Sign out"
+            Eyebrow="Account" />
 
-<EmptyState Title="End this session?"
-            Description="Your imported data, leagues, and draft history remain stored locally.">
+<EmptyState Title="Sign out of this browser?"
+            Description="Your leagues, drafts, and imported data stay on this instance and will be here when you sign back in.">
     <Action>
         <form method="post" action="/account/logout/submit">
             <AntiforgeryToken />
-            <button type="submit">Log out</button>
+            <button type="submit">Sign out</button>
         </form>
     </Action>
 </EmptyState>

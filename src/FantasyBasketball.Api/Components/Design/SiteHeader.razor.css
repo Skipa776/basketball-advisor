@@ -65,6 +65,12 @@
     gap: var(--space-6);
 }
 
+/* Without the section nav there is nothing carrying the auto margin, so the
+   actions would sit against the wordmark. */
+.site-header:not(:has(.site-nav)) .site-actions {
+    margin-inline-start: auto;
+}
+
 /* The angled CTA from the reference. clip-path rather than a skew transform so
    the label stays upright and legible. */
 .cta {

@@ -3,7 +3,7 @@
 @layout EmptyLayout
 @inject IOptions<GoogleSignInOptions> Google
 
-<PageTitle>Log in</PageTitle>
+<PageTitle>Sign in</PageTitle>
 
 <AuthPanel Title="Sign in"
            Description="Resume your private leagues, projections, and draft sessions."
@@ -18,8 +18,8 @@
         else if (Error == "locked")
         {
             <ErrorState Id="login-error"
-                        Message="The account is temporarily locked."
-                        Recovery="Wait before trying again." />
+                        Message="Too many failed attempts locked this account temporarily."
+                        Recovery="Wait about fifteen minutes, then sign in again." />
         }
 
         <form method="post"

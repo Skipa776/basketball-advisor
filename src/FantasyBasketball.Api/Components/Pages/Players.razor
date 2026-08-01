@@ -13,8 +13,11 @@
         <input id="player-search" @bind="search" />
     </p>
     <p>
-        <label for="projection-league">League ID for projection links</label>
-        <input id="projection-league" @bind="leagueText" />
+        <label for="projection-league">League ID</label>
+        <input id="projection-league"
+               @bind="leagueText"
+               aria-describedby="projection-league-help" />
+        <small id="projection-league-help">Copy it from My League. Projections are computed under that league's rules.</small>
     </p>
     <button type="submit">Search</button>
 </form>
@@ -33,9 +36,9 @@
 else if (players.Items.Count == 0)
 {
     <EmptyState Title="No players found"
-                Description="Change the search term or import the player pool from Data Sources.">
+                Description="Change the search term, or import the player pool if this instance has none yet.">
         <Action>
-            <a class="button-link" href="/data-sources">Manage imports</a>
+            <a class="button-link" href="/data-sources">Open Data Sources</a>
         </Action>
     </EmptyState>
 }

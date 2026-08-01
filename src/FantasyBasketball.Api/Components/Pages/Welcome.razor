@@ -13,9 +13,9 @@
    actually writes them. Wiring it to LeagueService is the obvious next step. *@
 <div class="notice preview-note">
     <p>
-        This walkthrough previews the settings for each platform. Creating the
-        league itself still happens on <a href="/league">My League</a> — carry
-        the values below across.
+        Nothing here is saved. This walkthrough narrows the settings to your
+        platform and scoring; you create the league itself on
+        <a href="/league">My League</a>.
     </p>
 </div>
 
@@ -51,13 +51,13 @@ else if (stepIndex == 1)
             }
         </div>
         <p class="hint">@ScoringHint</p>
-        <button type="button" @onclick="() => stepIndex = 0">Back</button>
+        <button type="button" @onclick="() => stepIndex = 0">Back to platform</button>
     </section>
 }
 else
 {
     <section aria-labelledby="summary-heading">
-        <h2 id="summary-heading">Carry these across</h2>
+        <h2 id="summary-heading">Copy these into My League</h2>
         <article class="panel">
             <p class="eyebrow">Suggested settings</p>
             <ul>
@@ -73,7 +73,7 @@ else
         </article>
         <div class="action-grid">
             <a class="button-link primary" href="/league">Open My League</a>
-            <button type="button" @onclick="() => stepIndex = 1">Back</button>
+            <button type="button" @onclick="() => stepIndex = 1">Back to scoring</button>
         </div>
     </section>
 }
