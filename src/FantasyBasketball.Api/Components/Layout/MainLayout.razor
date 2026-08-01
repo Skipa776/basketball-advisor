@@ -1,6 +1,6 @@
 @inherits LayoutComponentBase
 @inject IOptions<DemoContentOptions> Demo
-@inject LeagueService Leagues
+@inject IServiceScopeFactory Scopes
 @inject ActiveLeague ActiveLeague
 
 <a class="skip-link" href="#main-content">Skip to content</a>
@@ -20,10 +20,17 @@
                    found by scanning three labels instead of ten links. One nav
                    with one label: the groups are headings inside it, not four
                    separate landmarks a screen reader has to walk past. *@
-                <nav aria-label="Primary navigation">
+                @* `open` by default, and the summary is hidden above the
+                   breakpoint, so this is an ordinary sidebar on a desktop and a
+                   collapsible menu on a phone -- with no script either way.
+                   Eleven links stacked above the content would push the page
+                   itself below the fold. *@
+                <details class="nav-disclosure" open>
+                    <summary>Menu</summary>
+                    <nav aria-label="Primary navigation">
                     <p class="nav-group" id="nav-decide">Decide</p>
                     <ul aria-labelledby="nav-decide">
-                        <li><NavLink href="/draft">Draft Room</NavLink></li>
+                        <li><NavLink href="/draft">Draft Assistant</NavLink></li>
                         <li><NavLink href="/trade">Trade Analyzer</NavLink></li>
                         <li><NavLink href="/free-agents">Free Agents</NavLink></li>
                     </ul>
@@ -32,7 +39,7 @@
                     <ul aria-labelledby="nav-league">
                         <li><NavLink href="/" Match="NavLinkMatch.All">Dashboard</NavLink></li>
                         <li><NavLink href="/leagues">My Leagues</NavLink></li>
-                        <li><NavLink href="/league">League Setup</NavLink></li>
+                        <li><NavLink href="/league">My League</NavLink></li>
                         <li><NavLink href="/leaderboard">Leaderboard</NavLink></li>
                         <li><NavLink href="/players">Players</NavLink></li>
                     </ul>
@@ -44,9 +51,10 @@
                         @* /welcome had no inbound link anywhere in the app: the
                            route sweep rendered it, every test passed, and no
                            user could reach it. Row D-28. *@
-                        <li><NavLink href="/welcome">Setup Guide</NavLink></li>
+                        <li><NavLink href="/welcome">Set Up</NavLink></li>
                     </ul>
-                </nav>
+                    </nav>
+                </details>
                 <div class="sidebar-footer">
                     <ThemeToggle />
                     <a href="/account/logout">Sign out</a>
@@ -87,15 +95,30 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // The layout renders for signed-out visitors too, where there is no
-        // user to own a league and the query would throw. Failing quietly is
-        // right here: a switcher that cannot load is a missing convenience,
-        // never a broken page.
+        // Its OWN scope, deliberately. Blazor initialises the layout and the
+        // page concurrently, and the request-scoped DbContext is not
+        // thread-safe: querying it here raced every page that also queries on
+        // init, and EF threw "a second operation was started on this context
+        // instance". That took out the draft board, league setup and context
+        // review outright -- they returned the API error envelope instead of a
+        // page, and only a signed-in walk of the app showed it.
+        //
+        // A scope per layout render costs one extra connection and removes the
+        // race by construction, which is the right trade for a switcher that
+        // renders on every single page.
+        //
+        // The layout also renders for signed-out visitors, where there is no
+        // user to own a league. Failing quietly is right: a switcher that
+        // cannot load is a missing convenience, never a broken page.
         try
         {
+            using var scope = Scopes.CreateScope();
+            var leagues = scope.ServiceProvider
+                .GetRequiredService<LeagueService>();
+
             leagueOptions =
             [
-                .. (await Leagues.ListAsync(CancellationToken.None))
+                .. (await leagues.ListAsync(CancellationToken.None))
                     .Select(league => new LeagueOption(league.Id, league.Name)),
             ];
         }

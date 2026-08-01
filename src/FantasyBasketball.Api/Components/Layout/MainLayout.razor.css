@@ -442,9 +442,31 @@ main ::deep .visually-hidden {
         border-block-end: thin solid var(--color-rule);
     }
 
+    /* Was a horizontally scrolling flex strip, which suited a flat list and
+       turned the grouped nav into a cut-off mess -- group labels sitting
+       beside wrapped columns of links, the last group off-screen. Grouped
+       navigation stacks; the disclosure is what keeps it from filling the
+       screen. */
     .sidebar nav {
+        display: grid;
+        overflow-x: visible;
+    }
+
+    .nav-disclosure > summary {
+        min-height: var(--target-min);
         display: flex;
-        overflow-x: auto;
+        align-items: center;
+        padding: var(--space-3) var(--space-5);
+        border: thin solid var(--color-border-strong);
+        border-radius: var(--radius-sm);
+        font-size: var(--text-sm);
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .nav-disclosure > summary:focus-visible {
+        outline: none;
+        box-shadow: var(--focus-ring);
     }
 
     .sidebar-footer {
@@ -482,4 +504,14 @@ main ::deep .visually-hidden {
     padding-inline: var(--space-7);
     border-block-end: thin solid var(--color-rule);
     background: var(--color-surface);
+}
+
+/* Above the breakpoint the disclosure is plumbing, not a control. Written as a
+   min-width query rather than a bare rule: appended at the end of the file, a
+   bare rule outranks the mobile one by source order and the summary is hidden
+   at every width -- which makes the whole disclosure inert. */
+@media (min-width: 52.0625rem) {
+    .nav-disclosure > summary {
+        display: none;
+    }
 }
