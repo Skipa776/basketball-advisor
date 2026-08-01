@@ -64,6 +64,19 @@ scripts/gate.sh                 # format, build, test, and the bundle validator
 ### Actually running it
 
 ```bash
+cp .env.example .env            # then put your balldontlie key in it
+scripts/dev.sh                  # loads .env, then runs scripts/run.sh
+scripts/dev.sh --demo           # plus labelled-fictional sample content
+scripts/dev.sh --demo --open-reg   # plus registration after the instance is claimed
+```
+
+`.env` is gitignored and `.env.example` holds no values, so the key stays out of
+every commit. `scripts/gate.sh` scans every tracked file for key-shaped strings
+and fails the build rather than letting one reach a remote.
+
+Exporting the variable yourself still works and skips `.env` entirely:
+
+```bash
 export BallDontLie__ApiKey="your-key"
 scripts/run.sh                  # checks the port, applies migrations, starts
 ```
