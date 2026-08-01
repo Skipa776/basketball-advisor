@@ -8,8 +8,13 @@
 }
 
 .state-mark {
+    display: inline-flex;
     color: var(--color-text-muted);
-    font: 400 var(--text-xl)/1 var(--font-mono);
+}
+
+.state-mark svg {
+    width: var(--space-8);
+    height: var(--space-8);
 }
 
 h2,

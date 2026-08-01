@@ -60,10 +60,29 @@ h2 {
     gap: var(--space-3);
 }
 
+/* Rows, not cards. The contract makes tables the layout for player data and
+   reserves cards for single-subject summaries; four movers is player data. The
+   move size leads each row because the size of the move is the story, and the
+   name follows it. */
+.mover-group {
+    margin-block-start: var(--space-7);
+}
+
+.mover-group:first-of-type {
+    margin-block-start: var(--space-6);
+}
+
+.mover-group h3 {
+    margin: 0 0 var(--space-4);
+    color: var(--color-text-muted);
+    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
 .movers {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-    gap: var(--space-6);
+    gap: 0;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -71,45 +90,66 @@ h2 {
 
 .mover {
     display: grid;
-    gap: var(--space-2);
-    padding: var(--space-7);
-    border: var(--rule-width) solid var(--color-rule);
-    border-radius: var(--radius-md);
-    background-color: var(--color-surface);
-    box-shadow: var(--shadow-sm);
+    grid-template-columns: auto minmax(9rem, auto) auto minmax(0, 1fr) auto;
+    /* col 4 is the reason and takes the slack; col 5 is the rank, hard right. */
+    align-items: baseline;
+    column-gap: var(--space-7);
+    row-gap: var(--space-2);
+    padding-block: var(--space-5);
+    border-block-end: var(--rule-width) solid var(--color-rule);
 }
 
-.mover p {
-    margin: 0;
+.mover:last-child {
+    border-block-end: 0;
+}
+
+/* Fixed width so the names line up whatever the delta is. A ragged left edge
+   on a scannable list costs more than the space it saves. */
+.delta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 6.5rem;
+    font: 600 var(--text-sm)/1 var(--font-mono);
+}
+
+.arrow {
+    width: var(--space-6);
+    height: var(--space-6);
+    flex: none;
+}
+
+.delta-value {
+    font-variant-numeric: tabular-nums;
+}
+
+.delta-word {
+    color: var(--color-text-muted);
+    font-weight: 400;
 }
 
 .mover-name {
-    font-size: var(--text-lg);
+    font-size: var(--text-base);
     font-weight: 600;
-}
-
-.mover-meta,
-.mover-reason {
-    color: var(--color-text-muted);
-    font-size: var(--text-xs);
 }
 
 .mover-meta {
     display: flex;
     gap: var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
 }
 
 .mover-reason {
-    margin-block-start: var(--space-2);
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
 }
 
 .mover-rank {
-    display: flex;
+    display: inline-flex;
     align-items: baseline;
-    gap: var(--space-4);
-    margin-block-start: var(--space-5);
-    padding-block-start: var(--space-4);
-    border-block-start: var(--rule-width) solid var(--color-rule);
+    gap: var(--space-3);
+    justify-self: end;
 }
 
 .rank-label {
@@ -119,11 +159,29 @@ h2 {
     text-transform: uppercase;
 }
 
+/* Stacks at narrow widths: five columns of player data does not survive a
+   phone, and shrinking the type instead is how a list becomes unreadable. */
+@media (max-width: 60rem) {
+    .mover {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        column-gap: var(--space-6);
+    }
+
+    .mover-meta {
+        grid-column: 2;
+    }
+
+    .mover-reason {
+        grid-column: 1 / -1;
+        order: 1;
+    }
+}
+
 /* The rank sits in the cool tone, not the brand orange, so the numbers do not
    compete with the calls to action anywhere else on the page. */
 .rank {
     color: var(--color-rank);
-    font: 600 var(--text-2xl)/1 var(--font-mono);
+    font: 600 var(--text-base)/1 var(--font-mono);
     font-variant-numeric: tabular-nums;
 }
 

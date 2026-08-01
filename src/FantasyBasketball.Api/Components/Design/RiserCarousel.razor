@@ -49,30 +49,53 @@
              aria-roledescription="slide"
              aria-label="@($"{board.Title}, {index + 1} of {Boards.Count}")"
              hidden="@(index != 0)">
-            <ul class="movers" role="list">
-                @foreach (var mover in board.Movers)
-                {
-                    <li class="mover">
-                        <p class="mover-name">@mover.Name</p>
-                        <p class="mover-meta">
-                            <span>@mover.Team</span>
-                            <span aria-hidden="true">·</span>
-                            <span>@mover.Positions</span>
-                        </p>
-                        <p class="mover-reason">@mover.Reason</p>
-                        <p class="mover-rank">
-                            <span class="rank-label">Rank</span>
-                            <strong class="rank" data-numeric>@mover.Rank</strong>
-                            @* Direction is never colour alone: the arrow and the
-                               word both carry it, per D-12. *@
-                            <span class="delta @DirectionClass(mover)">
-                                <span aria-hidden="true">@DirectionMark(mover)</span>
-                                @DirectionWord(mover) @Math.Abs(mover.RankDelta)
-                            </span>
-                        </p>
-                    </li>
-                }
-            </ul>
+            @* Four identical cards was the lazy container, and it also broke the
+               contract's own rule: tables are the layout for player data, cards
+               are for single-subject summaries. This is four players, so it is a
+               list. Grouping by direction lets the eye answer "who is up, who is
+               down" before reading a single name, and the move size leads each
+               row because the size of the move is the story. *@
+            @foreach (var group in GroupBoard(board))
+            {
+                <div class="mover-group">
+                    <h3>@group.Label</h3>
+                    <ul class="movers" role="list">
+                        @foreach (var mover in group.Movers)
+                        {
+                            <li class="mover">
+                                @* Direction is never colour alone: the arrow
+                                   shape and the word both carry it, per D-12. *@
+                                <span class="delta @DirectionClass(mover)">
+                                    <svg class="arrow" viewBox="0 0 12 12" aria-hidden="true" focusable="false">
+                                        <path d="@DirectionPath(mover)"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              stroke-width="1.75"
+                                              stroke-linecap="round"
+                                              stroke-linejoin="round" />
+                                    </svg>
+                                    <span class="delta-value" data-numeric>@Math.Abs(mover.RankDelta)</span>
+                                    <span class="delta-word">@DirectionWord(mover)</span>
+                                </span>
+                                <span class="mover-name">@mover.Name</span>
+                                <span class="mover-meta">
+                                    <span>@mover.Team</span>
+                                    <span aria-hidden="true">·</span>
+                                    <span>@mover.Positions</span>
+                                </span>
+                                @* Reason before rank so the flexible column is
+                                   the prose and the rank anchors hard right.
+                                   The other order left a dead gap mid-row. *@
+                                <span class="mover-reason">@mover.Reason</span>
+                                <span class="mover-rank">
+                                    <span class="rank-label">now</span>
+                                    <span class="rank" data-numeric>@mover.Rank</span>
+                                </span>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
         </div>
     }
 </section>
@@ -92,9 +115,34 @@
     private static string DirectionClass(MoverItem mover) =>
         mover.Direction == MoveDirection.Riser ? "is-riser" : "is-faller";
 
-    private static string DirectionMark(MoverItem mover) =>
-        mover.Direction == MoveDirection.Riser ? "▲" : "▼";
+    /// <summary>
+    /// Drawn rather than the ▲/▼ glyphs this used to borrow from the body font.
+    /// A text arrow inherits that font's optical weight and never matches the
+    /// stroke of the icons around it.
+    /// </summary>
+    private static string DirectionPath(MoverItem mover) =>
+        mover.Direction == MoveDirection.Riser
+            ? "M6 10V2M2.5 5.5L6 2l3.5 3.5"
+            : "M6 2v8M2.5 6.5L6 10l3.5-3.5";
 
     private static string DirectionWord(MoverItem mover) =>
         mover.Direction == MoveDirection.Riser ? "up" : "down";
+
+    /// <summary>
+    /// Risers first, then fallers, each keeping the board's own order. Empty
+    /// groups are dropped so a board of only risers does not render a
+    /// "Falling" heading over nothing.
+    /// </summary>
+    private static IEnumerable<(string Label, IReadOnlyList<MoverItem> Movers)> GroupBoard(
+        MoverBoard board) =>
+        new[]
+        {
+            ("Rising", Filter(board, MoveDirection.Riser)),
+            ("Falling", Filter(board, MoveDirection.Faller)),
+        }.Where(group => group.Item2.Count > 0);
+
+    private static IReadOnlyList<MoverItem> Filter(
+        MoverBoard board,
+        MoveDirection direction) =>
+        [.. board.Movers.Where(mover => mover.Direction == direction)];
 }

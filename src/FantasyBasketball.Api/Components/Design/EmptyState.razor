@@ -1,5 +1,18 @@
 <section class="empty-state" aria-labelledby="@HeadingId">
-    <span class="state-mark" aria-hidden="true">◇</span>
+    @* Drawn, not the ◇ glyph this borrowed from the body font. A text glyph
+       inherits that font's optical weight and stroke, so it never matches the
+       icons around it -- and the one it borrowed had no relationship to
+       emptiness beyond being available. An open, dashed container does. *@
+    <span class="state-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M4 8V6a2 2 0 012-2h2M16 4h2a2 2 0 012 2v2M20 16v2a2 2 0 01-2 2h-2M8 20H6a2 2 0 01-2-2v-2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round" />
+        </svg>
+    </span>
     <div>
         <h2 id="@HeadingId">@Title</h2>
         <p>@Description</p>
