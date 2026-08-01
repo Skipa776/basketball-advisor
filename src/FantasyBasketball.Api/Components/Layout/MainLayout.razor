@@ -1,5 +1,7 @@
 @inherits LayoutComponentBase
 @inject IOptions<DemoContentOptions> Demo
+@inject LeagueService Leagues
+@inject ActiveLeague ActiveLeague
 
 <a class="skip-link" href="#main-content">Skip to content</a>
 <AuthorizeView>
@@ -51,6 +53,16 @@
                 </div>
             </aside>
             <div class="workspace">
+                @* The league every page opens on, switchable from anywhere.
+                   Pages used to make the user paste a League ID they had to
+                   copy out of the address bar. Row D-32. *@
+                @if (leagueOptions.Count > 0)
+                {
+                    <div class="utility-bar">
+                        <LeagueSelector Options="@leagueOptions"
+                                        SelectedId="@ActiveLeague.Current" />
+                    </div>
+                }
                 <main id="main-content" tabindex="-1">
                     @Body
                 </main>
@@ -69,3 +81,27 @@
         </div>
     </NotAuthorized>
 </AuthorizeView>
+
+@code {
+    private IReadOnlyList<LeagueOption> leagueOptions = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        // The layout renders for signed-out visitors too, where there is no
+        // user to own a league and the query would throw. Failing quietly is
+        // right here: a switcher that cannot load is a missing convenience,
+        // never a broken page.
+        try
+        {
+            leagueOptions =
+            [
+                .. (await Leagues.ListAsync(CancellationToken.None))
+                    .Select(league => new LeagueOption(league.Id, league.Name)),
+            ];
+        }
+        catch (Exception)
+        {
+            leagueOptions = [];
+        }
+    }
+}

@@ -98,6 +98,7 @@ public static class DependencyInjection
         });
         services.AddCascadingAuthenticationState();
         services.AddHttpContextAccessor();
+        services.AddScoped<ActiveLeague>();
         services.AddHttpsRedirection(options =>
         {
             options.HttpsPort = 443;

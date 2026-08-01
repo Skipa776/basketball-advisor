@@ -54,6 +54,14 @@ public static class AccountEndpoints
         endpoints.MapPost("/account/logout/submit", LogoutFormAsync)
             .RequireAuthorization()
             .AddEndpointFilter<CookieAntiforgeryFilter>();
+        // Cast: a Task<IResult> handler taking only HttpContext has the same
+        // shape as RequestDelegate, so routing binds it as one and discards the
+        // result -- the redirect would never be written.
+        endpoints.MapPost(
+                "/account/active-league/submit",
+                (Delegate)SetActiveLeagueAsync)
+            .RequireAuthorization()
+            .AddEndpointFilter<CookieAntiforgeryFilter>();
         return endpoints;
     }
 
@@ -234,5 +242,45 @@ public static class AccountEndpoints
     {
         await signIn.SignOutAsync();
         return Results.Redirect("/account/login");
+    }
+
+    /// <summary>
+    /// Records which league the user is working in. Deliberately does NOT check
+    /// that the league exists or belongs to them: the cookie is view state, and
+    /// every query that reads it still runs through the ownership filter, so a
+    /// value pointing anywhere else simply resolves to nothing. Validating here
+    /// would add a database round trip to a click that changes a preference.
+    /// </summary>
+    public static async Task<IResult> SetActiveLeagueAsync(HttpContext context)
+    {
+        var form = await context.Request.ReadFormAsync();
+        var raw = form["leagueId"].ToString();
+
+        if (Guid.TryParse(raw, out var leagueId))
+        {
+            context.Response.Cookies.Append(
+                ActiveLeague.CookieName,
+                leagueId.ToString(),
+                ActiveLeague.Options(context.Request.IsHttps));
+        }
+        else
+        {
+            context.Response.Cookies.Delete(ActiveLeague.CookieName);
+        }
+
+        // Back where they were. Only a same-origin relative path is honoured --
+        // a Referer is attacker-controllable, and redirecting to whatever it
+        // says turns a preference switch into an open redirect.
+        var referer = context.Request.Headers.Referer.ToString();
+        if (Uri.TryCreate(referer, UriKind.Absolute, out var target)
+            && string.Equals(
+                target.Authority,
+                context.Request.Host.Value,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return Results.Redirect(target.PathAndQuery);
+        }
+
+        return Results.Redirect("/");
     }
 }

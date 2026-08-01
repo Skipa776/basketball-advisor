@@ -466,3 +466,20 @@ main ::deep .visually-hidden {
         grid-template-columns: 1fr;
     }
 }
+
+/* Sits above the page content, below the sidebar's own header line. Sticky so
+   the league you are working in stays visible while a long table scrolls --
+   losing that context mid-scroll is how you read the wrong league's numbers. */
+.utility-bar {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 5;
+    display: flex;
+    min-height: var(--utility-bar-height);
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-6);
+    padding-inline: var(--space-7);
+    border-block-end: thin solid var(--color-rule);
+    background: var(--color-surface);
+}

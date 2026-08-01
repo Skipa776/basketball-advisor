@@ -92,3 +92,12 @@ public sealed record ImportPlatformItem(
 public sealed record OnboardingStepItem(
     string Title,
     string Description);
+
+/// <summary>
+/// One entry in the active-league switcher. A flat pair rather than the domain
+/// league, so the switcher stays presentational and cannot be handed something
+/// it might be tempted to compute from.
+/// </summary>
+public sealed record LeagueOption(
+    Guid Id,
+    string Name);
