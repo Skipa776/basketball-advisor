@@ -83,7 +83,10 @@
                 <h2 id="league-summary-@league.Id">@league.Name</h2>
                 <p>
                     <code>@league.Id</code>
-                    <small>League ID. Paste it into Players to see projections computed under these rules.</small>
+                    @* Was "paste it into Players", which is no longer how you
+                       get there: the switcher in the top bar does it. The ID
+                       stays visible because a shared link needs it. *@
+                    <small>League ID, for linking straight to this league. Switching leagues is in the bar above.</small>
                 </p>
                 <p>@league.TeamCount teams · @league.Type · @league.Cadence lineups</p>
                 <h3>Scoring</h3>
