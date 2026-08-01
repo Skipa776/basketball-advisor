@@ -257,7 +257,20 @@ public static class DependencyInjection
                 new ResponseCacheHandler(
                     serviceProvider.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>(),
                     CacheFreshness));
-        clientBuilder.AddStandardResilienceHandler();
+        // The defaults allow 10s per attempt, and balldontlie's free tier
+        // regularly takes ~9s to answer a players page. Every import therefore
+        // timed out, retried, and recorded a failed run against a working API
+        // key -- the data source looked broken when it was only slow.
+        //
+        // The handler validates these against each other: the total must be at
+        // least twice an attempt, and the breaker's sampling window likewise,
+        // so all three move together.
+        clientBuilder.AddStandardResilienceHandler(options =>
+        {
+            options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(30);
+            options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(120);
+            options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(60);
+        });
         clientBuilder.AddHttpMessageHandler(serviceProvider =>
             new HostRateLimitHandler(
                 serviceProvider.GetRequiredService<HostRateLimiter>()));
