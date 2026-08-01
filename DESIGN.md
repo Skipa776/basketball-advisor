@@ -27,9 +27,16 @@ There are now **two surface classes**, and they are deliberately different:
 
 Four consequences that drive every value below:
 
-1. **Off-white is the primary theme.** The first screen anyone sees is the landing
-   page. Dark is fully supported and equally tested — a draft still happens at
-   night — but light is the one designed first now.
+1. **Hardwood is the primary theme.** The first screen anyone sees is the landing
+   page, and it is court-line cream over maple. Dark is a night gym in walnut —
+   fully supported, equally tested, and not an inversion — but light is the one
+   designed first.
+
+   The wood is load-bearing and it is also a trap: a mid-tone maple cannot carry
+   body text at 4.5:1. So the text-bearing surfaces stay light and warm, and the
+   saturated maple lives in `--color-surface-wood`, which is **decorative and
+   carries nothing**. That split is what lets the shell read as a court without
+   putting a single label on a surface that cannot hold one.
 2. **Numbers are the interface.** Tabular figures, right-aligned, monospace. A column
    of misaligned decimals is unreadable at the speed a draft demands. The display
    face never touches a number (row `D-27`).
@@ -54,67 +61,78 @@ Ratios below are quoted **bg · surface · raised**.
 
 | Token | Value | Role | Contrast |
 |---|---|---|---|
-| `--color-bg` | `#FAF8F4` | Page — warm off-white | — |
-| `--color-surface` | `#FFFFFF` | Panels, table body | — |
-| `--color-surface-raised` | `#F0ECE4` | Hover, selected row, popovers | — |
-| `--color-rule` | `#E4DED3` | **Decorative** separators only | exempt — see note |
-| `--color-border-strong` | `#77716A` | **Interactive** boundaries: inputs, buttons | **4.55 · 4.82 · 4.09** |
-| `--color-text` | `#16161A` | Body | **17.01 · 18.04 · 15.32** |
-| `--color-text-muted` | `#57544F` | Secondary, labels, units | **7.11 · 7.54 · 6.40** |
-| `--color-accent` | `#D96612` | Fills, CTAs, display type | **3.38 · 3.58 · 3.04** — UI and large text only |
-| `--color-accent-ink` | `#B8460F` | Orange **as small text** | **5.05 · 5.36 · 4.55** |
-| `--color-accent-contrast` | `#16161A` | Label **on** an orange fill | **5.03** on accent |
-| `--color-rank` | `#1C6A72` | Carousel and list rank numbers | **5.90 · 6.26 · 5.31** |
-| `--color-positive` | `#1B6B45` | Supporting evidence, gains | **6.12 · 6.49 · 5.51** |
-| `--color-negative` | `#A8341F` | Risk evidence, losses | **6.23 · 6.61 · 5.61** |
-| `--color-caution` | `#7A5806` | Stale data, unverified context | **6.14 · 6.51 · 5.52** |
+| `--color-bg` | `#F7F1E7` | Page — court-line cream over maple | — |
+| `--color-surface` | `#FFFCF7` | Panels, table body | — |
+| `--color-surface-raised` | `#EDE3D2` | Hover, selected row, popovers | — |
+| `--color-rule` | `#DFD3BE` | **Decorative** separators only | exempt — see note |
+| `--color-border-strong` | `#756A59` | **Interactive** boundaries: inputs, buttons | **4.72 · 5.18 · 4.17** |
+| `--color-text` | `#1A1512` | Body — deep brown-black, not neutral | **16.11 · 17.69 · 14.24** |
+| `--color-text-muted` | `#5A5147` | Secondary, labels, units | **6.92 · 7.59 · 6.11** |
+| `--color-accent` | `#C85A10` | Fills, CTAs, display type | **3.79 · 4.17 · 3.35** — UI and large text only |
+| `--color-accent-ink` | `#A94209` | Orange **as small text** | **5.39 · 5.91 · 4.76** |
+| `--color-accent-contrast` | `#0A0807` | Label **on** an orange fill | **4.69** on accent |
+| `--color-rank` | `#1A6670` | Carousel and list rank numbers | **5.88 · 6.46 · 5.20** |
+| `--color-positive` | `#1A653F` | Supporting evidence, gains | **6.28 · 6.89 · 5.55** |
+| `--color-negative` | `#A32E1C` | Risk evidence, losses | **6.30 · 6.92 · 5.57** |
+| `--color-caution` | `#75540A` | Stale data, unverified context | **6.17 · 6.77 · 5.45** |
+| `--color-surface-wood` | `#C9A277` | Maple field behind the shell | exempt — **decorative, carries nothing** |
+| `--color-court-line` | `#E8D9BE` | Court geometry drawn on the wood | exempt — decorative |
 
 ### Dark
 
 | Token | Value | Role | Contrast |
 |---|---|---|---|
-| `--color-bg` | `#111114` | Page | — |
-| `--color-surface` | `#17171A` | Panels, table body | — |
-| `--color-surface-raised` | `#212127` | Hover, selected row, popovers | — |
-| `--color-rule` | `#2A2A31` | Decorative separators only | exempt |
-| `--color-border-strong` | `#767069` | Interactive boundaries | **3.85 · 3.66 · 3.27** |
-| `--color-text` | `#F2EFE9` | Body | **16.42 · 15.59 · 13.95** |
-| `--color-text-muted` | `#A5A099` | Secondary, labels, units | **7.26 · 6.89 · 6.17** |
-| `--color-accent` | `#E2711D` | Fills, CTAs, display type | **5.94 · 5.63 · 5.04** |
-| `--color-accent-ink` | `#F0904A` | Orange as small text | **7.89 · 7.49 · 6.70** |
-| `--color-accent-contrast` | `#16161A` | Label on an orange fill | **5.68** on accent |
-| `--color-rank` | `#5FC2CC` | Rank numbers | **9.04 · 8.58 · 7.68** |
-| `--color-positive` | `#5FBF8E` | Supporting evidence | **8.37 · 7.95 · 7.11** |
-| `--color-negative` | `#E8836F` | Risk evidence | **7.10 · 6.74 · 6.03** |
-| `--color-caution` | `#D9A441` | Stale, unverified | **8.38 · 7.95 · 7.12** |
+| `--color-bg` | `#16110D` | Page — night gym, walnut | — |
+| `--color-surface` | `#1E1812` | Panels, table body | — |
+| `--color-surface-raised` | `#2A221A` | Hover, selected row, popovers | — |
+| `--color-rule` | `#332A21` | Decorative separators only | exempt |
+| `--color-border-strong` | `#7C7062` | Interactive boundaries | **3.88 · 3.64 · 3.24** |
+| `--color-text` | `#F4EEE3` | Body | **16.24 · 15.22 · 13.55** |
+| `--color-text-muted` | `#A99E8E` | Secondary, labels, units | **7.11 · 6.67 · 5.94** |
+| `--color-accent` | `#E5761F` | Fills, CTAs, display type | **6.20 · 5.81 · 5.17** |
+| `--color-accent-ink` | `#F2954C` | Orange as small text | **8.19 · 7.68 · 6.84** |
+| `--color-accent-contrast` | `#0A0807` | Label on an orange fill | **6.61** on accent |
+| `--color-rank` | `#5FC4CE` | Rank numbers | **9.17 · 8.60 · 7.65** |
+| `--color-positive` | `#63C08F` | Supporting evidence | **8.45 · 7.92 · 7.05** |
+| `--color-negative` | `#EA8771` | Risk evidence | **7.32 · 6.87 · 6.11** |
+| `--color-caution` | `#DBA742` | Stale, unverified | **8.59 · 8.05 · 7.17** |
+| `--color-surface-wood` | `#3A2C1F` | Maple field behind the shell | exempt — decorative |
+| `--color-court-line` | `#4A3826` | Court geometry | exempt — decorative |
 
 ### Why there are two orange tokens
 
-One orange cannot carry small text on both an off-white page and a dark panel.
-Measured: `#E2711D` is **3.00:1** on the light page — fine as a fill, illegal as
-body text — while `#C2410C`, which passes there at 4.89:1, drops to **3.45:1** on
-the dark panel. So:
+One orange cannot carry small text on both a cream page and a walnut panel, and
+the warmer surfaces make this *worse* than it was on off-white — a maple-tinted
+background sits closer in luminance to the orange than a neutral one did.
+Measured: the dark theme's `#E5761F` scores **2.69** on the light page, failing
+even the 3:1 fill floor, while the light theme's `#A94209` drops to **2.90** on
+the dark panel. Neither can cross. So:
 
 - **`--color-accent`** — fills, CTAs, and display type ≥24px. Held to 3:1.
-  `#D96612` is the boldest orange clearing that on *all three* light surfaces;
-  the obvious `#E2711D` fails at **2.99** on bg and **2.70** on raised.
+  `#C85A10` is the boldest orange clearing that on *all three* light surfaces.
+  `#D05E11` still passes at **3.12** on raised; `#D46412` fails there at **2.93**,
+  which is where the ceiling actually is.
 - **`--color-accent-ink`** — the darker orange, for the cases where orange has to
   be small text. Held to 4.5:1.
 
-**Labels on an orange fill are near-black, never white**: `#16161A` scores 5.03
-against the fill, white only 3.58.
+**Labels on an orange fill are near-black, never white**: `#0A0807` scores 4.69
+against the fill, white only 4.26. That margin narrowed with the darker accent —
+it was 5.03 against 3.58 on the old palette — so the label token moved from
+`#16161A` to `#0A0807` to keep it. This is the pair with the least headroom in
+the whole system; changing the light accent means re-checking it first.
 
 ### The always-dark island
 
 `.on-dark` renders the dark token set regardless of the ambient theme. The player
 panel uses it, which is what makes it read as a slab cut out of the page.
 
-It exists because a token is measured against the fill it sits on: the light
-rank teal on that panel is **2.86:1** and fails. Inside the island every pair is
-re-checked against the island's own surfaces — off-white text **15.59**, accent
-**4.99**, rank **8.58**, positive **7.95**, negative **6.74**. Row `D-22` also
-asserts the island matches the dark set exactly, because a light set copied there
-would pass the pairs while rendering a panel indistinguishable from the page.
+It exists because a token is measured against the fill it sits on: the light rank
+teal on that panel is **2.66:1** and fails, and the light body text lands at
+**1.03:1** — very nearly invisible. Inside the island every pair is re-checked
+against the island's own surfaces — cream text **15.22**, accent **5.81**, rank
+**8.60**, positive **7.92**, negative **6.87**. Row `D-22` also asserts the island
+matches the dark set exactly, because a light set copied there would pass the
+pairs while rendering a panel indistinguishable from the page.
 
 ### Why there are two border tokens
 
@@ -296,9 +314,16 @@ that explained itself to someone who had not already been sold on it.
   coverage, footer. Renders at `/` for anyone signed out.
 - **Auth** — full-bleed court art, one centred card. No site chrome; there is
   nothing to navigate to yet.
-- **Illustration** — drawn, never photographed. `CourtBackdrop` is SVG court
-  geometry and non-identifiable silhouettes, so no real player's likeness is
-  used and there is no binary asset to license.
+- **Imagery** — licensed or drawn, never appropriated. *Amended 2026-07-31; this
+  read "drawn, never photographed", which ruled out binary assets outright.*
+  Licensed raster artwork is now permitted **here and on auth only**, and every
+  shipped binary carries source, licence, author, and retrieval date in
+  `ASSETS.md` (row `D-34`). `CourtBackdrop` — SVG court geometry and
+  non-identifiable silhouettes — stays as the fallback, so a missing or
+  CSP-blocked asset degrades to a designed surface rather than a broken one.
+  **No NBA, team, or identifiable player likeness in any medium.** The instrument
+  stays image-free: photography belongs to the surfaces read once, not to the one
+  read under a clock.
 - **Third-party names** — ESPN, Yahoo and Sleeper appear as *import formats*,
   in plain type, with a no-affiliation line that ships inside the component so a
   page cannot render the names without it. No logos, no sponsors row.

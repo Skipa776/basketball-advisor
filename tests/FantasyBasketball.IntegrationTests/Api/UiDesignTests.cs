@@ -70,7 +70,12 @@ public sealed partial class UiDesignTests
         // A colour token nobody checks is a contrast failure waiting to be
         // introduced. Decorative-only tokens are exempt by name, never by
         // omission -- adding a token now forces a decision about which it is.
-        string[] decorativeOnly = ["color-rule"];
+        // --color-surface-wood and --color-court-line carry the shell's hardwood
+        // field and the court geometry drawn on it. Decorative by construction:
+        // the contract forbids text or an interactive boundary landing on
+        // either, which is what keeps them out of a pair.
+        string[] decorativeOnly =
+            ["color-rule", "color-surface-wood", "color-court-line"];
         var checkedTokens = bodyPairs
             .Concat(boundaryPairs)
             .SelectMany(pair => new[] { pair.Item1, pair.Item2 })
