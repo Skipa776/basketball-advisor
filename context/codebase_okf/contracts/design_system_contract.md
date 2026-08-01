@@ -114,7 +114,7 @@ budget:
 | Type | display face, hero sizes | system stacks, `--text-sm` rows |
 | Accent | used freely | **recommended pick only** (`D-23`) |
 | Motion | one paused carousel (`D-24`) | none |
-| Imagery | licensed raster permitted, `ASSETS.md` (`D-34`) | **none** — no photography on a working surface |
+| Imagery | licensed raster permitted, `ASSETS.md` (`D-34`) | player portraits only, via `PlayerAvatar`; no decorative photography |
 
 Both classes draw from the same token file. A component belongs to one class or
 the other and does not migrate: the hero has no place on the board, and the board's

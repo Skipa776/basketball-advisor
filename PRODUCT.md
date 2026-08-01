@@ -129,9 +129,17 @@ the repository directory. Whether the rename reaches the code is undecided — t
   this previously read "drawn, never photographed", which ruled out binary assets
   entirely. Licensed raster artwork is now permitted on the marketing and auth
   surfaces, under conditions that are the actual commitment:
-  - **No NBA, team, or identifiable player likeness**, in any medium. The two
-    player photographs sitting in `inspiration-resources/` are mood reference and
-    cannot ship.
+  - **Player likeness is permitted where the photographer licensed it**
+    (decided 2026-07-31, reversing the blanket ban above it). A portrait ships
+    only when the photographer released it under a licence allowing reuse and
+    that licence is recorded in `ASSETS.md` — Wikimedia Commons contributors
+    publishing under CC BY-SA are the intended route.
+  - **Commercial stock remains unusable**, and this is not the same question.
+    Getty, iStock and similar license their catalogue; the photographer's
+    copyright is independent of the subject's likeness, so neither a small
+    audience nor private use makes copying lawful. The repository is public.
+    The two player photographs in `inspiration-resources/` are mood reference
+    and cannot ship.
   - Every shipped binary carries source, licence, author, and retrieval date in
     `ASSETS.md`. *Check: row `D-34`.*
   - The SVG `CourtBackdrop` stays as the fallback, so a missing or blocked asset

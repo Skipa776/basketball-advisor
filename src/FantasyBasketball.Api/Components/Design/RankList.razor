@@ -9,6 +9,10 @@
         {
             <li>
                 <span class="rank" data-numeric>@player.Rank</span>
+                @* No portrait set for demo players, so this renders
+                   initials -- which is the state most rows will be in
+                   until a licensed photo set exists. *@
+                <PlayerAvatar Name="@player.Name" Compact="true" />
                 <span class="name">@player.Name</span>
                 <span class="meta">@player.Team · @player.Positions</span>
                 <span class="value" data-numeric>
