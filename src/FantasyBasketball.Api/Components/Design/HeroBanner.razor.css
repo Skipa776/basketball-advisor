@@ -7,7 +7,10 @@
     position: relative;
     display: grid;
     place-items: center;
-    min-height: var(--hero-min-height);
+    /* Was a flat pixel value, which left dead space on a laptop and overflowed a
+       short window. Bounded by the viewport so the composition responds to the
+       screen it is actually read on. */
+    min-height: min(var(--hero-min-height), 88vh);
     padding: var(--space-8) var(--space-6);
     overflow: hidden;
     background-color: var(--color-bg);
@@ -15,8 +18,11 @@
     text-align: center;
 }
 
+/* Above the court floor. The backdrop is decorative and must never win a
+   stacking contest with the thing people came to read. */
 .hero-body {
     position: relative;
+    z-index: 1;
     max-width: var(--content-max);
 }
 
@@ -98,7 +104,8 @@
 }
 
 .chevron {
-    font-size: var(--text-lg);
+    width: var(--space-7);
+    height: var(--space-7);
 }
 
 a:focus-visible {

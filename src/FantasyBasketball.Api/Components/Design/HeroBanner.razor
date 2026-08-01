@@ -20,9 +20,22 @@
        nowhere is a broken promise. *@
     @if (!string.IsNullOrWhiteSpace(ScrollTarget))
     {
+        @* Drawn, not a unicode glyph borrowed from the body font. A text
+           chevron inherits the font's own metrics and optical weight, so it
+           never quite matches the stroke of anything around it. *@
         <a class="scroll-hint" href="@ScrollTarget">
             <span>Scroll to browse</span>
-            <span class="chevron" aria-hidden="true">⌄</span>
+            <svg class="chevron"
+                 viewBox="0 0 24 24"
+                 aria-hidden="true"
+                 focusable="false">
+                <path d="M5 9l7 7 7-7"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round" />
+            </svg>
         </a>
     }
 </section>

@@ -1,9 +1,23 @@
+/* Anchored to the bottom as a floor, not stretched over the whole section.
+   Spanning the full height put the silhouettes behind the platform row, so the
+   no-affiliation line rendered across a figure's chest, and cropped them dead
+   at the section edge -- a hard crop reads as a mistake rather than a choice.
+
+   The mask dissolves them into both edges instead. Depth of field, and it costs
+   one property. */
 .court-backdrop {
     position: absolute;
-    inset: 0;
+    inset-inline: 0;
+    inset-block-end: 0;
     width: 100%;
-    height: 100%;
+    height: 62%;
     pointer-events: none;
+    mask-image: linear-gradient(
+        to bottom,
+        transparent 0%,
+        black 26%,
+        black 72%,
+        transparent 100%);
 }
 
 .court {
