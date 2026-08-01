@@ -148,6 +148,13 @@ green scan is the floor, not the bar.
 # Verification
 
 `dotnet test --filter Api`, inside the full gate. `D-14` and `D-30` need a laid-out
-page and run in `scripts/ui-browser-gate.mjs`. Design review
+page and run in `scripts/ui-browser-gate.mjs`; `D-30` needs `UI_BASE_URL` pointing
+at a running instance, and is skipped without it.
+
+**This matrix stays `partial` for exactly one reason:** `D-30` has no ID-named
+test method, because it cannot have one — it needs layout, and the AngleSharp
+suite never lays a page out. It is not in `row_coverage_exceptions.txt` on
+purpose: that list may only shrink, and adding new work to it defeats the check
+it exists for. Design review
 ([run_design_process](../tasks/run_design_process.md) step 6) runs after these are
 green, not instead of them.

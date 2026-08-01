@@ -83,24 +83,6 @@ main ::deep .submit {
     cursor: pointer;
 }
 
-main ::deep .provider {
-    display: flex;
-    min-height: var(--target-min);
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-4);
-    padding: var(--space-4);
-    border: var(--rule-width) solid var(--color-border-strong);
-    border-radius: var(--radius-sm);
-    color: var(--color-text);
-    font-size: var(--text-sm);
-    text-decoration: none;
-}
-
-main ::deep .provider-mark {
-    font-weight: 600;
-}
-
 main ::deep .secondary a {
     color: var(--color-accent-ink);
     font-size: var(--text-sm);
@@ -124,9 +106,5 @@ main ::deep a:focus-visible {
     main ::deep .submit:hover {
         background: var(--color-accent-ink);
         color: var(--color-bg);
-    }
-
-    main ::deep .provider:hover {
-        background: var(--color-surface-raised);
     }
 }

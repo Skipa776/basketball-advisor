@@ -253,6 +253,78 @@ try {
 
     const baseUrl = process.env.UI_BASE_URL;
     const leagueId = process.env.UI_LEAGUE_ID;
+
+    // D-30: no horizontal overflow at 390 CSS px, on every route a signed-out
+    // visitor can reach. Needs a laid-out page, which is why it lives here
+    // rather than in the AngleSharp suite -- that never runs layout at all.
+    //
+    // Decorative backdrops are allowed past the viewport by name: CourtBackdrop
+    // is a full-bleed SVG and its figures are meant to bleed. Content and
+    // controls are not, and the document itself must never scroll sideways.
+    if (baseUrl) {
+        const narrowRoutes = ["/", "/account/login", "/account/register"];
+        for (const route of narrowRoutes) {
+            await command(
+                "Emulation.setDeviceMetricsOverride",
+                { width: 390, height: 844, deviceScaleFactor: 1, mobile: true },
+                sessionId,
+            );
+            await command(
+                "Page.navigate",
+                { url: new URL(route, baseUrl).toString() },
+                sessionId,
+            );
+            await waitFor("document.readyState === 'complete'", sessionId);
+            await new Promise(resolve => setTimeout(resolve, 750));
+
+            const overflow = await evaluate(
+                `(() => {
+                    const viewport = document.documentElement.clientWidth;
+                    const decorative = new Set(["svg", "g", "path", "circle", "line", "rect", "polygon"]);
+                    const offenders = [];
+                    for (const element of document.querySelectorAll("*")) {
+                        if (decorative.has(element.tagName.toLowerCase())) continue;
+                        if (element.closest("[data-decorative], .court-backdrop")) continue;
+                        const box = element.getBoundingClientRect();
+                        if (box.width === 0 && box.height === 0) continue;
+                        if (box.right > viewport + 1 || box.left < -1) {
+                            offenders.push(
+                                element.tagName.toLowerCase()
+                                + "." + (element.className || "").toString().trim().split(/\\s+/)[0]
+                                + " right=" + Math.round(box.right),
+                            );
+                        }
+                    }
+                    return JSON.stringify({
+                        viewport,
+                        documentScrollWidth: document.documentElement.scrollWidth,
+                        offenders: offenders.slice(0, 8),
+                    });
+                })()`,
+                sessionId,
+            );
+
+            const result = JSON.parse(overflow);
+            if (result.documentScrollWidth > result.viewport + 1) {
+                throw new Error(
+                    `D-30 ${route}: the document scrolls sideways at 390 CSS px `
+                    + `(scrollWidth ${result.documentScrollWidth} > viewport ${result.viewport}).`,
+                );
+            }
+            if (result.offenders.length > 0) {
+                throw new Error(
+                    `D-30 ${route}: content past the viewport at 390 CSS px: `
+                    + result.offenders.join(", "),
+                );
+            }
+            process.stdout.write(
+                `D-30 ${route}: no horizontal overflow at 390 CSS px\n`,
+            );
+        }
+
+        await command("Emulation.clearDeviceMetricsOverride", {}, sessionId);
+    }
+
     if (baseUrl && leagueId) {
         await command(
             "Page.navigate",

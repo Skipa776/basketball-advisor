@@ -1,3 +1,13 @@
+/* EmptyLayout declares `* { box-sizing: border-box }`, but scoped CSS compiles
+   that to `*[b-xxxxx]` and it never reaches this component's markup. Without
+   it, .auth-card's `width: min(26rem, 100%)` sized the CONTENT box and the
+   padding and border pushed the card past a phone-width viewport -- clipped
+   on a phone, which row D-30 caught the moment it ran. */
+.auth-stage,
+.auth-stage * {
+    box-sizing: border-box;
+}
+
 .auth-stage {
     position: relative;
     display: grid;
