@@ -56,12 +56,35 @@ li + li {
     text-align: end;
 }
 
+/* Four children into three columns put the value on a third line of its own,
+   orphaned under the meta, and every entry became three lines tall. Two rows
+   instead: rank and name lead, meta sits under the name, and the value spans
+   both rows hard right where it stays comparable down the column -- which is
+   the only reason to render it. */
 @media (max-width: 45rem) {
     li {
-        grid-template-columns: var(--space-8) 1fr auto;
+        grid-template-columns: var(--space-8) minmax(0, 1fr) auto;
+        align-items: center;
+        column-gap: var(--space-5);
+        row-gap: var(--space-1);
+    }
+
+    .rank {
+        grid-row: 1 / span 2;
+    }
+
+    .name {
+        grid-column: 2;
+        grid-row: 1;
     }
 
     .meta {
-        grid-column: 2 / -1;
+        grid-column: 2;
+        grid-row: 2;
+    }
+
+    .value {
+        grid-column: 3;
+        grid-row: 1 / span 2;
     }
 }
