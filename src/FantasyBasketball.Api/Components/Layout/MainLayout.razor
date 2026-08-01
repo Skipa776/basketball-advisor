@@ -12,13 +12,38 @@
                     <span class="wordmark-mark" aria-hidden="true">FB</span>
                     <span>Fastbreak</span>
                 </a>
+                @* Ten routes in one flat list is a directory, not navigation.
+                   Grouped by what the user came to do -- decide something, look
+                   after the league, tend the data -- so the section they want is
+                   found by scanning three labels instead of ten links. One nav
+                   with one label: the groups are headings inside it, not four
+                   separate landmarks a screen reader has to walk past. *@
                 <nav aria-label="Primary navigation">
-                    <NavLink href="/" Match="NavLinkMatch.All">Dashboard</NavLink>
-                    <NavLink href="/league">My League</NavLink>
-                    <NavLink href="/players">Players</NavLink>
-                    <NavLink href="/draft">Draft Assistant</NavLink>
-                    <NavLink href="/context-review">Context Review</NavLink>
-                    <NavLink href="/data-sources">Data Sources</NavLink>
+                    <p class="nav-group" id="nav-decide">Decide</p>
+                    <ul aria-labelledby="nav-decide">
+                        <li><NavLink href="/draft">Draft Room</NavLink></li>
+                        <li><NavLink href="/trade">Trade Analyzer</NavLink></li>
+                        <li><NavLink href="/free-agents">Free Agents</NavLink></li>
+                    </ul>
+
+                    <p class="nav-group" id="nav-league">League</p>
+                    <ul aria-labelledby="nav-league">
+                        <li><NavLink href="/" Match="NavLinkMatch.All">Dashboard</NavLink></li>
+                        <li><NavLink href="/leagues">My Leagues</NavLink></li>
+                        <li><NavLink href="/league">League Setup</NavLink></li>
+                        <li><NavLink href="/leaderboard">Leaderboard</NavLink></li>
+                        <li><NavLink href="/players">Players</NavLink></li>
+                    </ul>
+
+                    <p class="nav-group" id="nav-data">Data</p>
+                    <ul aria-labelledby="nav-data">
+                        <li><NavLink href="/context-review">Context Review</NavLink></li>
+                        <li><NavLink href="/data-sources">Data Sources</NavLink></li>
+                        @* /welcome had no inbound link anywhere in the app: the
+                           route sweep rendered it, every test passed, and no
+                           user could reach it. Row D-28. *@
+                        <li><NavLink href="/welcome">Setup Guide</NavLink></li>
+                    </ul>
                 </nav>
                 <div class="sidebar-footer">
                     <ThemeToggle />

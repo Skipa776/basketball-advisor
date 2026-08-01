@@ -265,7 +265,9 @@ sample content next.
 - **Live regions announce the pick and the top-recommendation change only.**
   *Check: row D-16.*
 - **Every page has a styled empty and error state.** *Check: row D-17 renders each
-  page with no data.*
+  page with no data. `NotBuiltState` satisfies it for a surface whose capability
+  does not exist — there is no data state to reach, and the whole page is a
+  styled account of why. Row D-33 stops that being a loophole.*
 - **Automated a11y scan is clean on every page.** *Check: row D-18.*
 - **Design components are presentational.** *Check: row D-19 asserts no type under
   `Components/Design` takes a service or repository dependency.*

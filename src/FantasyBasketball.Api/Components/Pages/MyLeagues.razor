@@ -1,0 +1,102 @@
+@page "/leagues"
+@rendermode InteractiveServer
+@inject LeagueService Leagues
+
+<PageTitle>My Leagues</PageTitle>
+<PageHeader Title="My Leagues"
+            Description="Every league on this instance that belongs to you. Open one to work against its exact rules.">
+    <Actions>
+        <a class="button-link primary" href="/league">Create a league</a>
+    </Actions>
+</PageHeader>
+
+@if (error is not null)
+{
+    <ErrorState Id="leagues-error"
+                Message="@error"
+                Recovery="Reload the page. If it keeps failing, the database may not be reachable — check Data Sources." />
+}
+else if (leagues is null)
+{
+    <SkeletonRows Rows="3" Label="Loading your leagues" />
+}
+else if (leagues.Count == 0)
+{
+    <EmptyState Title="No leagues yet"
+                Description="A league is the set of rules every projection and recommendation is computed under. Nothing else in the app works without one.">
+        <Action>
+            <a class="button-link primary" href="/league">Create your first league</a>
+        </Action>
+    </EmptyState>
+}
+else
+{
+    <ul class="league-grid">
+        @foreach (var league in leagues)
+        {
+            <li>
+                <article class="panel" aria-labelledby="@($"league-{league.Id}")">
+                    <h2 id="@($"league-{league.Id}")">@league.Name</h2>
+                    <dl class="stat-list">
+                        <div>
+                            <dt>Scoring</dt>
+                            <dd>@LeagueTypeLabel(league.Type)</dd>
+                        </div>
+                        <div>
+                            <dt>Teams</dt>
+                            <dd data-numeric>@league.TeamCount</dd>
+                        </div>
+                        <div>
+                            <dt>Lineups</dt>
+                            <dd>@CadenceLabel(league.Cadence)</dd>
+                        </div>
+                        <div>
+                            <dt>Roster slots</dt>
+                            <dd data-numeric>@league.RosterSlots.Count</dd>
+                        </div>
+                        <div>
+                            <dt>@(league.Type == LeagueType.Points ? "Scoring rules" : "Categories")</dt>
+                            <dd data-numeric>
+                                @(league.Type == LeagueType.Points
+                                    ? league.ScoringRules.Count
+                                    : league.Categories.Count)
+                            </dd>
+                        </div>
+                    </dl>
+                    @* Platform, current rank, and last-sync time are the fields a
+                       league card usually carries. None of them exist in this
+                       domain -- there is no provider connection and no standings
+                       -- so the card omits them rather than showing a dash that
+                       implies the data is merely missing. *@
+                    <div class="action-grid">
+                        <a class="button-link primary" href="@($"/players?leagueId={league.Id}")">Open players</a>
+                        <a class="button-link" href="@($"/draft?leagueId={league.Id}")">Draft room</a>
+                    </div>
+                </article>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private IReadOnlyList<FantasyLeague>? leagues;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            leagues = await Leagues.ListAsync(CancellationToken.None);
+        }
+        catch (Exception)
+        {
+            error = "Your leagues could not be loaded.";
+        }
+    }
+
+    private static string LeagueTypeLabel(LeagueType type) =>
+        type == LeagueType.Points ? "Points" : "Categories";
+
+    private static string CadenceLabel(LineupCadence cadence) =>
+        cadence == LineupCadence.Daily ? "Daily" : "Weekly";
+}

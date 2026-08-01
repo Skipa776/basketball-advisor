@@ -52,7 +52,7 @@ worth pinning.
 | `D-12` | Every evidence item | Renders an icon **and** a text label — never colour alone | ✅ |
 | `D-15` | Board row stylesheet and the scroll-anchor script | No row transitions a geometry property and the correction never animates — re-rank is instant by construction, so there is no motion left to reduce | ✅ |
 | `D-16` | Live regions on the draft board | Announce the pick made and a top-recommendation change; **not** every re-ranked row | ✅ |
-| `D-17` | Every page rendered with no data | A styled first-run surface — `EmptyState` or `AuthPanel`. Pages populated in every state are exempt **by name**, never by omission | ✅ |
+| `D-17` | Every page rendered with no data | A styled first-run surface — `EmptyState`, `AuthPanel`, or `NotBuiltState`. Pages populated in every state are exempt **by name**, never by omission | ✅ |
 | `D-18` | Automated a11y scan, every page, both themes | Zero violations (`accessibility_violations_allowed = 0`) | ✅ |
 | `D-22` | Every pair **inside `.on-dark`**, plus the island's own token values | Meets its floor against the island's surfaces, and matches the dark set exactly | ✅ |
 | `D-24` | Carousel script and markup | Reduced-motion guard, operable pause, hover and focus suspension, and slides that do not announce themselves (WCAG 2.2.2) | ✅ |
@@ -60,7 +60,8 @@ worth pinning.
 
 `D-22` exists because `.on-dark` renders the same fill in both themes, so nothing
 about the ambient theme predicts what is legible inside it. The pair that fails
-without it is the light rank teal on the island: **2.86:1**. The row also asserts
+without it is the light rank teal on the island: **2.66:1** under the hardwood
+palette (it was 2.86 before). The row also asserts
 the island equals the dark set, because a light set pasted there would satisfy
 every contrast pair while rendering a panel indistinguishable from the page.
 

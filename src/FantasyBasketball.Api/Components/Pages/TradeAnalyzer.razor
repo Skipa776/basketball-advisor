@@ -1,0 +1,34 @@
+@page "/trade"
+
+@* A designed surface over a capability that does not exist. Row D-33: name the
+   requirement, render no numbers. See web_ui_blazor.md, "Designed shells for
+   capabilities that do not exist". *@
+
+<PageTitle>Trade Analyzer</PageTitle>
+<PageHeader Title="Trade Analyzer"
+            Description="What a proposed trade does to your roster — before and after, immediate and rest-of-season." />
+
+<NotBuiltState Title="The trade engine is not built yet"
+               Description="This will compare your roster before and after a proposed trade: value change including replacement backfill and slot displacement in a points league, and the change in category profile and expected matchup wins in a category league. It reports what the trade does to your team."
+               Requirement="R15 — Trade analyzer, epic E08">
+    <Blocked>
+        <li>No trade engine exists. <code>components/trade_analyzer.md</code> is specified and unimplemented.</li>
+        <li>Replacement-level backfill and slot displacement come from the streaming advisor's lineup optimizer, which is also unbuilt (R14).</li>
+        <li>Expected matchup wins need the category analyzer (R12).</li>
+    </Blocked>
+</NotBuiltState>
+
+@* Worth stating on the surface itself rather than only in the spec: this
+   product has permanently declined to judge whether a trade is fair to the
+   other manager. Somebody will ask for that feature the first time they open
+   this page, and the answer should be here when they do. *@
+<section class="panel" aria-labelledby="trade-scope">
+    <h2 id="trade-scope">What this will not do</h2>
+    <p>
+        It will not tell you whether a trade is fair to the other manager. That
+        needs a model of their roster needs, which does not exist here and would
+        not be honest to guess at — a verdict computed without one is
+        authoritative-looking noise. This is a permanent scope decision, not a
+        missing feature.
+    </p>
+</section>

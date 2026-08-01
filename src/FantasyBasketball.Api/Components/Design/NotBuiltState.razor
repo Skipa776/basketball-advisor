@@ -1,0 +1,65 @@
+@* The surface exists so the navigation is walkable and the layout can be
+   judged; the capability behind it does not exist yet. Row D-33 makes that
+   honest mechanically: this component must name what it is waiting on, and the
+   page rendering it must show no numbers at all.
+
+   "Coming soon" is deliberately not available here. It is a marketing sentence
+   that tells a tester nothing. Requirement is required, and it goes in the
+   product's own vocabulary -- R14, R15, a roadmap entry -- so the reader can go
+   and read the thing that is missing. *@
+<section class="not-built" aria-labelledby="@HeadingId">
+    <div class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M3 20h18M6 20V10l6-5 6 5v10"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round" />
+            <path d="M10 20v-5h4v5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round" />
+        </svg>
+    </div>
+    <div>
+        <h2 id="@HeadingId">@Title</h2>
+        <p class="explain">@Description</p>
+        <p class="requirement">
+            <span class="requirement-label">Waiting on</span>
+            <span class="requirement-value">@Requirement</span>
+        </p>
+        @if (Blocked is not null)
+        {
+            <div class="blocked">
+                <h3 id="@BlockedId">What is missing</h3>
+                <ul aria-labelledby="@BlockedId">@Blocked</ul>
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    private readonly string HeadingId = $"not-built-{Guid.NewGuid():N}";
+    private readonly string BlockedId = $"not-built-blocked-{Guid.NewGuid():N}";
+
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    /// <summary>What this surface will do once the capability behind it exists.</summary>
+    [Parameter, EditorRequired]
+    public string Description { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The requirement or roadmap entry this waits on, named so a reader can go
+    /// and read it. Row D-33 asserts it is present and non-empty.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public string Requirement { get; set; } = string.Empty;
+
+    /// <summary>The specific data or engine that does not exist yet.</summary>
+    [Parameter]
+    public RenderFragment? Blocked { get; set; }
+}

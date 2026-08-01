@@ -94,6 +94,33 @@ nav {
     gap: var(--space-2);
 }
 
+nav ul {
+    display: grid;
+    gap: var(--space-1);
+    margin: 0 0 var(--space-6);
+    padding: 0;
+    list-style: none;
+}
+
+nav ul:last-child {
+    margin-block-end: 0;
+}
+
+/* More space above the label than below it: the gap belongs to the group the
+   label introduces, not to the one it just ended. */
+.nav-group {
+    margin: var(--space-6) 0 var(--space-3);
+    padding-inline: var(--space-5);
+    color: var(--color-text-muted);
+    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.nav-group:first-of-type {
+    margin-block-start: 0;
+}
+
 /* The active marker was a thick coloured border-inline-start, which is the
    decoration habit rather than a decision. Weight, fill, and the accent do the
    same job without a rail bolted to the side of every row. */
@@ -261,6 +288,18 @@ main ::deep .draft-workspace {
     grid-template-columns: minmax(16rem, 0.7fr) minmax(28rem, 2fr);
     align-items: start;
     gap: var(--space-7);
+}
+
+/* Pages compose inventory components and define no styles of their own
+   (row D-20), so shared page-level layouts live here beside .instrument-grid
+   rather than in the pages that use them. */
+main ::deep .league-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+    gap: var(--space-6);
+    margin: 0;
+    padding: 0;
+    list-style: none;
 }
 
 main ::deep .instrument-grid {

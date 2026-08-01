@@ -397,7 +397,11 @@ public sealed partial class UiDesignTests
         // styled first-run surface for the auth pages, which previously
         // satisfied this row by wrapping a login form in an EmptyState -- an
         // abuse of that component that happened to pass a substring scan.
-        string[] firstRunSurfaces = ["<EmptyState", "<AuthPanel"];
+        // NotBuiltState joins them for the same reason: a page whose capability
+        // does not exist has no data state to reach, and its whole surface is a
+        // styled account of why. Row D-33 is what stops that being a loophole --
+        // it makes the shell name its requirement and render no numbers.
+        string[] firstRunSurfaces = ["<EmptyState", "<AuthPanel", "<NotBuiltState"];
 
         // Named, never silent. A page here renders content in every state, so
         // it has no empty state to style; adding one would be decoration for a
@@ -417,8 +421,8 @@ public sealed partial class UiDesignTests
             .ToArray();
 
         offenders.ShouldBeEmpty(
-            "every first-run page needs an inventory EmptyState or AuthPanel: "
-            + string.Join(", ", offenders));
+            "every first-run page needs an inventory EmptyState, AuthPanel, or "
+            + "NotBuiltState: " + string.Join(", ", offenders));
     }
 
     [Fact]
