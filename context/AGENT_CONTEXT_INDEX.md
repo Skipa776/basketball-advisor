@@ -28,7 +28,7 @@ Index rows route; concepts own. Nothing here restates a concept's content.
 | Add or edit a concept file | `codebase_okf/okf_schema.md` |
 | Know what is in scope at all | `codebase_okf/tasks/post_mvp_roadmap.md` — scoped, deferred, and permanently refused |
 
-## Post-MVP (R11–R22) — build order and prompts in `docs/epics/`
+## Post-MVP (R11–R23) — build order and prompts in `docs/epics/`
 
 | I am about to… | Read first |
 |---|---|
@@ -48,6 +48,9 @@ Index rows route; concepts own. Nothing here restates a concept's content.
 | Add an entity that belongs to a user | `codebase_okf/contracts/auth_tenancy_contract.md`, `codebase_okf/safety/tenancy_policy.md` — **the filter and the sweep row are not optional** |
 | Add or change an endpoint after auth lands | `codebase_okf/contracts/auth_tenancy_contract.md` — every endpoint authorizes |
 | Style anything, or add a component | `codebase_okf/contracts/design_system_contract.md`, `codebase_okf/components/design_system.md` |
+| Add a route, link, CTA, or navigation entry | `codebase_okf/components/web_ui_blazor.md` — "The path between pages"; a route with no inbound link does not ship |
+| Work on how the app looks or feels to use | `PROJECT_REQUIREMENTS.md` R23, `docs/epics/E13-interface-and-experience.md` — **the current objective** |
+| Reach for a CSS framework or component library | `codebase_okf/assumptions.md` — refused twice, with the arithmetic |
 | Run the design process or produce `DESIGN.md` | `codebase_okf/tasks/run_design_process.md` — steps 1–3 need a human |
 | Build a chart | Load the `dataviz` skill, then `codebase_okf/tasks/run_design_process.md` step 5 |
 | Change a shipping default, compose file, or Dockerfile | `codebase_okf/safety/self_host_hardening.md` |

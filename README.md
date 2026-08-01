@@ -112,12 +112,12 @@ without asking anyone.
 |---|---|
 | `AGENTS.md` | Agent identity, read order, safety boundaries |
 | `stack_config.toml` | Pins, forbidden packages and patterns, gate minimums — machine-readable |
-| `PROJECT_REQUIREMENTS.md` | R1–R22 with acceptance criteria |
+| `PROJECT_REQUIREMENTS.md` | R1–R23 with acceptance criteria |
 | `ARCHITECTURE.md` | File tree, type shapes, API routes |
 | `AGENT_INSTRUCTIONS.md` | The numbered build sequence |
 | `context/codebase_okf/` | The knowledge base: contracts, components, safety policies, task playbooks, test matrices |
 | `context/AGENT_CONTEXT_INDEX.md` | "I am about to change X" → read these concepts first |
-| `docs/epics/` | Twelve phased builds, each with a paste-ready prompt |
+| `docs/epics/` | Thirteen phased builds, each with a paste-ready prompt |
 | `docs/design/` | The original design document |
 
 Two rules keep it trustworthy: every canonical value (stat key, formula, threshold,

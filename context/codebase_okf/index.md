@@ -18,7 +18,7 @@ Navigate-by-concern entry point. Routing by *task* is in
 and names what each concept owns.
 
 Requirements are in [`PROJECT_REQUIREMENTS.md`](../../PROJECT_REQUIREMENTS.md):
-**R1–R10 are the MVP**, **R11–R22** are the post-MVP epics. Build order and
+**R1–R10 are the MVP**, **R11–R23** are the post-MVP epics. Build order and
 paste-ready prompts are in `docs/epics/`.
 
 # Contracts — canonical values live here

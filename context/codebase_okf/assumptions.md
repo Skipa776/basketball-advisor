@@ -7,7 +7,7 @@ source_paths: []
 test_paths: []
 depends_on: [safety/scraping_policy.md, tasks/post_mvp_roadmap.md]
 status: planned
-last_updated: 2026-07-29
+last_updated: 2026-07-31
 owners: [engineering]
 ---
 
@@ -555,6 +555,43 @@ is the ordering a running host actually shuts down from. The startup race is
 untested and unexplained. If a future change makes the host log on shutdown
 again, start here rather than assuming `W-04` covers it.
 
+# The objective moved to the interface — 2026-07-31
+
+R23 was added and epic E13 scoped, and the OKF now points at them:
+`AGENTS.md` carries a current-objective section, the epics README names E13, and
+`web_ui_blazor.md` and `test_matrix_ui_design.md` both dropped from
+`implemented` to `partial` because rows `D-28`–`D-32` exist and do not pass yet.
+
+**Why a new requirement rather than more R19.** R19 built a vocabulary and a
+gate, and both are green. The four defects that shipped anyway — an orphan
+`/welcome`, a landing CTA that dead-ends on closed registration, a form asking
+for an ID no screen prints, and a second front page for a differently-named
+product — are none of them component bugs. Every page is individually correct.
+The *path* between them was owned by nothing, so nothing tested it. R23 gives the
+path an owner (`web_ui_blazor.md`, which already owns the routes) and five rows.
+
+**A CSS framework was considered and refused, again.** The question was raised
+directly — add Bootstrap if that is what a good front end takes. It is not, and
+the arithmetic is not close:
+
+- `D-10` scans `.razor` and `.razor.css` for hex colours, raw `px`, and `ms`
+  literals. Bootstrap ships thousands. The row fails on import, and there is no
+  way to make it pass except by exempting the framework, which is the same thing
+  as deleting the row.
+- `D-11` computes contrast from the token file. A second palette it cannot see
+  makes a green a11y gate a false statement, in both themes and inside `.on-dark`.
+- `D-20` requires pages to compose inventory components and define no styles of
+  their own. Utility classes in markup are page-level styling with extra steps.
+- The token layer already does more than Bootstrap would: two accent tokens held
+  to different contrast floors, an always-dark island, a display face barred from
+  numeric selectors. A framework would replace a system that knows this product
+  with one that knows none of it.
+
+The defects the objective is about — orphan routes, dead-end CTAs, undiscoverable
+identifiers, two front doors — are all path defects. **No CSS framework fixes a
+path defect.** The refusal stands where it already lived, in
+[design_system_contract](contracts/design_system_contract.md).
+
 # Revisit triggers
 
 - The user's real league settings differ from the seed league → update
@@ -576,3 +613,8 @@ again, start here rather than assuming `W-04` covers it.
   it. If it did not, the sweep is the bug, not the entity.
 - **A new page or route ships** → walk it in a browser before calling the epic done.
   Four defects survived a green suite because nobody made the second request.
+- **Rows `D-28`–`D-32` go green** → `web_ui_blazor.md` and
+  `test_matrix_ui_design.md` return to `implemented`, in that commit.
+- **The CSS-framework question is raised a third time** → the answer changes only
+  if `D-10` and `D-11` are being retired, not if the front end merely looks
+  unfinished. Read the section above before re-arguing it.

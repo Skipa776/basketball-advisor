@@ -44,6 +44,11 @@ design doc predates the decisions in `stack_config.toml`.
   affected concepts change in that same commit.
 - **No placeholder files.** If a module cannot be finished, do not create it. An
   empty file with a TODO is worse than an absent one — it reads as done.
+  *Narrowed 2026-07-31 for UI only:* a **finished** surface that renders
+  `NotBuiltState` naming the requirement it waits on is a documented absence, not
+  a placeholder, and is gated by row `D-33`. See
+  `context/codebase_okf/components/web_ui_blazor.md`. Nothing about backend
+  modules changes: a stub service or an empty class file is still forbidden.
 - **Record what you assumed.** Anything you had to decide that the spec did not
   cover goes in `context/codebase_okf/assumptions.md` with the reasoning.
 
@@ -67,7 +72,20 @@ yourself.
 
 ## Boundaries of scope
 
-Build the MVP defined in `PROJECT_REQUIREMENTS.md`. Post-MVP features are listed
-in `context/codebase_okf/tasks/post_mvp_roadmap.md` — do not start them, and do
-not add abstractions in anticipation of them. One implementation means one
-class, not an interface plus a factory.
+`PROJECT_REQUIREMENTS.md` R1–R23 is the whole product. Anything outside it is
+listed in `context/codebase_okf/tasks/post_mvp_roadmap.md` as deferred or
+refused — do not start it, and do not add abstractions in anticipation of it.
+One implementation means one class, not an interface plus a factory.
+
+## Current objective — R23, epic E13
+
+**The interface, not the engine.** The MVP and the design system ship; the work
+in front of you is the path a person takes through them —
+[`docs/epics/E13-interface-and-experience.md`](docs/epics/E13-interface-and-experience.md),
+gated by rows `D-28`–`D-32`.
+
+While E13 is the objective, prefer an interaction fix over a capability. A new
+engine, import, or number belongs to another epic and is out of scope here.
+E13 changes nothing about what the app can compute, and its boundaries —
+no CSS framework, no component library, the draft board's density and
+interaction budget unchanged — are not negotiable inside it.

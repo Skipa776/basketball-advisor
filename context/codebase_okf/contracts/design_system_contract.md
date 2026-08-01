@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Api/Components/Design, DESIGN.md]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Api]
 depends_on: [recommendation_evidence_contract.md, ../components/web_ui_blazor.md]
 status: implemented
-last_updated: 2026-07-30
+last_updated: 2026-07-31
 owners: [engineering]
 risk_level: medium
 edit_policy: stable_contract
@@ -48,9 +48,17 @@ One source, `Components/Design/Tokens.razor.css`, as CSS custom properties.
 --focus-ring
 --font-sans / --font-mono / --font-display
 --color-rule / --color-border-strong
+--color-surface-wood / --color-court-line       # decorative shell field, R23
 --board-row-height / --target-min / --content-max
 --hero-min-height / --carousel-interval
+--sidebar-width / --utility-bar-height          # the app shell, R23
 ```
+
+**`--color-surface-wood` and `--color-court-line` are decorative by
+construction.** They carry the hardwood field behind the shell and the court
+geometry drawn on it, and **no text or interactive boundary may land on either**.
+That is why they are named in `decorativeOnly` rather than in a contrast pair —
+the moment a label sits on the wood, it needs a pair and a measured ratio.
 
 **Two accent tokens, not one.** `--color-accent` is held to 3:1 and is for fills,
 CTAs and display type; `--color-accent-ink` is held to 4.5:1 and is the only one
@@ -68,10 +76,19 @@ override the choice of which persists. Not a preference: a live draft happens at
 night, and a self-hosted tool with one hardcoded theme will be used in the wrong
 one.
 
-**No CSS framework.** Six pages of scoped Blazor CSS over a token file does not
+**No CSS framework.** Ten pages of scoped Blazor CSS over a token file does not
 justify Tailwind or Bootstrap, and either would put a second styling vocabulary
 next to the tokens. Charts use the `dataviz` skill's guidance, with series colours
 drawn from these tokens rather than a chart library's defaults.
+
+Re-raised and refused again 2026-07-31. The arithmetic, not the taste: Bootstrap
+ships thousands of hex and `px` literals, so row `D-10` fails the moment it is
+imported, and there is no way to pass it except by exempting the framework —
+which is deleting the row. Row `D-11` computes contrast **from this token file**,
+so a second palette it cannot see turns a green accessibility gate into a false
+statement. Row `D-20` forbids page-level styling, and utility classes in markup
+are page-level styling with extra steps. Full reasoning in
+[assumptions](../assumptions.md).
 
 # Two surface classes
 
@@ -80,11 +97,12 @@ budget:
 
 | | Marketing and auth | The instrument |
 |---|---|---|
-| Pages | landing, sign in, sign up, `/welcome` | board, players, league, review, sources |
+| Pages | landing, sign in, sign up, `/welcome` | board, players, league, leagues, leaderboard, trade, free agents, review, sources |
 | Read | once, while deciding | repeatedly, under a clock |
 | Type | display face, hero sizes | system stacks, `--text-sm` rows |
 | Accent | used freely | **recommended pick only** (`D-23`) |
 | Motion | one paused carousel (`D-24`) | none |
+| Imagery | licensed raster permitted, `ASSETS.md` (`D-34`) | **none** — no photography on a working surface |
 
 Both classes draw from the same token file. A component belongs to one class or
 the other and does not migrate: the hero has no place on the board, and the board's
@@ -175,6 +193,29 @@ aspiration.
 `DraftBoard`, `PickEntry`, `SourceHealthCard`, `EmptyState`, `ErrorState`,
 `PageHeader`, `ThemeToggle`.
 
+Added by R23 — the shell and the shared instrument language:
+
+`AppSidebar`, `UtilityBar`, `LeagueSelector`, `NotBuiltState`,
+`SegmentedControl`, `PlayerAvatar`, `SearchField`, `FilterGroup`,
+`SkeletonRows`.
+
+`NotBuiltState` is the one that needs justifying. It renders a designed surface
+for a capability that does not exist and **names the requirement or roadmap entry
+it waits on**, which is what separates it from a placeholder. It is a component
+rather than a paragraph for the same reason `DemoDataBadge` is: the sentence that
+admits a thing is not built cannot be forgotten by whoever lays out the page
+around it. Row `D-33` enforces both halves — the naming, and the absence of
+numbers.
+
+`PlayerAvatar` renders initials over a CSS-generated fill. **It takes no image
+URL.** No player photography is licensed, the product commits to never using an
+identifiable likeness, and a component with an optional `src` invites someone to
+pass one.
+
+`SkeletonRows` renders at `--board-row-height` exactly, so the loaded state
+occupies the same geometry as the loading state and nothing shifts on arrival —
+the same layout-stability concern as `D-14`, one step earlier in the lifecycle.
+
 Marketing and auth class: `SiteHeader`, `SiteFooter`, `HeroBanner`,
 `CourtBackdrop`, `PlatformRow`, `RiserCarousel`, `RankList`, `NewsGrid`,
 `AuthPanel`, `OnboardingStepper`, `DemoDataBadge`.
@@ -235,6 +276,10 @@ sample content next.
 - **Sample content is opt-in and labelled fictional.** *Check: row D-26 asserts
   it is absent with the flag off and carries its label with the flag on.*
 - **Numbers never render in the display face.** *Check: row D-27.*
+- **A surface with no backing capability names what it waits on and shows no
+  numbers.** *Check: row D-33.*
+- **Every shipped binary is attributed.** *Check: row D-34 pairs `wwwroot/img`
+  against `ASSETS.md`.*
 
 # Change procedure
 
@@ -246,4 +291,4 @@ does not touch this file.
 # Verification
 
 [test_matrix_ui_design](../tests/test_matrix_ui_design.md), rows D-10 through
-D-27.
+D-34.

@@ -17,7 +17,7 @@ Owns the boundary of the project. Everything that was deferred at MVP has now
 either been **scoped as an epic** with full concepts and a build prompt, or is
 listed below as still-deferred or permanently out of scope.
 
-# Now scoped — R11–R22
+# Now scoped — R11–R23
 
 Requirements: [`PROJECT_REQUIREMENTS.md`](../../../PROJECT_REQUIREMENTS.md).
 Build prompts and the dependency graph: `docs/epics/`.
@@ -34,6 +34,7 @@ Build prompts and the dependency graph: `docs/epics/`.
 | Weight calibration / accuracy | R18 — [backtest_contract](../contracts/backtest_contract.md) |
 | Auth | R20 — [auth_tenancy_contract](../contracts/auth_tenancy_contract.md) |
 | Deployment | R21 — [distribution_and_operations](../components/distribution_and_operations.md) |
+| Interface quality and the path between pages | R23 — [web_ui_blazor](../components/web_ui_blazor.md) — **current objective** |
 
 The `/boxscores/` constraint that blocked rolling windows is resolved and owned by
 [boxscore_importer](../components/boxscore_importer.md): `*/gamelog/` is
@@ -57,6 +58,18 @@ specifying code nobody is about to write.
 - **Natural-language roster Q&A.** Considered and declined at scoping: the answer
   path would have to be grounded strictly in engine output, and the explainability
   guarantee is easier to keep with structured evidence than with generated prose.
+- **League standings and opponent rosters.** The domain models *your* league's
+  rules and *your* roster. There are no opponent teams, no head-to-head matchups,
+  no weekly results, and therefore no standings to rank. Every requirement in
+  R1–R23 is about deciding, not about tracking a season. Named here because the
+  Leaderboard surface exists as a designed shell (row `D-33`) and has to point at
+  something real when it says what is missing.
+
+  **This is not the cross-tenant aggregate refused below.** The other managers in
+  a fantasy league are not users of this instance; their teams would be imported
+  data hanging off the owner's own league record, isolated by the same filter as
+  everything else. The two look similar in a sentence and are different in the
+  schema.
 
 # Permanently out of scope
 
@@ -83,5 +96,5 @@ Not "later" — decided against.
 # Verification
 
 Nothing to verify — this concept exists so scope is written down rather than
-remembered. A feature request that is not in R1–R22 and not on the deferred list
+remembered. A feature request that is not in R1–R23 and not on the deferred list
 above is a scope change, and it gets discussed before it gets built.

@@ -1,12 +1,13 @@
 # Epics
 
-Twelve phased builds from the current state to a publishable, self-hostable
+Thirteen phased builds from the current state to a publishable, self-hostable
 product. Each has a paste-ready prompt, its own concepts, its own required test
 rows, and an exit gate. **Each lands independently green** — you can stop between
 any two.
 
-Current state: build steps 1–4 are done (skeleton, gates, stat vocabulary, scoring
-engines, persistence started). `AGENT_INSTRUCTIONS.md` step 5 is where E01 begins.
+**Current objective: [E13](E13-interface-and-experience.md).** The engines answer
+the question; E13 is whether a person can get to the answer and want to stay. It
+is the only epic that adds no capability.
 
 ## Order and dependencies
 
@@ -22,11 +23,13 @@ graph TD
     E04 --> E10[E10 · LLM context proposer]
     E07 --> E08[E08 · Streaming + trades]
     E06 --> E11[E11 · Back-test + calibration]
+    E05 --> E13[E13 · Interface + experience<br/><b>current objective</b>]
     E05 --> E12[E12 · Distribution + release<br/><b>publishable</b>]
     E08 --> E12
     E09 --> E12
     E10 --> E12
     E11 --> E12
+    E13 --> E12
 ```
 
 | # | Epic | Requirements | Depends on |
@@ -42,7 +45,8 @@ graph TD
 | E09 | Provider integrations | R16 | E04 |
 | E10 | LLM context proposer | R17 | E04 |
 | E11 | Back-test and calibration | R18 | E06 |
-| E12 | Distribution, observability, release — **publishable** | R21, R22 | E05, E08, E09, E10, E11 |
+| E13 | Interface and experience — **current objective** | R23 | E05 |
+| E12 | Distribution, observability, release — **publishable** | R21, R22 | E05, E08, E09, E10, E11, E13 |
 
 ## Why auth is fourth, not last
 

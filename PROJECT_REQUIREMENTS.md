@@ -4,10 +4,15 @@ The MVP is done when all ten stories below pass their acceptance criteria.
 Rationale for each lives in the design doc; this file is canonical for *what
 must be true*.
 
-**R1–R10 are the MVP** (design-doc phases 0–4). **R11–R22, below, are the
+**R1–R10 are the MVP** (design-doc phases 0–4). **R11–R23, below, are the
 post-MVP epics** that take the project to a self-hostable, publishable product.
 Each is scoped as one epic with its own prompt in `docs/epics/`. Nothing outside
-R1–R22 is in scope — see `context/codebase_okf/tasks/post_mvp_roadmap.md`.
+R1–R23 is in scope — see `context/codebase_okf/tasks/post_mvp_roadmap.md`.
+
+**R23 is the current objective.** The engines answer the question; R23 is about
+whether a person can get to the answer and want to stay. It is the only
+requirement whose subject is the *path through* the product rather than a
+capability inside it.
 
 ---
 
@@ -228,3 +233,60 @@ is just shooting hot.*
   consumption, and recommendation latency.
 - A data-source health view an operator can act on.
 - Owning concepts: `components/distribution_and_operations.md`
+
+### R23 — Interface quality and the interaction path
+
+*As a visitor who has never seen this before, I can tell what it is, get to a
+first useful screen without being told what to do, and want to keep looking.*
+
+R19 built the vocabulary — tokens, inventory, the accessibility floor. R23 is
+what gets composed from it. R19 asks "is this component correct"; R23 asks "is
+the path through this product coherent, finishable, and worth looking at". A
+green R19 suite is compatible with a product nobody can navigate, and that is
+the state this requirement exists to end.
+
+**The path is finishable.**
+
+- Every route is reachable from the app's own navigation. An orphan page is a
+  page that does not exist. *(`/welcome` is currently orphaned.)*
+- No user-facing input demands a value the UI never displays. If a form asks for
+  an identifier, some screen shows that identifier, or the form supplies a
+  picker. *(Context Review's impact override currently asks for a context event
+  ID that no page prints.)*
+- No call to action dead-ends. A CTA whose destination is unavailable under this
+  instance's configuration is not rendered as a CTA. *(The landing page's
+  "Create account" currently leads to "Registration is closed".)*
+- Every state a visitor can reach is designed: signed out, demo content off,
+  first run with no data, and failure. Not just the populated happy path.
+
+**The product has one face.**
+
+- Every front door presents the same product with the same name, palette, and
+  typeface. Two front pages describing two products is a defect regardless of
+  how either one looks. *(`site/index.html` currently does not match the app.)*
+- The name, wordmark, and display face are consistent across marketing, auth,
+  and the instrument.
+
+**It works at the size it is read at.**
+
+- No page overflows horizontally at 390 CSS px. Every action is operable
+  one-handed at phone width.
+- The two surface classes hold under compression: marketing may reflow, the
+  board may not lose its density or its layout stability.
+
+**It is worth looking at.** *(Reviewed, not scanned — no test asserts taste.)*
+
+- The first viewport of every marketing surface establishes hierarchy: one
+  dominant element, not three of equal weight.
+- Sections below the fold have a rhythm — varying weight, not a stack of
+  identically-shaped containers.
+- Decoration is a choice the design system made, not a default reached for.
+
+**What R23 must not do.** It does not soften the instrument. Density, the
+draft-board interaction budget, and every accent ration in
+`design_system_contract.md` survive this requirement unchanged; the board is not
+a surface to make prettier. It adds no CSS framework and no component library —
+that decision is the contract's and R23 does not reopen it.
+
+- Owning concepts: `components/web_ui_blazor.md`,
+  `contracts/design_system_contract.md`, `tasks/run_design_process.md`, `DESIGN.md`

@@ -6,8 +6,8 @@ tags: [component, ui, blazor]
 source_paths: [src/FantasyBasketball.Api/Components]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Api]
 depends_on: [../contracts/recommendation_evidence_contract.md, ../contracts/api_surface.md]
-status: implemented
-last_updated: 2026-07-29
+status: partial
+last_updated: 2026-07-31
 owners: [engineering]
 risk_level: low
 done_criteria:
@@ -32,9 +32,46 @@ live draft board needs no separate hub, no polling, and no client bundle.
 | Context Review | Create, verify, reject, and override context events |
 | Data Sources | Per-source health, last success, staleness |
 
-Free Agents, Streamers, Risers/Fallers, and Trades are post-MVP — see
-[post_mvp_roadmap](../tasks/post_mvp_roadmap.md). Do not add empty pages for
-them.
+# Pages (R23)
+
+The instrument grew a grouped shell and four more routes:
+
+| Page | Route | Backing |
+|---|---|---|
+| My Leagues | `/leagues` | Real — `LeagueService.ListAsync`, ownership-filtered |
+| Trade Analyzer | `/trade` | **None.** R15 / epic E08 — designed shell |
+| Free Agents | `/free-agents` | **None.** R14 — designed shell |
+| Leaderboard | `/leaderboard` | **None.** Standings are deferred, not scoped — designed shell |
+
+# Designed shells for capabilities that do not exist
+
+This **amends** the former rule "do not add empty pages for them" (2026-07-31,
+epic E13). The rule was written to stop half-built routes from reading as done,
+and that concern is still right. What changed is that the interface could not be
+evaluated with a third of its navigation missing, and a designed surface that
+says plainly what is not built is more honest than a nav item that is absent for
+reasons a tester cannot see.
+
+The permission is narrow and gated:
+
+- A shell renders `NotBuiltState`, which **names the requirement or roadmap entry**
+  it is waiting on. "Coming soon" is not a permitted string; the row is what is
+  missing and where it is written down.
+- A shell renders **no numeric player or team data**, real or invented. The
+  layout may exist; the numbers may not. *Check:
+  [test_matrix_ui_design](../tests/test_matrix_ui_design.md) row D-33.*
+- A shell is a finished surface. An empty `.razor` file with a TODO is still
+  forbidden by `AGENTS.md` and always will be.
+
+**The Trade Analyzer shell does not arbitrate fairness.** Judging a trade for the
+other side is permanently out of scope — no model of their needs exists, and a
+verdict computed without one is authoritative-looking noise. The surface shows
+both rosters and reports what the trade does to *your* team, which is what R15
+specifies and what the product is comfortable claiming.
+
+Streamers and Risers/Fallers get no route at all — they are post-MVP with no
+surface anyone has asked to test. See
+[post_mvp_roadmap](../tasks/post_mvp_roadmap.md).
 
 # Design
 
@@ -64,10 +101,29 @@ them.
 - **Degraded sources are visible**, not hidden behind a stale number. *Check:
   the health page test.*
 
+# The path between pages (R23)
+
+This component owns the routes, so it owns the graph they form. The
+[design_system_contract](../contracts/design_system_contract.md) owns what a
+component looks like and DESIGN.md owns the aesthetic; neither owns whether a
+person can get from one screen to the next, which is where the shipped defects
+were.
+
+- **Every route is reachable from in-app navigation.** A rendered route is not a
+  reached route — `/welcome` proved that with a green suite. *Check:
+  [test_matrix_ui_design](../tests/test_matrix_ui_design.md) row D-28.*
+- **No call to action dead-ends** under this instance's configuration. A CTA whose
+  destination is closed is not rendered as a CTA. *Check: row D-29.*
+- **No input demands a value the UI never displays.** Either the identifier appears
+  on some screen, or the input is a picker. *Check: row D-32.*
+- **Every reachable state is designed** — signed out, demo off, first run, and
+  failure — not only the populated path. *Check: rows D-17 and D-25.*
+
 # Change procedure
 
-Adding a page: the component, its route, its service dependency, and an
-integration test that renders it — one commit.
+Adding a page: the component, its route, its service dependency, **the navigation
+entry or link that reaches it**, and an integration test that renders it — one
+commit. A route with no inbound link does not ship.
 
 # Verification
 
