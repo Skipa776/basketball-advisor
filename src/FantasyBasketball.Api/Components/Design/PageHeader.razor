@@ -1,9 +1,9 @@
 <header class="page-header">
+    @* No eyebrow. A label stacked above a heading says in small grey caps what
+       the heading is about to say in full, and the heading is what people read.
+       Anything the eyebrow was scoping belongs in the title or the
+       description. *@
     <div>
-        @if (!string.IsNullOrWhiteSpace(Eyebrow))
-        {
-            <p class="eyebrow">@Eyebrow</p>
-        }
         <h1>@Title</h1>
         @if (!string.IsNullOrWhiteSpace(Description))
         {
@@ -19,9 +19,6 @@
 @code {
     [Parameter, EditorRequired]
     public string Title { get; set; } = string.Empty;
-
-    [Parameter]
-    public string? Eyebrow { get; set; }
 
     [Parameter]
     public string? Description { get; set; }

@@ -15,14 +15,6 @@ h2 {
     text-transform: uppercase;
 }
 
-.eyebrow {
-    margin: 0 0 var(--space-2);
-    color: var(--color-text-muted);
-    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-mono);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-}
-
 .ranks {
     margin: 0;
     padding: 0;

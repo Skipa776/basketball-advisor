@@ -15,14 +15,6 @@ h2 {
     text-transform: uppercase;
 }
 
-.eyebrow {
-    margin: 0 0 var(--space-2);
-    color: var(--color-text-muted);
-    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-mono);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-}
-
 ul {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
@@ -32,16 +24,37 @@ ul {
     list-style: none;
 }
 
+/* This was a thick accent border-inline-start whose own comment conceded it
+   carried no meaning. Depth ties the card to the page instead: elevation is a
+   property of the surface, not a stripe applied to one edge of it. */
 li {
     display: grid;
     gap: var(--space-3);
-    padding: var(--space-6);
+    padding: var(--space-7);
     border: var(--rule-width) solid var(--color-rule);
     border-radius: var(--radius-md);
     background-color: var(--color-surface);
-    /* A hairline of accent on the leading edge: enough to tie the card to the
-       brand without the accent carrying any meaning here. */
-    border-inline-start: var(--space-1) solid var(--color-accent);
+    box-shadow: var(--shadow-sm);
+    transition:
+        box-shadow var(--motion-base) var(--ease-out),
+        transform var(--motion-base) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    li:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(calc(var(--space-1) * -1));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    li {
+        transition: none;
+    }
+
+    li:hover {
+        transform: none;
+    }
 }
 
 h3 {

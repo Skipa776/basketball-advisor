@@ -1,7 +1,6 @@
 <section class="hero" aria-labelledby="hero-title">
     <CourtBackdrop />
     <div class="hero-body">
-        <p class="eyebrow">@Eyebrow</p>
         <h1 id="hero-title">@Title</h1>
         <p class="slogan">@Slogan</p>
         <p class="accent-line">@AccentLine</p>
@@ -37,10 +36,6 @@
 
     [Parameter, EditorRequired]
     public string AccentLine { get; set; } = string.Empty;
-
-    [Parameter]
-    public string Eyebrow { get; set; } = string.Empty;
-
     [Parameter]
     public string ActionLabel { get; set; } = "Get started";
 

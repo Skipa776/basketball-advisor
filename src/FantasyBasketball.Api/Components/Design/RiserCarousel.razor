@@ -10,7 +10,6 @@
          aria-labelledby="@($"{Id}-title")">
     <header class="carousel-head">
         <div>
-            <p class="eyebrow">@Eyebrow</p>
             <h2 id="@($"{Id}-title")">@Title</h2>
         </div>
         <div class="carousel-controls">
@@ -86,11 +85,7 @@
     public string Id { get; set; } = "movers";
 
     [Parameter]
-    public string Title { get; set; } = "Risers and fallers";
-
-    [Parameter]
-    public string Eyebrow { get; set; } = "Last seven days";
-
+    public string Title { get; set; } = "Risers and fallers, last seven days";
     [Parameter]
     public int IntervalMilliseconds { get; set; } = 6000;
 

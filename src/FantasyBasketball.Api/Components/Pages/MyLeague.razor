@@ -4,7 +4,6 @@
 
 <PageTitle>My League</PageTitle>
 <PageHeader Title="My League"
-            Eyebrow="Scoring context"
             Description="League rules determine every projection value and draft recommendation." />
 
 @if (error is not null)
@@ -81,7 +80,6 @@
         @foreach (var league in leagues)
         {
             <article class="panel" aria-labelledby="league-summary-@league.Id">
-                <p class="eyebrow">Active configuration</p>
                 <h2 id="league-summary-@league.Id">@league.Name</h2>
                 <p>
                     <code>@league.Id</code>

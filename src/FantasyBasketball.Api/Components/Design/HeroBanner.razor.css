@@ -1,3 +1,8 @@
+/* Plank seams over the page colour, not a wood fill. The base stays
+   --color-bg, so every contrast pair D-11 measured still holds; the texture is
+   two hairlines at 9% and 5% of the text brown, which reads as a floor without
+   moving the arithmetic. A real maple fill here would put the headline on an
+   untested surface, which is what the contract forbids by construction. */
 .hero {
     position: relative;
     display: grid;
@@ -6,20 +11,13 @@
     padding: var(--space-8) var(--space-6);
     overflow: hidden;
     background-color: var(--color-bg);
+    background-image: var(--texture-wood);
     text-align: center;
 }
 
 .hero-body {
     position: relative;
     max-width: var(--content-max);
-}
-
-.eyebrow {
-    margin: 0 0 var(--space-5);
-    color: var(--color-text-muted);
-    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-mono);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
 }
 
 /* Scoped through .hero deliberately: the layout's `main ::deep h1` sets every

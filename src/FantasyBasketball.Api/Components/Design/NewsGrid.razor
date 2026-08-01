@@ -1,6 +1,5 @@
 <section class="news" id="@Id" aria-labelledby="@($"{Id}-title")">
     <header>
-        <p class="eyebrow">@Eyebrow</p>
         <h2 id="@($"{Id}-title")">@Title</h2>
     </header>
     <ul role="list">
@@ -27,8 +26,4 @@
     public string Id { get; set; } = "coverage";
 
     [Parameter]
-    public string Title { get; set; } = "Trades and coverage";
-
-    [Parameter]
-    public string Eyebrow { get; set; } = "Context awaiting review";
-}
+    public string Title { get; set; } = "Trades and coverage awaiting review";}

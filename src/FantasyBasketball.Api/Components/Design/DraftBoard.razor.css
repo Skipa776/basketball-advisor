@@ -10,20 +10,10 @@
     gap: var(--space-6);
     margin-block-end: var(--space-5);
 }
-
-.eyebrow,
 h2,
 h3,
 p {
     margin: 0;
-}
-
-.eyebrow {
-    margin-block-end: var(--space-2);
-    color: var(--color-text-muted);
-    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-mono);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
 }
 
 h2,

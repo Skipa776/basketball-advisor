@@ -1,7 +1,6 @@
 <section class="draft-board" data-draft-board="@BoardId" aria-labelledby="@HeadingId">
     <div class="board-heading">
         <div>
-            <p class="eyebrow">Live rankings</p>
             <h2 id="@HeadingId">@Title</h2>
         </div>
         <p class="count" data-numeric>@Items.Count available</p>
@@ -16,7 +15,6 @@
         <aside class="recommendation" aria-labelledby="@RecommendationHeadingId">
             <div class="recommendation-heading">
                 <div>
-                    <p class="eyebrow">Top recommendation</p>
                     <h3 id="@RecommendationHeadingId">@top.Player.Name</h3>
                 </div>
                 <ConfidenceChip Confidence="@top.Confidence" />

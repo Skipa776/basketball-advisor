@@ -3,7 +3,6 @@
 
 <PageTitle>Set up</PageTitle>
 <PageHeader Title="Set up your league"
-            Eyebrow="First run"
             Description="Three steps to get the board ranking against your rules." />
 
 <OnboardingStepper Steps="@DemoContent.SetupSteps" CurrentIndex="@stepIndex" />
@@ -58,8 +57,8 @@ else
 {
     <section aria-labelledby="summary-heading">
         <h2 id="summary-heading">Copy these into My League</h2>
-        <article class="panel">
-            <p class="eyebrow">Suggested settings</p>
+        <article class="panel" aria-labelledby="suggested-heading">
+            <h3 id="suggested-heading">Suggested settings</h3>
             <ul>
                 <li><span>Platform</span><strong>@platform</strong></li>
                 <li><span>League type</span><strong>@LeagueTypeFor()</strong></li>

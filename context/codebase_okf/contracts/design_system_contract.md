@@ -49,10 +49,22 @@ One source, `Components/Design/Tokens.razor.css`, as CSS custom properties.
 --font-sans / --font-mono / --font-display
 --color-rule / --color-border-strong
 --color-surface-wood / --color-court-line       # decorative shell field, R23
+--shadow-sm / -md / -lg                         # elevation, R23
+--texture-wood                                  # decorative plank field, R23
 --board-row-height / --target-min / --content-max
 --hero-min-height / --carousel-interval
 --sidebar-width / --utility-bar-height          # the app shell, R23
 ```
+
+**Shadows carry an offset and a soft blur, in two layers.** A tight contact
+shadow plus a wide ambient one, because one blur radius cannot do both jobs. A
+zero-offset coloured halo is decoration, not depth, and is not what these are
+for. They are tinted with the text brown rather than neutral black — a grey
+shadow on a warm surface reads as dirt.
+
+**The board gets no elevation.** Rows are separated by hairline rules; a shadow
+on a 28px row at fifty rows is visual noise under a clock, and elevation implies
+a layering the board does not have.
 
 **`--color-surface-wood` and `--color-court-line` are decorative by
 construction.** They carry the hardwood field behind the shell and the court

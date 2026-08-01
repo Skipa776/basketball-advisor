@@ -68,6 +68,26 @@
     --motion-slow: 400ms;
     --ease-out: cubic-bezier(0.2, 0, 0, 1);
     --focus-ring: 0 0 0 3px var(--color-accent);
+    /* Offset and soft blur, never a zero-offset halo. Tinted with the text
+       brown rather than neutral black: a grey shadow on a warm surface reads as
+       dirt. Two layers -- a tight contact shadow and a wide ambient one --
+       because one blur radius cannot do both jobs. */
+    --shadow-sm: 0 1px 2px rgb(26 21 18 / 7%);
+    --shadow-md: 0 2px 4px rgb(26 21 18 / 5%), 0 8px 20px rgb(26 21 18 / 8%);
+    --shadow-lg: 0 4px 10px rgb(26 21 18 / 7%), 0 20px 48px rgb(26 21 18 / 12%);
+    /* The hardwood field. Decorative only -- the contract forbids text or an
+       interactive boundary landing on it, so it lives behind auth art and the
+       hero backdrop and never behind a label. Plank seams, not a wood photo:
+       no binary, themeable, and it costs nothing to load. */
+    --texture-wood:
+        repeating-linear-gradient(
+            90deg,
+            transparent 0 8.5rem,
+            color-mix(in srgb, var(--color-text) 9%, transparent) 8.5rem 8.62rem),
+        repeating-linear-gradient(
+            0deg,
+            transparent 0 21rem,
+            color-mix(in srgb, var(--color-text) 5%, transparent) 21rem 21.1rem);
     --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
     --font-display: "Anton", "Arial Narrow", var(--font-sans);
@@ -99,6 +119,9 @@
     --color-caution: #DBA742;
     --color-surface-wood: #3A2C1F;
     --color-court-line: #4A3826;
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 40%);
+    --shadow-md: 0 2px 6px rgb(0 0 0 / 45%), 0 10px 24px rgb(0 0 0 / 40%);
+    --shadow-lg: 0 6px 14px rgb(0 0 0 / 50%), 0 24px 56px rgb(0 0 0 / 45%);
     color-scheme: dark;
 }
 
@@ -120,6 +143,9 @@
         --color-caution: #DBA742;
         --color-surface-wood: #3A2C1F;
         --color-court-line: #4A3826;
+        --shadow-sm: 0 1px 2px rgb(0 0 0 / 40%);
+        --shadow-md: 0 2px 6px rgb(0 0 0 / 45%), 0 10px 24px rgb(0 0 0 / 40%);
+        --shadow-lg: 0 6px 14px rgb(0 0 0 / 50%), 0 24px 56px rgb(0 0 0 / 45%);
         color-scheme: dark;
     }
 }
@@ -151,6 +177,9 @@
     --color-caution: #DBA742;
     --color-surface-wood: #3A2C1F;
     --color-court-line: #4A3826;
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 40%);
+    --shadow-md: 0 2px 6px rgb(0 0 0 / 45%), 0 10px 24px rgb(0 0 0 / 40%);
+    --shadow-lg: 0 6px 14px rgb(0 0 0 / 50%), 0 24px 56px rgb(0 0 0 / 45%);
     background-color: var(--color-surface);
     color: var(--color-text);
     color-scheme: dark;

@@ -94,22 +94,27 @@ nav {
     gap: var(--space-2);
 }
 
+/* The active marker was a thick coloured border-inline-start, which is the
+   decoration habit rather than a decision. Weight, fill, and the accent do the
+   same job without a rail bolted to the side of every row. */
 nav ::deep a,
 .sidebar-footer ::deep a {
     min-height: var(--target-min);
     display: flex;
     align-items: center;
-    padding: var(--space-3) var(--space-4);
-    border-inline-start: var(--space-1) solid transparent;
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius-sm);
     color: var(--color-text-muted);
     font-size: var(--text-sm);
     text-decoration: none;
+    transition: background-color var(--motion-fast) var(--ease-out);
 }
 
 nav ::deep a.active {
-    border-inline-start-color: var(--color-text);
     background: var(--color-surface-raised);
-    color: var(--color-text);
+    box-shadow: var(--shadow-sm);
+    color: var(--color-accent-ink);
+    font-weight: 600;
 }
 
 nav ::deep a:focus-visible,
@@ -281,18 +286,11 @@ main ::deep .inline-form p {
 }
 
 main ::deep .panel {
-    padding: var(--space-6);
+    padding: var(--space-7);
     border: thin solid var(--color-rule);
     border-radius: var(--radius-md);
     background: var(--color-surface);
-}
-
-main ::deep .panel .eyebrow {
-    margin-block-end: var(--space-2);
-    color: var(--color-text-muted);
-    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-mono);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    box-shadow: var(--shadow-sm);
 }
 
 main ::deep .panel ul,
@@ -350,9 +348,13 @@ main ::deep .button-link.primary {
     color: var(--color-accent-contrast);
 }
 
+/* Was a thick positive-coloured border-inline-start. A notice earns a real
+   surface, not a stripe: the rule is hairline all the way round and the
+   meaning is carried by the copy, which is where it was always carried. */
 main ::deep .notice {
-    padding: var(--space-4) var(--space-5);
-    border-inline-start: var(--space-1) solid var(--color-positive);
+    padding: var(--space-5) var(--space-6);
+    border: thin solid var(--color-rule);
+    border-radius: var(--radius-md);
     background: var(--color-surface-raised);
 }
 
