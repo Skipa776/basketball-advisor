@@ -592,6 +592,41 @@ identifiers, two front doors — are all path defects. **No CSS framework fixes 
 path defect.** The refusal stands where it already lived, in
 [design_system_contract](contracts/design_system_contract.md).
 
+# Three defects the new path rows found — 2026-07-31
+
+Rows `D-28`–`D-34` were written as tests during E13. Three of them failed on
+their first run against code that had a fully green suite, which is the whole
+argument for the rows existing.
+
+**Google sign-in led to a 404 (`D-29`).** `GoogleSignInOptions` binds from
+configuration, but `AddGoogle()` is never called and no `/account/external/google`
+endpoint is mapped anywhere in `src`. An operator who set `Google:ClientId` got a
+"Continue with Google" button that went nowhere. `AuthPanel` already carried the
+correct rule in a comment — *a provider button that cannot complete a sign-in is
+worse than no button* — but the `IsConfigured` gate only checked that a key was
+supplied, not that the app could perform the sign-in.
+
+The button is removed. **`GoogleSignInOptions` is deliberately kept**: it is
+config plumbing for a feature someone may finish, and deleting it would hide
+that the intent existed. Restoring the button requires registering the
+authentication handler and mapping the callback first — the flag alone must
+never bring it back.
+
+**The sign-in card was clipped on every phone (`D-30`).** `EmptyLayout` declares
+`* { box-sizing: border-box }`, but Blazor scoped CSS compiles that to
+`*[b-xxxxx]`, so it matched only `EmptyLayout`'s own markup and never reached
+`AuthPanel`'s. `.auth-card`'s `width: min(26rem, 100%)` was therefore sizing the
+content box, and padding plus border carried it past the viewport.
+
+**This is a trap the whole component library shares.** A reset written in one
+scoped stylesheet does not cross into any other component. Anywhere a component
+assumes `border-box` because "the layout sets it", it is assuming something that
+is not true.
+
+**Context Review asked for an ID no screen printed (`D-32`).** Fixed at the
+cause — the review queue prints each event's ID — rather than by adding help
+text that explains where to find something invisible.
+
 # Revisit triggers
 
 - The user's real league settings differ from the seed league → update
@@ -618,3 +653,11 @@ path defect.** The refusal stands where it already lived, in
 - **The CSS-framework question is raised a third time** → the answer changes only
   if `D-10` and `D-11` are being retired, not if the front end merely looks
   unfinished. Read the section above before re-arguing it.
+- **Someone asks why there is no Google sign-in button** → the handler was never
+  written. See above; the config flag alone must not restore it.
+- **A component relies on `box-sizing: border-box` it did not declare itself** →
+  that reset does not cross a scoped-CSS boundary. Declare it in the component.
+- **A comment in `Components/**` mentions a pixel measurement** → row `D-10`
+  scans raw file contents, comments included, and will fail on the literal. This
+  cost five separate red runs during E13. Write "phone width" or "the page-title
+  size", never the number.
