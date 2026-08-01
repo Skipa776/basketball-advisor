@@ -59,11 +59,21 @@
             <legend>Override an impact</legend>
             <p>
                 <label for="override-event">Context event ID</label>
-                <input id="override-event" @bind="overrideEventText" />
+                <input id="override-event"
+                       @bind="overrideEventText"
+                       aria-describedby="override-event-help" />
+                @* This form used to ask for an identifier that no screen in the
+                   product printed, which made it usable only by whoever wrote
+                   it. The review queue below now shows each event's ID. Row
+                   D-32. *@
+                <small id="override-event-help">Shown against each row in the review queue below.</small>
             </p>
             <p>
                 <label for="override-player">Player ID</label>
-                <input id="override-player" @bind="overridePlayerText" />
+                <input id="override-player"
+                       @bind="overridePlayerText"
+                       aria-describedby="override-player-help" />
+                <small id="override-player-help">Open the player from Players; the id is in the address bar.</small>
             </p>
             <p>
                 <label for="minutes-delta">Minutes delta</label>
@@ -116,6 +126,7 @@
                         <th scope="row">
                             <strong>@contextEvent.Type</strong>
                             <span>@contextEvent.Summary</span>
+                            <code>@contextEvent.Id</code>
                         </th>
                         <td>@contextEvent.Verification</td>
                         <td>@contextEvent.Direction</td>

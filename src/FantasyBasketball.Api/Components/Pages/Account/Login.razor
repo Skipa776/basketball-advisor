@@ -1,13 +1,11 @@
 @page "/account/login"
 @attribute [AllowAnonymous]
 @layout EmptyLayout
-@inject IOptions<GoogleSignInOptions> Google
 
 <PageTitle>Sign in</PageTitle>
 
 <AuthPanel Title="Sign in"
-           Description="Resume your private leagues, projections, and draft sessions."
-           ShowFederated="@Google.Value.IsConfigured">
+           Description="Resume your private leagues, projections, and draft sessions.">
     <ChildContent>
         @if (Error == "invalid")
         {
@@ -46,15 +44,16 @@
 
     @* Rendered only when an operator has configured a client ID. A provider
        button that cannot complete a sign-in is worse than no button. *@
-    <Federated>
-        @if (Google.Value.IsConfigured)
-        {
-            <a class="provider" href="/account/external/google">
-                <span class="provider-mark" aria-hidden="true">G</span>
-                Continue with Google
-            </a>
-        }
-    </Federated>
+    @* Google sign-in is NOT rendered, and the config flag is not enough to
+       bring it back. GoogleSignInOptions binds, but AddGoogle() is never
+       called and no /account/external/google endpoint is mapped -- so an
+       operator who set a client ID got a button that 404s.
+
+       This component's own comment already had the right rule: "a provider
+       button that cannot complete a sign-in is worse than no button." The
+       IsConfigured gate only checked that the operator supplied a key, not
+       that the app can perform the sign-in. Restoring the button means
+       registering the handler and mapping the callback first. Row D-29. *@
 
     <Secondary>
         <a href="/account/register">Create account</a>
