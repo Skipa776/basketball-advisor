@@ -24,6 +24,39 @@ ul {
     list-style: none;
 }
 
+/* Three cards of equal weight is a grid, not a composition -- the eye has no
+   reason to start anywhere. The first item leads and the rest stack beside it,
+   which is what an editor would do with the same three stories.
+
+   Cards are right here, unlike the movers list: the contract reserves them for
+   single-subject summaries, and a headline with its source and a paragraph is
+   exactly that. */
+@media (min-width: 60rem) {
+    ul {
+        grid-template-columns: 1.45fr 1fr;
+        align-items: stretch;
+    }
+
+    /* space-between, not the default stretch: the lead is taller than its
+       content, and stretching the rows left a dead gap under the headline.
+       Spreading source, headline and summary across the height reads as a
+       decision instead. */
+    li:first-child {
+        grid-row: span 2;
+        align-content: space-between;
+        padding: var(--space-8);
+    }
+
+    li:first-child h3 {
+        font-size: var(--text-2xl);
+        letter-spacing: -0.01em;
+    }
+
+    li:first-child .summary {
+        font-size: var(--text-base);
+    }
+}
+
 /* This was a thick accent border-inline-start whose own comment conceded it
    carried no meaning. Depth ties the card to the page instead: elevation is a
    property of the surface, not a stripe applied to one edge of it. */

@@ -1,7 +1,22 @@
+/* This floated as bare text over the court illustration, so the disclaimer
+   rendered across a figure and the whole block read as unfinished. It is an
+   object now: a measured surface with an edge and elevation, sitting ON the
+   court rather than lost in it.
+
+   --color-surface deliberately, not a translucent fill: every contrast pair
+   D-11 measured is against a real surface token, and a blur over illustration
+   would put this text on a colour nothing has measured. */
 .platform-row {
     display: grid;
     justify-items: center;
     gap: var(--space-5);
+    max-width: 44rem;
+    margin-inline: auto;
+    padding: var(--space-7) var(--space-8);
+    border: var(--rule-width) solid var(--color-rule);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-md);
 }
 
 .label {
