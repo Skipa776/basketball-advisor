@@ -17,7 +17,9 @@
 }
 
 <div class="instrument-grid">
-    <form @onsubmit="CreateAsync" @onsubmit:preventDefault>
+    <form class="setup-form"
+          @onsubmit="CreateAsync"
+          @onsubmit:preventDefault>
         <fieldset aria-describedby="@(error is null ? null : "context-error")">
             <legend>Create a proposed context event</legend>
             <p>
@@ -50,11 +52,13 @@
                     }
                 </select>
             </p>
-            <button type="submit">Create proposal</button>
+            <button type="submit" class="primary">Create proposal</button>
         </fieldset>
     </form>
 
-    <form @onsubmit="OverrideAsync" @onsubmit:preventDefault>
+    <form class="setup-form"
+          @onsubmit="OverrideAsync"
+          @onsubmit:preventDefault>
         <fieldset aria-describedby="@(error is null ? null : "context-error")">
             <legend>Override an impact</legend>
             <p>

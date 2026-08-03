@@ -16,7 +16,11 @@
 <section aria-labelledby="run-import-heading">
     <h2 id="run-import-heading">Run an import</h2>
     <div class="action-grid">
-        <button type="button" @onclick="() => QueueAsync(ImportJobKind.Players)">Import teams and players</button>
+        @* Primary because it is the one every other import depends on: nothing else
+           has anything to attach to until the player pool exists. *@
+        <button type="button"
+                class="primary"
+                @onclick="() => QueueAsync(ImportJobKind.Players)">Import teams and players</button>
         <button type="button" @onclick="() => QueueAsync(ImportJobKind.Adp)">Import ADP</button>
     </div>
     <div class="instrument-grid">
@@ -62,8 +66,9 @@
     <h2 id="source-health-heading">Source health</h2>
     @if (sources is null)
     {
-        <EmptyState Title="Loading source health"
-                    Description="Freshness checks are still running." />
+        @* Loading is not emptiness. An empty state names a situation the
+           reader has to act on; this one resolves on its own. *@
+        <SkeletonRows Rows="4" Label="Checking source health" />
     }
     else if (sources.All(source => source.LastSuccess is null))
     {

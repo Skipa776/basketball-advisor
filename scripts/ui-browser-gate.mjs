@@ -254,15 +254,34 @@ try {
     const baseUrl = process.env.UI_BASE_URL;
     const leagueId = process.env.UI_LEAGUE_ID;
 
-    // D-30: no horizontal overflow at 390 CSS px, on every route a signed-out
-    // visitor can reach. Needs a laid-out page, which is why it lives here
-    // rather than in the AngleSharp suite -- that never runs layout at all.
+    // D-30: no horizontal overflow at 390 CSS px. Needs a laid-out page, which
+    // is why it lives here rather than in the AngleSharp suite -- that never
+    // runs layout at all.
+    //
+    // The workspace routes are the ones that can actually break it: the public
+    // pages are one column by construction, while the instrument is built from
+    // two-column grids that have to collapse. Checking only the front door was
+    // checking the half that was never at risk.
     //
     // Decorative backdrops are allowed past the viewport by name: CourtBackdrop
     // is a full-bleed SVG and its figures are meant to bleed. Content and
     // controls are not, and the document itself must never scroll sideways.
     if (baseUrl) {
-        const narrowRoutes = ["/", "/account/login", "/account/register"];
+        const narrowRoutes = [
+            "/",
+            "/account/login",
+            "/account/register",
+            "/draft",
+            "/players",
+            "/league",
+            "/leagues",
+            "/trade",
+            "/free-agents",
+            "/leaderboard",
+            "/context-review",
+            "/data-sources",
+            "/welcome",
+        ];
         for (const route of narrowRoutes) {
             await command(
                 "Emulation.setDeviceMetricsOverride",
@@ -295,10 +314,28 @@ try {
                             );
                         }
                     }
+                    // An element can be inside the viewport and still push the
+                    // document wide, when something it clips or scrolls is
+                    // wider than it is. The rect check above cannot see that,
+                    // so overflowing containers are collected separately.
+                    const overflowing = [];
+                    for (const element of document.querySelectorAll("*")) {
+                        if (decorative.has(element.tagName.toLowerCase())) continue;
+                        if (element.scrollWidth > element.clientWidth + 1
+                            && element.clientWidth > 0) {
+                            overflowing.push(
+                                element.tagName.toLowerCase()
+                                + "." + (element.className || "").toString().trim().split(/\\s+/)[0]
+                                + " scroll=" + element.scrollWidth
+                                + "/" + element.clientWidth,
+                            );
+                        }
+                    }
                     return JSON.stringify({
                         viewport,
                         documentScrollWidth: document.documentElement.scrollWidth,
                         offenders: offenders.slice(0, 8),
+                        overflowing: overflowing.slice(0, 8),
                     });
                 })()`,
                 sessionId,
@@ -308,7 +345,12 @@ try {
             if (result.documentScrollWidth > result.viewport + 1) {
                 throw new Error(
                     `D-30 ${route}: the document scrolls sideways at 390 CSS px `
-                    + `(scrollWidth ${result.documentScrollWidth} > viewport ${result.viewport}).`,
+                    + `(scrollWidth ${result.documentScrollWidth} > viewport ${result.viewport}). `
+                    // Naming what is over the line, not just that something is:
+                    // the width alone leaves whoever reads this walking the DOM
+                    // by hand to find it.
+                    + `Past the viewport: ${result.offenders.join(", ") || "nothing"}. `
+                    + `Overflowing its own box: ${result.overflowing.join(", ") || "nothing"}`,
                 );
             }
             if (result.offenders.length > 0) {
@@ -350,8 +392,13 @@ try {
             sessionId,
         );
         await new Promise(resolve => setTimeout(resolve, 500));
+        // Scoped to the draft form. `form button[type=submit]` matched the
+        // league switcher in the utility bar instead -- that form sits above
+        // <main> in the DOM, so it wins document order. Clicking it posted a
+        // cookie change and redirected back to /draft, which looks identical to
+        // a draft that never started.
         await evaluate(
-            "document.querySelector('form button[type=submit]').click()",
+            "document.querySelector('main .setup-form button[type=submit]').click()",
             sessionId,
         );
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -369,10 +416,36 @@ try {
                 `Draft session did not start: ${JSON.stringify(startState)}`,
             );
         }
-        await waitFor(
-            "document.querySelector('[role=combobox]') !== null",
-            sessionId,
-        );
+        // The session can also fail to start without rendering an error state --
+        // a render exception tears the circuit down and leaves the page as it
+        // was. A bare "condition timed out" for the combobox says nothing about
+        // which of those happened, so the page's own state goes in the message.
+        try {
+            await waitFor(
+                "document.querySelector('[role=combobox]') !== null",
+                sessionId,
+            );
+        } catch (cause) {
+            const afterState = await evaluate(
+                `(() => ({
+                    url: location.href,
+                    heading: document.querySelector("h1")?.textContent.trim(),
+                    hasStatus:
+                        document.querySelector("section[aria-label='Draft status']")
+                            !== null,
+                    disconnected:
+                        document.querySelector("#components-reconnect-modal")
+                            !== null,
+                    body: document.body.innerText.slice(0, 400),
+                }))()`,
+                sessionId,
+            );
+            throw new Error(
+                `D-13: the pick entry never rendered after starting a draft. `
+                + `Page state: ${JSON.stringify(afterState)}`,
+                { cause },
+            );
+        }
         await evaluate(
             "document.querySelector('[role=combobox]').focus()",
             sessionId,
@@ -392,9 +465,13 @@ try {
             `(() => ({
                 focusReturned:
                     document.activeElement?.getAttribute("role") === "combobox",
+                // The number itself, not a substring of the rendered line. The
+                // status bar puts the label, the pick and the total in separate
+                // elements, so its textContent has no spaces to match on.
                 currentPick:
-                    document.querySelector("section[aria-label='Draft status']")
-                        ?.textContent.includes("Pick 2") === true,
+                    document.querySelector(
+                        "section[aria-label='Draft status'] [data-numeric]",
+                    )?.textContent.trim() === "2",
             }))()`,
             sessionId,
         );

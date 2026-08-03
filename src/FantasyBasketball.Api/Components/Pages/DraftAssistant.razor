@@ -4,6 +4,7 @@
 @inject DraftBoardService Boards
 @inject PlayerQueryService PlayersService
 @inject LeagueService Leagues
+@inject ActiveLeague ActiveLeague
 @inject IJSRuntime JavaScript
 
 <PageTitle>Draft Assistant</PageTitle>
@@ -28,7 +29,9 @@
 }
 else if (session is null)
 {
-    <form @onsubmit="StartDraftAsync" @onsubmit:preventDefault>
+    <form class="setup-form"
+          @onsubmit="StartDraftAsync"
+          @onsubmit:preventDefault>
         <fieldset aria-describedby="@(error is null ? null : "draft-error")">
             <legend>Start a draft</legend>
             <p>
@@ -42,17 +45,27 @@ else if (session is null)
                         <option value="@option.Id">@option.Name</option>
                     }
                 </select>
-                <small id="draft-league-help">Leagues you have created on My League.</small>
+                <small id="draft-league-help">Every ranking on the board is computed under this league's rules.</small>
             </p>
             <p>
                 <label for="draft-slot">Your draft position</label>
-                <input id="draft-slot" type="number" min="1" @bind="userSlot" />
+                <input id="draft-slot"
+                       type="number"
+                       min="1"
+                       @bind="userSlot"
+                       aria-describedby="draft-slot-help" />
+                <small id="draft-slot-help">Your seat in the order. It decides when the board says you are on the clock.</small>
             </p>
             <p>
                 <label for="draft-rounds">Rounds</label>
-                <input id="draft-rounds" type="number" min="1" @bind="roundCount" />
+                <input id="draft-rounds"
+                       type="number"
+                       min="1"
+                       @bind="roundCount"
+                       aria-describedby="draft-rounds-help" />
+                <small id="draft-rounds-help">Usually one per roster slot.</small>
             </p>
-            <button type="submit">Start draft</button>
+            <button type="submit" class="primary">Start draft</button>
         </fieldset>
     </form>
     <EmptyState Title="No active draft"
@@ -60,10 +73,10 @@ else if (session is null)
 }
 else
 {
-    <section aria-label="Draft status">
-        <strong data-numeric>Pick @session.CurrentPick</strong>
-        <span> · @TurnLabel</span>
-    </section>
+    <DraftStatus Pick="session.CurrentPick"
+                 TeamCount="session.TeamCount"
+                 RoundCount="session.RoundCount"
+                 PicksUntilNextTurn="session.PicksUntilNextTurn" />
 
     <div class="draft-workspace">
         <PickEntry Items="@AvailablePlayers"
@@ -73,13 +86,19 @@ else
 
         @if (board is null)
         {
-            <EmptyState Title="Rankings are loading"
-                        Description="The board will appear when league projections are available." />
+            @* At the board's own row height, so nothing under the cursor moves
+               when the ranked rows replace it -- the D-14 concern, one step
+               earlier in the lifecycle. *@
+            <SkeletonRows Rows="12" Label="Ranking the board" />
         }
         else if (board.Rankings.Count == 0)
         {
             <EmptyState Title="No ranked players"
-                        Description="Import players and projections, then return to this draft session." />
+                        Description="The board ranks the imported pool under this league's rules. Nothing has been imported yet, so there is nothing to rank.">
+                <Action>
+                    <a class="button-link primary" href="/data-sources">Open Data Sources</a>
+                </Action>
+            </EmptyState>
         }
         else
         {
@@ -98,6 +117,14 @@ else
      data-live-region="top-recommendation">@topRecommendationAnnouncement</div>
 
 @code {
+    /// <summary>
+    /// Which league to open the setup form on. My Leagues links straight here
+    /// with it set; before this existed that link silently dropped it and the
+    /// form opened on whichever league happened to be first.
+    /// </summary>
+    [SupplyParameterFromQuery]
+    public Guid? LeagueId { get; set; }
+
     private string leagueText = string.Empty;
     private int userSlot = 1;
     private int roundCount = 13;
@@ -110,15 +137,6 @@ else
     private string? pickAnnouncement;
     private string? topRecommendationAnnouncement;
     private string? error;
-
-    // "1 picks until your next turn" is the kind of thing this product cannot
-    // afford to print, and zero is not a countdown at all -- it is your turn.
-    private string TurnLabel => session?.PicksUntilNextTurn switch
-    {
-        null or 0 => "your turn to pick",
-        1 => "1 pick until your next turn",
-        var count => $"{count} picks until your next turn",
-    };
 
     private IReadOnlyList<PickEntryItem> AvailablePlayers
     {
@@ -171,9 +189,13 @@ else
     protected override async Task OnInitializedAsync()
     {
         leagues = await Leagues.ListAsync(CancellationToken.None);
-        leagueText = leagues.Count == 0
-            ? string.Empty
-            : leagues[0].Id.ToString();
+        // The league named in the link wins, then the one the shell's switcher
+        // is set to, then the first one that exists. Falling straight to the
+        // first is how a two-league instance drafts against the wrong rules.
+        var preferred = LeagueId ?? ActiveLeague.Current;
+        var opening = leagues.FirstOrDefault(league => league.Id == preferred)
+            ?? leagues.FirstOrDefault();
+        leagueText = opening?.Id.ToString() ?? string.Empty;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

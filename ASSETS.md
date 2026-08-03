@@ -24,26 +24,32 @@ invisible until it is expensive, and this repository is public and MIT licensed.
 
 ## Assets
 
-### `img/player-placeholder.jpg`
+**None.** No binary image ships today and `wwwroot/img/` does not exist. Row
+`D-34` is vacuously green, which is the intended state: the check was in place
+before the first asset needed it, not after.
 
-| | |
-|---|---|
-| **Used by** | `Components/Design/PlayerAvatar.razor`, when a player has no portrait |
-| **Source** | Supplied by the repository owner at `resources/nophotoforplayer.jpg` |
-| **Author** | Unknown |
-| **Licence** | **Unconfirmed** |
-| **Retrieved** | 2026-07-31 |
+Everything visual in the app is drawn. The favicon, the court backdrop and every
+icon are SVG written against the tokens, so they theme with the palette and
+carry no attribution burden. The one self-hosted binary, the Anton display face
+under `wwwroot/fonts/`, is a typeface rather than imagery; it ships under the SIL
+OFL and `PRODUCT.md` records the commitment to self-host it.
 
-> **This entry is incomplete and is the one thing in this file that does not
-> meet its own standard.** The image was provided without provenance. It has the
-> visual signature of a commercial stock avatar, and if it came from a stock
-> library it cannot ship in a public repository.
->
-> **Before this repository is published or released, either confirm the licence
-> and complete this entry, or delete the file.** `PlayerAvatar` already falls
-> back to drawn initials when no image is set, so removing it costs one line and
-> breaks nothing — the component treats a missing portrait as an ordinary state,
-> not an error.
->
-> A drawn SVG silhouette would remove the question entirely and would theme with
-> the palette, which this neutral grey does not.
+### Removed: `img/player-placeholder.jpg`
+
+A grey silhouette avatar, added on 2026-07-31 for `PlayerAvatar`'s no-photo
+state and removed on 2026-08-03 without ever having been wired up. Recorded here
+rather than deleted quietly, because both reasons apply to the next one somebody
+adds:
+
+- **Its licence could not be named.** It arrived without provenance and has the
+  visual signature and the square dimensions of a commercial stock avatar. An
+  asset whose terms cannot be stated fails the third rule above, and this
+  repository is public.
+- **Nothing referenced it.** `PlayerAvatar` already draws initials when no
+  portrait is set, and initials carry more than a silhouette does — they
+  identify the row. The file was shipped weight and legal exposure buying
+  nothing.
+
+When a portrait set exists, `PlayerAvatar` takes an `ImageUrl` and falls back to
+initials per player, so portraits can land one at a time as their licences are
+confirmed. Each one gets an entry here.

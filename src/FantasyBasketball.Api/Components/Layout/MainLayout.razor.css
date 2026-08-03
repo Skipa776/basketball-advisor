@@ -198,8 +198,12 @@ main ::deep form {
     margin-block-end: var(--space-7);
 }
 
+/* min-width: 0 because a fieldset's initial min-inline-size is min-content, so
+   it refuses to shrink below its widest child and pushes the document sideways
+   on a phone instead of wrapping. Row D-30. */
 main ::deep fieldset {
     display: grid;
+    min-width: 0;
     gap: var(--space-5);
     padding: var(--space-6);
     border: thin solid var(--color-rule);
@@ -242,6 +246,17 @@ main ::deep button {
     cursor: pointer;
 }
 
+/* The one action a form exists to perform. Matches .button-link.primary so a
+   submit button and a link that starts the same job look like the same thing.
+   Justify-self keeps it at its own width inside the fieldset grid rather than
+   stretched across the column. */
+main ::deep button.primary {
+    justify-self: start;
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+}
+
 main ::deep input:focus-visible,
 main ::deep select:focus-visible,
 main ::deep button:focus-visible,
@@ -276,9 +291,28 @@ main ::deep [data-numeric] {
     font-variant-numeric: tabular-nums;
 }
 
+/* A GUID is 36 unbreakable characters, and at the mono size that is wider than
+   a phone. League ids and player names both land in these, and neither is
+   something the app gets to choose the length of. Row D-30. */
+main ::deep code,
+main ::deep h1,
+main ::deep h2,
+main ::deep h3 {
+    overflow-wrap: anywhere;
+}
+
+main ::deep .panel {
+    min-width: 0;
+}
+
+/* Field help carries syntax examples -- "PG,SG,SF,PF,C,UTIL,BENCH,IR" -- which
+   have no spaces and are therefore one word to the layout engine. `anywhere`
+   rather than `break-word` because only `anywhere` also shrinks min-content, so
+   the fieldset above can actually get narrow. */
 main ::deep small {
     display: block;
     margin-block-start: var(--space-2);
+    overflow-wrap: anywhere;
     color: var(--color-text-muted);
     font-size: var(--text-xs);
 }
@@ -307,6 +341,43 @@ main ::deep .instrument-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start;
     gap: var(--space-7);
+}
+
+/* One control and the sentence that says what it searches, on a rule rather
+   than in a box. A single field boxed like a form implies more fields are
+   coming. */
+main ::deep .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: var(--space-6);
+    margin-block-end: var(--space-7);
+    padding-block-end: var(--space-6);
+    border-block-end: var(--rule-width) solid var(--color-rule);
+}
+
+main ::deep .filter-bar .search-field {
+    flex: 1 1 20rem;
+    max-width: 32rem;
+}
+
+main ::deep .filter-context {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+}
+
+/* Setup forms read down a single column at a comfortable measure. The rest of
+   the workspace is dense on purpose; a form being filled in for the first time
+   is the one place in this app that is not. */
+main ::deep .setup-form fieldset {
+    max-width: 34rem;
+}
+
+main ::deep .league-shape {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
 }
 
 main ::deep .inline-form {
@@ -479,13 +550,18 @@ main ::deep .visually-hidden {
         padding: var(--space-5);
     }
 
+    /* minmax(0, 1fr) rather than 1fr. A grid item's automatic minimum is its
+       min-content width, so a plain 1fr track refuses to go narrower than the
+       widest input inside it and the whole document scrolls sideways. The
+       desktop tracks above already say minmax; these said 1fr and were the
+       thing row D-30 caught on /league. */
     main ::deep .draft-workspace {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     main ::deep .instrument-grid,
     main ::deep .inline-form {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 

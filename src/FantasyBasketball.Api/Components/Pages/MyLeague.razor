@@ -1,20 +1,30 @@
 @page "/league"
 @rendermode InteractiveServer
 @inject LeagueService Leagues
+@inject ActiveLeague ActiveLeague
 
-<PageTitle>My League</PageTitle>
-<PageHeader Title="My League"
-            Description="League rules determine every projection value and draft recommendation." />
+<PageTitle>League Rules</PageTitle>
+@* Titled for what it is. "My League" beside "My Leagues" in the same nav
+   group is two labels one character apart pointing at different things, and
+   the reader has to open both to learn which is which. *@
+<PageHeader Title="League Rules"
+            Description="Every projection value and draft recommendation is computed under these rules, and under nothing else.">
+    <Actions>
+        <a class="button-link" href="/leagues">All leagues</a>
+    </Actions>
+</PageHeader>
 
 @if (error is not null)
 {
     <ErrorState Id="league-error"
                 Message="@error"
-                Recovery="Check category, scoring, and roster values against the examples below." />
+                Recovery="Check category, scoring, and roster values against the accepted values listed under each field." />
 }
 
 <div class="instrument-grid">
-    <form @onsubmit="CreateLeagueAsync" @onsubmit:preventDefault>
+    <form class="setup-form"
+          @onsubmit="CreateLeagueAsync"
+          @onsubmit:preventDefault>
         <fieldset disabled="@saving"
                   aria-describedby="@(error is null ? null : "league-error")">
             <legend>Create a league</legend>
@@ -28,84 +38,140 @@
             </p>
             <p>
                 <label for="league-type">League type</label>
-                <select id="league-type" @bind="leagueType">
+                <select id="league-type"
+                        @bind="leagueType"
+                        aria-describedby="league-type-help">
                     @foreach (var value in Enum.GetValues<LeagueType>())
                     {
                         <option value="@value">@value</option>
                     }
                 </select>
+                <small id="league-type-help">Points totals a scoring formula. Categories wins or loses each stat separately.</small>
             </p>
             <p>
                 <label for="league-cadence">Lineup cadence</label>
-                <select id="league-cadence" @bind="cadence">
+                <select id="league-cadence"
+                        @bind="cadence"
+                        aria-describedby="league-cadence-help">
                     @foreach (var value in Enum.GetValues<LineupCadence>())
                     {
                         <option value="@value">@value</option>
                     }
                 </select>
+                <small id="league-cadence-help">How often you can change the lineup. It decides which games are usable.</small>
             </p>
-            <p>
-                <label for="scoring-rules">Points scoring rules</label>
-                <input id="scoring-rules"
-                       @bind="scoringText"
-                       aria-describedby="scoring-help" />
-                <small id="scoring-help">Example: PTS=1,REB=1.2</small>
-            </p>
-            <p>
-                <label for="categories">Categories</label>
-                <input id="categories"
-                       @bind="categoriesText"
-                       aria-describedby="categories-help" />
-                <small id="categories-help">Example: PTS,REB,AST</small>
-            </p>
+            @* Only the half that applies. A points league has no categories to
+               fill in and a category league has no points-per-unit, and asking
+               for both taught every new user that half this form is ignorable. *@
+            @if (leagueType == LeagueType.Points)
+            {
+                <p>
+                    <label for="scoring-rules">Scoring rules</label>
+                    <input id="scoring-rules"
+                           @bind="scoringText"
+                           aria-describedby="scoring-help" />
+                    <small id="scoring-help">
+                        Stat=points, comma separated. Example: PTS=1,REB=1.2,TOV=-1.
+                        Accepted stats: @StatKeys
+                    </small>
+                </p>
+            }
+            else
+            {
+                <p>
+                    <label for="categories">Categories</label>
+                    <input id="categories"
+                           @bind="categoriesText"
+                           aria-describedby="categories-help" />
+                    <small id="categories-help">
+                        Comma separated. Example: PTS,REB,AST.
+                        Accepted stats: @StatKeys
+                    </small>
+                </p>
+            }
             <p>
                 <label for="roster-slots">Roster slots</label>
                 <input id="roster-slots"
                        @bind="rosterText"
                        required
                        aria-describedby="roster-help" />
-                <small id="roster-help">Example: PG,SG,SF,PF,C,UTIL,BENCH,IR</small>
+                <small id="roster-help">
+                    One entry per slot, repeated for each copy. Example:
+                    PG,SG,SF,PF,C,UTIL,BENCH,BENCH,IR.
+                    Accepted slots: @RosterKinds
+                </small>
             </p>
-            <button type="submit">Create league</button>
+            @* Nothing here is pre-filled. The product's whole claim is that it
+               computes under your league's rules rather than a provider's
+               defaults, and a form that arrives holding a guess is how a guess
+               becomes a fact nobody checked. *@
+            <button type="submit" class="primary">Create league</button>
         </fieldset>
     </form>
 
-    @if (leagues.Count == 0)
+    @if (current is null)
     {
         <EmptyState Title="No league configured"
-                    Description="Every projection and draft recommendation is computed under a league's own rules, so this comes first." />
+                    Description="Every projection and draft recommendation is computed under a league's own rules, so this comes first. Create one on the left and the rules it will use appear here." />
     }
     else
     {
-        @foreach (var league in leagues)
-        {
-            <article class="panel" aria-labelledby="league-summary-@league.Id">
-                <h2 id="league-summary-@league.Id">@league.Name</h2>
-                <p>
-                    <code>@league.Id</code>
-                    @* Was "paste it into Players", which is no longer how you
-                       get there: the switcher in the top bar does it. The ID
-                       stays visible because a shared link needs it. *@
-                    <small>League ID, for linking straight to this league. Switching leagues is in the bar above.</small>
-                </p>
-                <p>@league.TeamCount teams · @league.Type · @league.Cadence lineups</p>
-                <h3>Scoring</h3>
-                <ul>
-                    @foreach (var rule in league.ScoringRules)
-                    {
-                        <li>
-                            <span>@rule.Stat</span>
-                            <strong data-numeric>@rule.PointsPerUnit.ToString("0.###", CultureInfo.InvariantCulture)</strong>
-                        </li>
-                    }
-                    @foreach (var category in league.Categories)
-                    {
-                        <li><span>@category</span><strong>category</strong></li>
-                    }
-                </ul>
-                <p>Roster: @string.Join(", ", league.RosterSlots.Select(slot => slot.Kind))</p>
-            </article>
-        }
+        <article class="panel" aria-labelledby="league-summary">
+            <h2 id="league-summary">@current.Name</h2>
+            <p class="league-shape">
+                <span data-numeric>@current.TeamCount</span> teams ·
+                @current.Type ·
+                @current.Cadence lineups
+            </p>
+
+            @if (current.Type == LeagueType.Points)
+            {
+                <table>
+                    <caption>Scoring rules for @current.Name</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Stat</th>
+                            <th scope="col">Points per unit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var rule in current.ScoringRules)
+                        {
+                            <tr>
+                                <th scope="row">@rule.Stat</th>
+                                <td data-numeric>@rule.PointsPerUnit.ToString("0.###", CultureInfo.InvariantCulture)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <h3>Categories</h3>
+                <p>@string.Join(", ", current.Categories)</p>
+            }
+
+            <h3>Roster</h3>
+            @* Grouped and counted rather than listed. "BENCH, BENCH, BENCH" is
+               three words for one fact, and a fourteen-slot roster printed flat
+               is a line nobody reads to the end of. *@
+            <dl class="stat-list">
+                @foreach (var slot in RosterShape)
+                {
+                    <div>
+                        <dt>@slot.Kind</dt>
+                        <dd data-numeric>@slot.Count</dd>
+                    </div>
+                }
+            </dl>
+
+            <p>
+                <code>@current.Id</code>
+                @* The switcher in the top bar is how you change leagues now.
+                   The ID stays visible because a shared link still needs it. *@
+                <small>League ID, for linking straight to this league.</small>
+            </p>
+        </article>
     }
 </div>
 
@@ -121,14 +187,41 @@
     private string? error;
     private IReadOnlyList<FantasyLeague> leagues = [];
 
+    /// <summary>
+    /// The one league whose rules this page shows. Every league used to be
+    /// printed here in full, which made this a second, worse copy of My
+    /// Leagues; the list lives there and the rules live here.
+    /// </summary>
+    private FantasyLeague? current;
+
+    private string StatKeys => string.Join(", ", Enum.GetNames<StatKey>());
+
+    private string RosterKinds =>
+        string.Join(", ", Enum.GetNames<RosterSlotKind>());
+
+    private IReadOnlyList<RosterSlotCount> RosterShape =>
+        current is null
+            ? []
+            : current.RosterSlots
+                .GroupBy(slot => slot.Kind)
+                .Select(group => new RosterSlotCount(group.Key, group.Count()))
+                .ToArray();
+
     // Without this the page only ever showed a league in the render that
     // created it: navigating away and back said "No league configured" while
     // the league sat in the database, and the draft page's "use the ID shown
     // on My League" pointed at an ID the user could no longer see.
     protected override async Task OnInitializedAsync() => await LoadAsync();
 
-    private async Task LoadAsync() =>
+    private async Task LoadAsync()
+    {
         leagues = await Leagues.ListAsync(CancellationToken.None);
+        var active = ActiveLeague.Current;
+        current = leagues.FirstOrDefault(league => league.Id == active)
+            ?? leagues.FirstOrDefault();
+    }
+
+    private sealed record RosterSlotCount(RosterSlotKind Kind, int Count);
 
     private async Task CreateLeagueAsync()
     {
@@ -143,18 +236,22 @@
                     "roster slot")
                 .Select(kind => new RosterSlot(kind))
                 .ToArray();
-            await Leagues.CreateAsync(
-                new FantasyLeague(
-                    Guid.NewGuid(),
-                    name,
-                    leagueType,
-                    teamCount,
-                    rules,
-                    categories,
-                    rosterSlots,
-                    cadence),
-                CancellationToken.None);
+            var created = new FantasyLeague(
+                Guid.NewGuid(),
+                name,
+                leagueType,
+                teamCount,
+                rules,
+                categories,
+                rosterSlots,
+                cadence);
+            await Leagues.CreateAsync(created, CancellationToken.None);
             await LoadAsync();
+            // Show what was just made, not whatever the cookie still points at.
+            // The switcher in the bar is a separate action and the user has not
+            // taken it yet.
+            current = leagues.FirstOrDefault(league => league.Id == created.Id)
+                ?? current;
         }
         catch (ArgumentException exception)
         {

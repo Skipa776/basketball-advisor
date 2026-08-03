@@ -1,0 +1,67 @@
+@* A search control rather than a text box with a word next to it. The glyph
+   says what the field does before the label is read, and the button sits
+   inside the same border so the pair reads as one object instead of two
+   controls that happen to be adjacent.
+
+   type="search" is the point: it gets the platform's own clear affordance and
+   the right on-screen keyboard, which a text input does not. *@
+<div class="search-field">
+    <label for="@Id">@Label</label>
+    <div class="control">
+        <span class="glyph" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+                <circle cx="11"
+                        cy="11"
+                        r="6"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5" />
+                <path d="M15.6 15.6L20 20"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round" />
+            </svg>
+        </span>
+        <input id="@Id"
+               type="search"
+               value="@Value"
+               @oninput="HandleInputAsync"
+               aria-describedby="@HelpId" />
+        <button type="submit">@ButtonLabel</button>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(Help))
+    {
+        <small id="@HelpId">@Help</small>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Id { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> ValueChanged { get; set; }
+
+    /// <summary>Where the results come from, or what the search matches.</summary>
+    [Parameter]
+    public string? Help { get; set; }
+
+    [Parameter]
+    public string ButtonLabel { get; set; } = "Search";
+
+    // Null rather than an id pointing at nothing: row D-18 requires every
+    // aria-describedby to resolve, and Blazor omits an attribute whose value
+    // is null.
+    private string? HelpId =>
+        string.IsNullOrWhiteSpace(Help) ? null : $"{Id}-help";
+
+    private Task HandleInputAsync(ChangeEventArgs args) =>
+        ValueChanged.InvokeAsync(args.Value?.ToString());
+}

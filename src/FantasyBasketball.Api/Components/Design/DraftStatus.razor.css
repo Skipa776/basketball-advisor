@@ -1,0 +1,79 @@
+.draft-status {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+    margin-block-end: var(--space-7);
+    padding: var(--space-6) var(--space-7);
+    border: var(--rule-width) solid var(--color-rule);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+}
+
+/* Your turn is a different surface, not a different colour: a fill reads at a
+   glance from across a desk and survives being printed, screenshotted, or
+   looked at by someone who does not see the hue. */
+.draft-status.is-user-turn {
+    border-color: var(--color-border-strong);
+    background: var(--color-surface-raised);
+}
+
+.figure {
+    display: grid;
+    gap: var(--space-2);
+}
+
+/* The turn column takes the leftover width so the two counters stay together
+   on the left and the state sits at the far end where the eye stops. */
+.figure.turn {
+    margin-inline-start: auto;
+    text-align: end;
+}
+
+.label {
+    color: var(--color-text-muted);
+    font-size: var(--text-2xs);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.value {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+}
+
+.figure.turn .value {
+    justify-content: flex-end;
+}
+
+.value strong {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    line-height: var(--leading-tight);
+}
+
+.of {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+}
+
+@media (max-width: 45rem) {
+    .draft-status {
+        gap: var(--space-6);
+    }
+
+    /* Three columns will not fit; the turn state keeps the full width because
+       it is the one that has to be legible without looking for it. */
+    .figure.turn {
+        flex-basis: 100%;
+        margin-inline-start: 0;
+        padding-block-start: var(--space-5);
+        border-block-start: var(--rule-width) solid var(--color-rule);
+        text-align: start;
+    }
+
+    .figure.turn .value {
+        justify-content: flex-start;
+    }
+}

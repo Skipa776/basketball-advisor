@@ -1,25 +1,38 @@
 @page "/players"
 @inject PlayerQueryService PlayersService
 @inject ProjectionDecompositionService Projections
+@inject LeagueService Leagues
 @inject ActiveLeague ActiveLeague
 
 <PageTitle>Players</PageTitle>
 <PageHeader Title="Players"
             Description="Search the imported player pool and inspect every stage of a league-specific projection." />
 
-<form class="inline-form" @onsubmit="SearchAsync" @onsubmit:preventDefault>
-    <p>
-        <label for="player-search">Search players</label>
-        <input id="player-search" @bind="search" />
+@* One control, not a form of them. Position and team filters would need a
+   vocabulary this app does not own -- positions arrive from the provider as
+   free text, so a fixed PG/SG/SF/PF/C list would silently return nothing
+   against a pool that says "G-F". Search is the filter that is true. *@
+<form class="filter-bar" @onsubmit="SearchAsync" @onsubmit:preventDefault>
+    <SearchField Id="player-search"
+                 Label="Search players"
+                 @bind-Value="search"
+                 Help="Matches on name across every imported player." />
+    <p class="filter-context">
+        @if (leagueName is null)
+        {
+            <span>
+                No active league, so projections are unavailable. Choose one in
+                the bar above.
+            </span>
+        }
+        else
+        {
+            <span>
+                Projections are computed under
+                <strong>@leagueName</strong> rules.
+            </span>
+        }
     </p>
-    <p>
-        <label for="projection-league">League ID</label>
-        <input id="projection-league"
-               @bind="leagueText"
-               aria-describedby="projection-league-help" />
-        <small id="projection-league-help">Copy it from My League. Projections are computed under that league's rules.</small>
-    </p>
-    <button type="submit">Search</button>
 </form>
 
 @if (error is not null)
@@ -30,15 +43,25 @@
 
 @if (players is null)
 {
-    <EmptyState Title="Loading player pool"
-                Description="Imported players will appear here." />
+    <SkeletonRows Rows="8" Label="Loading the player pool" />
+}
+else if (players.Items.Count == 0 && !string.IsNullOrWhiteSpace(search))
+{
+    @* A search that matched nothing and a pool that is empty are different
+       problems with different fixes, so they are different screens. *@
+    <EmptyState Title="No player matches that search"
+                Description="@($"Nothing in the imported pool matches \"{search}\". Check the spelling, or clear the search to see everyone.")">
+        <Action>
+            <button type="button" @onclick="ClearSearchAsync">Clear search</button>
+        </Action>
+    </EmptyState>
 }
 else if (players.Items.Count == 0)
 {
-    <EmptyState Title="No players found"
-                Description="Change the search term, or import the player pool if this instance has none yet.">
+    <EmptyState Title="No players imported yet"
+                Description="The player pool arrives by import. Nothing on this page, the draft board, or any projection works until it has run at least once.">
         <Action>
-            <a class="button-link" href="/data-sources">Open Data Sources</a>
+            <a class="button-link primary" href="/data-sources">Open Data Sources</a>
         </Action>
     </EmptyState>
 }
@@ -91,7 +114,7 @@ else
     public Guid? LeagueId { get; set; }
 
     private string? search;
-    private string leagueText = string.Empty;
+    private string? leagueName;
     private PagedResult<Player>? players;
     private FantasyBasketball.Application.Projections.ProjectionDecomposition? projection;
     private string? error;
@@ -135,7 +158,7 @@ else
         // An explicit ?leagueId= still wins, because a shared link should show
         // the league it names rather than whichever one the reader last chose.
         LeagueId ??= ActiveLeague.Current;
-        leagueText = LeagueId?.ToString() ?? leagueText;
+        await LoadLeagueNameAsync();
         await SearchAsync();
         projection = null;
         if (PlayerId is null || LeagueId is null)
@@ -156,15 +179,38 @@ else
         }
     }
 
+    // The league is named, not asked for. This page used to demand the caller
+    // paste a League ID into a text box -- an identifier the interface itself
+    // never showed them anywhere they could copy it from.
+    private async Task LoadLeagueNameAsync()
+    {
+        leagueName = null;
+        if (LeagueId is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var leagues = await Leagues.ListAsync(CancellationToken.None);
+            leagueName = leagues
+                .FirstOrDefault(league => league.Id == LeagueId)?.Name;
+        }
+        catch (Exception)
+        {
+            error = "The active league could not be read.";
+        }
+    }
+
+    private async Task ClearSearchAsync()
+    {
+        search = null;
+        await SearchAsync();
+    }
+
     private async Task SearchAsync()
     {
         error = null;
-        if (!string.IsNullOrWhiteSpace(leagueText)
-            && Guid.TryParse(leagueText, out var leagueId))
-        {
-            LeagueId = leagueId;
-        }
-
         try
         {
             players = await PlayersService.ListAsync(

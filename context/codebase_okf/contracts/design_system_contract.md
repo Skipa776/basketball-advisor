@@ -207,9 +207,21 @@ aspiration.
 
 Added by R23 — the shell and the shared instrument language:
 
-`AppSidebar`, `UtilityBar`, `LeagueSelector`, `NotBuiltState`,
-`SegmentedControl`, `PlayerAvatar`, `SearchField`, `FilterGroup`,
-`SkeletonRows`.
+`LeagueSelector`, `NotBuiltState`, `PlayerAvatar`, `SearchField`,
+`SkeletonRows`, `DraftStatus`.
+
+The sidebar and the utility bar are markup inside `MainLayout`, not components.
+They render once, in one place, and have no second caller — extracting them
+would buy a file boundary and nothing else. An earlier draft of this list named
+them, and `SegmentedControl` and `FilterGroup` besides; all four were removed on
+2026-08-03 when the surfaces that were supposed to need them turned out not to.
+**This list names what exists.** A contract that promises components nobody
+built teaches the reader to check the directory instead of the contract.
+
+`FilterGroup` in particular was dropped for a reason worth keeping: the only
+filter it had to offer was position, and positions arrive from the provider as
+free text. A fixed PG/SG/SF/PF/C control would return nothing against a pool
+that says `G-F`, silently. Search is the filter this app can honestly claim.
 
 `NotBuiltState` is the one that needs justifying. It renders a designed surface
 for a capability that does not exist and **names the requirement or roadmap entry
@@ -219,10 +231,16 @@ admits a thing is not built cannot be forgotten by whoever lays out the page
 around it. Row `D-33` enforces both halves — the naming, and the absence of
 numbers.
 
-`PlayerAvatar` renders initials over a CSS-generated fill. **It takes no image
-URL.** No player photography is licensed, the product commits to never using an
-identifiable likeness, and a component with an optional `src` invites someone to
-pass one.
+`PlayerAvatar` renders initials over a CSS-generated fill, and takes an optional
+`ImageUrl` for a portrait whose licence is recorded in `ASSETS.md` (row `D-34`).
+**Initials are the default, not the failure case.** No portrait set covers every
+player in a league, so a design that assumes one breaks on the first rookie; the
+component treats a missing photo as an ordinary state.
+
+`DraftStatus` carries the pick, the round, and whether the reader is on the
+clock. It states the turn with fill and weight rather than the accent: orange on
+that screen belongs to the recommended row (`D-23`), and a second orange object
+above the board spends the signal twice.
 
 `SkeletonRows` renders at `--board-row-height` exactly, so the loaded state
 occupies the same geometry as the loading state and nothing shifts on arrival —

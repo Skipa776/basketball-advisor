@@ -627,6 +627,36 @@ is not true.
 cause — the review queue prints each event's ID — rather than by adding help
 text that explains where to find something invisible.
 
+# What the browser gate was not actually checking — 2026-08-03
+
+Two of its own assertions were dead, and the suite was green over both.
+
+**`D-13` had been clicking the wrong button since the league switcher landed.**
+The gate submitted `document.querySelector('form button[type=submit]')`, and the
+switcher's form sits in the utility bar, above `<main>` in document order. So
+every run posted a cookie change, redirected back to `/draft`, and then timed out
+waiting for a pick entry that no draft had started. The failure read
+`Browser condition timed out`, which named nothing, so the gate now reports the
+page's own state when the combobox never arrives.
+
+**`D-30` walked only the three signed-out routes**, which is the half that was
+never at risk — public pages are one column by construction, while the instrument
+is built from two-column grids that have to collapse. Given the workspace routes
+it failed on the first run, on three separate causes:
+
+- A grid item's automatic minimum is its **min-content** width, so the mobile
+  `grid-template-columns: 1fr` overrides refused to shrink below the widest input
+  inside them. The desktop tracks already said `minmax(0, 1fr)`; the mobile ones
+  did not.
+- A `fieldset`'s initial `min-inline-size` is `min-content` for the same reason,
+  and needs an explicit `min-width: 0`.
+- **A league id is 36 unbreakable characters**, which at the mono size is wider
+  than a phone. That one had been shipping since the page existed.
+
+The general lesson is the one worth keeping: **a gate that only walks the front
+door tests the surface that was already safe.** The routes behind sign-in are
+where the layouts are.
+
 # Revisit triggers
 
 - The user's real league settings differ from the seed league → update

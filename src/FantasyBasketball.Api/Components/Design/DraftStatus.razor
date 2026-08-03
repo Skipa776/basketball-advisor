@@ -1,0 +1,66 @@
+@* The one line on this page that gets read on a clock. Three facts, in the
+   order they are asked for: which pick is live, how far into the draft that
+   is, and whether the person reading it has to do something right now.
+
+   The turn state is carried by weight, fill, and words -- not by the accent.
+   Orange on this screen belongs to the recommended row (row D-23), and a
+   second orange object above the board spends the signal twice. *@
+<section class="draft-status @StateClass" aria-label="Draft status">
+    <div class="figure">
+        <span class="label">Pick</span>
+        <span class="value">
+            <strong data-numeric>@Pick</strong>
+            <span class="of">of <span data-numeric>@TotalPicks</span></span>
+        </span>
+    </div>
+    <div class="figure">
+        <span class="label">Round</span>
+        <span class="value">
+            <strong data-numeric>@Round</strong>
+            <span class="of">of <span data-numeric>@RoundCount</span></span>
+        </span>
+    </div>
+    <div class="figure turn">
+        <span class="label">On the clock</span>
+        <span class="value">
+            <strong>@TurnLabel</strong>
+        </span>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public int Pick { get; set; }
+
+    [Parameter, EditorRequired]
+    public int TeamCount { get; set; }
+
+    [Parameter, EditorRequired]
+    public int RoundCount { get; set; }
+
+    /// <summary>
+    /// Picks remaining before this user is up. Zero and null both mean now —
+    /// the caller does not have to normalise which one it has.
+    /// </summary>
+    [Parameter]
+    public int? PicksUntilNextTurn { get; set; }
+
+    private bool IsUserTurn => PicksUntilNextTurn is null or 0;
+
+    private string StateClass => IsUserTurn ? "is-user-turn" : string.Empty;
+
+    private int TotalPicks => TeamCount * RoundCount;
+
+    // Pick 1 is round 1. Integer division on the zero-based pick index gives
+    // that without a special case for the first pick of each round.
+    private int Round => ((Pick - 1) / Math.Max(TeamCount, 1)) + 1;
+
+    // "1 picks until your next turn" is the kind of thing this product cannot
+    // afford to print, and zero is not a countdown at all — it is your turn.
+    private string TurnLabel => PicksUntilNextTurn switch
+    {
+        null or 0 => "Your pick",
+        1 => "1 pick away",
+        var count => $"{count} picks away",
+    };
+}

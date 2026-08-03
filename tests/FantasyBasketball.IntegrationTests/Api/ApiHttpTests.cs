@@ -437,7 +437,7 @@ public sealed class ApiHttpTests : IAsyncLifetime
 
     [Theory]
     [InlineData("/", "Dashboard")]
-    [InlineData("/league", "My League")]
+    [InlineData("/league", "League Rules")]
     [InlineData("/players", "Players")]
     [InlineData("/draft", "Draft Assistant")]
     [InlineData("/context-review", "Context Review")]

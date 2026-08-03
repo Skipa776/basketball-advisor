@@ -74,11 +74,18 @@ each is a row and not a guideline.
 |---|---|---|---|
 | `D-28` | Every `@page` route, enumerated by reflection | Reachable from a link or nav entry on some rendered page. An orphan route fails | ✅ |
 | `D-29` | Every marketing CTA, rendered anonymously | Its destination is reachable under the instance's current configuration — a CTA that lands on "unavailable" is a failure, not a redirect | ✅ |
-| `D-30` | Every page at **390 CSS px** | No horizontal document overflow. Decorative backdrops may exceed the viewport; content and controls may not | ✅ |
+| `D-30` | Every page at **390 CSS px**, public *and* signed-in | No horizontal document overflow. Decorative backdrops may exceed the viewport; content and controls may not | ✅ |
 | `D-31` | The app landing page and `site/index.html` | Same product name and wordmark. Two front doors naming two products fails | ✅ |
 | `D-32` | Every input whose label names an identifier | Either a `<select>`, or an `aria-describedby` that resolves to text naming where the value comes from | ✅ |
 | `D-33` | Every page with no backing capability | Renders `NotBuiltState` naming its requirement or roadmap entry, and renders **no** numeric player or team data. The string "coming soon" fails | ✅ |
 | `D-34` | Every binary under `wwwroot/img` | Has an `ASSETS.md` entry with source, licence, author, and retrieval date | ✅ |
+
+`D-30` walked only the three signed-out routes until 2026-08-03, which was the
+half that was never at risk: the public pages are one column by construction,
+while the instrument is built from two-column grids that have to collapse. Given
+the workspace routes it failed immediately, on a league id — 36 unbreakable
+characters at the mono size is wider than a phone, and it had been shipping that
+way since the page existed.
 
 `D-28` exists because `/welcome` shipped with no inbound link and a green suite:
 the route sweep rendered it, so every test passed, and no user could reach it.
