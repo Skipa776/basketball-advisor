@@ -33,7 +33,19 @@ namespace FantasyBasketball.Api;
 public static class DependencyInjection
 {
     private static readonly TimeSpan CacheFreshness = TimeSpan.FromDays(1);
-    private static readonly TimeSpan MinimumRequestInterval = TimeSpan.FromSeconds(10);
+    /// <summary>
+    /// Floor between requests to any one external host: 10s, or six a minute.
+    /// That is the self-imposed scrape ceiling in safety/scraping_policy.md and
+    /// it stays the default.
+    ///
+    /// Configurable because a published API limit is not the same number as a
+    /// politeness ceiling, and balldontlie's free tier is five a minute -- one
+    /// tighter than this. A player import paginates far enough that the
+    /// difference is the whole run: teams (one request) succeeded while players
+    /// earned a 429 partway through. Raising the interval is the operator's
+    /// lever; nothing here may ever LOWER it below the policy floor.
+    /// </summary>
+    private const int DefaultRequestIntervalSeconds = 10;
     private const string UserAgent =
         "FantasyBasketballDecisionEngine/0.1 (personal project; contact via repository)";
 
@@ -144,7 +156,13 @@ public static class DependencyInjection
             };
         });
         services.AddMemoryCache();
-        services.AddSingleton(new HostRateLimiter(MinimumRequestInterval));
+        var requestIntervalSeconds = Math.Max(
+            DefaultRequestIntervalSeconds,
+            configuration.GetValue(
+                "Http:MinimumRequestIntervalSeconds",
+                DefaultRequestIntervalSeconds));
+        services.AddSingleton(
+            new HostRateLimiter(TimeSpan.FromSeconds(requestIntervalSeconds)));
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton(serviceProvider =>
             serviceProvider.GetRequiredService<IOptions<ProjectionOptions>>().Value);
@@ -211,9 +229,18 @@ public static class DependencyInjection
             serviceProvider.GetRequiredService<ImportJobQueue>());
         services.AddHostedService(serviceProvider =>
             serviceProvider.GetRequiredService<ImportJobQueue>());
-        services.AddHostedService<ScheduleRefreshWorker>();
-        services.AddHostedService<StatRefreshWorker>();
-        services.AddHostedService<AdpRefreshWorker>();
+        // The queue itself always runs -- it is what executes a manual import.
+        // The three RECURRING refreshers are switchable; see
+        // RefreshWorkerOptions.Enabled for why that matters on a small rate
+        // budget. Default true, so this changes nothing unless asked.
+        if (configuration
+            .GetSection(RefreshWorkerOptions.SectionName)
+            .GetValue("Enabled", true))
+        {
+            services.AddHostedService<ScheduleRefreshWorker>();
+            services.AddHostedService<StatRefreshWorker>();
+            services.AddHostedService<AdpRefreshWorker>();
+        }
 
         AddSourceClient(
             services,

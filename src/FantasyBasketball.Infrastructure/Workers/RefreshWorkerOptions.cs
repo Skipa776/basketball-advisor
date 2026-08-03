@@ -4,6 +4,18 @@ public sealed class RefreshWorkerOptions
 {
     public const string SectionName = "RefreshWorkers";
 
+    /// <summary>
+    /// Whether the recurring refreshers run at all. True by default: an
+    /// unattended instance should keep itself fresh.
+    ///
+    /// Turning them off frees the whole per-host rate budget for a manual
+    /// import. Each worker fires once on startup and then daily, so they are
+    /// not a constant drain -- but every restart is a fresh volley, and on
+    /// balldontlie's free tier a handful of those plus a paginating player
+    /// import is enough to earn a 429 against a perfectly valid key.
+    /// </summary>
+    public bool Enabled { get; set; } = true;
+
     public ScheduleRefreshOptions Schedule { get; set; } = new();
 
     public StatRefreshOptions Stats { get; set; } = new();
