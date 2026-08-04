@@ -75,22 +75,30 @@ thead {
    is honoured -- so PlayerRow's `min-width: 12rem` on the name never applied
    and the seven columns split the width evenly. On a phone that left the name,
    the only identifying content in the row, ellipsed to a letter or two.
-   Fixed widths on the numeric columns, and whatever is left goes to the name. */
-.player-table[data-ranked="True"] th:nth-child(2) {
+   Fixed widths on the numeric columns, and whatever is left goes to the name.
+
+   Every other column has to be sized for that to mean anything: under fixed
+   layout `width: auto` is "share the leftover equally", so rank, position and
+   the recommendation flag each took a quarter of the remaining space and the
+   name ellipsed at 1440 CSS px with the table half empty. */
+.player-table[data-ranked="true"] th:nth-child(2) {
     width: auto;
 }
 
-.player-table[data-ranked="True"] th.numeric {
+.player-table[data-ranked="true"] th:nth-child(1) {
+    width: 4rem;
+}
+
+.player-table[data-ranked="true"] th:nth-child(3) {
     width: 5rem;
 }
 
-/* ADP is the least load-bearing of the three: it is market position, not this
-   league's own value. It is the column to lose when there is no room. */
-@media (max-width: 52rem) {
-    .player-table th:nth-child(6),
-    .player-table ::deep .player-row > td:nth-child(6) {
-        display: none;
-    }
+.player-table[data-ranked="true"] th.numeric {
+    width: 6rem;
+}
+
+.player-table[data-ranked="true"] th:nth-child(6) {
+    width: 4rem;
 }
 
 .visually-hidden {
@@ -106,6 +114,6 @@ thead {
    sit at opposite ends of a very wide row with nothing between them, and the
    eye has to travel the whole span to pair them up. The ranked board earns the
    full width because it fills it with numbers. */
-.player-table[data-ranked="False"] {
+.player-table[data-ranked="false"] {
     max-width: 44rem;
 }

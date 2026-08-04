@@ -3,8 +3,19 @@
    the order is alphabetical and "Rank 1" would be a claim about a player that
    happens to start with A. The columns are dropped rather than dashed, because
    a column of em dashes says the number is missing when the truth is that the
-   number does not apply to this view. *@
-<div class="player-table" data-player-table data-ranked="@Ranked">
+   number does not apply to this view.
+
+   There is no ADP column. DraftValue does not carry the average draft position
+   -- the domain consumes it as the "value relative to market ADP" evidence line
+   and never surfaces the number itself -- so the column rendered an em dash on
+   every row of every board. The market signal is in the evidence panel. *@
+@* A string, not the bool. Blazor treats a bool-valued attribute as a boolean
+   attribute: false omits it entirely and true writes it with no value, so
+   `[data-ranked="True"]` and `[data-ranked="False"]` both matched nothing and
+   every column-width rule below was dead. *@
+<div class="player-table"
+     data-player-table
+     data-ranked="@(Ranked ? "true" : "false")">
     <table>
         <caption>@Caption</caption>
         <thead>
@@ -19,7 +30,6 @@
                 {
                     <th scope="col" class="numeric">Value</th>
                     <th scope="col" class="numeric">VAR</th>
-                    <th scope="col" class="numeric">ADP</th>
                     <th scope="col"><span class="visually-hidden">Recommendation</span></th>
                 }
             </tr>

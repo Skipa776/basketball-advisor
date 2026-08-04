@@ -9,7 +9,6 @@ public sealed record PlayerTableItem(
     string Positions,
     decimal? Value,
     decimal? ValueAboveReplacement,
-    decimal? AverageDraftPosition,
     bool IsRecommended,
     bool HasUnverifiedContext,
     IReadOnlyList<RecommendationEvidence> Evidence,
