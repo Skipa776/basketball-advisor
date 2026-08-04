@@ -1,94 +1,32 @@
-.pick-entry {
-    padding: var(--space-6);
-    border: thin solid var(--color-rule);
-    border-radius: var(--radius-md);
-    background: var(--color-surface);
-}
-
 .entry-heading {
     display: flex;
-    align-items: start;
     justify-content: space-between;
-    gap: var(--space-6);
-}
-h2,
-p {
-    margin: 0;
-}
-
-h2 {
-    font-size: var(--text-base);
-}
-
-.instruction {
-    margin-block: var(--space-5);
-    color: var(--color-text-muted);
-    font-size: var(--text-xs);
-}
-
-label {
-    display: block;
-    margin-block-end: var(--space-2);
-    color: var(--color-text-muted);
-    font-size: var(--text-xs);
-    font-weight: 600;
+    gap: var(--space-4);
 }
 
 .combobox {
-    position: relative;
+    display: flex;
+    align-items: center;
 }
 
-input {
-    width: 100%;
-    padding-inline-end: var(--space-8);
+.combobox input {
+    flex: 1;
 }
 
-.shortcut {
-    position: absolute;
-    inset-block-start: 50%;
-    inset-inline-end: var(--space-4);
-    color: var(--color-text-muted);
-    font: 400 var(--text-2xs)/1 var(--font-mono);
-    pointer-events: none;
-    transform: translateY(-50%);
-}
-
-ul {
-    max-height: 16rem;
-    margin: var(--space-2) 0 0;
+.pick-entry ul {
+    margin: 0;
     padding: 0;
-    overflow: auto;
-    border: thin solid var(--color-rule);
+    border: var(--rule-width) solid var(--color-border-strong);
     list-style: none;
 }
 
-li {
+.pick-entry li {
     display: flex;
-    min-height: var(--target-min);
-    align-items: center;
     justify-content: space-between;
-    gap: var(--space-5);
-    padding: var(--space-3) var(--space-4);
-    border-block-end: thin solid var(--color-rule);
+    padding: var(--space-3);
     cursor: pointer;
-    font-size: var(--text-sm);
 }
 
-li:last-child {
-    border-block-end: 0;
-}
-
-li[aria-selected="true"] {
-    background: var(--color-surface-raised);
-    box-shadow: inset var(--space-1) 0 var(--color-accent);
-}
-
-.position {
-    color: var(--color-text-muted);
-    font: 400 var(--text-xs)/1 var(--font-mono);
-}
-
-.secondary {
-    background: transparent;
-    color: var(--color-text);
+.pick-entry li[aria-selected="true"] {
+    font-weight: 600;
 }

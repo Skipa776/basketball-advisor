@@ -1,119 +1,14 @@
 .player-table {
-    max-height: min(65vh, 46rem);
+    max-height: 70vh;
     overflow: auto;
-    border-block: thin solid var(--color-rule);
-    background: var(--color-surface);
-    scrollbar-gutter: stable;
+    border: var(--rule-width) solid var(--color-border-strong);
 }
 
 .player-table table {
     width: 100%;
     table-layout: fixed;
-    border-collapse: separate;
-    border-spacing: 0;
 }
 
-caption {
-    position: absolute;
-    width: var(--space-1);
-    height: var(--space-1);
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-}
-
-thead {
-    position: sticky;
-    z-index: 1;
-    inset-block-start: 0;
-    background: var(--color-surface);
-}
-
-.player-table th {
-    box-sizing: border-box;
-    height: var(--board-row-height);
-    padding: var(--space-2) var(--space-5);
-    border-block-end: thin solid var(--color-border-strong);
-    color: var(--color-text-muted);
-    font: 600 var(--text-2xs)/1 var(--font-sans);
-    letter-spacing: 0.06em;
-    text-align: start;
-    text-transform: uppercase;
-}
-
-.player-table ::deep .player-row {
-    height: var(--board-row-height);
-}
-
-.player-table ::deep .player-row > td,
-.player-table ::deep .player-row > th {
-    box-sizing: border-box;
-    height: var(--board-row-height);
-    padding: var(--space-2) var(--space-5);
-    overflow: hidden;
-    border-block-end: 0;
-    box-shadow:
-        inset 0 calc(-1 * var(--rule-width)) var(--color-rule);
-    font-size: var(--text-sm);
-    line-height: 1;
-    letter-spacing: normal;
-    text-overflow: ellipsis;
-    text-transform: none;
-    white-space: nowrap;
-}
-
-/* `.player-table th` above is (0,2,1) and a bare `.numeric` is (0,1,0), so the
-   numeric headers had been losing to `text-align: start` since the table was
-   written -- VALUE, VAR and ADP sat hard left over right-aligned columns of
-   digits. DESIGN.md calls a column of misaligned decimals unreadable at the
-   speed a draft demands, and this was that column. */
-.player-table th.numeric {
+.numeric {
     text-align: end;
-}
-
-/* Under `table-layout: fixed` a cell's `min-width` is ignored -- only `width`
-   is honoured -- so PlayerRow's `min-width: 12rem` on the name never applied
-   and the seven columns split the width evenly. On a phone that left the name,
-   the only identifying content in the row, ellipsed to a letter or two.
-   Fixed widths on the numeric columns, and whatever is left goes to the name.
-
-   Every other column has to be sized for that to mean anything: under fixed
-   layout `width: auto` is "share the leftover equally", so rank, position and
-   the recommendation flag each took a quarter of the remaining space and the
-   name ellipsed at 1440 CSS px with the table half empty. */
-.player-table[data-ranked="true"] th:nth-child(2) {
-    width: auto;
-}
-
-.player-table[data-ranked="true"] th:nth-child(1) {
-    width: 4rem;
-}
-
-.player-table[data-ranked="true"] th:nth-child(3) {
-    width: 5rem;
-}
-
-.player-table[data-ranked="true"] th.numeric {
-    width: 6rem;
-}
-
-.player-table[data-ranked="true"] th:nth-child(6) {
-    width: 4rem;
-}
-
-.visually-hidden {
-    position: absolute;
-    width: var(--space-1);
-    height: var(--space-1);
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-}
-
-/* A search result is two columns. Left at full width, the name and the position
-   sit at opposite ends of a very wide row with nothing between them, and the
-   eye has to travel the whole span to pair them up. The ranked board earns the
-   full width because it fills it with numbers. */
-.player-table[data-ranked="false"] {
-    max-width: 44rem;
 }

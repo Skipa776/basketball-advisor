@@ -1,42 +1,4 @@
 .error-state {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: var(--space-5);
-    padding: var(--space-6);
-    border-inline-start: var(--space-1) solid var(--color-negative);
-    background: var(--color-surface);
-}
-
-.state-mark {
-    display: grid;
-    width: var(--target-min);
-    height: var(--target-min);
-    place-items: center;
-    border: thin solid var(--color-negative);
-    border-radius: var(--radius-sm);
-    color: var(--color-negative);
-    font: 600 var(--text-sm)/1 var(--font-mono);
-}
-
-h2,
-p {
-    margin: 0;
-}
-
-h2 {
-    font-size: var(--text-base);
-}
-
-p {
-    margin-block-start: var(--space-2);
-    color: var(--color-text-muted);
-    font-size: var(--text-sm);
-}
-
-.recovery {
-    color: var(--color-text);
-}
-
-.action {
-    margin-block-start: var(--space-5);
+    padding: var(--space-5);
+    border: var(--rule-width) solid var(--color-negative);
 }

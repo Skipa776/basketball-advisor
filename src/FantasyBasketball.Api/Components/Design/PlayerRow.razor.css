@@ -1,66 +1,26 @@
-/* No transform or position transition, deliberately: the board holds still by
-   scroll-anchoring in draft-board.js, not by animating rows into place. A row
-   that translates would fight that correction. Colour is the only thing that
-   moves here, which is why there is no reduced-motion override below. */
 .player-row {
     height: var(--board-row-height);
-    transition: background-color var(--motion-fast) var(--ease-out);
+}
+
+.player-row > th,
+.player-row > td {
+    height: var(--board-row-height);
+    padding-block: 0;
+    line-height: var(--board-row-height);
+}
+
+.player {
+    max-width: 20rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .player-row[data-recommended="True"] {
-    background: var(--color-surface-raised);
-}
-
-.rank,
-.position {
-    color: var(--color-text-muted);
-    font-family: var(--font-mono);
-}
-
-.rank {
-    width: 4rem;
-    text-align: end;
+    font-weight: 600;
 }
 
 .take-marker,
 .recommendation {
     color: var(--color-accent);
-}
-
-.player {
-    /* Was min-width, which table-layout: fixed ignores. The header row
-       above sizes this column now; the cell just must not fight it. */
-    width: auto;
-    color: var(--color-text);
-    font-weight: 600;
-    text-align: start;
-}
-
-a {
-    color: inherit;
-    text-underline-offset: var(--space-2);
-}
-
-.unverified {
-    margin-inline-start: var(--space-3);
-    color: var(--color-caution);
-    font: 600 var(--text-2xs)/1 var(--font-sans);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
-
-.recommendation {
-    width: 4rem;
-    font: 600 var(--text-2xs)/1 var(--font-mono);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-}
-
-.visually-hidden {
-    position: absolute;
-    width: var(--space-1);
-    height: var(--space-1);
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
 }

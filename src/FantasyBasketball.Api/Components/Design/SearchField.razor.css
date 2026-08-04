@@ -1,60 +1,12 @@
-.search-field {
-    display: grid;
-    gap: var(--space-3);
-}
-
-label {
-    color: var(--color-text);
-    font-size: var(--text-sm);
-    font-weight: 600;
-}
-
-/* One border around the whole control, drawn here rather than on the input, so
-   the glyph and the button sit inside the field instead of beside it. */
 .control {
     display: flex;
-    align-items: stretch;
-    overflow: hidden;
-    border: var(--rule-width) solid var(--color-border-strong);
-    border-radius: var(--radius-sm);
-    background: var(--color-surface);
 }
 
-.control:focus-within {
-    box-shadow: var(--focus-ring);
-}
-
-.glyph {
-    display: flex;
-    align-items: center;
-    padding-inline-start: var(--space-5);
-    color: var(--color-text-muted);
-}
-
-.glyph svg {
-    width: var(--space-7);
-    height: var(--space-7);
-}
-
-/* Beats the layout's `main ::deep input` rule on specificity: the field owns
-   its own border now, and a second one inside the first is a seam. */
 .control input {
     min-width: 0;
     flex: 1;
-    border: none;
-    border-radius: 0;
-    background: none;
 }
 
-/* The ring belongs to the whole control, set above on :focus-within. Leaving
-   the input's own ring on would draw a second one inside the first. */
-.control input:focus-visible {
-    box-shadow: none;
-}
-
-.control button {
-    border: none;
-    border-inline-start: var(--rule-width) solid var(--color-rule);
-    border-radius: 0;
-    font-size: var(--text-sm);
+.glyph {
+    display: none;
 }

@@ -1,129 +1,14 @@
-/* Plank seams over the page colour, not a wood fill. The base stays
-   --color-bg, so every contrast pair D-11 measured still holds; the texture is
-   two hairlines at 9% and 5% of the text brown, which reads as a floor without
-   moving the arithmetic. A real maple fill here would put the headline on an
-   untested surface, which is what the contract forbids by construction. */
 .hero {
-    position: relative;
-    display: grid;
-    place-items: center;
-    /* Was a flat pixel value, which left dead space on a laptop and overflowed a
-       short window. Bounded by the viewport so the composition responds to the
-       screen it is actually read on. */
-    min-height: min(var(--hero-min-height), 88vh);
-    padding: var(--space-8) var(--space-6);
-    overflow: hidden;
-    background-color: var(--color-bg);
-    background-image: var(--texture-wood);
-    text-align: center;
-}
-
-/* Above the court floor. The backdrop is decorative and must never win a
-   stacking contest with the thing people came to read. */
-.hero-body {
-    position: relative;
-    z-index: 1;
-    max-width: var(--content-max);
-}
-
-/* Scoped through .hero deliberately: the layout's `main ::deep h1` sets every
-   page title to --text-xl, and a bare `h1` here loses to it on specificity --
-   which was silently rendering the hero headline at the page-title size. */
-.hero h1 {
-    margin: 0;
-    font: 400 var(--text-hero)/0.9 var(--font-display);
-    letter-spacing: 0.01em;
-    text-transform: uppercase;
-    /* The angular italic of the reference, applied to an upright face. Skewing
-       the block rather than the glyphs keeps the letterforms undistorted. */
-    transform: skewX(-6deg);
-}
-
-.slogan {
-    margin: var(--space-7) 0 0;
-    font: 400 var(--text-xl)/var(--leading-tight) var(--font-display);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
-
-/* Large display type, so --color-accent at 3.38:1 clears the 3:1 floor that
-   applies at this size. Small orange text uses --color-accent-ink instead. */
-.accent-line {
-    margin: var(--space-4) 0 0;
-    color: var(--color-accent-ink);
-    font: 400 var(--text-3xl)/var(--leading-tight) var(--font-display);
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
+    padding: var(--space-7);
+    border-block-end: var(--rule-width) solid var(--color-border-strong);
 }
 
 .hero-actions {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--space-6);
-    margin-block-start: var(--space-8);
+    gap: var(--space-4);
 }
 
-.cta {
-    padding: var(--space-5) var(--space-8);
-    clip-path: polygon(var(--space-6) 0, 100% 0, calc(100% - var(--space-6)) 100%, 0 100%);
-    background-color: var(--color-accent);
-    color: var(--color-accent-contrast);
-    font: 400 var(--text-xl)/1 var(--font-display);
-    letter-spacing: 0.04em;
-    text-decoration: none;
-    text-transform: uppercase;
-}
-
-.cta:hover {
-    background-color: var(--color-accent-ink);
-    color: var(--color-bg);
-}
-
-.secondary {
-    align-self: center;
-    color: var(--color-text);
-    font-size: var(--text-base);
-    text-underline-offset: var(--space-2);
-}
-
-.hero-platforms {
-    margin-block-start: var(--space-8);
-}
-
-.scroll-hint {
-    position: relative;
-    display: grid;
-    gap: var(--space-2);
-    justify-items: center;
-    color: var(--color-text-muted);
-    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-mono);
-    letter-spacing: 0.06em;
-    text-decoration: none;
-    text-transform: uppercase;
-}
-
-.chevron {
-    width: var(--space-7);
-    height: var(--space-7);
-}
-
-a:focus-visible {
-    border-radius: var(--radius-sm);
-    box-shadow: var(--focus-ring);
-    outline: none;
-}
-
-@media (max-width: 56rem) {
-    .hero h1 {
-        font-size: var(--text-4xl);
-    }
-
-    .accent-line {
-        font-size: var(--text-2xl);
-    }
-
-    .slogan {
-        font-size: var(--text-lg);
-    }
+.hero-actions a {
+    color: inherit;
 }

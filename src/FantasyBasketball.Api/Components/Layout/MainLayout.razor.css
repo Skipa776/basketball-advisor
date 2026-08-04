@@ -5,180 +5,96 @@
 .app-frame {
     min-height: 100vh;
     display: grid;
-    grid-template-columns: minmax(11rem, 14rem) minmax(0, 1fr);
+    grid-template-columns: minmax(12rem, var(--sidebar-width)) minmax(0, 1fr);
     background: var(--color-bg);
     color: var(--color-text);
-    font: 400 var(--text-base)/var(--leading-normal) var(--font-sans);
+    font: var(--text-base)/var(--leading-normal) var(--font-sans);
 }
 
 .public-frame {
-    display: flex;
     min-height: 100vh;
-    flex-direction: column;
     background: var(--color-bg);
     color: var(--color-text);
-    font: 400 var(--text-base)/var(--leading-normal) var(--font-sans);
-}
-
-/* The marketing surfaces run edge to edge: a hero constrained to --content-max
-   with workspace padding around it reads as a panel, not a page. Sections do
-   their own inner spacing. */
-.public-frame main {
-    width: 100%;
-    max-width: none;
-    flex: 1;
-    padding: 0;
-}
-
-.public-frame ::deep .public-section {
-    width: min(100%, var(--content-max));
-    margin-inline: auto;
+    font: var(--text-base)/var(--leading-normal) var(--font-sans);
 }
 
 .skip-link {
-    position: fixed;
-    z-index: 10;
-    inset-block-start: var(--space-4);
+    position: absolute;
     inset-inline-start: var(--space-4);
-    padding: var(--space-3) var(--space-5);
     transform: translateY(-200%);
-    border-radius: var(--radius-sm);
-    background: var(--color-accent);
-    color: var(--color-accent-contrast);
 }
 
-/* Untransitioned on purpose. A skip link is the first thing a keyboard user
-   reaches; sliding it in delays the only affordance telling them where they
-   are. Instant is correct here for every motion preference. */
 .skip-link:focus {
     transform: translateY(0);
 }
 
-/* The wood edge is the one piece of court in the instrument. DESIGN.md promised
-   "the shell reads as a court" and the workspace shipped without a single
-   distinctive token in it -- no wood, no court line, no display face -- while
-   nine marketing components used all of them. This is a rail, not a field:
-   --color-surface-wood is decorative by contract and may never carry text, so
-   it lives on the border where nothing is ever set on it. */
 .sidebar {
-    position: sticky;
-    inset-block-start: 0;
-    min-height: 100vh;
-    max-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-7);
+    min-width: 0;
     padding: var(--space-6);
-    overflow-y: auto;
-    border-inline-end: var(--space-2) solid var(--color-surface-wood);
+    border-inline-end: var(--rule-width) solid var(--color-border-strong);
     background: var(--color-surface);
 }
 
-/* Signed out this wordmark is Anton, uppercase, letter-spaced. Signed in it was
-   the system sans at body size, semibold -- the brand changed typeface, size
-   and case at the sign-in boundary, which is the one place it must not.
-   Matches SiteHeader. */
 .wordmark {
-    display: flex;
-    align-items: center;
-    gap: var(--space-4);
-    color: var(--color-text);
-    font: 400 var(--text-lg)/1 var(--font-display);
-    letter-spacing: 0.04em;
+    display: block;
+    margin-block-end: var(--space-6);
+    color: inherit;
+    font-weight: 600;
     text-decoration: none;
-    text-transform: uppercase;
 }
 
 .wordmark-mark {
-    display: inline-grid;
-    width: var(--target-min);
-    height: var(--target-min);
-    place-items: center;
-    border: thin solid var(--color-border-strong);
-    border-radius: var(--radius-sm);
-    font: 600 var(--text-2xs)/1 var(--font-mono);
-    letter-spacing: 0.04em;
+    margin-inline-end: var(--space-2);
 }
 
-nav {
-    display: grid;
-    gap: var(--space-2);
+.nav-group {
+    margin: var(--space-5) 0 var(--space-2);
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+    font-weight: 600;
 }
 
 nav ul {
-    display: grid;
-    gap: var(--space-1);
-    margin: 0 0 var(--space-6);
+    margin: 0;
     padding: 0;
     list-style: none;
 }
 
-nav ul:last-child {
-    margin-block-end: 0;
-}
-
-/* More space above the label than below it: the gap belongs to the group the
-   label introduces, not to the one it just ended. */
-.nav-group {
-    margin: var(--space-6) 0 var(--space-3);
-    padding-inline: var(--space-5);
-    color: var(--color-text-muted);
-    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-mono);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
-.nav-group:first-of-type {
-    margin-block-start: 0;
-}
-
-/* The active marker was a thick coloured border-inline-start, which is the
-   decoration habit rather than a decision. Weight, fill, and the accent do the
-   same job without a rail bolted to the side of every row. */
 nav ::deep a,
 .sidebar-footer ::deep a {
+    display: block;
     min-height: var(--target-min);
-    display: flex;
-    align-items: center;
-    padding: var(--space-3) var(--space-5);
-    border-radius: var(--radius-sm);
-    color: var(--color-text-muted);
-    font-size: var(--text-sm);
-    text-decoration: none;
-    transition: background-color var(--motion-fast) var(--ease-out);
+    padding-block: var(--space-2);
+    color: var(--color-text);
 }
 
 nav ::deep a.active {
-    background: var(--color-surface-raised);
-    box-shadow: var(--shadow-sm);
-    color: var(--color-accent-ink);
     font-weight: 600;
 }
 
-nav ::deep a:focus-visible,
-.sidebar-footer ::deep a:focus-visible {
-    outline: none;
-    box-shadow: var(--focus-ring);
-}
-
 .sidebar-footer {
-    margin-block-start: auto;
-    display: grid;
-    gap: var(--space-3);
+    margin-block-start: var(--space-7);
 }
 
-.workspace {
+.workspace,
+main {
     min-width: 0;
 }
 
 main {
     width: min(100%, var(--content-max));
     margin-inline: auto;
-    padding: var(--space-7);
+    padding: var(--space-6);
 }
 
-main:focus {
-    outline: none;
+.public-frame main {
+    width: 100%;
+}
+
+.utility-bar {
+    padding: var(--space-4) var(--space-6);
+    border-block-end: var(--rule-width) solid var(--color-border-strong);
+    background: var(--color-surface);
 }
 
 main ::deep h1,
@@ -188,106 +104,71 @@ main ::deep p {
     margin-block-start: 0;
 }
 
-main ::deep h1 {
-    font-size: var(--text-xl);
-    line-height: var(--leading-tight);
-}
-
-main ::deep h2 {
-    font-size: var(--text-lg);
-    line-height: var(--leading-tight);
-}
-
-main ::deep h3 {
-    font-size: var(--text-base);
-    line-height: var(--leading-tight);
+main ::deep h1,
+main ::deep h2,
+main ::deep h3,
+main ::deep code,
+main ::deep small {
+    overflow-wrap: anywhere;
 }
 
 main ::deep section,
 main ::deep article,
 main ::deep form {
-    margin-block-end: var(--space-7);
+    margin-block-end: var(--space-6);
 }
 
-/* min-width: 0 because a fieldset's initial min-inline-size is min-content, so
-   it refuses to shrink below its widest child and pushes the document sideways
-   on a phone instead of wrapping. Row D-30. */
 main ::deep fieldset {
-    display: grid;
     min-width: 0;
-    gap: var(--space-5);
-    padding: var(--space-6);
-    border: thin solid var(--color-rule);
-    border-radius: var(--radius-md);
+    padding: var(--space-5);
+    border: var(--rule-width) solid var(--color-border-strong);
 }
 
-main ::deep legend,
 main ::deep label {
-    color: var(--color-text);
-    font-size: var(--text-sm);
+    display: block;
     font-weight: 600;
 }
 
 main ::deep input,
 main ::deep select,
-main ::deep button {
+main ::deep button,
+main ::deep .button-link {
     min-height: var(--target-min);
-    border: thin solid var(--color-border-strong);
-    border-radius: var(--radius-sm);
+    padding: var(--space-3) var(--space-4);
+    border: var(--rule-width) solid var(--color-border-strong);
+    border-radius: 0;
+    background: var(--color-surface);
+    color: var(--color-text);
     font: inherit;
 }
 
 main ::deep input,
 main ::deep select {
     width: 100%;
-    padding: var(--space-3) var(--space-4);
-    background: var(--color-surface);
-    color: var(--color-text);
 }
 
 main ::deep input[type="checkbox"] {
-    width: var(--target-min);
-    vertical-align: middle;
+    width: auto;
 }
 
-/* justify-self on every button, not just the primary one. Inside a fieldset's
-   grid a button stretched the full column, and with the same border and radius
-   as an input beside it, "Import schedule" read as an empty text field. */
-main ::deep button {
-    justify-self: start;
-    padding: var(--space-3) var(--space-5);
-    background: var(--color-surface-raised);
-    color: var(--color-text);
+main ::deep button,
+main ::deep .button-link {
+    display: inline-block;
+    width: auto;
     cursor: pointer;
+    text-decoration: none;
 }
 
-/* The one action a form exists to perform. Matches .button-link.primary so a
-   submit button and a link that starts the same job look like the same thing.
-   Justify-self keeps it at its own width inside the fieldset grid rather than
-   stretched across the column. */
-main ::deep button.primary {
-    border-color: var(--color-accent);
-    background: var(--color-accent);
-    color: var(--color-accent-contrast);
-}
-
-/* The forms disable themselves while a write is in flight. Every colour here is
-   set explicitly, so the browser's own disabled rendering had nothing left to
-   grey out and a dead control looked exactly like a live one. Opacity rather
-   than a muted token because it has to read the same on the accent fill and on
-   the plain one, and the cursor says it before the colour does. */
-main ::deep button:disabled,
-main ::deep input:disabled,
-main ::deep select:disabled,
-main ::deep fieldset:disabled button {
-    opacity: 0.5;
-    cursor: not-allowed;
+main ::deep button.primary,
+main ::deep .button-link.primary {
+    font-weight: 600;
 }
 
 main ::deep input:focus-visible,
 main ::deep select:focus-visible,
 main ::deep button:focus-visible,
-main ::deep a:focus-visible {
+main ::deep a:focus-visible,
+nav ::deep a:focus-visible {
     outline: none;
     box-shadow: var(--focus-ring);
 }
@@ -297,17 +178,10 @@ main ::deep table {
     border-collapse: collapse;
 }
 
-main ::deep th {
-    color: var(--color-text-muted);
-    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-sans);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-}
-
 main ::deep th,
 main ::deep td {
-    padding: var(--space-3) var(--space-5);
-    border-block-end: thin solid var(--color-rule);
+    padding: var(--space-2) var(--space-4);
+    border-block-end: var(--rule-width) solid var(--color-rule);
     text-align: start;
 }
 
@@ -318,194 +192,51 @@ main ::deep [data-numeric] {
     font-variant-numeric: tabular-nums;
 }
 
-/* A GUID is 36 unbreakable characters, and at the mono size that is wider than
-   a phone. League ids and player names both land in these, and neither is
-   something the app gets to choose the length of. Row D-30. */
-main ::deep code,
-main ::deep h1,
-main ::deep h2,
-main ::deep h3 {
-    overflow-wrap: anywhere;
-}
-
-main ::deep .panel {
-    min-width: 0;
-}
-
-/* Field help carries syntax examples -- "PG,SG,SF,PF,C,UTIL,BENCH,IR" -- which
-   have no spaces and are therefore one word to the layout engine. `anywhere`
-   rather than `break-word` because only `anywhere` also shrinks min-content, so
-   the fieldset above can actually get narrow. */
-main ::deep small {
+main ::deep small,
+main ::deep .hint,
+main ::deep .filter-context {
     display: block;
-    margin-block-start: var(--space-2);
-    overflow-wrap: anywhere;
     color: var(--color-text-muted);
-    font-size: var(--text-xs);
 }
 
-main ::deep .draft-workspace {
+main ::deep .instrument-grid,
+main ::deep .draft-workspace,
+main ::deep .inline-form {
     display: grid;
-    grid-template-columns: minmax(16rem, 0.7fr) minmax(28rem, 2fr);
-    align-items: start;
-    gap: var(--space-7);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-6);
 }
 
-/* Pages compose inventory components and define no styles of their own
-   (row D-20), so shared page-level layouts live here beside .instrument-grid
-   rather than in the pages that use them. */
 main ::deep .league-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
-    gap: var(--space-6);
+    gap: var(--space-4);
     margin: 0;
     padding: 0;
     list-style: none;
 }
 
-main ::deep .instrument-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
-    gap: var(--space-7);
-}
-
-/* One control and the sentence that says what it searches, on a rule rather
-   than in a box. A single field boxed like a form implies more fields are
-   coming. */
+main ::deep .action-grid,
 main ::deep .filter-bar {
     display: flex;
     flex-wrap: wrap;
-    align-items: end;
-    justify-content: space-between;
-    gap: var(--space-6);
-    margin-block-end: var(--space-7);
-    padding-block-end: var(--space-6);
-    border-block-end: var(--rule-width) solid var(--color-rule);
+    gap: var(--space-4);
 }
 
-main ::deep .filter-bar .search-field {
-    flex: 1 1 20rem;
-    max-width: 32rem;
+main ::deep .panel,
+main ::deep .notice {
+    min-width: 0;
+    padding: var(--space-5);
+    border: var(--rule-width) solid var(--color-rule);
 }
 
-main ::deep .filter-context {
-    margin: 0;
-    color: var(--color-text-muted);
-    font-size: var(--text-sm);
-}
-
-/* Setup forms read down a single column at a comfortable measure. The rest of
-   the workspace is dense on purpose; a form being filled in for the first time
-   is the one place in this app that is not. */
-main ::deep .setup-form fieldset {
-    max-width: 34rem;
-}
-
-main ::deep .league-shape {
-    color: var(--color-text-muted);
-    font-size: var(--text-sm);
-}
-
-main ::deep .inline-form {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(12rem, 1fr)) auto;
-    align-items: end;
-    gap: var(--space-5);
-    padding: var(--space-6);
-    border: thin solid var(--color-rule);
-    border-radius: var(--radius-md);
-    background: var(--color-surface);
-}
-
-main ::deep .inline-form p {
-    margin: 0;
-}
-
-main ::deep .panel {
-    padding: var(--space-7);
-    border: thin solid var(--color-rule);
-    border-radius: var(--radius-md);
-    background: var(--color-surface);
-    box-shadow: var(--shadow-sm);
-}
-
-main ::deep .panel ul,
 main ::deep .stat-list {
-    margin: var(--space-5) 0;
     padding: 0;
     list-style: none;
 }
 
-main ::deep .panel li,
 main ::deep .stat-list div {
     display: flex;
     justify-content: space-between;
-    gap: var(--space-5);
-    padding-block: var(--space-3);
-    border-block-end: thin solid var(--color-rule);
-}
-
-main ::deep .stat-list dt,
-main ::deep .stat-list dd {
-    margin: 0;
-}
-
-main ::deep .stat-list dd {
-    text-align: end;
-}
-
-main ::deep .status-list {
-    border-block-start: thin solid var(--color-rule);
-}
-
-main ::deep .action-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-4);
-    margin-block-end: var(--space-6);
-}
-
-main ::deep .button-link {
-    display: inline-flex;
-    min-height: var(--target-min);
-    align-items: center;
-    padding: var(--space-3) var(--space-5);
-    border: thin solid var(--color-border-strong);
-    border-radius: var(--radius-sm);
-    background: var(--color-surface-raised);
-    color: var(--color-text);
-    font-size: var(--text-sm);
-    text-decoration: none;
-}
-
-main ::deep .button-link.primary {
-    border-color: var(--color-accent);
-    background: var(--color-accent);
-    color: var(--color-accent-contrast);
-}
-
-/* Was a thick positive-coloured border-inline-start. A notice earns a real
-   surface, not a stripe: the rule is hairline all the way round and the
-   meaning is carried by the copy, which is where it was always carried. */
-main ::deep .notice {
-    padding: var(--space-5) var(--space-6);
-    border: thin solid var(--color-rule);
-    border-radius: var(--radius-md);
-    background: var(--color-surface-raised);
-}
-
-main ::deep details summary {
-    min-height: var(--target-min);
-    cursor: pointer;
-    font-weight: 600;
-}
-
-main ::deep caption {
-    padding: var(--space-3);
-    color: var(--color-text-muted);
-    font-size: var(--text-xs);
-    text-align: start;
 }
 
 main ::deep .visually-hidden {
@@ -517,118 +248,28 @@ main ::deep .visually-hidden {
     white-space: nowrap;
 }
 
-@media (hover: hover) and (pointer: fine) {
-    nav ::deep a:hover,
-    .sidebar-footer ::deep a:hover,
-    main ::deep button:hover {
-        background: var(--color-surface-raised);
-        color: var(--color-text);
-    }
-}
-
 @media (max-width: 52rem) {
     .app-frame {
         display: block;
     }
 
     .sidebar {
-        position: static;
-        min-height: auto;
-        max-height: none;
-        padding: var(--space-4);
         border-inline-end: 0;
-        border-block-end: thin solid var(--color-rule);
-    }
-
-    /* Was a horizontally scrolling flex strip, which suited a flat list and
-       turned the grouped nav into a cut-off mess -- group labels sitting
-       beside wrapped columns of links, the last group off-screen. Grouped
-       navigation stacks; the disclosure is what keeps it from filling the
-       screen. */
-    .sidebar nav {
-        display: grid;
-        overflow-x: visible;
-    }
-
-    .nav-disclosure > summary {
-        min-height: var(--target-min);
-        display: flex;
-        align-items: center;
-        padding: var(--space-3) var(--space-5);
-        border: thin solid var(--color-border-strong);
-        border-radius: var(--radius-sm);
-        font-size: var(--text-sm);
-        font-weight: 600;
-        cursor: pointer;
-    }
-
-    .nav-disclosure > summary:focus-visible {
-        outline: none;
-        box-shadow: var(--focus-ring);
-    }
-
-    .sidebar-footer {
-        display: flex;
-        align-items: center;
-        margin-block-start: 0;
-    }
-
-    main {
-        padding: var(--space-5);
-    }
-
-    /* minmax(0, 1fr) rather than 1fr. A grid item's automatic minimum is its
-       min-content width, so a plain 1fr track refuses to go narrower than the
-       widest input inside it and the whole document scrolls sideways. The
-       desktop tracks above already say minmax; these said 1fr and were the
-       thing row D-30 caught on /league. */
-    main ::deep .draft-workspace {
-        grid-template-columns: minmax(0, 1fr);
+        border-block-end: var(--rule-width) solid var(--color-border-strong);
     }
 
     main ::deep .instrument-grid,
+    main ::deep .draft-workspace,
     main ::deep .inline-form {
         grid-template-columns: minmax(0, 1fr);
     }
 }
 
-/* Sits above the page content, below the sidebar's own header line. Sticky so
-   the league you are working in stays visible while a long table scrolls --
-   losing that context mid-scroll is how you read the wrong league's numbers. */
-.utility-bar {
-    position: sticky;
-    inset-block-start: 0;
-    z-index: 5;
-    display: flex;
-    min-height: var(--utility-bar-height);
-    align-items: center;
-    justify-content: flex-end;
-    gap: var(--space-6);
-    padding-inline: var(--space-7);
-    border-block-end: thin solid var(--color-rule);
-    background: var(--color-surface);
-}
-
-/* Above the breakpoint the disclosure is plumbing, not a control. Written as a
-   min-width query rather than a bare rule: appended at the end of the file, a
-   bare rule outranks the mobile one by source order and the summary is hidden
-   at every width -- which makes the whole disclosure inert. */
 @media (min-width: 52.0625rem) {
     .nav-disclosure > summary {
         display: none;
     }
 
-    /* The markup no longer carries `open`, because on a phone that put eleven
-       links and a theme toggle above the fold on every page -- the content
-       started below all of it. Above the breakpoint the sidebar must still be
-       an ordinary always-visible nav, so the closed state is overridden here
-       rather than by a script or a duplicate nav.
-
-       Both declarations, deliberately. Older engines hide a closed details by
-       setting display:none on its children; current Chrome and Safari hide the
-       ::details-content pseudo with content-visibility instead, and the first
-       rule alone left the desktop sidebar empty. Each is a no-op on the engine
-       the other one covers. */
     .nav-disclosure > nav {
         display: block;
     }

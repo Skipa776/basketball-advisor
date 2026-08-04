@@ -1,41 +1,4 @@
 .empty-state {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: var(--space-5);
-    padding: var(--space-7);
-    border-block: thin solid var(--color-rule);
-    background: var(--color-surface);
-}
-
-.state-mark {
-    display: inline-flex;
-    color: var(--color-text-muted);
-}
-
-.state-mark svg {
-    width: var(--space-8);
-    height: var(--space-8);
-}
-
-h2,
-p {
-    margin: 0;
-}
-
-h2 {
-    font-size: var(--text-base);
-}
-
-/* The panel runs the width of the workspace deliberately -- it is a rule-bound
-   band, not a card -- but the sentence inside it must not. A line spanning a
-   full-width workspace loses the reader at the wrap. */
-p {
-    max-width: 68ch;
-    margin-block-start: var(--space-2);
-    color: var(--color-text-muted);
-    font-size: var(--text-sm);
-}
-
-.action {
-    margin-block-start: var(--space-5);
+    padding: var(--space-5);
+    border: var(--rule-width) dashed var(--color-border-strong);
 }

@@ -1,22 +1,5 @@
 .demo-badge {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-4);
-    margin: 0;
-    padding: var(--space-4) var(--space-8);
-    border-block-end: var(--rule-width) solid var(--color-rule);
-    background-color: var(--color-surface-raised);
-    color: var(--color-text-muted);
-    font-size: var(--text-xs);
-}
-
-.tag {
-    padding: var(--space-1) var(--space-4);
-    border-radius: var(--radius-sm);
-    background-color: var(--color-caution);
-    color: var(--color-bg);
-    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-mono);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    padding: var(--space-3);
+    border-block-end: var(--rule-width) solid var(--color-border-strong);
+    text-align: center;
 }

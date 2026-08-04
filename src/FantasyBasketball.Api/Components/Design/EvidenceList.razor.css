@@ -1,50 +1,13 @@
-.evidence-list {
-    display: grid;
-    gap: var(--space-3);
+.evidence {
     margin: 0;
-    padding: 0;
-    list-style: none;
+    padding-inline-start: var(--space-7);
 }
 
-li {
-    display: grid;
-    grid-template-columns: var(--target-min) minmax(4rem, auto) minmax(0, 1fr) auto;
-    align-items: baseline;
-    gap: var(--space-3);
-    color: var(--color-text);
-    font-size: var(--text-sm);
+.evidence li {
+    margin-block: var(--space-2);
 }
 
-.icon {
-    font: 600 var(--text-sm)/1 var(--font-mono);
-    text-align: center;
-}
-
+.icon,
 .polarity {
-    color: var(--color-text-muted);
-    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-sans);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-}
-
-[data-polarity="supporting"] .icon {
-    color: var(--color-positive);
-}
-
-[data-polarity="risk"] .icon {
-    color: var(--color-negative);
-}
-
-.magnitude {
-    color: var(--color-text-muted);
-    font: 400 var(--text-xs)/var(--leading-tight) var(--font-mono);
-    text-align: end;
-}
-
-.evidence-list[data-compact="True"] {
-    gap: var(--space-2);
-}
-
-.evidence-list[data-compact="True"] li {
-    font-size: var(--text-xs);
+    margin-inline-end: var(--space-2);
 }

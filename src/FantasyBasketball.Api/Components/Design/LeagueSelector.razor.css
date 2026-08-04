@@ -1,66 +1,6 @@
 .league-switch {
     display: flex;
-    align-items: center;
-    gap: var(--space-4);
-}
-
-label {
-    color: var(--color-text-muted);
-    font: 600 var(--text-2xs)/var(--leading-tight) var(--font-mono);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-}
-
-select {
-    min-height: var(--target-min);
-    max-width: 16rem;
-    padding: var(--space-2) var(--space-4);
-    border: var(--rule-width) solid var(--color-border-strong);
-    border-radius: var(--radius-sm);
-    background: var(--color-surface);
-    color: var(--color-text);
-    font: inherit;
-    font-size: var(--text-sm);
-}
-
-button {
-    min-height: var(--target-min);
-    padding: var(--space-2) var(--space-5);
-    border: var(--rule-width) solid var(--color-border-strong);
-    border-radius: var(--radius-sm);
-    background: var(--color-surface-raised);
-    color: var(--color-text);
-    font: inherit;
-    font-size: var(--text-sm);
-    cursor: pointer;
-}
-
-select:focus-visible,
-button:focus-visible {
-    outline: none;
-    box-shadow: var(--focus-ring);
-}
-
-@media (hover: hover) and (pointer: fine) {
-    button:hover {
-        background: var(--color-surface);
-    }
-}
-
-/* The label is the first thing to go: the select's own options carry enough
-   context on a phone, and a switcher that wraps to two lines costs more room
-   than it earns. */
-@media (max-width: 52rem) {
-    label {
-        position: absolute;
-        width: var(--space-1);
-        height: var(--space-1);
-        overflow: hidden;
-        clip: rect(0 0 0 0);
-        white-space: nowrap;
-    }
-
-    select {
-        max-width: 10rem;
-    }
+    flex-wrap: wrap;
+    align-items: end;
+    gap: var(--space-3);
 }
