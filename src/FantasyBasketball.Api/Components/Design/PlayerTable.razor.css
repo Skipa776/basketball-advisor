@@ -62,8 +62,35 @@ thead {
     white-space: nowrap;
 }
 
-.numeric {
+/* `.player-table th` above is (0,2,1) and a bare `.numeric` is (0,1,0), so the
+   numeric headers had been losing to `text-align: start` since the table was
+   written -- VALUE, VAR and ADP sat hard left over right-aligned columns of
+   digits. DESIGN.md calls a column of misaligned decimals unreadable at the
+   speed a draft demands, and this was that column. */
+.player-table th.numeric {
     text-align: end;
+}
+
+/* Under `table-layout: fixed` a cell's `min-width` is ignored -- only `width`
+   is honoured -- so PlayerRow's `min-width: 12rem` on the name never applied
+   and the seven columns split the width evenly. On a phone that left the name,
+   the only identifying content in the row, ellipsed to a letter or two.
+   Fixed widths on the numeric columns, and whatever is left goes to the name. */
+.player-table[data-ranked="True"] th:nth-child(2) {
+    width: auto;
+}
+
+.player-table[data-ranked="True"] th.numeric {
+    width: 5rem;
+}
+
+/* ADP is the least load-bearing of the three: it is market position, not this
+   league's own value. It is the column to lose when there is no room. */
+@media (max-width: 52rem) {
+    .player-table th:nth-child(6),
+    .player-table ::deep .player-row > td:nth-child(6) {
+        display: none;
+    }
 }
 
 .visually-hidden {
@@ -73,4 +100,12 @@ thead {
     overflow: hidden;
     clip: rect(0 0 0 0);
     white-space: nowrap;
+}
+
+/* A search result is two columns. Left at full width, the name and the position
+   sit at opposite ends of a very wide row with nothing between them, and the
+   eye has to travel the whole span to pair them up. The ranked board earns the
+   full width because it fills it with numbers. */
+.player-table[data-ranked="False"] {
+    max-width: 44rem;
 }

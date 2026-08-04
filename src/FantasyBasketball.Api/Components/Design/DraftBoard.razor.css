@@ -16,9 +16,17 @@ p {
     margin: 0;
 }
 
-h2,
 h3 {
     font-size: var(--text-base);
+}
+
+/* The one display-face word in the whole instrument, on the heading of the one
+   surface this product exists for. Row D-27 keeps it off anything numeric --
+   this is a heading, and every number below it stays mono and tabular. */
+h2 {
+    font: 400 var(--text-lg)/var(--leading-tight) var(--font-display);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
 }
 
 .count {

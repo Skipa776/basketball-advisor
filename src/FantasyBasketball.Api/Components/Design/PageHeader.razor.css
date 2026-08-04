@@ -19,6 +19,14 @@ h1 {
     letter-spacing: -0.02em;
 }
 
+/* FocusOnNavigate moves focus to the h1 after every navigation, which is the
+   right thing for a screen reader and puts the browser's own blue ring around
+   the page title on every single page load. The heading carries tabindex="-1",
+   so it is not in the tab order and there is no keyboard focus to preserve. */
+h1:focus {
+    outline: none;
+}
+
 .description {
     max-width: 64ch;
     margin-block-start: var(--space-3);

@@ -32,7 +32,8 @@ else if (session is null)
     <form class="setup-form"
           @onsubmit="StartDraftAsync"
           @onsubmit:preventDefault>
-        <fieldset aria-describedby="@(error is null ? null : "draft-error")">
+        <fieldset disabled="@busy"
+                  aria-describedby="@(error is null ? null : "draft-error")">
             <legend>Start a draft</legend>
             <p>
                 <label for="draft-league">League</label>
@@ -68,8 +69,10 @@ else if (session is null)
             <button type="submit" class="primary">Start draft</button>
         </fieldset>
     </form>
-    <EmptyState Title="No active draft"
-                Description="Choose a league above and start a session to load the ranked board and begin entering picks." />
+    @* No "No active draft" empty state here any more. It sat directly beneath
+       the form and said "choose a league above and start a session", which is
+       the form describing itself. The empty state for this page is the one
+       above, for when there is no league to draft for at all. *@
 }
 else
 {
@@ -138,6 +141,13 @@ else
     private string? topRecommendationAnnouncement;
     private string? error;
 
+    // Every handler here awaits the server, and an await yields the circuit back
+    // to the next queued event. Enter held down on the pick box therefore fires
+    // RecordPick twice against the same CurrentPick, and a double-clicked "Start
+    // draft" opens two sessions and shows the second. One flag, because the page
+    // has one thing in flight at a time by construction.
+    private bool busy;
+
     private IReadOnlyList<PickEntryItem> AvailablePlayers
     {
         get
@@ -192,7 +202,8 @@ else
         // The league named in the link wins, then the one the shell's switcher
         // is set to, then the first one that exists. Falling straight to the
         // first is how a two-league instance drafts against the wrong rules.
-        var preferred = LeagueId ?? ActiveLeague.Current;
+        var preferred = LeagueId
+            ?? ActiveLeague.Resolve(leagues.Select(league => league.Id));
         var opening = leagues.FirstOrDefault(league => league.Id == preferred)
             ?? leagues.FirstOrDefault();
         leagueText = opening?.Id.ToString() ?? string.Empty;
@@ -213,6 +224,11 @@ else
 
     private async Task StartDraftAsync()
     {
+        if (busy)
+        {
+            return;
+        }
+
         error = null;
         if (!Guid.TryParse(leagueText, out var leagueId))
         {
@@ -220,6 +236,7 @@ else
             return;
         }
 
+        busy = true;
         try
         {
             session = await Drafts.CreateAsync(
@@ -241,16 +258,21 @@ else
         {
             error = "The draft could not be started.";
         }
+        finally
+        {
+            busy = false;
+        }
     }
 
     private async Task RecordSelectedAsync(PickEntryItem selected)
     {
-        if (session is null)
+        if (session is null || busy)
         {
             return;
         }
 
         error = null;
+        busy = true;
         try
         {
             pendingSnapshot = await CaptureBoardAsync();
@@ -270,16 +292,21 @@ else
             pendingSnapshot = null;
             error = "The pick could not be recorded.";
         }
+        finally
+        {
+            busy = false;
+        }
     }
 
     private async Task UndoAsync()
     {
-        if (session is null || session.Picks.Count == 0)
+        if (session is null || session.Picks.Count == 0 || busy)
         {
             return;
         }
 
         error = null;
+        busy = true;
         try
         {
             pendingSnapshot = await CaptureBoardAsync();
@@ -297,6 +324,10 @@ else
         {
             pendingSnapshot = null;
             error = "The last pick could not be undone.";
+        }
+        finally
+        {
+            busy = false;
         }
     }
 

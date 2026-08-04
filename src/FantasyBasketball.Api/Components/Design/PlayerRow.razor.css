@@ -28,7 +28,9 @@
 }
 
 .player {
-    min-width: 12rem;
+    /* Was min-width, which table-layout: fixed ignores. The header row
+       above sizes this column now; the cell just must not fight it. */
+    width: auto;
     color: var(--color-text);
     font-weight: 600;
     text-align: start;

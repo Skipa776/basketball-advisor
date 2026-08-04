@@ -67,7 +67,12 @@ else if (players.Items.Count == 0)
 }
 else
 {
-    <PlayerTable Rows="@PlayerRows" Caption="Player search results" />
+    @* Ranked="false": this list is alphabetical and carries no projections, so
+       a rank column would number players by their initials and three stat
+       columns would be a wall of em dashes. *@
+    <PlayerTable Rows="@PlayerRows"
+                 Ranked="false"
+                 Caption="Player search results" />
 }
 
 @if (projection is not null)
@@ -157,7 +162,6 @@ else
         // The switcher in the shell decides which league this page opens on.
         // An explicit ?leagueId= still wins, because a shared link should show
         // the league it names rather than whichever one the reader last chose.
-        LeagueId ??= ActiveLeague.Current;
         await LoadLeagueNameAsync();
         await SearchAsync();
         projection = null;
@@ -185,14 +189,11 @@ else
     private async Task LoadLeagueNameAsync()
     {
         leagueName = null;
-        if (LeagueId is null)
-        {
-            return;
-        }
-
         try
         {
             var leagues = await Leagues.ListAsync(CancellationToken.None);
+            LeagueId ??= ActiveLeague.Resolve(
+                leagues.Select(league => league.Id));
             leagueName = leagues
                 .FirstOrDefault(league => league.Id == LeagueId)?.Name;
         }

@@ -20,12 +20,13 @@
                    found by scanning three labels instead of ten links. One nav
                    with one label: the groups are headings inside it, not four
                    separate landmarks a screen reader has to walk past. *@
-                @* `open` by default, and the summary is hidden above the
-                   breakpoint, so this is an ordinary sidebar on a desktop and a
-                   collapsible menu on a phone -- with no script either way.
-                   Eleven links stacked above the content would push the page
-                   itself below the fold. *@
-                <details class="nav-disclosure" open>
+                @* Closed by default and forced open above the breakpoint in
+                   CSS, so this is an ordinary sidebar on a desktop and a
+                   collapsed menu on a phone -- with no script either way.
+                   It shipped with `open` and the phone paid for it: eleven
+                   links and the theme toggle filled the first screen, and the
+                   page's own heading started below all of them. *@
+                <details class="nav-disclosure">
                     <summary>Menu</summary>
                     <nav aria-label="Primary navigation">
                     <p class="nav-group" id="nav-decide">Decide</p>
@@ -67,8 +68,12 @@
                 @if (leagueOptions.Count > 0)
                 {
                     <div class="utility-bar">
+                        @* Resolved, not read raw. A select always renders its
+                           first option, so a null cookie showed a league here
+                           while every page below reported having none. *@
                         <LeagueSelector Options="@leagueOptions"
-                                        SelectedId="@ActiveLeague.Current" />
+                                        SelectedId="@ActiveLeague.Resolve(
+                                            leagueOptions.Select(o => o.Id))" />
                     </div>
                 }
                 <main id="main-content" tabindex="-1">

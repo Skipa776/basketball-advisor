@@ -108,6 +108,12 @@ h1 {
     text-transform: uppercase;
 }
 
+/* Same as PageHeader: FocusOnNavigate focuses the heading on arrival, and the
+   browser's blue ring around SIGN IN was the first thing on the sign-in page. */
+h1:focus {
+    outline: none;
+}
+
 .description {
     margin: 0 0 var(--space-7);
     color: var(--color-text-muted);

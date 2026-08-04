@@ -26,6 +26,28 @@ public sealed class ActiveLeague(IHttpContextAccessor accessor)
             ? leagueId
             : null;
 
+    /// <summary>
+    /// The league a page should actually open on, given the leagues the user
+    /// owns. The cookie wins when it names one of them; otherwise the first.
+    ///
+    /// Without this the app contradicted itself on first run: the switcher in
+    /// the bar renders a league because a select always shows its first option,
+    /// while every page read the cookie, found nothing, and reported "no active
+    /// league" underneath a bar naming one. The cookie is only written when the
+    /// user actively switches, which most users never need to do.
+    ///
+    /// It also drops a cookie pointing at a league that no longer exists, which
+    /// otherwise left the app permanently insisting on a league the user could
+    /// not see.
+    /// </summary>
+    public Guid? Resolve(IEnumerable<Guid> owned)
+    {
+        var candidates = owned as IReadOnlyCollection<Guid> ?? [.. owned];
+        return Current is { } current && candidates.Contains(current)
+            ? current
+            : candidates.Select(league => (Guid?)league).FirstOrDefault();
+    }
+
     public static CookieOptions Options(bool secure) => new()
     {
         HttpOnly = true,

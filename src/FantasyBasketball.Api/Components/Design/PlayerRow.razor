@@ -2,15 +2,22 @@
     data-player-id="@Item.Id.Value"
     data-recommended="@Item.IsRecommended"
     data-unverified="@Item.HasUnverifiedContext">
-    <td class="rank" data-numeric>
-        @if (Item.IsRecommended)
-        {
-            <span class="take-marker" aria-hidden="true">▸</span>
-            <span class="visually-hidden">Recommended pick</span>
-        }
-        @Rank
-    </td>
-    <th scope="row" class="player">
+    @if (Ranked)
+    {
+        <td class="rank" data-numeric>
+            @if (Item.IsRecommended)
+            {
+                <span class="take-marker" aria-hidden="true">▸</span>
+                <span class="visually-hidden">Recommended pick</span>
+            }
+            @Rank
+        </td>
+    }
+    @* The cell ellipses, and the name is the only thing in the row that
+       identifies who it is about. `title` is the recovery: a long name is
+       readable on hover and on focus without widening the column, and the
+       accessible name is the full string either way. *@
+    <th scope="row" class="player" title="@Item.Name">
         @if (Item.Href is null)
         {
             <span>@Item.Name</span>
@@ -25,18 +32,21 @@
         }
     </th>
     <td class="position">@Item.Positions</td>
-    <StatCell Label="Value" Value="@Item.Value" />
-    <StatCell Label="Value above replacement"
-              Value="@Item.ValueAboveReplacement"
-              Format="+0.##;-0.##;0" />
-    <StatCell Label="Average draft position"
-              Value="@Item.AverageDraftPosition" />
-    <td class="recommendation">
-        @if (Item.IsRecommended)
-        {
-            <span>take</span>
-        }
-    </td>
+    @if (Ranked)
+    {
+        <StatCell Label="Value" Value="@Item.Value" />
+        <StatCell Label="Value above replacement"
+                  Value="@Item.ValueAboveReplacement"
+                  Format="+0.##;-0.##;0" />
+        <StatCell Label="Average draft position"
+                  Value="@Item.AverageDraftPosition" />
+        <td class="recommendation">
+            @if (Item.IsRecommended)
+            {
+                <span>take</span>
+            }
+        </td>
+    }
 </tr>
 
 @code {
@@ -45,4 +55,11 @@
 
     [Parameter]
     public int Rank { get; set; }
+
+    /// <summary>
+    /// False on a search result, where the row order carries no ranking and the
+    /// projection columns have nothing to show.
+    /// </summary>
+    [Parameter]
+    public bool Ranked { get; set; } = true;
 }

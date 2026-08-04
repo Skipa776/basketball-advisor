@@ -54,6 +54,12 @@
     transform: translateY(0);
 }
 
+/* The wood edge is the one piece of court in the instrument. DESIGN.md promised
+   "the shell reads as a court" and the workspace shipped without a single
+   distinctive token in it -- no wood, no court line, no display face -- while
+   nine marketing components used all of them. This is a rail, not a field:
+   --color-surface-wood is decorative by contract and may never carry text, so
+   it lives on the border where nothing is ever set on it. */
 .sidebar {
     position: sticky;
     inset-block-start: 0;
@@ -64,18 +70,23 @@
     gap: var(--space-7);
     padding: var(--space-6);
     overflow-y: auto;
-    border-inline-end: thin solid var(--color-rule);
+    border-inline-end: var(--space-2) solid var(--color-surface-wood);
     background: var(--color-surface);
 }
 
+/* Signed out this wordmark is Anton, uppercase, letter-spaced. Signed in it was
+   the system sans at body size, semibold -- the brand changed typeface, size
+   and case at the sign-in boundary, which is the one place it must not.
+   Matches SiteHeader. */
 .wordmark {
     display: flex;
     align-items: center;
     gap: var(--space-4);
     color: var(--color-text);
-    font-size: var(--text-sm);
-    font-weight: 600;
+    font: 400 var(--text-lg)/1 var(--font-display);
+    letter-spacing: 0.04em;
     text-decoration: none;
+    text-transform: uppercase;
 }
 
 .wordmark-mark {
@@ -239,7 +250,11 @@ main ::deep input[type="checkbox"] {
     vertical-align: middle;
 }
 
+/* justify-self on every button, not just the primary one. Inside a fieldset's
+   grid a button stretched the full column, and with the same border and radius
+   as an input beside it, "Import schedule" read as an empty text field. */
 main ::deep button {
+    justify-self: start;
     padding: var(--space-3) var(--space-5);
     background: var(--color-surface-raised);
     color: var(--color-text);
@@ -251,10 +266,22 @@ main ::deep button {
    Justify-self keeps it at its own width inside the fieldset grid rather than
    stretched across the column. */
 main ::deep button.primary {
-    justify-self: start;
     border-color: var(--color-accent);
     background: var(--color-accent);
     color: var(--color-accent-contrast);
+}
+
+/* The forms disable themselves while a write is in flight. Every colour here is
+   set explicitly, so the browser's own disabled rendering had nothing left to
+   grey out and a dead control looked exactly like a live one. Opacity rather
+   than a muted token because it has to read the same on the accent fill and on
+   the plain one, and the cursor says it before the colour does. */
+main ::deep button:disabled,
+main ::deep input:disabled,
+main ::deep select:disabled,
+main ::deep fieldset:disabled button {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 main ::deep input:focus-visible,
@@ -589,5 +616,24 @@ main ::deep .visually-hidden {
 @media (min-width: 52.0625rem) {
     .nav-disclosure > summary {
         display: none;
+    }
+
+    /* The markup no longer carries `open`, because on a phone that put eleven
+       links and a theme toggle above the fold on every page -- the content
+       started below all of it. Above the breakpoint the sidebar must still be
+       an ordinary always-visible nav, so the closed state is overridden here
+       rather than by a script or a duplicate nav.
+
+       Both declarations, deliberately. Older engines hide a closed details by
+       setting display:none on its children; current Chrome and Safari hide the
+       ::details-content pseudo with content-visibility instead, and the first
+       rule alone left the desktop sidebar empty. Each is a no-op on the engine
+       the other one covers. */
+    .nav-disclosure > nav {
+        display: block;
+    }
+
+    .nav-disclosure::details-content {
+        content-visibility: visible;
     }
 }

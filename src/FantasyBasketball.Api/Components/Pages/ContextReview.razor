@@ -20,7 +20,8 @@
     <form class="setup-form"
           @onsubmit="CreateAsync"
           @onsubmit:preventDefault>
-        <fieldset aria-describedby="@(error is null ? null : "context-error")">
+        <fieldset disabled="@busy"
+                  aria-describedby="@(error is null ? null : "context-error")">
             <legend>Create a proposed context event</legend>
             <p>
                 <label for="context-player">Affected player ID</label>
@@ -59,7 +60,8 @@
     <form class="setup-form"
           @onsubmit="OverrideAsync"
           @onsubmit:preventDefault>
-        <fieldset aria-describedby="@(error is null ? null : "context-error")">
+        <fieldset disabled="@busy"
+                  aria-describedby="@(error is null ? null : "context-error")">
             <legend>Override an impact</legend>
             <p>
                 <label for="override-event">Context event ID</label>
@@ -141,9 +143,11 @@
                             @if (contextEvent.Verification == VerificationState.Proposed)
                             {
                                 <button type="button"
+                                        disabled="@busy"
                                         aria-label="@($"Verify: {contextEvent.Summary}")"
                                         @onclick="() => ReviewAsync(contextEvent.Id, true)">Verify</button>
                                 <button type="button"
+                                        disabled="@busy"
                                         aria-label="@($"Reject: {contextEvent.Summary}")"
                                         @onclick="() => ReviewAsync(contextEvent.Id, false)">Reject</button>
                             }
@@ -171,6 +175,11 @@
     private decimal confidenceDelta;
     private string? error;
 
+    // A verified context event is a human decision about ground truth. Two of
+    // them from one double-click is the kind of duplicate this page exists to
+    // prevent, so every write here waits for the one before it.
+    private bool busy;
+
     protected override Task OnInitializedAsync() => LoadAsync();
 
     private async Task LoadAsync()
@@ -183,6 +192,11 @@
 
     private async Task CreateAsync()
     {
+        if (busy)
+        {
+            return;
+        }
+
         error = null;
         if (!Guid.TryParse(playerText, out var playerValue))
         {
@@ -190,6 +204,7 @@
             return;
         }
 
+        busy = true;
         try
         {
             var playerId = new PlayerId(playerValue);
@@ -223,11 +238,21 @@
         {
             error = "The context proposal could not be created.";
         }
+        finally
+        {
+            busy = false;
+        }
     }
 
     private async Task ReviewAsync(Guid contextEventId, bool verify)
     {
+        if (busy)
+        {
+            return;
+        }
+
         error = null;
+        busy = true;
         try
         {
             if (verify)
@@ -251,10 +276,19 @@
         {
             error = "The review action could not be saved.";
         }
+        finally
+        {
+            busy = false;
+        }
     }
 
     private async Task OverrideAsync()
     {
+        if (busy)
+        {
+            return;
+        }
+
         error = null;
         if (!Guid.TryParse(overrideEventText, out var eventId)
             || !Guid.TryParse(overridePlayerText, out var playerId))
@@ -263,6 +297,7 @@
             return;
         }
 
+        busy = true;
         try
         {
             await ContextEvents.OverrideImpactAsync(
@@ -282,6 +317,10 @@
         catch (Exception)
         {
             error = "The impact override could not be saved.";
+        }
+        finally
+        {
+            busy = false;
         }
     }
 }

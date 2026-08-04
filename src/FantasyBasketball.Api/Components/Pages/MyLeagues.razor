@@ -69,8 +69,10 @@ else
                        -- so the card omits them rather than showing a dash that
                        implies the data is merely missing. *@
                     <div class="action-grid">
-                        <a class="button-link primary" href="@($"/players?leagueId={league.Id}")">Open players</a>
-                        <a class="button-link" href="@($"/draft?leagueId={league.Id}")">Draft room</a>
+                        @* The accent goes to the draft. This product exists for the pick clock;
+                           browsing the pool is the secondary errand. *@
+                        <a class="button-link primary" href="@($"/draft?leagueId={league.Id}")">Draft room</a>
+                        <a class="button-link" href="@($"/players?leagueId={league.Id}")">Open players</a>
                     </div>
                 </article>
             </li>

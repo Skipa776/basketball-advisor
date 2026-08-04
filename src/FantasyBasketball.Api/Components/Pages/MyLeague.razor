@@ -127,7 +127,11 @@
             @if (current.Type == LeagueType.Points)
             {
                 <table>
-                    <caption>Scoring rules for @current.Name</caption>
+                    @* Not "Scoring rules for {name}": the panel is labelled by
+                       the league's own h2 directly above, so the name was said
+                       twice, and a long one spent three wrapped lines saying
+                       nothing the reader had not just read. *@
+                    <caption>Scoring rules</caption>
                     <thead>
                         <tr>
                             <th scope="col">Stat</th>
@@ -216,9 +220,8 @@
     private async Task LoadAsync()
     {
         leagues = await Leagues.ListAsync(CancellationToken.None);
-        var active = ActiveLeague.Current;
-        current = leagues.FirstOrDefault(league => league.Id == active)
-            ?? leagues.FirstOrDefault();
+        var active = ActiveLeague.Resolve(leagues.Select(league => league.Id));
+        current = leagues.FirstOrDefault(league => league.Id == active);
     }
 
     private sealed record RosterSlotCount(RosterSlotKind Kind, int Count);
