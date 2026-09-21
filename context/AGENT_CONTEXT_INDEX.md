@@ -33,6 +33,7 @@ Index rows route; concepts own. Nothing here restates a concept's content.
 
 | I am about to… | Read first |
 |---|---|
+| Compute descriptive heat or recent points performance | `codebase_okf/contracts/player_heat_contract.md`, `codebase_okf/tests/test_matrix_player_heat.md`, `codebase_okf/contracts/rolling_window_contract.md`, `codebase_okf/contracts/scoring_rules_catalog.md` |
 | Compute or change a rolling window or trend | `codebase_okf/contracts/rolling_window_contract.md`, `codebase_okf/components/trend_engine.md` |
 | Import per-game box scores | `codebase_okf/components/boxscore_importer.md`, `codebase_okf/safety/scraping_policy.md` |
 | Touch category z-scores, profiles, or punts | `codebase_okf/contracts/category_value_contract.md`, `codebase_okf/components/category_analyzer.md` |

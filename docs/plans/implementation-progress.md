@@ -16,7 +16,7 @@ are preserved.
 | M2 — basic features | Partial | Account/session/registration availability, explicit editable ESPN setup, owned league selection, player search/detail, snake draft creation, keyboard pick, undo and URL-based reload. Saved-draft listing, league settings editing and ranking/recommendation presentation remain |
 | M3 — verification | Partial | Real HTTP and PostgreSQL tests; cross-user isolation; browser journey, axe scans, desktop/mobile screenshots. Full parity matrix and owner visual acceptance remain |
 | M4 — game data | Partial | ESPN setup catalog and independent scoring golden delivered. Per-game schema/parser/import/progress and data sufficiency remain |
-| M5 — heat | Pending | Latest three appearances versus the preceding expanding 10–30 appearance baseline; no heat number is presented as implemented |
+| M5 — heat | Partial | Pure C# calculation and best/hot ranking logic pass 20 offline cases; game-data storage, API and UI integration remain |
 | M6 — player intelligence UI | Pending | Separate best-performing, draft-value and hot views with evidence, samples and dates |
 | M7 — release | Pending | Remaining routes, distribution, full regression and owner review |
 
@@ -109,3 +109,36 @@ to thirty and then rolls at thirty; DNP is not zero; reset at season boundaries.
 Live box-score fetching remains blocked by the recorded safety allowlist mismatch.
 Offline parser/engine work can proceed without weakening that policy. Sleeper
 adapters and league automation remain deferred.
+
+## Heat calculation checkpoint — 2026-09-20
+
+`PlayerHeatCalculator` now computes league-specific per-game fantasy scores,
+current and comparison averages, point/relative lift, counts above baseline, and
+separate best-performing/hottest rankings. Effective policy, model version, game
+dates, IDs and provenance remain attached. No current-season fallback and no
+invented sustainability or freshness claim. `PlayerGameSample` distinguishes
+DNP/incomplete appearances and requires statistics/provenance where appropriate.
+
+`dotnet test ... --filter PlayerHeat` passed **20 cases**. The full gate also
+passed: **234 tests** (91 Domain, 30 Application, 113 Integration), zero build
+warnings, Domain coverage 89.19%, Application coverage 72.92%, five clean axe
+scans, D-14 stability 0.000px, and 75 valid OKF concepts. This completes the pure math module only; M4/M5 are still partial.
+Usage check after unit tests again returned no budget/quota value.
+
+### Next-step code findings
+
+- `ProjectionService.ProjectPoolAsync` is registered but has no production
+  caller. New leagues can legitimately have no `FantasyValue` rows even when
+  players have been imported. Wire projection generation/revaluation explicitly
+  and test it from imported season stats through the actual ranking response.
+- `DraftCandidateRepository` and `ProjectionRepository.GetFantasyValueAsync`
+  select the latest value by descending random GUID. GUID ordering does not
+  establish recency. Correct version/recency selection, scoring-change behavior,
+  and projection decomposition consistency before treating rankings as current.
+- `GetLatestDecompositionAsync` starts from the latest shared baseline rather
+  than a coherent league value/adjusted/baseline chain. Add regression cases with
+  multiple baselines and multiple leagues so another projection run cannot make
+  a valid league decomposition disappear or mix versions.
+
+These findings are documented for the next integration step; this checkpoint
+has not silently changed persistence or projection semantics.

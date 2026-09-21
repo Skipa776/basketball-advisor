@@ -169,3 +169,10 @@ hand), the engine, `ModelVersion` on trends, and rows T-01 … T-06 — one comm
 # Verification
 
 [test_matrix_trends](../tests/test_matrix_trends.md), rows T-01 through T-06.
+
+## Separate owner-selected descriptive heat
+
+[Player heat](player_heat_contract.md) owns the latest-three-appearance comparison
+against a disjoint expanding/capped baseline. It is not `TrendScore` and does not
+change the opportunity or sustainability formulas above. Its effective policy
+expresses the three-game window directly; it never aliases `Last5Games`.

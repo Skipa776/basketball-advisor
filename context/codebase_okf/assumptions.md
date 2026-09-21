@@ -852,3 +852,19 @@ provider was touched. Migration remains partial. The owner requested continuatio
 with the remaining player-intelligence work; the progress ledger names gaps.
 The independent ESPN scoring golden is 53, corrected from an erroneous hand total
 of 58 caught by the test. No scoring weight changed to accommodate the golden.
+
+## 2026-09-20 — descriptive heat math decisions
+
+Implement heat independently of sustainable opportunity trends. Absolute positive
+fantasy-point lift orders the hottest list; current up-to-thirty appearance average
+orders best performing. Relative lift divides by absolute baseline value so a
+negative baseline retains improvement direction; zero baseline has no percentage.
+No arbitrary "very hot" threshold or stale-data cutoff is invented. Results expose
+game dates, scored samples, provenance and the effective window policy. The later
+API must assess data freshness before calling these retrospective values live.
+No scraping policy, source allowlist, stored baseline, or projection math changes.
+
+Heat checkpoint verification: all 20 dedicated cases and the full 234-test gate
+passed with Domain coverage 89.19% and Application 72.92%. The pure heat contract
+and its own matrix are implemented; opportunity TrendScore, importing, persistence,
+and heat API/UI are not promoted. The React/API checkpoint is commit `d74f962`.

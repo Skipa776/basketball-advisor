@@ -43,6 +43,7 @@ paste-ready prompts are in `docs/epics/`.
 
 | Concept | Owns | Epic |
 |---|---|---|
+| [player_heat_contract](contracts/player_heat_contract.md) | Owner-selected descriptive heat and recent performance | E06 slice |
 | [rolling_window_contract](contracts/rolling_window_contract.md) | Windows, the exact three-way production decomposition, trend score | E06 |
 | [category_value_contract](contracts/category_value_contract.md) | Z-scores with volume-weighted ratios, win probability, punt ceiling | E07 |
 | [draft_intelligence_contract](contracts/draft_intelligence_contract.md) | Survival probability, tiers, the OpportunityCost replacement | E07 |
@@ -121,3 +122,5 @@ paste-ready prompts are in `docs/epics/`.
 
 - [okf_schema](okf_schema.md) — the metadata and maintenance contract for this bundle
 - [assumptions](assumptions.md) — current state, deliberate defaults, what is knowingly unenforced
+
+Player heat verification: [test_matrix_player_heat](tests/test_matrix_player_heat.md).
