@@ -1,4 +1,5 @@
 using FantasyBasketball.Domain.Players;
+using FantasyBasketball.Domain.Leagues;
 using FantasyBasketball.Domain.Projections;
 
 namespace FantasyBasketball.Application.Abstractions;
@@ -28,6 +29,9 @@ public interface IProjectionRepository
 
     Task AddFantasyValueAsync(
         FantasyValue value,
+        FantasyLeague league,
+        DateTimeOffset computedAt,
+        Guid? publicationId,
         CancellationToken cancellationToken);
 
     Task<FantasyValue?> GetFantasyValueAsync(

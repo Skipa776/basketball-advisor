@@ -13,11 +13,11 @@ are preserved.
 |---|---|---|
 | M0 — baseline | Complete | SSH.NET security repair; approved scope/toolchain recorded; baseline gate green |
 | M1 — React foundation | Partial | Pinned React/TypeScript/Vite project, .NET-served `/app`, typed API boundary, loading/error states. Continuous animated landing and complete design-system port remain |
-| M2 — basic features | Partial | Account/session/registration availability, explicit editable ESPN setup, owned league selection, player search/detail, snake draft creation, keyboard pick, undo and URL-based reload. Saved-draft listing, league settings editing and ranking/recommendation presentation remain |
+| M2 — basic features | Partial | Account/session/registration availability, explicit editable ESPN setup, owned league selection, player search/detail, snake draft creation, keyboard pick, undo and URL-based reload. League-specific recalculation, ranked advice/evidence and pick/undo reranking now connected. Saved-draft listing and league settings editing remain |
 | M3 — verification | Partial | Real HTTP and PostgreSQL tests; cross-user isolation; browser journey, axe scans, desktop/mobile screenshots. Full parity matrix and owner visual acceptance remain |
 | M4 — game data | Partial | ESPN setup catalog and independent scoring golden delivered. Per-game schema/parser/import/progress and data sufficiency remain |
 | M5 — heat | Partial | Pure C# calculation and best/hot ranking logic pass 20 offline cases; game-data storage, API and UI integration remain |
-| M6 — player intelligence UI | Pending | Separate best-performing, draft-value and hot views with evidence, samples and dates |
+| M6 — player intelligence UI | Partial | Draft-value shortlist/evidence/decomposition delivered; separate observed best-performing and hot views remain |
 | M7 — release | Pending | Remaining routes, distribution, full regression and owner review |
 
 ## What is implemented
@@ -87,8 +87,7 @@ or live provider was used. Screenshots contain clearly named fictional test data
 Budget checks were made at startup, after the API slice, during browser work and
 before wrap-up. Every `get_goal` result returned no active goal, remaining-token
 value or completion budget report. Account usage quota is not exposed; no numeric
-remaining-usage claim is possible. The owner requested continuation after the green React checkpoint. Begin the
-heat calculation as a separate tested step; do not leave partially tested work
+remaining-usage claim is possible. The owner requested continuation after the green React checkpoint. Continue at tested subsystem boundaries and do not leave partially tested work
 when the context budget approaches its limit.
 
 The earlier automatic-review account-limit block was cleared by the owner's
@@ -96,12 +95,11 @@ continuation; restore and subsequent approved tooling commands ran successfully.
 
 ## Single next action
 
-Complete **draft decision presentation and its integration test**: ensure a newly
-created league can obtain/recompute its league-specific projections, show the
-server-ranked recommendations with evidence, and verify re-ranking after pick
-and undo. The current player pool displays existing draft values but is not yet
-that full ranking-first surface. Then implement the per-game/heat subsystem,
-reading its routed contracts and safety concepts before editing.
+Implement **per-game persistence and an offline box-score parser**, then connect
+stored appearances to the tested heat calculator and its authenticated query/UI.
+Read the routed game-data, heat, provenance, tenancy and scraping concepts first.
+The projection publication and draft recommendation flow is now connected; the
+remaining heat work must not treat season projections as observed game logs.
 
 Keep the accepted heat rule unchanged: first complete comparison after appearance
 13; latest three excluded from the comparison baseline; baseline grows from ten
@@ -142,3 +140,55 @@ Usage check after unit tests again returned no budget/quota value.
 
 These findings are documented for the next integration step; this checkpoint
 has not silently changed persistence or projection semantics.
+
+
+## Draft decision checkpoint — 2026-09-20
+
+Delivered:
+
+- Explicit selection of an imported season/source, with manual corrections taking
+  precedence, followed by one atomic four-record projection publication. New owned
+  routes are included in the 13-route cross-user isolation sweep.
+- Saved values carry a run ID, calculation timestamp and normalized scoring profile.
+  PostgreSQL selects the latest run before loading the pool; another league or a
+  player absent from the newly selected pool cannot leak old values into it.
+- A scoring edit hides obsolete values until explicit recalculation. Historical
+  rows remain unchanged. Legacy values without publication metadata require
+  recalculation; legacy observation links are not guessed or backfilled.
+- Projection detail follows the exact saved value → adjustment → baseline →
+  observation chain. Random IDs only break equal-timestamp ties deterministically.
+- React shows the top five server-ranked candidates, confidence, evidence and
+  visible risk text, including unverified context. Picks and undo refresh advice;
+  ordinary polling does not repeatedly persist recommendations. Full decomposition
+  remains available from each shortlist player.
+- Compact signed-in header and a fixed-height shortlist preserve the space for
+  the player table during re-ranking. The calculation controls explicitly say
+  that recent-form/heat rankings are not connected yet.
+
+Validation findings and fixes: missing scoring-engine DI registration, fixture
+parser-version labels, an EF grouping/order translation error, and the selector's
+accessible name were corrected. The older HTTP lifecycle test now asserts that
+scoring changes invalidate existing values and then explicitly recalculates before
+requesting the new decomposition. No safety rule or test threshold was weakened.
+
+Targeted tests passed for application orchestration, transaction rollback,
+independent league/run reads, manual precedence, scoring invalidation, owned-route
+isolation, HTTP publication, pick/undo and the browser journey. Final `bash scripts/gate.sh` passed **243 tests**: 92 Domain, 35 Application,
+116 Integration. Build: zero warnings/errors. Domain coverage **89.22%**,
+Application **74.33%**. Both the existing D-14 browser gate (0.000px) and the new
+React row-stability assertion passed. All five axe scans were clean; mobile
+390px and 320px did not overflow. **75 OKF concepts** validated. Toolchain remains
+.NET SDK 10.0.302 / Node 24.13.0 / npm 11.6.2; final log:
+`/tmp/fb-publication-gate2.log`.
+
+Commands: `dotnet ef migrations add ProjectionPublication` generated the forward
+migration without applying it to a developer database; `dotnet format
+--no-restore`, TypeScript/Vite builds, focused `dotnet test` runs, and the full
+gate completed. The attempted EF `migrations remove --offline` option was not
+supported; only this session's uncommitted generated files were regenerated
+from the committed snapshot. No prior migration or developer database was edited.
+
+Usage was checked at startup, after implementation, during regression and before
+wrap-up. The tool again returned no active goal or remaining-token/quota values;
+no numeric account-usage estimate is available. This checkpoint completes the
+projection/draft-decision slice, not the whole React migration or heat pipeline.

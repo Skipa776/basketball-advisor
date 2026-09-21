@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Domain/Projections, src/FantasyBasketball.A
 test_paths: [tests/FantasyBasketball.Domain.Tests/Projections]
 depends_on: [stat_vocabulary.md, scoring_rules_catalog.md, context_event_catalog.md]
 status: implemented
-last_updated: 2026-07-29
+last_updated: 2026-09-20
 owners: [engineering]
 risk_level: high
 edit_policy: stable_contract
@@ -196,3 +196,10 @@ volume, stacked clamps, computation-time expiry, and baseline/event references.
 `ObservedStats`, `BaselineProjection`, `AdjustedProjection`, and `FantasyValue`
 persist as four separate records through forward migrations. Repository and
 DbContext shape keep observed statistics and baselines append-only.
+
+The explicit league-publication workflow now persists an exact observation link
+for each new baseline and follows the saved value's adjusted/baseline/observed
+chain for decomposition. A newer run in another league cannot select a different
+baseline or observation for this value. Mathematical steps and model version
+are unchanged; publication metadata and migration policy are owned by
+[persistence_contract](persistence_contract.md).

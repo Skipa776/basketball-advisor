@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Domain/Projections, src/FantasyBasketball.A
 test_paths: [tests/FantasyBasketball.Domain.Tests/Projections]
 depends_on: [../contracts/projection_pipeline_contract.md]
 status: implemented
-last_updated: 2026-07-29
+last_updated: 2026-09-20
 owners: [engineering]
 risk_level: high
 done_criteria:
@@ -70,3 +70,8 @@ come from validated, options-bound `ProjectionOptions`. `ProjectionService`
 computes the pool average once, injects one UTC run timestamp, and persists one
 observed/baseline pair per player. This component's baseline-only done criteria
 are implemented.
+
+The owned `LeagueProjectionService` now calls this baseline-only service with
+an explicit imported pool, then applies context and scores in a separate stage.
+No projection formula or baseline immutability rule changed. `P-11`–`P-13`
+cover publication isolation, rollback and the real HTTP draft workflow.

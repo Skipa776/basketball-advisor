@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api, message } from './api';
 import type { Envelope } from './api';
 
-export function useResource<T>(path: string | null, interval = 0) {
+export function useResource<T>(path: string | null, interval = 0, version: unknown = null) {
   const [revision, setRevision] = useState(0);
   const [state, setState] = useState<{ path: string | null; result: Envelope<T> | null; error: string; loading: boolean }>({ path: null, result: null, error: '', loading: true });
   const refresh = useCallback(() => setRevision(value => value + 1), []);
@@ -16,7 +16,7 @@ export function useResource<T>(path: string | null, interval = 0) {
       if (!controller.signal.aborted) setState({ path, result: null, error: message(error), loading: false });
     });
     return () => controller.abort();
-  }, [path, revision]);
+  }, [path, revision, version]);
   useEffect(() => {
     if (!interval || !path) return;
     const poll = () => { if (!document.hidden) refresh(); };

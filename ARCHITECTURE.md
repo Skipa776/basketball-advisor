@@ -177,6 +177,11 @@ public sealed record FantasyValue(
     decimal PerGame, decimal SeasonTotal,
     Guid? AdjustedProjectionId);
 
+// Persistence publication metadata (not additional scoring inputs):
+// BaselineProjectionRow.ObservedStatsId → exact immutable observation, nullable for legacy rows.
+// FantasyValueRow.ComputedAt, ScoringProfile, PublicationId → league-specific active run.
+// Legacy rows are retained but require recalculation before current ranking.
+
 // --- Context --------------------------------------------------------------
 // ContextEventType members + magnitude/confidence scales: contracts/context_event_catalog.md
 public sealed record ContextEvent(
@@ -234,6 +239,8 @@ GET    /api/leagues/setup                    explicit starter and enum catalog
 POST   /api/leagues                          create a league
 GET    /api/leagues/{id}
 PUT    /api/leagues/{id}/scoring             replace scoring rules
+GET    /api/leagues/{id}/projection-pools    imported seasons/sources (owned trigger)
+POST   /api/leagues/{id}/projections         atomically calculate a points-league pool
 
 GET    /api/players?search=&team=&position=
 GET    /api/players/{id}

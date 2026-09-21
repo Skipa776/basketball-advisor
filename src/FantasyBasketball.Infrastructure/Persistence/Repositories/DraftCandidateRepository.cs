@@ -14,14 +14,8 @@ public sealed class DraftCandidateRepository(FantasyDbContext database)
         Guid leagueId,
         CancellationToken cancellationToken)
     {
-        var values = (await database.FantasyValues
-                .AsNoTracking()
-                .Where(value => value.FantasyLeagueId == leagueId)
-                .ToArrayAsync(cancellationToken))
-            .GroupBy(value => value.PlayerId)
-            .Select(group => group.OrderByDescending(value => value.Id).First())
-            .ToArray();
-        var results = new List<DraftCandidate>(values.Length);
+        var values = await CurrentFantasyValues.ListAsync(database, leagueId, cancellationToken);
+        var results = new List<DraftCandidate>(values.Count);
 
         foreach (var value in values)
         {
@@ -57,7 +51,8 @@ public sealed class DraftCandidateRepository(FantasyDbContext database)
                 0m,
                 0m,
                 adjusted?.RoleRisk ?? 0m,
-                categoryTotals));
+                categoryTotals,
+                adjusted?.HasUnverifiedContext ?? false));
         }
 
         return results;

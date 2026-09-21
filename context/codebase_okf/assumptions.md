@@ -7,7 +7,7 @@ source_paths: []
 test_paths: []
 depends_on: [safety/scraping_policy.md, tasks/post_mvp_roadmap.md]
 status: planned
-last_updated: 2026-09-18
+last_updated: 2026-09-20
 owners: [engineering]
 ---
 
@@ -868,3 +868,41 @@ Heat checkpoint verification: all 20 dedicated cases and the full 234-test gate
 passed with Domain coverage 89.19% and Application 72.92%. The pure heat contract
 and its own matrix are implemented; opportunity TrendScore, importing, persistence,
 and heat API/UI are not promoted. The React/API checkpoint is commit `d74f962`.
+
+
+## 2026-09-20 — projection publication and draft decisions
+
+Season/source choice is explicit. Manual season rows take precedence over the
+chosen automated source for the same player/year; they also include manually
+entered players absent from that source. No previous-season fallback is hidden.
+Publication timestamps denote calculation start, with ID as a deterministic tie
+breaker for equal timestamps. A full-pool run has one publication ID, so switching
+pools cannot leave absent players ranked from older runs. Concurrent runs remain
+atomic and the newest calculation timestamp wins regardless of completion order.
+
+Values preserve the scoring profile actually passed to the scorer; a concurrent
+scoring edit cannot relabel an old result as new. Current reads require profile
+equality. Recalculation is explicit after scoring or context edits. The workflow
+currently supports points leagues only; category recalculation returns a conflict
+without affecting the existing category engine/board. No mathematical projection
+constant, draft weight, or heat rule changed.
+
+Legacy projection rows are retained. Unknown observation links and scoring
+metadata are not inferred; existing instances must recalculate from their imported
+season data before those rows become current rankings. This is preferable to
+inventing audit history. The forward migration never rewrites a stored baseline.
+
+React recommendation requests occur on draft-state/recalculation changes and
+explicit refresh, not periodic polling, because the existing endpoint saves its
+recommendation evidence. Risk evidence is visible outside collapsed details, and
+unverified context adds a warning without an extra score penalty. Shortlist height
+and loading text reserve space so the player table does not jump after a pick.
+Next subsystem: offline per-game storage/parser followed by heat query/UI wiring;
+live scraping still requires resolving the documented allowlist mismatch.
+
+Final projection/draft gate passed 243 tests (92 Domain, 35 Application, 116
+Integration), zero build warnings/errors, Domain coverage 89.22%, Application
+74.33%, five clean axe scans, both draft stability checks and 75 valid concepts.
+Review screenshots/report are linked from the progress ledger. Usage checks
+returned no quota or remaining-token report. The next handoff remains per-game
+storage/parser and heat integration; the overall migration stays partial.

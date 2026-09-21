@@ -2,6 +2,7 @@ using System.Text.Json;
 using FantasyBasketball.Application.Abstractions;
 using FantasyBasketball.Application.Projections;
 using FantasyBasketball.Domain.Players;
+using FantasyBasketball.Domain.Leagues;
 using FantasyBasketball.Domain.Projections;
 using FantasyBasketball.Domain.Provenance;
 using FantasyBasketball.Domain.Recommendations;
@@ -28,11 +29,12 @@ public sealed class ProjectionRepository(FantasyDbContext database)
                 nameof(baseline));
         }
 
-        database.ObservedStats.Add(ObservedStatsRow.Create(
+        var observedRow = ObservedStatsRow.Create(
             observed.PlayerId.Value,
             observed.Source.SeasonEndYear,
             observed.Source.Provenance.Source,
-            observed.AsOf));
+            observed.AsOf);
+        database.ObservedStats.Add(observedRow);
         database.BaselineProjections.Add(BaselineProjectionRow.Create(
             baseline.Id,
             baseline.PlayerId.Value,
@@ -41,7 +43,8 @@ public sealed class ProjectionRepository(FantasyDbContext database)
             Serialize(baseline.ProjectedPerGame),
             baseline.ProjectedGamesPlayed,
             baseline.ComputedAt,
-            baseline.ModelVersion));
+            baseline.ModelVersion,
+            observedRow.Id));
         await database.SaveChangesAsync(cancellationToken);
     }
 
@@ -137,16 +140,28 @@ public sealed class ProjectionRepository(FantasyDbContext database)
 
     public async Task AddFantasyValueAsync(
         FantasyValue value,
+        FantasyLeague league,
+        DateTimeOffset computedAt,
+        Guid? publicationId,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(value);
+        ArgumentNullException.ThrowIfNull(league);
+        if (value.LeagueId != league.Id || computedAt.Offset != TimeSpan.Zero)
+        {
+            throw new ArgumentException("Value must name its scoring league and a UTC timestamp.");
+        }
+
         database.FantasyValues.Add(FantasyValueRow.Create(
             Guid.NewGuid(),
             value.PlayerId.Value,
             value.LeagueId,
             Round(value.PerGame),
             Round(value.SeasonTotal),
-            value.AdjustedProjectionId));
+            value.AdjustedProjectionId,
+            computedAt,
+            CurrentFantasyValues.Profile(league),
+            publicationId));
         await database.SaveChangesAsync(cancellationToken);
     }
 
@@ -155,13 +170,8 @@ public sealed class ProjectionRepository(FantasyDbContext database)
         Guid leagueId,
         CancellationToken cancellationToken)
     {
-        var row = await database.FantasyValues
-            .AsNoTracking()
-            .Where(value =>
-                value.PlayerId == playerId.Value
-                && value.FantasyLeagueId == leagueId)
-            .OrderByDescending(value => value.Id)
-            .FirstOrDefaultAsync(cancellationToken);
+        var row = (await CurrentFantasyValues.ListAsync(database, leagueId, cancellationToken))
+            .SingleOrDefault(value => value.PlayerId == playerId.Value);
         return row is null
             ? null
             : new FantasyValue(
@@ -177,59 +187,35 @@ public sealed class ProjectionRepository(FantasyDbContext database)
         Guid leagueId,
         CancellationToken cancellationToken)
     {
-        var baselineId = await database.BaselineProjections
-            .AsNoTracking()
-            .Where(value => value.PlayerId == playerId.Value)
-            .OrderByDescending(value => value.ComputedAt)
-            .ThenByDescending(value => value.Id)
-            .Select(value => (Guid?)value.Id)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (baselineId is null)
+        var value = await GetFantasyValueAsync(playerId, leagueId, cancellationToken);
+        if (value?.AdjustedProjectionId is not { } adjustedId)
         {
             return null;
         }
 
-        var adjustedId = await database.AdjustedProjections
-            .AsNoTracking()
-            .Where(value => value.BaselineProjectionId == baselineId.Value)
-            .OrderByDescending(value => value.ComputedAt)
-            .ThenByDescending(value => value.Id)
-            .Select(value => (Guid?)value.Id)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (adjustedId is null)
+        var adjusted = await GetAdjustedAsync(adjustedId, cancellationToken);
+        if (adjusted is null || adjusted.PlayerId != playerId)
         {
             return null;
         }
 
-        var observed = await GetLatestObservedAsync(playerId, cancellationToken);
-        var baseline = await GetBaselineAsync(baselineId.Value, cancellationToken);
-        var adjusted = await GetAdjustedAsync(adjustedId.Value, cancellationToken);
-        var valueRow = await database.FantasyValues
-            .AsNoTracking()
-            .Where(value =>
-                value.PlayerId == playerId.Value
-                && value.FantasyLeagueId == leagueId
-                && value.AdjustedProjectionId == adjustedId.Value)
-            .OrderByDescending(value => value.Id)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (observed is null
-            || baseline is null
-            || adjusted is null
-            || valueRow is null)
+        var baselineRow = await database.BaselineProjections.AsNoTracking()
+            .SingleOrDefaultAsync(row => row.Id == adjusted.BaselineProjectionId
+                && row.PlayerId == playerId.Value, cancellationToken);
+        if (baselineRow?.ObservedStatsId is not { } observedId)
         {
             return null;
         }
 
-        return new ProjectionDecomposition(
-            observed,
-            baseline,
-            adjusted,
-            new FantasyValue(
-                playerId,
-                leagueId,
-                valueRow.PerGame,
-                valueRow.SeasonTotal,
-                valueRow.AdjustedProjectionId));
+        var observedRow = await database.ObservedStats.AsNoTracking()
+            .SingleAsync(row => row.Id == observedId, cancellationToken);
+        var source = await database.SeasonStatLines.AsNoTracking()
+            .SingleAsync(row => row.PlayerId == observedRow.PlayerId
+                && row.SeasonEndYear == observedRow.SeasonEndYear
+                && row.Source == observedRow.Source, cancellationToken);
+        var observed = new ObservedStats(playerId, Map(source), observedRow.AsOf);
+        var baseline = await GetBaselineAsync(baselineRow.Id, cancellationToken);
+        return new ProjectionDecomposition(observed, baseline!, adjusted, value);
     }
 
     private static SeasonStatLine Map(SeasonStatLineRow row) =>

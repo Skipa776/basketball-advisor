@@ -28,7 +28,7 @@ export function Workspace() {
     <a className="skip" href="#workspace">Skip to workspace</a>
     <header className="masthead"><a className="wordmark" href="/app">✳ Fastbreak</a><span>YOUR DRAFT, IN PERSPECTIVE.</span><a href="/">Existing app ↗</a>{user && <button onClick={logout} disabled={busy}>Sign out</button>}</header>
     <main id="workspace" tabIndex={-1}>
-      <div className="intro"><p className="eyebrow">THE WORKSPACE / DRAFT PREPARATION</p><h1>See the court.<br /><em>Make your move.</em></h1><p>Set your rules. Study the players. Keep your next pick in view.</p></div>
+      <div className={`intro${user ? " intro-compact" : ""}`}><p className="eyebrow">THE WORKSPACE / DRAFT PREPARATION</p><h1>See the court.<br /><em>Make your move.</em></h1><p>Set your rules. Study the players. Keep your next pick in view.</p></div>
       <ErrorNotice text={error || session.error} retry={session.error ? session.refresh : undefined} />
       {!session.result && session.loading && <p role="status">Connecting to your workspace…</p>}
       {session.result && (user ? <LeagueWorkspace key={user.id} /> : <AccountForm session={session.result.data} onSignedIn={session.refresh} />)}

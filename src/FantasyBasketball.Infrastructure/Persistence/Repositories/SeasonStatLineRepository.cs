@@ -1,5 +1,6 @@
 using System.Text.Json;
 using FantasyBasketball.Application.Abstractions;
+using FantasyBasketball.Application.Players;
 using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Domain.Provenance;
 using FantasyBasketball.Domain.Stats;
@@ -11,6 +12,32 @@ namespace FantasyBasketball.Infrastructure.Persistence.Repositories;
 public sealed class SeasonStatLineRepository(FantasyDbContext database)
     : ISeasonStatLineRepository
 {
+    public async Task<IReadOnlyList<SeasonProjectionPool>> ListPoolsAsync(
+        CancellationToken cancellationToken) =>
+        await database.SeasonStatLines.AsNoTracking()
+            .GroupBy(row => new { row.SeasonEndYear, row.Source })
+            .OrderByDescending(group => group.Key.SeasonEndYear).ThenBy(group => group.Key.Source)
+            .Select(group => new SeasonProjectionPool(
+                group.Key.SeasonEndYear, group.Key.Source, group.Count()))
+            .Take(Paging.MaximumLimit).ToArrayAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<SeasonStatLine>> ListPoolAsync(
+        int seasonEndYear, string source, CancellationToken cancellationToken)
+    {
+        var rows = await database.SeasonStatLines.AsNoTracking()
+            .Where(row => row.SeasonEndYear == seasonEndYear
+                && (row.Source == source || row.Source == DataSourceName.Manual))
+            .ToArrayAsync(cancellationToken);
+        if (!rows.Any(row => row.Source == source))
+        {
+            return [];
+        }
+
+        return rows.GroupBy(row => row.PlayerId)
+            .Select(group => group.OrderByDescending(row => row.Source == DataSourceName.Manual).First())
+            .OrderBy(row => row.PlayerId).Select(Map).ToArray();
+    }
+
     public async Task AddAsync(
         SeasonStatLine statLine,
         CancellationToken cancellationToken)
@@ -50,9 +77,10 @@ public sealed class SeasonStatLineRepository(FantasyDbContext database)
                     && value.Source == source,
                 cancellationToken);
 
-        return row is null
-            ? null
-            : new SeasonStatLine(
+        return row is null ? null : Map(row);
+    }
+
+    private static SeasonStatLine Map(SeasonStatLineRow row) => new(
                 new PlayerId(row.PlayerId),
                 row.SeasonEndYear,
                 row.GamesPlayed,
@@ -68,7 +96,6 @@ public sealed class SeasonStatLineRepository(FantasyDbContext database)
                     row.ParserVersion,
                     row.Confidence,
                     row.RawRecordHash));
-    }
 
     private static string Serialize(StatLine line) =>
         JsonSerializer.Serialize(

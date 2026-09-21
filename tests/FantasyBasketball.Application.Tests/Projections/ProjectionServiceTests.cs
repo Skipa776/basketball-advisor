@@ -110,6 +110,9 @@ public sealed class ProjectionServiceTests
 
         public Task AddFantasyValueAsync(
             FantasyValue value,
+            FantasyBasketball.Domain.Leagues.FantasyLeague league,
+            DateTimeOffset computedAt,
+        Guid? publicationId,
             CancellationToken cancellationToken) =>
             Task.CompletedTask;
 

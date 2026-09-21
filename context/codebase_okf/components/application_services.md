@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Application]
 test_paths: [tests/FantasyBasketball.Application.Tests]
 depends_on: [../contracts/provider_contracts.md, ../contracts/api_surface.md]
 status: implemented
-last_updated: 2026-07-29
+last_updated: 2026-09-20
 owners: [engineering]
 risk_level: medium
 done_criteria:
@@ -78,3 +78,10 @@ source-health, and paging services now expose the remaining HTTP use cases
 without Infrastructure dependencies. The Blazor surface calls these services
 directly, while recurring infrastructure workers enter through the same import
 use cases and preserve the dependency direction.
+
+`LeagueProjectionService` publishes the selected imported season/source pool
+under an owned points league's rules. It reuses the pure baseline, context and
+scoring engines and the existing transaction abstraction. Every record is
+appended within the transaction; missing data and unsupported category
+recalculation are explicit conflicts. Application fakes cover orchestration,
+invalid requests and cancellation; PostgreSQL covers rollback and coherent reads.

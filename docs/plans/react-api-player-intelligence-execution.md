@@ -244,3 +244,14 @@ Do not multiply per-game projections by scheduled games and call that “best”
 Execute M0, then build the smallest real vertical slice: **React sign-in → session restore → league selection/setup → league-specific player detail**, verified through real local .NET HTTP calls and persistence. Then complete **start/reopen draft → enter pick → recommendations update → undo → reload recovery** before the first integrated owner handoff. Broader provider integrations remain deferred. No ranking should be presented as live until its underlying game data and exact scoring have passed their own gates.
 
 This planning pass inspected code/contracts and official platform documentation. It did not implement React, exercise the running application APIs, import live data, or certify provider availability. Current evidence is a plan grounded in the repository, not a connectivity test result.
+
+
+### 2026-09-20 projection/draft implementation checkpoint
+
+The React workspace now publishes projections from explicitly chosen imported
+season data, shows server-ranked shortlist/evidence/confidence and full player
+projection detail, and refreshes after pick/undo. Saved values are isolated by
+league, calculation run and scoring profile; changed rules require explicit
+recalculation. This advances M2/M3 and draft-value presentation in M6; it does not
+complete per-game importing, heat API/UI, landing parity or release. The current
+verification and exact next action are in [implementation progress](implementation-progress.md).

@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Infrastructure/Persistence]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Persistence]
 depends_on: [../contracts/persistence_contract.md]
 status: partial
-last_updated: 2026-07-29
+last_updated: 2026-09-20
 owners: [engineering]
 risk_level: medium
 done_criteria:
@@ -74,3 +74,15 @@ recommendation entities in the contract are not implemented yet. The
 `ProjectionRecords` migration and repository now add immutable
 `ObservedStats` and full `BaselineProjection` persistence; adjusted
 projections and fantasy values remain.
+
+## Projection publication repair — 2026-09-20
+
+The forward `ProjectionPublication` migration adds an exact observation link
+to new baselines and publication ID, timestamp and scoring-profile metadata to
+fantasy values. Legacy rows remain intact and need recalculation before current
+ranking. Current-value selection is shared by the draft and detail repositories
+and queries the latest publication in PostgreSQL before materializing its pool.
+`P-11`–`P-13` exercise profile invalidation, manual precedence, independent
+leagues/seasons, immutable history, atomic rollback and real HTTP reranking.
+The old implementation notes above describe earlier checkpoints, not the current
+absence of adjusted/value storage.

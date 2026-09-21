@@ -539,6 +539,8 @@ public sealed class BaselineProjectionRow
 
     public Guid PlayerId { get; private set; }
 
+    public Guid? ObservedStatsId { get; private set; }
+
     public decimal ProjectedMinutesPerGame { get; private set; }
 
     public string PerMinuteRates { get; private set; } = "{}";
@@ -559,7 +561,8 @@ public sealed class BaselineProjectionRow
         string projectedPerGame,
         int projectedGamesPlayed,
         DateTimeOffset computedAt,
-        string modelVersion) =>
+        string modelVersion,
+        Guid? observedStatsId = null) =>
         new()
         {
             Id = id,
@@ -569,6 +572,7 @@ public sealed class BaselineProjectionRow
             ProjectedPerGame = projectedPerGame,
             ProjectedGamesPlayed = projectedGamesPlayed,
             ModelVersion = modelVersion,
+            ObservedStatsId = observedStatsId,
             ComputedAt = computedAt,
         };
 }
@@ -933,13 +937,22 @@ public sealed class FantasyValueRow : IOwnedResource
 
     public Guid? AdjustedProjectionId { get; private set; }
 
+    public DateTimeOffset? ComputedAt { get; private set; }
+
+    public string? ScoringProfile { get; private set; }
+
+    public Guid? PublicationId { get; private set; }
+
     public static FantasyValueRow Create(
         Guid id,
         Guid playerId,
         Guid fantasyLeagueId,
         decimal perGame,
         decimal seasonTotal,
-        Guid? adjustedProjectionId) =>
+        Guid? adjustedProjectionId,
+        DateTimeOffset? computedAt = null,
+        string? scoringProfile = null,
+        Guid? publicationId = null) =>
         new()
         {
             Id = id,
@@ -948,6 +961,9 @@ public sealed class FantasyValueRow : IOwnedResource
             PerGame = perGame,
             SeasonTotal = seasonTotal,
             AdjustedProjectionId = adjustedProjectionId,
+            ComputedAt = computedAt,
+            ScoringProfile = scoringProfile,
+            PublicationId = publicationId,
         };
 }
 

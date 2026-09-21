@@ -347,6 +347,10 @@ public sealed class BaselineProjectionConfiguration
         builder.Property(value => value.ProjectedGamesPlayed).HasColumnName("projected_games_played");
         builder.Property(value => value.ComputedAt).HasColumnName("computed_at").HasColumnType("timestamptz");
         builder.Property(value => value.ModelVersion).HasColumnName("model_version").IsRequired();
+        builder.Property(value => value.ObservedStatsId).HasColumnName("observed_stats_id");
+        builder.HasOne<ObservedStatsRow>().WithMany()
+            .HasForeignKey(value => value.ObservedStatsId)
+            .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<PlayerRow>()
             .WithMany()
             .HasForeignKey(value => value.PlayerId)
@@ -610,6 +614,12 @@ public sealed class FantasyValueConfiguration
             .HasPrecision(10, 4);
         builder.Property(value => value.AdjustedProjectionId)
             .HasColumnName("adjusted_projection_id");
+        builder.Property(value => value.ComputedAt)
+            .HasColumnName("computed_at").HasColumnType("timestamptz");
+        builder.Property(value => value.ScoringProfile).HasColumnName("scoring_profile");
+        builder.Property(value => value.PublicationId).HasColumnName("publication_id");
+        builder.HasIndex(value => new { value.FantasyLeagueId, value.PlayerId, value.ComputedAt })
+            .IsDescending(false, false, true);
         builder.HasIndex(value => new
         {
             value.PlayerId,

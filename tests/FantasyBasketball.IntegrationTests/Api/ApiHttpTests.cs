@@ -40,7 +40,7 @@ using Testcontainers.PostgreSql;
 
 namespace FantasyBasketball.IntegrationTests.Api;
 
-public sealed class ApiHttpTests : IAsyncLifetime
+public sealed partial class ApiHttpTests : IAsyncLifetime
 {
     private readonly PostgreSqlContainer postgres =
         new PostgreSqlBuilder("postgres:17").Build();
@@ -256,6 +256,16 @@ public sealed class ApiHttpTests : IAsyncLifetime
             await client.GetAsync(
                 $"/api/players/{firstPlayer.Value}",
                 cancellationToken),
+            cancellationToken);
+        using (var outdated = await client.GetAsync(
+            $"/api/players/{firstPlayer.Value}/projection?leagueId={leagueId}", cancellationToken))
+        {
+            outdated.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        }
+
+        await AssertSuccessAsync(
+            await client.PostAsJsonAsync($"/api/leagues/{leagueId}/projections",
+                new { SeasonEndYear = 2026, Source = DataSourceName.Manual }, cancellationToken),
             cancellationToken);
         using (var projection = await client.GetAsync(
             $"/api/players/{firstPlayer.Value}/projection?leagueId={leagueId}",
@@ -915,6 +925,9 @@ public sealed class ApiHttpTests : IAsyncLifetime
                 10m,
                 700m,
                 adjusted.Id),
+            (await services.GetRequiredService<ILeagueRepository>().GetAsync(leagueId, cancellationToken))!,
+            DateTimeOffset.UnixEpoch,
+            null,
             cancellationToken);
     }
 

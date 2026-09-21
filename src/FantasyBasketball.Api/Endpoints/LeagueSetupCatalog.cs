@@ -1,5 +1,6 @@
 using FantasyBasketball.Domain.Leagues;
 using FantasyBasketball.Domain.Stats;
+using FantasyBasketball.Domain.Recommendations;
 
 namespace FantasyBasketball.Api.Endpoints;
 
@@ -9,6 +10,8 @@ public static class LeagueSetupCatalog
     public static object Create() => new
     {
         SuggestedTeamCount = 7,
+        ConfidenceLevels = Enum.GetValues<Confidence>().Select(value => new { Name = value.ToString(), Value = (int)value }),
+        EvidencePolarities = Enum.GetValues<EvidencePolarity>().Select(value => new { Name = value.ToString(), Value = (int)value }),
         Stats = Enum.GetValues<StatKey>().Select(value => new { Name = value.ToString(), Value = (int)value }),
         RosterSlots = Enum.GetValues<RosterSlotKind>().Select(value => value.ToString()),
         PointsProfile = new

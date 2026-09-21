@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Web, src/FantasyBasketball.Api/ApiHost.cs]
 test_paths: [src/FantasyBasketball.Web/tests/workspace.mjs, tests/FantasyBasketball.IntegrationTests/Auth/AuthHttpTests.cs]
 depends_on: [../contracts/api_surface.md, ../contracts/auth_tenancy_contract.md, ../contracts/design_system_contract.md, web_ui_blazor.md]
 status: partial
-last_updated: 2026-09-19
+last_updated: 2026-09-20
 owners: [engineering]
 ---
 
@@ -52,7 +52,19 @@ from the existence of tests.
 # Remaining work
 
 This is a functional migration slice, not full parity. The accepted continuous
-animated landing remains in the visual prototype. Ranking-first presentation,
-league settings edits, saved-draft listing, import/context/account-management
+animated landing remains in the visual prototype. League settings edits,
+saved-draft listing, import/context/account-management
 parity, and the per-game heat pipeline remain on the execution plan. Do not
 promote this concept to implemented until the accepted migration gates pass.
+
+## Draft decision slice — 2026-09-20
+
+The points workspace now offers an explicit imported season/source selection
+and atomic projection recalculation. It shows the first five server-ranked
+recommendations, server-named confidence and evidence, visible risk text, and
+the four-part projection detail. Advice refreshes after a pick, undo,
+recalculation or explicit refresh; it is not repeatedly persisted by polling.
+The shortlist has a fixed-height scroll area and loading text reserves space
+so re-ranking does not move the player search/table. The signed-in header is
+compact. The browser journey now covers calculation, evidence/decomposition,
+recommendation removal/restoration, and player-row stability as well as auth.

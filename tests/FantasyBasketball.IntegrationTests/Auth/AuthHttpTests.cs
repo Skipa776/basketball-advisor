@@ -7,6 +7,10 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using FantasyBasketball.Api;
 using FantasyBasketball.Application.Ingestion;
+using FantasyBasketball.Application.Abstractions;
+using FantasyBasketball.Domain.Players;
+using FantasyBasketball.Domain.Provenance;
+using FantasyBasketball.Domain.Stats;
 using FantasyBasketball.Infrastructure.Persistence;
 using FantasyBasketball.Infrastructure.Workers;
 using Microsoft.AspNetCore.Builder;
@@ -94,8 +98,18 @@ public sealed class AuthHttpTests : IAsyncLifetime
         await using (var scope = app.Services.CreateAsyncScope())
         {
             var database = scope.ServiceProvider.GetRequiredService<FantasyDbContext>();
-            database.Players.Add(PlayerRow.Create(Guid.NewGuid(), "Fixture Guard", "fixture guard", ["PG"], null));
-            await database.SaveChangesAsync(token);
+            foreach (var (name, points) in new[] { ("Fixture Guard", 30m), ("Fixture Center", 20m) })
+            {
+                var playerId = new PlayerId(Guid.NewGuid());
+                database.Players.Add(PlayerRow.Create(playerId.Value, name, name.ToLowerInvariant(), ["PG"], null));
+                await database.SaveChangesAsync(token);
+                await scope.ServiceProvider.GetRequiredService<ISeasonStatLineRepository>().AddAsync(
+                    new SeasonStatLine(playerId, 2026, 50, 30m,
+                        new StatLine(new Dictionary<StatKey, decimal> { [StatKey.PTS] = points }),
+                        new StatLine(new Dictionary<StatKey, decimal> { [StatKey.MIN] = 1500m, [StatKey.PTS] = points * 50m }),
+                        null, new DataProvenance(DataSourceName.Manual, null, DateTimeOffset.UnixEpoch, null,
+                            "manual-v1", DataSourceConfidence.ManualEntry, new string('a', 64))), token);
+            }
         }
 
         var start = new ProcessStartInfo("node")

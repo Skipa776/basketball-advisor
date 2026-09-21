@@ -11,6 +11,19 @@ namespace FantasyBasketball.Domain.Tests.Draft;
 public sealed class DraftEngineTests
 {
     [Fact]
+    public void C02_unverified_context_is_visible_risk_evidence_without_an_extra_score_penalty()
+    {
+        var league = LeagueCatalog.CreateSeedPointsLeague(Guid.NewGuid());
+        var candidate = Candidate(1000m, ["PG"], null);
+        var board = new DraftBoard(new DraftValueCalculator(new DraftWeightOptions()));
+        var plain = board.Rank(CreateSession(), league, [candidate], []).Rankings[0];
+        var flagged = board.Rank(CreateSession(), league, [candidate with { HasUnverifiedContext = true }], []).Rankings[0];
+        flagged.Total.ShouldBe(plain.Total);
+        flagged.Evidence.ShouldContain(item => item.Kind == EvidenceKind.Context
+            && item.Polarity == EvidencePolarity.Risk && item.Statement.Contains("unverified", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Completed_draft_rejects_extra_picks_and_undo_reopens_it()
     {
         var session = new DraftSession(Guid.NewGuid(), 1, 1, 1);

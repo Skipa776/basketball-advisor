@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Domain/Draft]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Draft]
 depends_on: [projection_pipeline_contract.md, scoring_rules_catalog.md, recommendation_evidence_contract.md]
 status: implemented
-last_updated: 2026-07-29
+last_updated: 2026-09-20
 owners: [engineering]
 risk_level: high
 edit_policy: stable_contract
@@ -156,6 +156,10 @@ see [assumptions](../assumptions.md).
   falls back to projected category totals with an explicit banner. *Check: row D-07.*
 
 # Change procedure
+
+The candidate's `HasUnverifiedContext` flag produces Context/Risk evidence
+without changing any additive term. Consumers must not infer verification from
+a nonzero projected score.
 
 Changing a weight is a config change. Changing a *term* means updating this
 file, the engine, the evidence strings it produces, and rows D-01 … D-07

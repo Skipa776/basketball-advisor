@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Infrastructure/Persistence]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Persistence]
 depends_on: [provenance_contract.md, stat_vocabulary.md]
 status: implemented
-last_updated: 2026-07-29
+last_updated: 2026-09-20
 owners: [engineering]
 risk_level: medium
 done_criteria:
@@ -71,6 +71,25 @@ Required, because each backs a hot path:
 | `data_import_run` | `(source, started_at desc)` |
 
 # Migration policy
+
+Projection publication (2026-09-20): each new baseline stores the exact
+`ObservedStatsId` created beside it. Legacy baselines keep a null link; do not
+guess an observation from timestamps. Fantasy values store a UTC `ComputedAt`
+and a normalized snapshot of the league scoring profile. Legacy values retain
+null publication metadata and must be recalculated before being ranked.
+Current reads select the latest timestamp per player and league (ID breaks
+equal-timestamp ties deterministically), then require the saved profile to
+match current rules. A scoring edit hides outdated values without deleting
+history. Decomposition follows value → adjusted → baseline → observed.
+It never substitutes another run's baseline or observation.
+
+Values in a full-pool calculation share a `PublicationId`. Once a league has
+such a publication, current reads use only its latest complete publication;
+players absent from the chosen season/source do not leak in from older runs.
+
+An explicitly requested season/source pool is published in one transaction;
+failure or cancellation rolls back all four records. Manual season stats take
+precedence over the selected automated source for the same player and season.
 
 - Every schema change is an EF Core migration, committed with the code that
   needs it. No `EnsureCreated`, ever — it silently diverges from migrations.

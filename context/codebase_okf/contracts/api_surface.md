@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Api/Endpoints]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Api]
 depends_on: [recommendation_evidence_contract.md, scoring_rules_catalog.md]
 status: implemented
-last_updated: 2026-07-29
+last_updated: 2026-09-20
 owners: [engineering]
 risk_level: low
 done_criteria:
@@ -127,3 +127,21 @@ degradation, framework 404s, and forced 500s.
 
 Existing numeric enum serialization stays compatible. The setup catalog supplies
 name/value mappings so React does not duplicate the C# enums.
+
+## Projection publication — 2026-09-20
+
+- `GET /api/leagues/{id}/projection-pools` requires explicit ownership. Returns
+  up to 200 imported season/source groups, newest first, with source player counts.
+- `POST /api/leagues/{id}/projections` requires ownership and cookie anti-forgery.
+  Body: `{seasonEndYear, source}`. Only points leagues are currently supported.
+  Invalid season/source is `400`; no matching imported pool or a category league
+  is `409`. No request to an external provider occurs. Success returns
+  `{seasonEndYear, source, playerCount, computedAt}` after one atomic publication.
+  Manual corrections take precedence and may add players to the source pool.
+- Recalculation appends immutable history. Current values match the current
+  scoring profile and the latest complete publication; a scoring edit requires
+  recalculation and never silently serves old scores as current. Previously
+  persisted values without publication metadata require recalculation.
+- Setup additionally supplies confidence and evidence-polarity enum mappings.
+  React fetches recommendations on draft-state changes or explicit refresh;
+  the existing recommendation endpoint persists evidence, so it is not polled.

@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Domain/Projections, src/FantasyBasketball.D
 test_paths: [tests/FantasyBasketball.Domain.Tests]
 depends_on: [required_gates.md, ../contracts/projection_pipeline_contract.md, ../contracts/draft_value_contract.md]
 status: implemented
-last_updated: 2026-07-29
+last_updated: 2026-09-20
 owners: [engineering]
 ---
 
@@ -29,6 +29,9 @@ The cases gating build steps 10, 11, and 12 — requirements R7, R8, R9, R10.
 | `P-08` | Event past `ExpectedExpiration` | Excluded at computation time, with no cleanup job having run | ✅ |
 | `P-09` | Any `AdjustedProjection` | Names its `BaselineProjectionId` and its applied event ids; never null | ✅ |
 | `P-10` | Player with zero prior minutes | Projects to the shrinkage target; no `NaN`, no divide-by-zero | ✅ |
+| `P-11` | Multiple league publications, manual overrides, changed scoring and a different season pool | Current values follow the selected run, exact observation and profile; old baselines are unchanged; random IDs do not establish recency | ✅ |
+| `P-12` | Publication fails after baseline writes | Transaction rolls back observed, baseline, adjusted and value rows together | ✅ |
+| `P-13` | Real HTTP projection publication, pick and undo | League receives ranked values/evidence; pick removes player; undo restores board; scoring edit hides obsolete values | ✅ |
 
 # Context (`C-`)
 

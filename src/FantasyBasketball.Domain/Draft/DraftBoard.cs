@@ -14,7 +14,8 @@ public sealed record DraftCandidate(
     decimal ContextAdjustment,
     decimal InjuryRisk,
     decimal RoleRisk,
-    IReadOnlyDictionary<StatKey, decimal> CategoryTotals);
+    IReadOnlyDictionary<StatKey, decimal> CategoryTotals,
+    bool HasUnverifiedContext = false);
 
 public sealed record DraftBoardResult(
     IReadOnlyList<DraftValue> Rankings,
@@ -77,7 +78,8 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
                 market,
                 candidate.AverageDraftPosition,
                 candidate.InjuryRisk,
-                candidate.RoleRisk);
+                candidate.RoleRisk,
+                candidate.HasUnverifiedContext);
             return calculator.Calculate(
                 candidate.PlayerId,
                 candidate.ProjectedSeasonValue,
@@ -159,7 +161,8 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
         decimal market,
         decimal? adp,
         decimal injuryRisk,
-        decimal roleRisk)
+        decimal roleRisk,
+        bool hasUnverifiedContext)
     {
         var evidence = new List<RecommendationEvidence>
         {
@@ -205,6 +208,12 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
                 EvidencePolarity.Risk,
                 "Role or injury uncertainty reduces draft value",
                 Math.Max(injuryRisk, roleRisk)));
+        }
+
+        if (hasUnverifiedContext)
+        {
+            evidence.Add(new RecommendationEvidence(EvidenceKind.Context, EvidencePolarity.Risk,
+                "Projection includes unverified context; review the underlying estimates", null));
         }
 
         return evidence;

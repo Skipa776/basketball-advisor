@@ -202,6 +202,8 @@ public static class DependencyInjection
         services.AddScoped<ImportAdpService>();
         services.AddScoped<ImportRunQueryService>();
         services.AddScoped<ProjectionService>();
+        services.AddScoped<LeagueProjectionService>();
+        services.AddSingleton<FantasyBasketball.Domain.Scoring.PointsScoringEngine>();
         services.AddScoped<ProjectionDecompositionService>();
         services.AddScoped<ContextEventService>();
         services.AddScoped<ContextEventQueryService>();

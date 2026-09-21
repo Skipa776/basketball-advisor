@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Domain/Draft, src/FantasyBasketball.Applica
 test_paths: [tests/FantasyBasketball.Domain.Tests/Draft]
 depends_on: [../contracts/draft_value_contract.md, ../contracts/recommendation_evidence_contract.md]
 status: implemented
-last_updated: 2026-07-29
+last_updated: 2026-09-20
 owners: [engineering]
 risk_level: high
 done_criteria:
@@ -91,3 +91,8 @@ slice but do not block this component's two done criteria.
 
 A completed draft rejects additional picks; undoing the final pick reopens it.
 The completion guard is enforced in the domain, not just by React controls.
+
+Candidates now carry the adjusted projection's unverified-context flag through
+to structured Context/Risk evidence. This adds a visible warning, not a new
+ranking penalty. The domain regression verifies the score is unchanged, and
+the React shortlist shows risk evidence outside collapsed details.

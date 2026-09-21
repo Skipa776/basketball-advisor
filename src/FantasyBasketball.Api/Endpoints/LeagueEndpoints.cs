@@ -1,4 +1,6 @@
 using FantasyBasketball.Application.Leagues;
+using FantasyBasketball.Application.Projections;
+using FantasyBasketball.Domain.Provenance;
 using FantasyBasketball.Application.Players;
 using FantasyBasketball.Domain.Leagues;
 using FantasyBasketball.Domain.Stats;
@@ -21,6 +23,8 @@ public sealed record CreateLeagueRequest(
 public sealed record ReplaceScoringRequest(
     IReadOnlyList<ScoringRuleRequest>? ScoringRules);
 
+public sealed record RecalculateProjectionsRequest(int SeasonEndYear, string Source);
+
 public static class LeagueEndpoints
 {
     public static IEndpointRouteBuilder MapLeagueEndpoints(
@@ -36,7 +40,38 @@ public static class LeagueEndpoints
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
         group.MapPut("/{id:guid}/scoring", ReplaceScoringAsync)
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
+        group.MapGet("/{id:guid}/projection-pools", ProjectionPoolsAsync)
+            .WithMetadata(new OwnedRouteMetadata("league", "id"));
+        group.MapPost("/{id:guid}/projections", RecalculateProjectionsAsync)
+            .WithMetadata(new OwnedRouteMetadata("league", "id"));
         return endpoints;
+    }
+
+    public static async Task<IResult> ProjectionPoolsAsync(
+        Guid id, LeagueProjectionService service,
+        OwnedResourceAuthorizationService authorization, CancellationToken cancellationToken)
+    {
+        await authorization.RequireLeagueAsync(id, cancellationToken);
+        return ApiResults.Success(await service.ListPoolsAsync(cancellationToken));
+    }
+
+    public static async Task<IResult> RecalculateProjectionsAsync(
+        Guid id, RecalculateProjectionsRequest request, LeagueProjectionService service,
+        OwnedResourceAuthorizationService authorization, TimeProvider clock,
+        CancellationToken cancellationToken)
+    {
+        await authorization.RequireLeagueAsync(id, cancellationToken);
+        if (request.SeasonEndYear < 1947 || request.SeasonEndYear > clock.GetUtcNow().Year + 1
+            || string.IsNullOrWhiteSpace(request.Source) || !DataSourceName.IsKnown(request.Source))
+        {
+            throw new RequestValidationException(new Dictionary<string, string[]>
+            {
+                ["pool"] = ["Select an imported season and known source."],
+            });
+        }
+
+        return ApiResults.Success(await service.RecalculateAsync(
+            id, request.SeasonEndYear, request.Source, cancellationToken));
     }
 
     public static async Task<IResult> ListAsync(

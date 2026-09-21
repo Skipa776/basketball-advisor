@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Domain/Recommendations]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Draft]
 depends_on: [provenance_contract.md]
 status: implemented
-last_updated: 2026-07-29
+last_updated: 2026-09-20
 owners: [engineering]
 risk_level: medium
 edit_policy: stable_contract
@@ -107,3 +107,7 @@ from persisted import health; stale or failed automated sources lower the
 factor and add a risk-polarity `DataQuality` item, completing E-04. The
 recommendation and its ordered evidence also round-trip as separate persisted
 records.
+
+Unverified adjusted projections carry an explicit Context/Risk item into draft
+recommendations. React renders risks visibly beside the recommendation and uses
+the setup catalog's confidence/polarity names instead of duplicating enum values.

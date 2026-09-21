@@ -22,7 +22,7 @@ using CanonicalAdpEntry = FantasyBasketball.Domain.Draft.AdpEntry;
 
 namespace FantasyBasketball.IntegrationTests.Persistence;
 
-public sealed class PersistenceTests : IAsyncLifetime
+public sealed partial class PersistenceTests : IAsyncLifetime
 {
     private readonly PostgreSqlContainer postgres = new PostgreSqlBuilder("postgres:17")
         .Build();
@@ -724,6 +724,9 @@ public sealed class PersistenceTests : IAsyncLifetime
                     25.12345m,
                     1758.64155m,
                     adjusted.Id),
+                league,
+                DateTimeOffset.UnixEpoch,
+                null,
                 TestContext.Current.CancellationToken);
         }
 

@@ -3,6 +3,8 @@ import type { FormEvent, KeyboardEvent } from 'react';
 import { api, post, message } from './api';
 import { useResource } from './useResource';
 import { ErrorNotice } from './Workspace';
+import { ProjectionControls } from './projections';
+import { DraftAdvice } from './advice';
 import type { Board, Draft, DraftRecord, League, Player, Ranking } from './types';
 
 const number = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 1 });
@@ -10,6 +12,7 @@ const number = (value: number) => value.toLocaleString(undefined, { maximumFract
 export function DraftWorkspace({ league, draftId, onDraft }: { league: League; draftId: string; onDraft: (id: string) => void }) {
   const record = useResource<DraftRecord>(draftId ? `/api/drafts/${draftId}` : null, 5000);
   const board = useResource<Board>(draftId ? `/api/drafts/${draftId}/board?leagueId=${league.id}` : null, 5000);
+  const [projectionRevision, setProjectionRevision] = useState(0);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [announcement, setAnnouncement] = useState('');
@@ -45,6 +48,8 @@ export function DraftWorkspace({ league, draftId, onDraft }: { league: League; d
   }
   return <section className="draft" aria-labelledby="draft-title"><div className="section-heading"><div><p className="eyebrow">02 / PREPARE & PICK</p><h2 id="draft-title">{league.name}</h2><p>{league.teamCount} teams · {league.type === 0 ? 'Points' : 'Category'} league</p></div>{session && <div className="on-clock"><span>{complete ? 'DRAFT COMPLETE' : 'CURRENT PICK'}</span><strong>{complete ? session.picks.length : session.currentPick}</strong><button disabled={busy || record.loading || !session.picks.length} onClick={undo}>Undo last pick</button></div>}</div>
     <ErrorNotice text={error || record.error || board.error} retry={record.error || board.error ? () => { record.refresh(); board.refresh(); } : undefined} /><p className="sr-only" role="status">{announcement}</p>
+    {league.type === 0 && <ProjectionControls key={league.id} leagueId={league.id} onPublished={() => { setProjectionRevision(value => value + 1); board.refresh(); }} />}
+    {session && league.type === 0 && <DraftAdvice draft={session} leagueId={league.id} version={projectionRevision} disabled={busy || record.loading || !!record.error || complete} pick={pick} />}
     {!draftId && <form className="draft-start panel" onSubmit={create}><h3>Start a snake draft</h3><p>Your draft position and round count are saved with this session.</p><div className="form-row"><label>Your draft position<input type="number" name="position" required min="1" max={league.teamCount} /></label><label>Rounds<input type="number" name="rounds" required min="1" /></label><button className="primary" disabled={busy}>{busy ? 'Starting…' : 'Start draft'} ↗</button></div></form>}
     {draftId && !record.result && record.loading && <p role="status">Restoring your saved draft…</p>}
     {record.result && !session && <p className="notice">This draft belongs to a different league. Choose its league or start a new draft.</p>}
@@ -77,7 +82,7 @@ function PlayerPool({ leagueId, session, rankings, pick, disabled }: { leagueId:
     buttons[Math.max(0, Math.min(buttons.length - 1, current + (event.key === 'ArrowDown' ? 1 : -1)))].focus();
   }
   return <div className="pool"><div className="pool-tools"><label>Find a player<input ref={searchInput} type="search" value={search} onChange={event => setSearch(event.target.value)} onKeyDown={event => move(event)} placeholder="Search by name" /></label><p className="muted">Type a name, ↓ to a pick button, Enter to record.<br />Rankings use your league’s saved projections.</p></div>
-    <ErrorNotice text={players.error} retry={players.refresh} />{players.loading && <p role="status">Loading players…</p>}
+    <ErrorNotice text={players.error} retry={players.refresh} /><p className="loading-status">{players.loading ? 'Loading players…' : '\u00a0'}</p>
     {players.result?.data.length === 0 && <p className="notice">{query ? 'No players match this search.' : <>No players have been imported yet. <a href="/data-sources">Open data sources</a> to import your player pool.</>}</p>}
     {!!players.result?.data.length && <><div className="table-scroll"><table><caption className="sr-only">Player pool and draft actions</caption><thead><tr><th>Player</th><th>Position</th><th>Draft value</th><th>Action</th></tr></thead><tbody ref={rows}>{players.result.data.map(player => {
       const value = values.get(player.id.value); const taken = drafted.has(player.id.value);
@@ -98,12 +103,12 @@ function PickName({ id, number: pickNumber }: { id: string; number: number }) {
 
 type StatValues = { values: Record<string, number> };
 type Projection = {
-  observed: { asOf: string; source: { gamesPlayed: number; season: number } };
+  observed: { asOf: string; source: { gamesPlayed: number; seasonEndYear: number } };
   baseline: { computedAt: string; projectedPerGame: StatValues; projectedGamesPlayed: number };
   adjusted: { projectedPerGame: StatValues; hasUnverifiedContext: boolean; appliedContextEventIds: string[] };
   value: { perGame: number; seasonTotal: number };
 };
-function PlayerDetail({ player, leagueId, close }: { player: Player; leagueId: string; close: () => void }) {
+export function PlayerDetail({ player, leagueId, close }: { player: Player; leagueId: string; close: () => void }) {
   const projection = useResource<Projection>(`/api/players/${player.id.value}/projection?leagueId=${leagueId}`);
   const data = projection.result?.data;
   const stats = data ? [...new Set([...Object.keys(data.baseline.projectedPerGame.values), ...Object.keys(data.adjusted.projectedPerGame.values)])] : [];
@@ -111,7 +116,7 @@ function PlayerDetail({ player, leagueId, close }: { player: Player; leagueId: s
     {projection.loading && <p role="status">Loading projection…</p>}<ErrorNotice text={projection.error} retry={projection.refresh} />
     {data && <>
       {data.adjusted.hasUnverifiedContext && <p className="notice">Includes unverified context. Review it before relying on the adjusted projection.</p>}
-      <p>Observed sample: {data.observed.source.gamesPlayed} games · Updated {new Date(data.observed.asOf).toLocaleDateString()}</p>
+      <p>Observed sample: {data.observed.source.gamesPlayed} games · Season ending {data.observed.source.seasonEndYear} · Calculated {new Date(data.observed.asOf).toLocaleDateString()}</p>
       <p>Baseline: {data.baseline.projectedGamesPlayed} projected games · {data.adjusted.appliedContextEventIds.length} context events applied.</p>
       <div className="table-scroll"><table><caption>Per-game projection, before and after context</caption><thead><tr><th>Stat</th><th>Baseline</th><th>Adjusted</th></tr></thead><tbody>{stats.map(stat => <tr key={stat}><th scope="row">{stat}</th><td>{number(data.baseline.projectedPerGame.values[stat] ?? 0)}</td><td>{number(data.adjusted.projectedPerGame.values[stat] ?? 0)}</td></tr>)}</tbody></table></div>
       <p>Final fantasy points: <strong>{number(data.value.perGame)} per game</strong> · {number(data.value.seasonTotal)} per season.</p>

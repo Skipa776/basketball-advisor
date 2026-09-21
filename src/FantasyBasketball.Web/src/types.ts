@@ -8,3 +8,5 @@ export type Draft = { id: string; teamCount: number; roundCount: number; userSlo
 export type DraftRecord = { leagueId: string; session: Draft };
 export type Ranking = { playerId: { value: string }; total: number; projectedSeasonValue: number; evidence: { statement: string; magnitude: number | null }[] };
 export type Board = { rankings: Ranking[]; banner: string | null };
+export type Advice = { subjectPlayerId: { value: string }; score: number; confidence: number; evidence: { statement: string; polarity: number; magnitude: number | null }[] };
+export type EvidenceCatalog = { confidenceLevels: { name: string; value: number }[]; evidencePolarities: { name: string; value: number }[] };
