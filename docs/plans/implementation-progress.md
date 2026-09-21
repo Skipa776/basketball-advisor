@@ -1,6 +1,6 @@
 # React and player intelligence implementation progress
 
-Updated: 2026-09-20. Accepted decisions and full scope are in
+Updated: 2026-09-21. Accepted decisions and full scope are in
 [the execution plan](react-api-player-intelligence-execution.md).
 
 ## Current checkpoint
@@ -15,8 +15,8 @@ are preserved.
 | M1 — React foundation | Partial | Pinned React/TypeScript/Vite project, .NET-served `/app`, typed API boundary, loading/error states. Continuous animated landing and complete design-system port remain |
 | M2 — basic features | Partial | Account/session/registration availability, explicit editable ESPN setup, owned league selection, player search/detail, snake draft creation, keyboard pick, undo and URL-based reload. League-specific recalculation, ranked advice/evidence and pick/undo reranking now connected. Saved-draft listing and league settings editing remain |
 | M3 — verification | Partial | Real HTTP and PostgreSQL tests; cross-user isolation; browser journey, axe scans, desktop/mobile screenshots. Full parity matrix and owner visual acceptance remain |
-| M4 — game data | Partial | ESPN setup catalog and independent scoring golden delivered. Per-game schema/parser/import/progress and data sufficiency remain |
-| M5 — heat | Partial | Pure C# calculation and best/hot ranking logic pass 20 offline cases; game-data storage, API and UI integration remain |
+| M4 — game data | Partial | ESPN setup catalog and independent scoring golden delivered. Offline box-score parser and atomic per-game snapshots delivered; identity/import worker, live compatibility, progress and data sufficiency remain |
+| M5 — heat | Partial | Pure C# calculation and best/hot ranking logic pass 20 offline cases; stored game-data boundary delivered; API and UI integration remain |
 | M6 — player intelligence UI | Partial | Draft-value shortlist/evidence/decomposition delivered; separate observed best-performing and hot views remain |
 | M7 — release | Pending | Remaining routes, distribution, full regression and owner review |
 
@@ -95,8 +95,8 @@ continuation; restore and subsequent approved tooling commands ran successfully.
 
 ## Single next action
 
-Implement **per-game persistence and an offline box-score parser**, then connect
-stored appearances to the tested heat calculator and its authenticated query/UI.
+Connect **stored appearances to the tested heat calculator and authenticated
+query/UI**. The offline parser and atomic per-game repository are now implemented.
 Read the routed game-data, heat, provenance, tenancy and scraping concepts first.
 The projection publication and draft recommendation flow is now connected; the
 remaining heat work must not treat season projections as observed game logs.
@@ -192,3 +192,51 @@ Usage was checked at startup, after implementation, during regression and before
 wrap-up. The tool again returned no active goal or remaining-token/quota values;
 no numeric account-usage estimate is available. This checkpoint completes the
 projection/draft-decision slice, not the whole React migration or heat pipeline.
+
+## Completed-game storage checkpoint — 2026-09-21
+
+Delivered:
+
+- A pure saved-HTML box-score parser with one canonical counting-column map,
+  raw-page SHA-256, visible/comment-wrapped full-game tables, DNP/played-zero
+  distinction, and explicit malformed-schema/identity/stat failures.
+- Immutable completed-game snapshots and a forward EF migration, with full
+  page/player provenance, canonical player/game foreign keys and explicit phase.
+  These are shared NBA reference rows; no existing ownership changed.
+- Atomic page publication and idempotent imports, including a forced concurrent
+  insert race. Corrections retain history but current reads select one complete
+  page per source/game before phase/date filtering. Removed players cannot leak
+  from earlier versions. Failed imports roll back and detach attempted rows.
+- BS-01–BS-10 tests and routed contracts. Targeted verification passed after
+  correcting a fixture that unintentionally assigned equal timestamps to two
+  successive corrections. The deterministic ID tie-break behavior was unchanged.
+
+The parser fixture is synthetic, not a captured real provider page. No live games
+were fetched or imported, no worker/identity resolver was added, and heat is not
+shown in React yet. The stable scraping allowlist conflict remains unresolved.
+Stored samples are current corrected observations through a game date, not an
+as-known-at backtesting dataset. Unknown phase is never assumed regular season.
+
+Usage checks returned no active goal or quota/remaining-token report. The earlier
+account-limit rejection no longer blocked the authorized test retry. Validation
+runs only used disposable PostgreSQL 17; no developer database was migrated.
+Final `bash scripts/gate.sh` passed **271 tests** (93 Domain, 35 Application,
+143 Integration), with zero build warnings/errors. Domain coverage **89.20%**,
+Application **74.33%**. Playwright's real-cookie React journey and all five axe
+scans passed, including 390px/320px layouts and row stability after re-ranking.
+D-14 measured **0.000 CSS px** movement. **77 OKF concepts** validated.
+Log: `/tmp/fb-boxscore-gate.log`; review report/screenshots use the existing links
+in the verification ledger above. No frontend visual changes were made in this
+checkpoint, and these checks do not replace the owner's visual acceptance.
+
+Commands completed: generated the forward `CompletedBoxScores` migration,
+`dotnet format --no-restore`, focused parser/domain/storage tests, local review of
+parser validation, correction selection, append-only enforcement and the schema,
+and the full gate. No prior migration or developer database was modified.
+
+Next: authenticated league-specific heat query and React best/hot views, consuming
+regular-season stored appearances with explicit season/source/through-date,
+visible evidence and insufficient-history states. Preserve the accepted latest-3
+versus preceding expanding-10-to-30/rolling-30 policy. Until verified game ingestion
+exists, production must honestly show missing observations; synthetic test games
+must never populate the user's player rankings.

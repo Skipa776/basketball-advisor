@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Infrastructure/Persistence]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Persistence]
 depends_on: [../contracts/persistence_contract.md]
 status: partial
-last_updated: 2026-09-20
+last_updated: 2026-09-21
 owners: [engineering]
 risk_level: medium
 done_criteria:
@@ -86,3 +86,12 @@ and queries the latest publication in PostgreSQL before materializing its pool.
 leagues/seasons, immutable history, atomic rollback and real HTTP reranking.
 The old implementation notes above describe earlier checkpoints, not the current
 absence of adjusted/value storage.
+
+## Completed game storage — 2026-09-21
+
+`CompletedBoxScores` adds append-only shared snapshots and their player rows.
+`BoxScoreRepository` atomically saves complete games, handles identical concurrent
+imports, and chooses a single latest page per source/game before phase/date
+filtering. BS-07–BS-10 cover round-trip, correction isolation, concurrency,
+rollback, cancellation and mutation rejection. The importer remains partial;
+this repository does not fetch or manufacture game observations.

@@ -11,7 +11,7 @@ public enum BasketballReferenceSeasonPage
 
 public sealed partial class BbrefUrlBuilder
 {
-    private static readonly Uri BaseUri = new("https://www.basketball-reference.com");
+    internal static readonly Uri BaseUri = new("https://www.basketball-reference.com");
 
     public Uri CreateSeasonUri(int seasonEndYear, BasketballReferenceSeasonPage page)
     {

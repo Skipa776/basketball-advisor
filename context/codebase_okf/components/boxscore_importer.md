@@ -6,8 +6,8 @@ tags: [component, ingestion, scrapers]
 source_paths: [src/FantasyBasketball.Infrastructure/Scrapers/BasketballReference, src/FantasyBasketball.Infrastructure/Workers/BoxScoreImportWorker.cs]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Scrapers]
 depends_on: [../safety/scraping_policy.md, scrapers.md, ../contracts/rolling_window_contract.md]
-status: planned
-last_updated: 2026-07-29
+status: partial
+last_updated: 2026-09-21
 owners: [engineering]
 risk_level: high
 done_criteria:
@@ -24,7 +24,7 @@ needs, and the one the MVP deliberately did without.
 
 `*/gamelog/` is **disallowed** by Basketball-Reference's robots directives
 ([scraping_policy](../safety/scraping_policy.md)), and it is the obvious source.
-The permitted path is `/boxscores/{yyyymmdd}0{TEAM}.html` — one page per game,
+The proposed path is `/boxscores/{yyyymmdd}0{TEAM}.html` — one page per game,
 roughly **1230 games per season**, at the self-imposed 6 requests/minute ceiling:
 
 ```text
@@ -76,3 +76,18 @@ A Basketball-Reference box-score redesign: fresh fixture, fix the parser, bump
 
 [test_matrix_ingestion_scrapers](../tests/test_matrix_ingestion_scrapers.md),
 rows S-10, S-11, S-30 through S-34.
+
+## Offline prerequisite — 2026-09-21
+
+The pure parser and atomic snapshot repository are implemented separately under
+[box_score_storage_contract](../contracts/box_score_storage_contract.md), with
+[BS-01–BS-10](../tests/test_matrix_box_scores.md) evidence. The synthetic fixture
+exercises two teams, comment tables, DNP, played zero and malformed input. It is
+not evidence of current live-site compatibility.
+
+The worker, schedule/final-status checks, canonical player resolution, resumable
+progress and full-season data remain unimplemented. The stable scraping policy's
+path table excludes box scores although its prose describes them as permitted.
+No live request or URL-builder expansion is enabled; that conflict needs explicit
+policy resolution before any fetching. Existing gamelog rejection is unchanged.
+Unknown game phase never silently becomes regular season.

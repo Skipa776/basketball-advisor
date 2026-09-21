@@ -457,3 +457,23 @@ POST   /api/account/{register,login,logout}      R20
 GET    /health/{live,ready}                      R22
 GET    /metrics                                  R22
 ```
+
+## Completed-game storage boundary (2026-09-21)
+
+`CompletedBoxScore` contains a canonical game ID, season, provider game date,
+explicit `NbaGamePhase`, page provenance and immutable final player observations.
+The phase catalog and exact snapshot rules belong to
+`context/codebase_okf/contracts/box_score_storage_contract.md`.
+
+`BoxScoreSnapshotRow` stores page identity/classification/provenance;
+`PlayerGameStatRow` stores canonical player ID, played flag, nullable counting-stat
+JSON and row provenance. Both are shared NBA reference data. A single transaction
+publishes all rows. A correction appends a new complete page; queries choose its
+rows only, never merge removed players from an earlier page. Source is explicit.
+
+The Application `IBoxScoreRepository` port supports atomic add and season/source/
+phase/date reads. Infrastructure implements it in `BoxScoreRepository`, registered
+by the API host. `BoxScoreParser` accepts saved HTML only and returns external
+identities and a raw-page hash. No fetching, identity resolution, background worker
+or heat HTTP surface is introduced by this boundary. Synthetic fixture coverage
+must not be described as live data or verified provider compatibility.

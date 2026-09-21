@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Infrastructure/Persistence]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Persistence]
 depends_on: [provenance_contract.md, stat_vocabulary.md]
 status: implemented
-last_updated: 2026-09-20
+last_updated: 2026-09-21
 owners: [engineering]
 risk_level: medium
 done_criteria:
@@ -26,6 +26,7 @@ are in [`ARCHITECTURE.md`](../../../ARCHITECTURE.md).
 ```text
 Player  NbaTeam  ExternalPlayerIdentity  PendingIdentityMatch
 SeasonStatLine  NbaGame  AdpEntry
+BoxScoreSnapshot  PlayerGameStat
 FantasyLeague  ScoringRule  RosterSlot
 DraftSession  DraftPick
 ObservedStats  BaselineProjection  AdjustedProjection  FantasyValue
@@ -154,3 +155,23 @@ round-trip tests now cover every entity in this contract.
 rewriting history: Identity shares this context, and every owned table gains a
 nullable user foreign key so pre-auth data can be claimed before the later
 non-null migration.
+
+## Completed box-score snapshots — 2026-09-21
+
+The forward `CompletedBoxScores` migration adds two shared NBA-reference tables;
+existing games and season observations are not backfilled into invented samples.
+[box_score_storage_contract](box_score_storage_contract.md) owns their shape and
+selection rules. Both tables are append-only in `FantasyDbContext`. Foreign keys
+to games, snapshots and canonical players restrict deletion. A database check
+requires null stats exactly for non-appearances; played zero remains a stat line.
+Counting-stat JSON is rounded to four decimals and ratios are derived on read.
+
+Snapshot identity is unique `(game_id, source, parser_version, raw_record_hash,
+phase)`; player rows are unique `(snapshot_id, player_id)`. Latest reads use the
+season/source/game/fetched-time index and player rows have a player-ID index.
+A complete graph is written by one transactional SaveChanges. Duplicate races
+become no-ops only for the snapshot identity constraint; other failures roll back
+and detach the attempted graph. Corrections append whole pages and reads select
+the latest page before date/phase filtering. There is no user/league ownership or
+cross-provider merging in these tables. BS-07–BS-10 verify the migration and rules
+against disposable PostgreSQL 17.

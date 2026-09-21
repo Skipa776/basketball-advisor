@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Infrastructure/Identity, src/FantasyBasketb
 test_paths: [tests/FantasyBasketball.IntegrationTests/Auth]
 depends_on: [persistence_contract.md, ../safety/tenancy_policy.md]
 status: implemented
-last_updated: 2026-07-29
+last_updated: 2026-09-21
 owners: [engineering]
 risk_level: high
 edit_policy: stable_contract
@@ -45,6 +45,11 @@ what makes a multi-user instance possible at all.
 owned when it applies a user's own context events. It carries a nullable
 `OwnerId`: null means global, set means personal. This is the one entity where the
 split is per-row, and it is the row most likely to be got wrong.
+
+`BoxScoreSnapshotRow` and `PlayerGameStatRow` are also explicitly shared NBA
+reference data: completed game observations and their provenance, used by the
+authorized per-game/heat implementation. They contain no league, roster, account
+or private provider data. No previously owned entity changes classification.
 
 # Enforcement — two layers, on purpose
 

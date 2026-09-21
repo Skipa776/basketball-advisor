@@ -7,7 +7,7 @@ source_paths: []
 test_paths: []
 depends_on: []
 status: partial
-last_updated: 2026-07-29
+last_updated: 2026-09-21
 owners: [engineering]
 ---
 
@@ -43,6 +43,7 @@ paste-ready prompts are in `docs/epics/`.
 
 | Concept | Owns | Epic |
 |---|---|---|
+| [box_score_storage_contract](contracts/box_score_storage_contract.md) | Atomic completed-game snapshots, phase selection and offline parsing | E06 slice |
 | [player_heat_contract](contracts/player_heat_contract.md) | Owner-selected descriptive heat and recent performance | E06 slice |
 | [rolling_window_contract](contracts/rolling_window_contract.md) | Windows, the exact three-way production decomposition, trend score | E06 |
 | [category_value_contract](contracts/category_value_contract.md) | Z-scores with volume-weighted ratios, win probability, punt ceiling | E07 |
@@ -111,6 +112,7 @@ paste-ready prompts are in `docs/epics/`.
 - [test_matrix_projection_draft](tests/test_matrix_projection_draft.md) — `P-`, `C-`, `E-`, `D-01`–`D-09`
 - [test_matrix_ingestion_scrapers](tests/test_matrix_ingestion_scrapers.md) — `I-`, `N-`, `L-`, `W-`, `S-10`–`S-14`, `S-30`–`S-34`
 - [test_matrix_api_persistence](tests/test_matrix_api_persistence.md) — `A-`
+- [test_matrix_box_scores](tests/test_matrix_box_scores.md) — `BS-01`–`BS-10`
 - [test_matrix_trends](tests/test_matrix_trends.md) — `T-`
 - [test_matrix_advanced_decisions](tests/test_matrix_advanced_decisions.md) — `Y-`, `X-`, `R-`, `S-20`–`S-29`, `S-35`–`S-36`
 - [test_matrix_auth_tenancy](tests/test_matrix_auth_tenancy.md) — `U-`

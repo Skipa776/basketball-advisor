@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Infrastructure]
 test_paths: [tests/FantasyBasketball.IntegrationTests]
 depends_on: [required_gates.md, ../safety/scraping_policy.md, ../contracts/player_identity_contract.md]
 status: partial
-last_updated: 2026-07-29
+last_updated: 2026-09-21
 owners: [engineering]
 ---
 
@@ -140,3 +140,9 @@ failed ADP run is persisted, later iterations succeed, provider and transaction
 scope identities differ on every run, configured cadences bind for all three
 registered workers, and shutdown cancels a stagger delay promptly. Post-MVP
 box-score and league-import rows remain, so this matrix stays `partial`.
+
+Offline box-score prerequisite (2026-09-21): `BS01_S32` checks the stat identities
+against a synthetic full-game fixture. The separate
+[test_matrix_box_scores](test_matrix_box_scores.md) covers the parser and atomic
+storage. S-30, S-31, S-33 and S-34 still need the resumable worker; no live-site
+compatibility or completed historical season is claimed.

@@ -51,6 +51,10 @@ public sealed class FantasyDbContext
 
     public DbSet<NbaGameRow> NbaGames => Set<NbaGameRow>();
 
+    public DbSet<BoxScoreSnapshotRow> BoxScoreSnapshots => Set<BoxScoreSnapshotRow>();
+
+    public DbSet<PlayerGameStatRow> PlayerGameStats => Set<PlayerGameStatRow>();
+
     public DbSet<AdpEntryRow> AdpEntries => Set<AdpEntryRow>();
 
     public DbSet<BaselineProjectionRow> BaselineProjections =>
@@ -104,6 +108,12 @@ public sealed class FantasyDbContext
     private void RejectImmutableUpdates()
     {
         StampOwnedAdds();
+        if (ChangeTracker.Entries().Any(entry =>
+            (entry.Entity is BoxScoreSnapshotRow or PlayerGameStatRow)
+            && entry.State is EntityState.Modified or EntityState.Deleted))
+        {
+            throw new InvalidOperationException("Completed box-score observations are append-only.");
+        }
         if (ChangeTracker.Entries<BaselineProjectionRow>()
             .Any(entry => entry.State is EntityState.Modified or EntityState.Deleted))
         {

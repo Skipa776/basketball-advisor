@@ -906,3 +906,31 @@ Integration), zero build warnings/errors, Domain coverage 89.22%, Application
 Review screenshots/report are linked from the progress ledger. Usage checks
 returned no quota or remaining-token report. The next handoff remains per-game
 storage/parser and heat integration; the overall migration stays partial.
+
+## Completed game storage — 2026-09-21
+
+- This checkpoint implements the offline parser/storage prerequisite authorized
+  by the owner, not live fetching. The stable scraping path-table/prose conflict
+  stays unresolved; no allowlist or crawl-rate change was made.
+- The fixture is deliberately synthetic. A verified saved real page and schedule/
+  final-status/identity checks are required before a live importer is enabled.
+- Completed box scores are public NBA reference data, like NBA schedule and
+  season observations, so the new tables explicitly join the shared-data catalog.
+  They carry no league, account or private roster data; existing ownership stays.
+- Game phase is explicit, including unknown. Only a caller selecting regular
+  season may use those rows for heat; neither parser nor repository guesses phase.
+- Corrections are whole-page append-only snapshots. Latest retrieval time wins
+  per game/source, with ID only breaking equal-time ties. Phase/date filters run
+  afterward to avoid resurrecting stale eligible versions. Sources never blend.
+- Snapshot uniqueness includes phase, allowing a later classification correction
+  with unchanged HTML. Legacy games receive no manufactured stat rows. An importer
+  still owns canonical identity resolution and confirming a game is complete.
+- This is a current corrected-data query through a game date, not an as-known-at
+  historical replay. Backtesting with an ingestion-time cutoff is a separate scope.
+
+Completed-game checkpoint gate: 271 passing tests (93 Domain, 35 Application,
+143 Integration), zero warnings/errors, coverage 89.20% / 74.33%, five clean axe
+scans, draft stability checks passed, and 77 valid concepts. Next action is the
+owned league heat query and React best/hot views over explicit dated observations.
+No live importer or production observations exist from this checkpoint. Quota
+checks returned no numerical remaining usage, so no quota estimate is recorded.

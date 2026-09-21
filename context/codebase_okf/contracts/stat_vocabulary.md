@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Domain/Stats]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Stats]
 depends_on: []
 status: implemented
-last_updated: 2026-07-29
+last_updated: 2026-09-21
 owners: [engineering]
 risk_level: high
 edit_policy: stable_contract
@@ -113,6 +113,15 @@ Page column header → `StatKey`. Applies to
 
 From `/leagues/NBA_{year}_advanced.html`: `USG%` → `SeasonStatLine.UsageRate`,
 divided by 100.
+
+## Basketball-Reference full-game box scores
+
+`StatSourceColumnMap.BoxScoreCounting` owns the `data-stat` mapping:
+`mp→MIN`, `pts→PTS`, `orb→OREB`, `drb→DREB`, `trb→REB`, `ast→AST`,
+`stl→STL`, `blk→BLK`, `tov→TOV`, `fg→FGM`, `fga→FGA`, `fg3→FG3M`,
+`fg3a→FG3A`, `ft→FTM`, `fta→FTA`, `pf→PF`.
+`mp` is minutes:seconds; other counting cells are nonnegative whole numbers.
+Source ratio columns are not accepted as truth. DNP rows have no stat line.
 
 ## balldontlie
 

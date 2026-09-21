@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Domain/Provenance]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Ingestion]
 depends_on: [provider_contracts.md]
 status: partial
-last_updated: 2026-07-29
+last_updated: 2026-09-21
 owners: [engineering]
 risk_level: medium
 done_criteria:
@@ -105,3 +105,13 @@ external player id, and stable SHA-256 input hash; canonical ADP persistence
 round-trips that block through non-null source, external-id, parser-version,
 confidence, and hash columns. I-11's user-entered roster or context event
 remains unimplemented, so this contract stays `partial`.
+
+## Completed games — 2026-09-21
+
+The offline box-score parser hashes the full supplied HTML as UTF-8 before
+parsing. Completed game snapshots and every player row persist complete
+`DataProvenance`, with optional external ID/source timestamp retained as optional.
+The parser does not invent a fetch time or confidence; an importer must supply
+those. Historical corrections append a new snapshot and retain the old metadata.
+BS-01 verifies the deterministic raw hash; BS-07 verifies the database round trip
+and required provenance columns.
