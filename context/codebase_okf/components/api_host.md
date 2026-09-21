@@ -76,3 +76,10 @@ request token, and a loopback HTTP test covers the complete route surface.
 Razor components and interactive server rendering share the same host; a
 specific `/api` fallback preserves the envelope for unknown API routes while
 the Blazor router owns human-facing routes.
+
+## React API bridge
+
+Session discovery is anonymous-readable but non-cacheable; league setup/list and
+draft detail retain cookie authentication, anti-forgery on mutations and existing
+ownership enforcement. These endpoints support a separate React client without
+changing the envelope or existing Blazor routes.

@@ -20,3 +20,8 @@ skills-lock.json
 # Reference material: third-party screenshots and saved pages, not ours to redistribute
 inspiration-resources/
 .devswarm-temp/
+
+# React build and browser-test output
+node_modules/
+src/FantasyBasketball.Api/wwwroot/app/
+playwright-report/

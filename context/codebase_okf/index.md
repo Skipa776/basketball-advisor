@@ -58,6 +58,7 @@ paste-ready prompts are in `docs/epics/`.
 
 | Concept | Subsystem | Epic |
 |---|---|---|
+| [web_ui_react](components/web_ui_react.md) | Incremental React workspace and API integration | migration |
 | [domain_model](components/domain_model.md) | Pure domain types and source independence | — |
 | [scoring_engine](components/scoring_engine.md) | Stat line + league → fantasy value | done |
 | [projection_engine](components/projection_engine.md) | Observed → baseline projection | E02 |

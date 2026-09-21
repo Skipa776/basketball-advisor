@@ -86,3 +86,7 @@ changes.
 
 [test_matrix_ui_design](../tests/test_matrix_ui_design.md), rows D-10, D-18 through
 D-21.
+
+The incremental React workspace is owned by [web_ui_react](web_ui_react.md).
+Its axe browser checks complement the existing Blazor gates; the broader animated
+landing and complete token/component migration are still pending.

@@ -56,6 +56,13 @@ public static class ApiHost
         app.MapContextEndpoints();
         app.MapHealthEndpoints();
         app.MapAccountEndpoints();
+        app.MapGet("/app", () =>
+        {
+            var index = Path.Combine(app.Environment.WebRootPath, "app", "index.html");
+            return File.Exists(index)
+                ? Results.File(index, "text/html")
+                : Results.NotFound();
+        }).AllowAnonymous();
         app.MapFallback(
             "/api/{**path}",
             () => ApiResults.Failure(

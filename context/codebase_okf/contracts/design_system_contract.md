@@ -324,3 +324,12 @@ does not touch this file.
 
 [test_matrix_ui_design](../tests/test_matrix_ui_design.md), rows D-10 through
 D-34.
+
+## Owner-authorized React migration
+
+The approved React execution plan introduces a separate `/app` surface while
+Blazor remains supported. Its interim styles are owned by `workspace.css` in
+`src/FantasyBasketball.Web/src`; the token-file location above remains canonical
+for Blazor. No CSS framework or component library is introduced. This changes
+the rendering technology and style location, not the accessibility floor or
+the requirement to show evidence and unverified-context labels.

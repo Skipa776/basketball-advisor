@@ -1,4 +1,7 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
+using FantasyBasketball.IntegrationTests.TestSupport;
+using FantasyBasketball.Infrastructure.Persistence.Entities;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -37,6 +40,8 @@ public sealed class AuthHttpTests : IAsyncLifetime
         await postgres.StartAsync();
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions
         {
+            ApplicationName = typeof(ApiHost).Assembly.GetName().Name,
+            WebRootPath = Path.Combine(Directory.GetParent(TestPaths.TestsRoot)!.FullName, "src/FantasyBasketball.Api/wwwroot"),
             EnvironmentName = Environments.Development,
         });
         builder.Logging.ClearProviders();
@@ -80,6 +85,71 @@ public sealed class AuthHttpTests : IAsyncLifetime
         await app.DisposeAsync();
         await postgres.DisposeAsync();
         logs.Dispose();
+    }
+
+    [Fact]
+    public async Task React_browser_registers_creates_league_and_persists_keyboard_pick()
+    {
+        var token = TestContext.Current.CancellationToken;
+        await using (var scope = app.Services.CreateAsyncScope())
+        {
+            var database = scope.ServiceProvider.GetRequiredService<FantasyDbContext>();
+            database.Players.Add(PlayerRow.Create(Guid.NewGuid(), "Fixture Guard", "fixture guard", ["PG"], null));
+            await database.SaveChangesAsync(token);
+        }
+
+        var start = new ProcessStartInfo("node")
+        {
+            WorkingDirectory = Directory.GetParent(TestPaths.TestsRoot)!.FullName,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        start.ArgumentList.Add("src/FantasyBasketball.Web/tests/workspace.mjs");
+        start.Environment["UI_BASE_URL"] = client.BaseAddress!.ToString();
+        using var process = Process.Start(start)!;
+        var output = process.StandardOutput.ReadToEndAsync(token);
+        var errors = process.StandardError.ReadToEndAsync(token);
+        try { await process.WaitForExitAsync(token); }
+        finally { if (!process.HasExited) process.Kill(entireProcessTree: true); }
+        process.ExitCode.ShouldBe(0, $"{await output}\n{await errors}");
+    }
+
+    [Fact]
+    public async Task Session_discovery_tracks_registration_and_identity_without_caching()
+    {
+        var token = TestContext.Current.CancellationToken;
+        using var anonymous = await client.GetAsync("/api/account/session", token);
+        anonymous.StatusCode.ShouldBe(HttpStatusCode.OK);
+        anonymous.Headers.CacheControl!.NoStore.ShouldBeTrue();
+        using var initial = JsonDocument.Parse(await anonymous.Content.ReadAsStringAsync(token));
+        initial.RootElement.GetProperty("data").GetProperty("authenticated").GetBoolean().ShouldBeFalse();
+        initial.RootElement.GetProperty("data").GetProperty("registrationOpen").GetBoolean().ShouldBeTrue();
+
+        using var registration = await PostAsync("/api/account/register", new
+        {
+            Email = "session@example.test",
+            Password = string.Join(' ', "fixture", "session", "password"),
+            DisplayName = "Session owner",
+        }, token);
+        registration.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var cookie = registration.Headers.GetValues("Set-Cookie")
+            .Single(value => value.Contains(".AspNetCore.Identity.Application", StringComparison.Ordinal))
+            .Split(';')[0];
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/account/session");
+        request.Headers.Add("Cookie", cookie);
+        using var authenticated = await client.SendAsync(request, token);
+        authenticated.Headers.CacheControl!.NoStore.ShouldBeTrue();
+        using var session = JsonDocument.Parse(await authenticated.Content.ReadAsStringAsync(token));
+        var data = session.RootElement.GetProperty("data");
+        data.GetProperty("authenticated").GetBoolean().ShouldBeTrue();
+        data.GetProperty("registrationOpen").GetBoolean().ShouldBeFalse();
+        data.GetProperty("user").GetProperty("displayName").GetString().ShouldBe("Session owner");
+        data.GetProperty("user").EnumerateObject().Count().ShouldBe(3);
+        using var anonymousAgain = await client.GetAsync("/api/account/session", token);
+        using var closed = JsonDocument.Parse(await anonymousAgain.Content.ReadAsStringAsync(token));
+        closed.RootElement.GetProperty("data").GetProperty("authenticated").GetBoolean().ShouldBeFalse();
+        closed.RootElement.GetProperty("data").GetProperty("registrationOpen").GetBoolean().ShouldBeFalse();
     }
 
     [Fact]

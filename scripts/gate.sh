@@ -4,6 +4,9 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
+npm --prefix src/FantasyBasketball.Web ci --ignore-scripts
+npm --prefix src/FantasyBasketball.Web run build
+
 dotnet restore --locked-mode
 
 python3 - <<'PY'

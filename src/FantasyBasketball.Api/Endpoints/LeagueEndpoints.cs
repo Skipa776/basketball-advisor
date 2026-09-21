@@ -1,4 +1,5 @@
 using FantasyBasketball.Application.Leagues;
+using FantasyBasketball.Application.Players;
 using FantasyBasketball.Domain.Leagues;
 using FantasyBasketball.Domain.Stats;
 using FantasyBasketball.Infrastructure.Identity;
@@ -28,12 +29,35 @@ public static class LeagueEndpoints
         var group = endpoints.MapGroup("/api/leagues");
         group.AddEndpointFilter<CookieAntiforgeryFilter>();
         group.RequireAuthorization();
+        group.MapGet("/", ListAsync);
+        group.MapGet("/setup", () => ApiResults.Success(LeagueSetupCatalog.Create()));
         group.MapPost("/", CreateAsync);
         group.MapGet("/{id:guid}", GetAsync)
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
         group.MapPut("/{id:guid}/scoring", ReplaceScoringAsync)
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
         return endpoints;
+    }
+
+    public static async Task<IResult> ListAsync(
+        int? page,
+        int? limit,
+        LeagueService service,
+        OwnedResourceAuthorizationService authorization,
+        CancellationToken cancellationToken)
+    {
+        var currentPage = page ?? 1;
+        var pageSize = limit ?? Paging.DefaultLimit;
+        Paging.Validate(currentPage, pageSize);
+        var leagues = await service.ListAsync(cancellationToken);
+        var selected = leagues.Skip((int)Math.Min((long)(currentPage - 1) * pageSize, int.MaxValue))
+            .Take(pageSize).ToArray();
+        foreach (var league in selected)
+        {
+            await authorization.RequireLeagueAsync(league.Id, cancellationToken);
+        }
+
+        return ApiResults.Success(selected, meta: new ApiMeta(leagues.Count, currentPage, pageSize));
     }
 
     public static async Task<IResult> CreateAsync(
@@ -94,7 +118,7 @@ public static class LeagueEndpoints
         if (!Enum.TryParse<LeagueType>(
                 request.Type,
                 ignoreCase: true,
-                out var type))
+                out var type) || !Enum.IsDefined(type))
         {
             fields["type"] = ["Type must be Points or Categories."];
         }
@@ -107,7 +131,7 @@ public static class LeagueEndpoints
         if (!Enum.TryParse<LineupCadence>(
                 request.Cadence,
                 ignoreCase: true,
-                out var cadence))
+                out var cadence) || !Enum.IsDefined(cadence))
         {
             fields["cadence"] = ["Cadence must be Daily or Weekly."];
         }
@@ -168,7 +192,7 @@ public static class LeagueEndpoints
             if (!Enum.TryParse<StatKey>(
                     request.Stat,
                     ignoreCase: true,
-                    out var stat))
+                    out var stat) || !Enum.IsDefined(stat))
             {
                 fields["scoringRules"] = [
                     $"Unknown scoring stat '{request.Stat}'.",
@@ -200,7 +224,7 @@ public static class LeagueEndpoints
         var results = new List<StatKey>();
         foreach (var value in values)
         {
-            if (!Enum.TryParse<StatKey>(value, true, out var stat))
+            if (!Enum.TryParse<StatKey>(value, true, out var stat) || !Enum.IsDefined(stat))
             {
                 fields[field] = [$"Unknown stat '{value}'."];
             }
@@ -231,7 +255,7 @@ public static class LeagueEndpoints
         var results = new List<RosterSlot>();
         foreach (var value in values)
         {
-            if (!Enum.TryParse<RosterSlotKind>(value, true, out var kind))
+            if (!Enum.TryParse<RosterSlotKind>(value, true, out var kind) || !Enum.IsDefined(kind))
             {
                 fields["rosterSlots"] = [$"Unknown roster slot '{value}'."];
             }

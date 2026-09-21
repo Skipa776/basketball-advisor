@@ -1,0 +1,10 @@
+export type Session = { authenticated: boolean; registrationOpen: boolean; user: { id: string; displayName: string; isInstanceOwner: boolean } | null };
+export type Rule = { stat: string; pointsPerUnit: number };
+export type Setup = { suggestedTeamCount: number; stats: { name: string; value: number }[]; rosterSlots: string[]; pointsProfile: { id: string; name: string; rules: Rule[] } };
+export type League = { id: string; name: string; teamCount: number; type: number; scoringRules: { stat: number; pointsPerUnit: number }[]; rosterSlots: { kind: number }[] };
+export type Player = { id: { value: string }; fullName: string; positions: string[] };
+export type Pick = { pickNumber: number; playerId: { value: string } };
+export type Draft = { id: string; teamCount: number; roundCount: number; userSlot: number; currentPick: number; picks: Pick[] };
+export type DraftRecord = { leagueId: string; session: Draft };
+export type Ranking = { playerId: { value: string }; total: number; projectedSeasonValue: number; evidence: { statement: string; magnitude: number | null }[] };
+export type Board = { rankings: Ranking[]; banner: string | null };

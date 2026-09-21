@@ -7,7 +7,7 @@ source_paths: []
 test_paths: []
 depends_on: [safety/scraping_policy.md, tasks/post_mvp_roadmap.md]
 status: planned
-last_updated: 2026-07-31
+last_updated: 2026-09-18
 owners: [engineering]
 ---
 
@@ -657,6 +657,147 @@ The general lesson is the one worth keeping: **a gate that only walks the front
 door tests the surface that was already safe.** The routes behind sign-in are
 where the layouts are.
 
+# React and Liquid Glass planning request — 2026-09-18
+
+The owner requested a reviewable migration/design plan before implementation.
+The proposal is in [the React migration plan](../../docs/plans/react-liquid-glass-migration.md),
+with [researched references and an inspected asset inventory](../../docs/plans/react-liquid-glass-references.md).
+It is not approval to replace the stack or promote any concept status.
+
+Planning assumptions, pending the owner's answers: preserve current capabilities,
+the Fastbreak name, both themes, the C# engines, cookie authentication, tenancy,
+and the draft interaction budget. A single ASP.NET origin with a React build is
+recommended to preserve the existing deployment boundary. Visual direction,
+public-page rendering, optional UX additions, dependencies, and image use remain
+review decisions, not new canonical defaults.
+
+Two source conflicts must be resolved during approved implementation: the latest
+UI simplification disables decorative tokens that DESIGN.md still describes,
+and E13's blanket likeness ban disagrees with PRODUCT.md/ASSETS.md's later
+permission for licensed likenesses. Those latter files still classify the Curry
+and LeBron inspiration photos as reference-only. No image rights were inferred,
+no assets were copied, and no existing contract was amended by this plan.
+
+### 2026-09-18 — visual review handover
+
+The owner requested completion of the plan and a Playwright UI/UX check before
+visual review. Interpreted this as a completed planning package plus a labelled
+local HTML concept, not approval to replace the production frontend. The concept
+uses fictional data and four representative screens; it does not demonstrate
+React runtime performance or production integration. The completed plan records
+recommended defaults with owner approval still pending.
+
+Browser review runs against a disposable PostgreSQL database with fictional
+records, real Identity flows, background workers disabled, and provider HTTP
+blocked. The existing developer database is not used. Photo-bearing captures
+remain in the ignored inspiration folder. No concept status or stable contract
+is promoted or weakened by these artifacts. See
+[the visual review packet](../../docs/plans/visual-review/README.md).
+
+### 2026-09-18 — reference-led redesign after owner rejection
+
+The owner rejected the first visual concept and selected Maxima Therapy and Sam
+Walks as the primary foundations. The instruction is to build basketball identity
+on those foundations; SimplyRaffle, Webharu and Konny Amaya are backup references.
+Created an isolated three-direction study under docs/plans/visual-review with
+original scene artwork, local reference photography and an identity-layer toggle.
+The daily draft remains a dense, photo-free instrument. This changes the planning
+art direction, not production components or canonical token values. Both themes
+and all route states remain required for the selected implementation.
+
+The new study is static HTML/CSS/JavaScript with local fictional data, not a React
+migration or a production game. Its optional exploration is always bypassable.
+No packages, donor-site artwork, canonical scoring values or engine capabilities
+were introduced. Owner choice of the final composition and implementation is
+still pending. The rejected study remains clearly archived for comparison.
+
+### 2026-09-19 — continuous animated landing study
+
+The owner requested more of Maxima Therapy’s animation and one continuously
+scrolling main landing page. Interpreted this as a revision of the authorized
+visual review artifact, not approval to replace Blazor or begin the React port.
+The selected planning direction is now a five-section vertical landing, with
+user-controlled wheel/sign/ball/sticker interactions, scroll-linked decoration,
+finite reveals, explicit reduced motion and direct workspace access. Sam Walks
+remains a supporting reference; its horizontal introduction is not the main page.
+
+The standalone study lives at docs/plans/visual-review/landing.html. It adds no
+packages, production routes, scoring calculations or backend capabilities.
+Native scrolling, original vector artwork and locally referenced photos support
+review before implementation. Dense draft behavior and canonical statuses remain
+unchanged. Offline browser checks and remaining limitations are recorded in the
+visual review packet; previous studies are retained for comparison.
+
+### 2026-09-19 — React integration and league-aware intelligence planning
+
+The owner requested an execution plan for React-to-.NET integration, API response
+verification, and hot/best-performing player logic under ESPN or Sleeper points
+rules, followed by implementation-goal questions. The plan records that the new
+frontend is still a static design artifact, while existing C# points/projection/
+draft services are reusable. Per-game ingestion and trends remain planned.
+
+Proposed scope sequences the frontend migration and API gaps before selected
+E06/R11 and E09/R16 work. Performance, sustainable trend and projected value are
+kept distinct; exact league settings remain authoritative, without platform
+fallbacks. Platform mode, first workflow, ranking window, freshness and data budget
+are unresolved owner decisions. The plan also records the existing box-score
+allowlist discrepancy and missing Sleeper bonus/mode representation rather than
+silently relaxing a contract. No production code, dependency, safety contract or
+concept status changes in this planning pass. See
+[the execution proposal](../../docs/plans/react-api-player-intelligence-execution.md).
+
+### 2026-09-19 — owner selected draft-first ESPN and scoring heat
+
+The owner chose draft preparation/live draft decisions, an ESPN-default points
+starter because no real league exists yet, and hot as recent fantasy-point
+production above a player's expected average. These resolve the previous plan's
+primary workflow/platform/meaning questions. The execution plan records published
+ESPN weights once, as an explicit editable preparation profile, not a fallback
+for missing league rules and not a replacement for the seed fixture. Narrowly
+reconcile the catalog's broad provider-default wording during implementation in
+accordance with this explicit owner instruction; do not request the same approval
+again. No canonical scoring value or implementation changed in this planning edit.
+
+Hot is a descriptive above-expectation comparison, including temporary efficiency
+streaks. It must not be silently redefined as the existing opportunity-weighted
+TrendScore or automatically added to DraftValue. Expected-benchmark choice,
+window and draft setup remain unresolved. Last-five-games versus a disjoint
+historical average is the proposed first comparison, not an accepted new contract.
+Preseason/old-season samples must be dated and not represented as current heat.
+Sleeper-specific work and broader league imports are deferred behind this draft
+workflow. The updated execution proposal contains the acceptance sequence.
+
+### 2026-09-19 — expanding/rolling heat baseline and initial team count
+
+The owner specified the first ten season games as the initial player baseline,
+then an expanding average through thirty, followed by the latest thirty games.
+Interpret games as completed player appearances, not team schedules or DNPs.
+This supersedes the earlier uncapped historical-average proposal for descriptive
+heat; it does not silently modify baseline projections or the existing stable
+sustainable-trend contract. The plan records boundary examples and required tests.
+A five-game short comparison window with a reference baseline frozen before that
+window remains recommended and has been asked explicitly; its cutoff and window
+are not yet accepted. Insufficient history stays visible rather than zero-scored.
+
+The initial league size is seven, with configuration allowing eleven or more
+later. The plan requires count-dependent draft behavior and snapshot-preservation
+tests rather than hardcoded sizes or silent alteration of an active draft.
+Roster slots and draft position remain open; the existing engine's snake ordering
+is the proposed first format. This turn updates planning only, with no production
+code, canonical status, or safety-policy change.
+
+### 2026-09-19 — three-game hot window selected
+
+The owner answered the explicit short-window question with “Latest 3 games.”
+That question described comparison against the baseline before the short window,
+so the plan now fixes the three-game comparison and its non-overlapping cutoff.
+The first complete comparison is player appearances 11–13 against 1–10; the
+reference baseline reaches thirty games when comparing 31–33 against 1–30, then
+slides to 2–31 for comparison games 32–34. This resolves the earlier window/cutoff
+proposal. The currently defined WindowSpan lacks a three-game member; its exact
+representation and tests must be added at implementation without relabelling an
+existing span. No engine or canonical status is implemented by this decision log.
+
 # Revisit triggers
 
 - The user's real league settings differ from the seed league → update
@@ -691,3 +832,23 @@ where the layouts are.
   scans raw file contents, comments included, and will fail on the literal. This
   cost five separate red runs during E13. Write "phone width" or "the page-title
   size", never the number.
+
+## 2026-09-19 — implementation resumed
+
+Owner approved the execution plan and continuation after an account-limit stop.
+Patch SSH.NET (already transitive through Testcontainers) to 2026.0.0 as a private
+test dependency to resolve NU1903 without suppressing vulnerability checks.
+React receives the existing API envelope, numeric enum mappings from a server
+catalog, cookie sessions and anti-forgery tokens; no browser-stored credentials.
+Seven teams is an editable setup suggestion, not a restriction. No league roster
+or draft position is silently assumed: setup asks for these before creation.
+
+## 2026-09-20 — green React integration checkpoint
+
+React `/app` and its .NET bridge passed the full gate: 214 tests, Domain coverage
+88.43%, Application 72.92%, five clean Playwright/axe scans, and 73 valid concepts.
+Fixtures run in disposable PostgreSQL containers; no developer database or live
+provider was touched. Migration remains partial. The owner requested continuation
+with the remaining player-intelligence work; the progress ledger names gaps.
+The independent ESPN scoring golden is 53, corrected from an erroneous hand total
+of 58 caught by the test. No scoring weight changed to accommodate the golden.

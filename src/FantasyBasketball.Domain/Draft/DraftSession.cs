@@ -88,6 +88,11 @@ public sealed class DraftSession
 
     public DraftPick MakePick(PlayerId playerId)
     {
+        if (CurrentPick > (long)TeamCount * RoundCount)
+        {
+            throw new InvalidOperationException("The draft is complete.");
+        }
+
         if (picks.Any(pick => pick.PlayerId == playerId))
         {
             throw new InvalidOperationException("Player has already been drafted.");

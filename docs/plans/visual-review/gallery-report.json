@@ -1,0 +1,21 @@
+{
+  "artifact": "index.html",
+  "date": "2026-09-19T17:55:55.988Z",
+  "views": [
+    {
+      "width": 1440,
+      "documentWidth": 1440,
+      "images": 5,
+      "broken": [],
+      "videoDuration": 14.68
+    },
+    {
+      "width": 390,
+      "documentWidth": 390,
+      "images": 5,
+      "broken": [],
+      "videoDuration": 14.68
+    }
+  ],
+  "liveLinkPassed": true
+}

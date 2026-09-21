@@ -9,6 +9,13 @@ any two.
 the question; E13 is whether a person can get to the answer and want to stay. It
 is the only epic that adds no capability.
 
+**Proposal awaiting owner review:** [React migration and Liquid Glass experience
+plan](../plans/react-liquid-glass-migration.md), with [UI references and photo
+inventory](../plans/react-liquid-glass-references.md). This planning document does
+not replace E13, approve dependencies, or change the canonical Blazor stack.
+
+**Next execution proposal:** [React/API integration and league-aware player intelligence](../plans/react-api-player-intelligence-execution.md) sequences the React port, real API acceptance checks, E06 box scores/trends, and selected E09 league imports. The owner selected draft preparation/live draft, an ESPN-default starter, and above-expected scoring heat. Broader league adapters are deferred; this link does not promote any epic status.
+
 ## Order and dependencies
 
 ```mermaid

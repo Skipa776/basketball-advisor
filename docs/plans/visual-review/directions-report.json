@@ -1,0 +1,314 @@
+{
+  "artifact": "directions.html",
+  "scope": "Offline static design concepts; not React or production acceptance",
+  "date": "2026-09-19",
+  "checks": [
+    {
+      "name": "Courtside controls, scene keyboard navigation and announcements",
+      "status": "pass"
+    },
+    {
+      "name": "Courtside responds to a horizontal drag",
+      "status": "pass"
+    },
+    {
+      "name": "Identity layer can be removed and restored",
+      "status": "pass"
+    },
+    {
+      "name": "Direction navigation, Back and skip link retain focus and route",
+      "status": "pass"
+    },
+    {
+      "name": "Walk slider and scene buttons navigate and clamp at endpoints",
+      "status": "pass"
+    },
+    {
+      "name": "Scene index traps focus, supports Escape and direct selection",
+      "status": "pass"
+    },
+    {
+      "name": "Reduced-motion journey advances by discrete scene",
+      "status": "pass"
+    },
+    {
+      "name": "Hold-to-explore stops on release and navigation",
+      "status": "pass"
+    },
+    {
+      "name": "Film room supports keyboard pick, undo and focus",
+      "status": "pass"
+    },
+    {
+      "name": "No-result search and active descendant remain valid",
+      "status": "pass"
+    },
+    {
+      "name": "Player research and board navigation work",
+      "status": "pass"
+    },
+    {
+      "name": "All 18 viewport/layer states have no page overflow, missing images or unlabelled inputs",
+      "status": "pass"
+    },
+    {
+      "name": "Phone journey objects do not cover copy or overflow the ticket",
+      "status": "pass"
+    },
+    {
+      "name": "No browser errors or external network requests",
+      "status": "pass"
+    }
+  ],
+  "views": [
+    {
+      "viewport": "desktop",
+      "layer": "basketball",
+      "view": "courtside",
+      "actualLayer": "basketball",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "visibleMain": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rowHeight": 0,
+      "screenshot": "desktop-basketball-courtside.png"
+    },
+    {
+      "viewport": "desktop",
+      "layer": "basketball",
+      "view": "walk",
+      "actualLayer": "basketball",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "visibleMain": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rowHeight": 0,
+      "screenshot": "desktop-basketball-walk.png"
+    },
+    {
+      "viewport": "desktop",
+      "layer": "basketball",
+      "view": "film",
+      "actualLayer": "basketball",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "visibleMain": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rowHeight": 28,
+      "screenshot": "desktop-basketball-film.png"
+    },
+    {
+      "viewport": "desktop",
+      "layer": "foundation",
+      "view": "courtside",
+      "actualLayer": "foundation",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "visibleMain": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rowHeight": 0,
+      "screenshot": "desktop-foundation-courtside.png"
+    },
+    {
+      "viewport": "desktop",
+      "layer": "foundation",
+      "view": "walk",
+      "actualLayer": "foundation",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "visibleMain": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rowHeight": 0,
+      "screenshot": "desktop-foundation-walk.png"
+    },
+    {
+      "viewport": "desktop",
+      "layer": "foundation",
+      "view": "film",
+      "actualLayer": "foundation",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "visibleMain": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rowHeight": 28,
+      "screenshot": "desktop-foundation-film.png"
+    },
+    {
+      "viewport": "phone",
+      "layer": "basketball",
+      "view": "courtside",
+      "actualLayer": "basketball",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "visibleMain": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rowHeight": 0,
+      "screenshot": "phone-basketball-courtside.png"
+    },
+    {
+      "viewport": "phone",
+      "layer": "basketball",
+      "view": "walk",
+      "actualLayer": "basketball",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "visibleMain": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rowHeight": 0,
+      "screenshot": "phone-basketball-walk.png"
+    },
+    {
+      "viewport": "phone",
+      "layer": "basketball",
+      "view": "film",
+      "actualLayer": "basketball",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "visibleMain": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rowHeight": 28,
+      "screenshot": "phone-basketball-film.png"
+    },
+    {
+      "viewport": "phone",
+      "layer": "foundation",
+      "view": "courtside",
+      "actualLayer": "foundation",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "visibleMain": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rowHeight": 0,
+      "screenshot": "phone-foundation-courtside.png"
+    },
+    {
+      "viewport": "phone",
+      "layer": "foundation",
+      "view": "walk",
+      "actualLayer": "foundation",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "visibleMain": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rowHeight": 0,
+      "screenshot": "phone-foundation-walk.png"
+    },
+    {
+      "viewport": "phone",
+      "layer": "foundation",
+      "view": "film",
+      "actualLayer": "foundation",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "visibleMain": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rowHeight": 28,
+      "screenshot": "phone-foundation-film.png"
+    },
+    {
+      "viewport": "small-phone",
+      "layer": "basketball",
+      "view": "courtside",
+      "actualLayer": "basketball",
+      "width": 320,
+      "documentWidth": 320,
+      "overflow": false,
+      "visibleMain": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rowHeight": 0
+    },
+    {
+      "viewport": "small-phone",
+      "layer": "basketball",
+      "view": "walk",
+      "actualLayer": "basketball",
+      "width": 320,
+      "documentWidth": 320,
+      "overflow": false,
+      "visibleMain": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rowHeight": 0
+    },
+    {
+      "viewport": "small-phone",
+      "layer": "basketball",
+      "view": "film",
+      "actualLayer": "basketball",
+      "width": 320,
+      "documentWidth": 320,
+      "overflow": false,
+      "visibleMain": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rowHeight": 28
+    },
+    {
+      "viewport": "small-phone",
+      "layer": "foundation",
+      "view": "courtside",
+      "actualLayer": "foundation",
+      "width": 320,
+      "documentWidth": 320,
+      "overflow": false,
+      "visibleMain": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rowHeight": 0
+    },
+    {
+      "viewport": "small-phone",
+      "layer": "foundation",
+      "view": "walk",
+      "actualLayer": "foundation",
+      "width": 320,
+      "documentWidth": 320,
+      "overflow": false,
+      "visibleMain": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rowHeight": 0
+    },
+    {
+      "viewport": "small-phone",
+      "layer": "foundation",
+      "view": "film",
+      "actualLayer": "foundation",
+      "width": 320,
+      "documentWidth": 320,
+      "overflow": false,
+      "visibleMain": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rowHeight": 28
+    }
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "browser": "145.0.7632.6"
+}

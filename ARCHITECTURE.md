@@ -228,6 +228,9 @@ Minimal APIs, grouped per `Endpoints/*.cs`. Full request/response DTOs and error
 envelope: `contracts/api_surface.md`.
 
 ```text
+GET    /api/account/session                  session and registration availability
+GET    /api/leagues                          caller-owned, paged
+GET    /api/leagues/setup                    explicit starter and enum catalog
 POST   /api/leagues                          create a league
 GET    /api/leagues/{id}
 PUT    /api/leagues/{id}/scoring             replace scoring rules
@@ -242,6 +245,7 @@ POST   /api/imports/season-stats             basketball-reference
 POST   /api/imports/adp                      fantasypros, or CSV body
 GET    /api/imports/runs                     DataImportRun history
 
+GET    /api/drafts/{id}                      persisted session and league id
 POST   /api/drafts                           create session
 GET    /api/drafts/{id}/board?leagueId=      available pool, re-ranked
 POST   /api/drafts/{id}/picks                record a pick

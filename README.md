@@ -167,3 +167,31 @@ responsibility. Read them before pointing this at a live host.
 ## Licence
 
 MIT — see [LICENSE](LICENSE).
+
+## React workspace (incremental migration)
+
+Node 24 is required alongside the existing .NET and Docker prerequisites. Build
+the frontend **before** building or publishing the .NET host so its static asset
+manifest includes the bundle:
+
+```sh
+npm --prefix src/FantasyBasketball.Web ci --ignore-scripts
+npm --prefix src/FantasyBasketball.Web run build
+dotnet build -c Release
+```
+
+Start the existing API with your normal local configuration and open `/app` on
+that same origin. The dashboard also links there. Account, league and draft data
+use the existing database and secure cookie/anti-forgery policies. Configure
+HTTPS for browser development when using the Vite proxy; production requires
+HTTPS. `npm --prefix src/FantasyBasketball.Web run dev` supports `FB_API_URL` for
+the API proxy target (default `http://localhost:5000`). The built same-origin route
+is the tested path.
+
+`scripts/gate.sh` builds both clients and runs the real-cookie Playwright journey
+inside a disposable database fixture. Set `CHROME_PATH` if Chromium is not in a
+standard installation path. Browser screenshots and the JSON report are written
+to `tests/FantasyBasketball.IntegrationTests/TestResults/react-review/`. No real
+provider is contacted by that test. See
+[implementation progress](docs/plans/implementation-progress.md) for completed
+work and the remaining migration/player-intelligence milestones.

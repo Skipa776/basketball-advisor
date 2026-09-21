@@ -88,3 +88,6 @@ recommendation. D-01 through D-09 pass, a 300-player rerank stays under 500 ms,
 and a 10-team, 13-round manual mock draft completes all 130 picks with evidence
 on every recommendation. API idempotency rows A-11/A-12 remain for the API
 slice but do not block this component's two done criteria.
+
+A completed draft rejects additional picks; undoing the final pick reopens it.
+The completion guard is enforced in the domain, not just by React controls.

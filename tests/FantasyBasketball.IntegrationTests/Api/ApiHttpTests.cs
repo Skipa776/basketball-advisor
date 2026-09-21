@@ -125,6 +125,82 @@ public sealed class ApiHttpTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task League_setup_rejects_undefined_numeric_enum_values()
+    {
+        var token = TestContext.Current.CancellationToken;
+        foreach (var field in new[] { "Type", "Cadence", "ScoringRules", "Categories", "RosterSlots" })
+        {
+            var payload = System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.Serialize(
+                LeagueRequest([new { Stat = nameof(StatKey.PTS), PointsPerUnit = 1m }])))!;
+            if (field == "ScoringRules") payload[field]![0]!["Stat"] = "999";
+            else if (field is "Categories" or "RosterSlots") payload[field] = new System.Text.Json.Nodes.JsonArray("999");
+            else payload[field] = "999";
+            using var response = await client.PostAsJsonAsync("/api/leagues", payload, token);
+            response.StatusCode.ShouldBe(HttpStatusCode.BadRequest, field);
+        }
+    }
+
+    [Fact]
+    public async Task React_setup_leagues_and_draft_restore_use_persisted_state()
+    {
+        var token = TestContext.Current.CancellationToken;
+        using var setupResponse = await client.GetAsync("/api/leagues/setup", token);
+        using var setup = await ReadEnvelopeAsync(setupResponse, token);
+        var catalog = setup.RootElement.GetProperty("data");
+        catalog.GetProperty("suggestedTeamCount").GetInt32().ShouldBe(7);
+        var rules = catalog.GetProperty("pointsProfile").GetProperty("rules");
+        rules.GetArrayLength().ShouldBe(11);
+        // Golden independent of the setup implementation: ESPN's 25-point,
+        // 8-rebound, 6-assist, 2-steal, 1-block, 3-turnover shooting line = 53.
+        var stats = new Dictionary<StatKey, decimal>
+        {
+            [StatKey.PTS] = 25,
+            [StatKey.REB] = 8,
+            [StatKey.AST] = 6,
+            [StatKey.STL] = 2,
+            [StatKey.BLK] = 1,
+            [StatKey.TOV] = 3,
+            [StatKey.FGM] = 9,
+            [StatKey.FGA] = 18,
+            [StatKey.FG3M] = 3,
+            [StatKey.FTM] = 4,
+            [StatKey.FTA] = 5,
+        };
+        rules.EnumerateArray().Sum(rule => stats[Enum.Parse<StatKey>(rule.GetProperty("stat").GetString()!)]
+            * rule.GetProperty("pointsPerUnit").GetDecimal()).ShouldBe(53m);
+        using var create = await client.PostAsJsonAsync("/api/leagues", new
+        {
+            Name = "Eleven team preparation",
+            Type = "Points",
+            TeamCount = 11,
+            ScoringRules = rules,
+            Categories = Array.Empty<string>(),
+            RosterSlots = new[] { "PG", "SG", "UTIL" },
+            Cadence = "Daily",
+        }, token);
+        create.StatusCode.ShouldBe(HttpStatusCode.Created);
+        using var created = await ReadEnvelopeAsync(create, token);
+        var league = created.RootElement.GetProperty("data").GetProperty("id").GetGuid();
+        using var listResponse = await client.GetAsync("/api/leagues", token);
+        using var list = await ReadEnvelopeAsync(listResponse, token);
+        list.RootElement.GetProperty("meta").GetProperty("limit").GetInt32().ShouldBe(50);
+        list.RootElement.GetProperty("data")[0].GetProperty("id").GetGuid().ShouldBe(league);
+        using var invalid = await client.GetAsync("/api/leagues?page=0", token);
+        invalid.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        var draft = await CreateDraftAsync(league, token);
+        var player = await AddPlayerAsync("Persisted pick", token);
+        await RecordPickAsync(draft, 1, player, HttpStatusCode.OK, token);
+        using var restoredResponse = await client.GetAsync($"/api/drafts/{draft}", token);
+        using var restored = await ReadEnvelopeAsync(restoredResponse, token);
+        var record = restored.RootElement.GetProperty("data");
+        record.GetProperty("leagueId").GetGuid().ShouldBe(league);
+        var session = record.GetProperty("session");
+        session.GetProperty("teamCount").GetInt32().ShouldBe(11);
+        session.GetProperty("currentPick").GetInt32().ShouldBe(2);
+        session.GetProperty("picks")[0].GetProperty("playerId").GetProperty("value").GetGuid().ShouldBe(player.Value);
+    }
+
+    [Fact]
     public async Task A10_through_A14_http_contract_and_lifecycles_hold()
     {
         var cancellationToken = TestContext.Current.CancellationToken;

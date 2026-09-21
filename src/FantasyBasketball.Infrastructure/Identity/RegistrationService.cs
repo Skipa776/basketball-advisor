@@ -26,6 +26,9 @@ public sealed class RegistrationService(
 {
     private const string OwnerRole = "Owner";
 
+    public async Task<bool> IsOpenAsync(CancellationToken cancellationToken) =>
+        options.Value.OpenRegistration || !await database.Users.AnyAsync(cancellationToken);
+
     public async Task<RegistrationOutcome> RegisterAsync(
         string email,
         string password,

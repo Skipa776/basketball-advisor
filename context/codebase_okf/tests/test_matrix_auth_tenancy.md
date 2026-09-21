@@ -74,9 +74,13 @@ the sweep finds it. A sweep that cannot fail is not a test.
 
 # Current evidence
 
-U-01 through U-17 pass against PostgreSQL 17. U-01 discovers 10 owned routes from
+U-01 through U-17 pass against PostgreSQL 17. U-01 discovers 11 owned routes from
 ASP.NET endpoint metadata, attacks each as user B, and observes only identifier-free
 `404` responses. U-02 plants a leaky owned fixture and records one sweep failure.
 The remaining rows cover shared versus personal filters, the two migration
 boundaries and claim step, Identity defaults, throwing worker context, deletion,
 portable 11-table export/import, and marker coverage.
+
+React bridge tests cover non-cacheable session discovery before/after registration,
+closed registration visibility, and ownership-filtered league listing. The reflected
+draft-detail route participates in the same cross-user 404 sweep.

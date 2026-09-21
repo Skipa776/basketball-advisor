@@ -18,6 +18,7 @@ Index rows route; concepts own. Nothing here restates a concept's content.
 | Change what a recommendation says or how sure it is | `codebase_okf/contracts/recommendation_evidence_contract.md` |
 | Add an entity, column, or migration | `codebase_okf/contracts/persistence_contract.md`, `codebase_okf/components/persistence.md` |
 | Add or change an HTTP endpoint | `codebase_okf/contracts/api_surface.md`, `codebase_okf/components/api_host.md` |
+| Build or change the React workspace | `codebase_okf/components/web_ui_react.md`, `codebase_okf/contracts/api_surface.md`, `codebase_okf/contracts/auth_tenancy_contract.md` |
 | Build or change a page | `codebase_okf/components/web_ui_blazor.md` |
 | Add a background refresh job | `codebase_okf/components/background_workers.md` |
 | Record where a piece of data came from | `codebase_okf/contracts/provenance_contract.md` |

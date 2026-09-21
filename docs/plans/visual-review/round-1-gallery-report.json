@@ -1,0 +1,18 @@
+{
+  "tool": "Playwright 1.58.2",
+  "checks": [
+    {
+      "width": 1440,
+      "documentWidth": 1440,
+      "images": 22,
+      "broken": []
+    },
+    {
+      "width": 390,
+      "documentWidth": 390,
+      "images": 22,
+      "broken": []
+    }
+  ],
+  "prototypeLink": "pass"
+}

@@ -145,3 +145,10 @@ and daily/weekly cadence without a provider default. The pick combobox supports
 type, up/down, Enter, and
 returns focus after a committed pick. A loopback Kestrel render test over real
 PostgreSQL proves A-20 and A-21, and a route sweep renders all six pages.
+
+## Incremental migration — 2026-09-19
+
+The owner authorized a parallel React workspace, linked from the dashboard at
+`/app`. Its boundary and verification belong to
+[web_ui_react](web_ui_react.md). Existing Blazor routes remain supported during
+the migration; this does not promote any unimplemented Blazor capability.

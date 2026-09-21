@@ -22,6 +22,8 @@ public static class DraftEndpoints
         var group = endpoints.MapGroup("/api/drafts");
         group.AddEndpointFilter<CookieAntiforgeryFilter>();
         group.RequireAuthorization();
+        group.MapGet("/{id:guid}", GetAsync)
+            .WithMetadata(new OwnedRouteMetadata("draft", "id"));
         group.MapPost("/", CreateAsync)
             .WithMetadata(new OwnedRouteMetadata("league", "body:leagueId"));
         group.MapGet("/{id:guid}/board", GetBoardAsync)
@@ -33,6 +35,16 @@ public static class DraftEndpoints
         group.MapGet("/{id:guid}/recommendations", GetRecommendationsAsync)
             .WithMetadata(new OwnedRouteMetadata("draft", "id"));
         return endpoints;
+    }
+
+    public static async Task<IResult> GetAsync(
+        Guid id,
+        DraftSessionService service,
+        OwnedResourceAuthorizationService authorization,
+        CancellationToken cancellationToken)
+    {
+        await authorization.RequireDraftAsync(id, cancellationToken);
+        return ApiResults.Success(await service.GetAsync(id, cancellationToken));
     }
 
     public static async Task<IResult> CreateAsync(

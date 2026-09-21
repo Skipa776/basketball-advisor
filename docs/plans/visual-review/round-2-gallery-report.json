@@ -1,0 +1,19 @@
+{
+  "artifact": "round 2 gallery",
+  "tool": "Playwright",
+  "results": [
+    {
+      "width": 1440,
+      "documentWidth": 1440,
+      "images": 6,
+      "broken": []
+    },
+    {
+      "width": 390,
+      "documentWidth": 390,
+      "images": 6,
+      "broken": []
+    }
+  ],
+  "interactiveLink": "pass"
+}

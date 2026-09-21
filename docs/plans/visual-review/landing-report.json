@@ -1,0 +1,360 @@
+{
+  "artifact": "landing.html",
+  "scope": "Offline landing concept; not production or React acceptance",
+  "date": "2026-09-19T17:55:08.769Z",
+  "checks": [
+    {
+      "name": "Eight viewport/motion states retain five continuous sections and no overflow or missing images",
+      "status": "pass"
+    },
+    {
+      "name": "Wheel buttons and keyboard change perspective without changing routes",
+      "status": "pass"
+    },
+    {
+      "name": "Wheel drag tracks input and settles on a perspective",
+      "status": "pass"
+    },
+    {
+      "name": "Wheel can be reversed while moving",
+      "status": "pass"
+    },
+    {
+      "name": "Ball responds to activation and its animation finishes",
+      "status": "pass"
+    },
+    {
+      "name": "Section anchor scrolls and transfers focus below sticky navigation",
+      "status": "pass"
+    },
+    {
+      "name": "Scroll draws court lines and changes decorative photo positions",
+      "status": "pass"
+    },
+    {
+      "name": "Sticker supports keyboard activation and changes its accessible name",
+      "status": "pass"
+    },
+    {
+      "name": "Hanging sign follows a drag and returns to rest",
+      "status": "pass"
+    },
+    {
+      "name": "Manual reduced motion cancels animation and preserves interaction",
+      "status": "pass"
+    },
+    {
+      "name": "Changing OS reduced-motion setting settles active motion",
+      "status": "pass"
+    },
+    {
+      "name": "Workspace entry opens the existing functional design preview",
+      "status": "pass"
+    },
+    {
+      "name": "Page remains readable and navigable with JavaScript disabled",
+      "status": "pass"
+    },
+    {
+      "name": "Touch scrolling over the wheel retains native vertical page movement",
+      "status": "pass"
+    },
+    {
+      "name": "No runtime errors or attempted external HTTP requests",
+      "status": "pass"
+    }
+  ],
+  "views": [
+    {
+      "width": 1440,
+      "documentWidth": 1440,
+      "sections": [
+        {
+          "id": "top",
+          "height": 984,
+          "visible": true
+        },
+        {
+          "id": "your-league",
+          "height": 899,
+          "visible": true
+        },
+        {
+          "id": "the-context",
+          "height": 1439,
+          "visible": true
+        },
+        {
+          "id": "your-move",
+          "height": 940,
+          "visible": true
+        },
+        {
+          "id": "closing",
+          "height": 939,
+          "visible": true
+        }
+      ],
+      "brokenImages": [],
+      "headings": 1,
+      "main": 1,
+      "unnamedControls": 0,
+      "motion": "no-preference"
+    },
+    {
+      "width": 1440,
+      "documentWidth": 1440,
+      "sections": [
+        {
+          "id": "top",
+          "height": 984,
+          "visible": true
+        },
+        {
+          "id": "your-league",
+          "height": 899,
+          "visible": true
+        },
+        {
+          "id": "the-context",
+          "height": 1439,
+          "visible": true
+        },
+        {
+          "id": "your-move",
+          "height": 940,
+          "visible": true
+        },
+        {
+          "id": "closing",
+          "height": 939,
+          "visible": true
+        }
+      ],
+      "brokenImages": [],
+      "headings": 1,
+      "main": 1,
+      "unnamedControls": 0,
+      "motion": "reduce"
+    },
+    {
+      "width": 768,
+      "documentWidth": 768,
+      "sections": [
+        {
+          "id": "top",
+          "height": 744,
+          "visible": true
+        },
+        {
+          "id": "your-league",
+          "height": 648,
+          "visible": true
+        },
+        {
+          "id": "the-context",
+          "height": 1141,
+          "visible": true
+        },
+        {
+          "id": "your-move",
+          "height": 819,
+          "visible": true
+        },
+        {
+          "id": "closing",
+          "height": 712,
+          "visible": true
+        }
+      ],
+      "brokenImages": [],
+      "headings": 1,
+      "main": 1,
+      "unnamedControls": 0,
+      "motion": "no-preference"
+    },
+    {
+      "width": 768,
+      "documentWidth": 768,
+      "sections": [
+        {
+          "id": "top",
+          "height": 744,
+          "visible": true
+        },
+        {
+          "id": "your-league",
+          "height": 648,
+          "visible": true
+        },
+        {
+          "id": "the-context",
+          "height": 1141,
+          "visible": true
+        },
+        {
+          "id": "your-move",
+          "height": 819,
+          "visible": true
+        },
+        {
+          "id": "closing",
+          "height": 712,
+          "visible": true
+        }
+      ],
+      "brokenImages": [],
+      "headings": 1,
+      "main": 1,
+      "unnamedControls": 0,
+      "motion": "reduce"
+    },
+    {
+      "width": 390,
+      "documentWidth": 390,
+      "sections": [
+        {
+          "id": "top",
+          "height": 1050,
+          "visible": true
+        },
+        {
+          "id": "your-league",
+          "height": 1024,
+          "visible": true
+        },
+        {
+          "id": "the-context",
+          "height": 1353,
+          "visible": true
+        },
+        {
+          "id": "your-move",
+          "height": 1028,
+          "visible": true
+        },
+        {
+          "id": "closing",
+          "height": 632,
+          "visible": true
+        }
+      ],
+      "brokenImages": [],
+      "headings": 1,
+      "main": 1,
+      "unnamedControls": 0,
+      "motion": "no-preference"
+    },
+    {
+      "width": 390,
+      "documentWidth": 390,
+      "sections": [
+        {
+          "id": "top",
+          "height": 1050,
+          "visible": true
+        },
+        {
+          "id": "your-league",
+          "height": 1024,
+          "visible": true
+        },
+        {
+          "id": "the-context",
+          "height": 1353,
+          "visible": true
+        },
+        {
+          "id": "your-move",
+          "height": 1028,
+          "visible": true
+        },
+        {
+          "id": "closing",
+          "height": 632,
+          "visible": true
+        }
+      ],
+      "brokenImages": [],
+      "headings": 1,
+      "main": 1,
+      "unnamedControls": 0,
+      "motion": "reduce"
+    },
+    {
+      "width": 320,
+      "documentWidth": 320,
+      "sections": [
+        {
+          "id": "top",
+          "height": 983,
+          "visible": true
+        },
+        {
+          "id": "your-league",
+          "height": 972,
+          "visible": true
+        },
+        {
+          "id": "the-context",
+          "height": 1384,
+          "visible": true
+        },
+        {
+          "id": "your-move",
+          "height": 1053,
+          "visible": true
+        },
+        {
+          "id": "closing",
+          "height": 802,
+          "visible": true
+        }
+      ],
+      "brokenImages": [],
+      "headings": 1,
+      "main": 1,
+      "unnamedControls": 0,
+      "motion": "no-preference"
+    },
+    {
+      "width": 320,
+      "documentWidth": 320,
+      "sections": [
+        {
+          "id": "top",
+          "height": 983,
+          "visible": true
+        },
+        {
+          "id": "your-league",
+          "height": 972,
+          "visible": true
+        },
+        {
+          "id": "the-context",
+          "height": 1384,
+          "visible": true
+        },
+        {
+          "id": "your-move",
+          "height": 1053,
+          "visible": true
+        },
+        {
+          "id": "closing",
+          "height": 802,
+          "visible": true
+        }
+      ],
+      "brokenImages": [],
+      "headings": 1,
+      "main": 1,
+      "unnamedControls": 0,
+      "motion": "reduce"
+    }
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "browser": "145.0.7632.6"
+}

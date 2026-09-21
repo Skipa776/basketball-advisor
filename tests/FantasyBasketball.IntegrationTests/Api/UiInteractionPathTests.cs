@@ -16,6 +16,13 @@ namespace FantasyBasketball.IntegrationTests.Api;
 /// </summary>
 public sealed partial class UiDesignTests
 {
+    // React entry points are HTTP endpoints rather than Razor @page directives.
+    // Discover them from their actual route declarations, never an exception list.
+    private static IEnumerable<string> HostPageRoutes() =>
+        Regex.Matches(File.ReadAllText(Path.Combine(RepositoryRoot, "src", "FantasyBasketball.Api", "ApiHost.cs")),
+            @"app\.MapGet\(""(?<route>[^""]+)""")
+            .Select(match => match.Groups["route"].Value);
+
     [Fact]
     public void D28_every_route_is_reachable_from_in_app_navigation()
     {
@@ -25,6 +32,7 @@ public sealed partial class UiDesignTests
         var routes = PageFiles()
             .SelectMany(path => PageRoute().Matches(File.ReadAllText(path))
                 .Select(match => match.Groups["route"].Value))
+            .Concat(HostPageRoutes())
             .Where(route => !route.Contains('{', StringComparison.Ordinal))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
@@ -69,6 +77,7 @@ public sealed partial class UiDesignTests
         var routes = PageFiles()
             .SelectMany(path => PageRoute().Matches(File.ReadAllText(path))
                 .Select(match => match.Groups["route"].Value))
+            .Concat(HostPageRoutes())
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         var anonymousPages = PageFiles()

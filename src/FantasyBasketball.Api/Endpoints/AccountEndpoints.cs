@@ -22,6 +22,7 @@ public static class AccountEndpoints
     {
         var group = endpoints.MapGroup("/api/account");
         group.AddEndpointFilter<CookieAntiforgeryFilter>();
+        group.MapGet("/session", GetSessionAsync).AllowAnonymous();
         group.MapGet("/antiforgery", GetAntiforgery)
             .AllowAnonymous();
         group.MapPost("/register", RegisterAsync)
@@ -63,6 +64,24 @@ public static class AccountEndpoints
             .RequireAuthorization()
             .AddEndpointFilter<CookieAntiforgeryFilter>();
         return endpoints;
+    }
+
+    public static async Task<IResult> GetSessionAsync(
+        HttpContext context,
+        UserManager<FantasyUser> users,
+        RegistrationService registrations,
+        CancellationToken cancellationToken)
+    {
+        context.Response.Headers.CacheControl = "no-store";
+        var user = context.User.Identity?.IsAuthenticated is true
+            ? await users.GetUserAsync(context.User)
+            : null;
+        return ApiResults.Success(new
+        {
+            Authenticated = user is not null,
+            User = user is null ? null : new { user.Id, user.DisplayName, user.IsInstanceOwner },
+            RegistrationOpen = await registrations.IsOpenAsync(cancellationToken),
+        });
     }
 
     public static async Task<IResult> ExportAsync(

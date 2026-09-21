@@ -73,3 +73,12 @@ with the reasoning recorded in [assumptions](../assumptions.md).
 # Verification
 
 The gate is verified by its own use: it must be green at every commit boundary.
+
+## React migration gate additions
+
+The gate restores pinned npm packages and builds React before .NET static asset
+discovery. Node 24 and Chromium are required. The real-cookie integration fixture
+launches the Playwright/axe workspace test against its own throwaway database;
+it does not contact live providers. `CHROME_PATH` can select a local installation.
+The SSH.NET private test dependency pins the patched transitive version without
+disabling NuGet vulnerability checks.

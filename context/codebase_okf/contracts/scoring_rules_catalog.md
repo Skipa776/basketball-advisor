@@ -13,7 +13,7 @@ risk_level: high
 edit_policy: stable_contract
 done_criteria:
   - A points league and a category league can both be configured and scored.
-  - No provider default value appears anywhere in the codebase.
+  - No provider scoring value is silently substituted for user configuration.
   - The seed league reproduces its golden values exactly.
 ---
 
@@ -125,3 +125,13 @@ DTO, and the UI league form together.
 
 `test_matrix_scoring.md` — the seed league golden cases, the validation cases,
 and the zero-contribution case for unscored stats.
+
+## Explicit starter profile — owner-approved 2026-09-19
+
+The React setup catalog offers an **explicitly selected**, editable ESPN default
+points profile. `LeagueSetupCatalog` owns its executable weights; clients consume
+that catalog and submit reviewed rules through the existing validated endpoint.
+This narrows the historical ban on provider values, but preserves its invariant:
+missing scoring rules are invalid and unconfigured stats contribute zero.
+The seed league and existing golden values are unchanged. Profile reference:
+[ESPN default points scoring](https://www.espn.com/fantasy/basketball/story/_/id/30296896/espn-fantasy-default-points-league-scoring-explained).

@@ -1,0 +1,298 @@
+{
+  "tool": "Playwright 1.58.2",
+  "scope": "Static HTML visual prototype, fictional interactions, no React runtime or backend integration",
+  "checks": [
+    {
+      "name": "Type-arrow-enter preview pick and undo keep focus",
+      "status": "pass"
+    },
+    {
+      "name": "No-result search and Escape remain usable",
+      "status": "pass"
+    },
+    {
+      "name": "Skip link retains selected screen and focuses main",
+      "status": "pass"
+    },
+    {
+      "name": "Navigation sets focus and supports Back",
+      "status": "pass"
+    },
+    {
+      "name": "Solid mode removes backdrop filter",
+      "status": "pass"
+    },
+    {
+      "name": "Theme toggle changes theme and accessible action",
+      "status": "pass"
+    },
+    {
+      "name": "Sign-in preview never sends or retains credentials",
+      "status": "pass"
+    },
+    {
+      "name": "Reduced motion disables view animation",
+      "status": "pass"
+    },
+    {
+      "name": "High contrast uses solid material",
+      "status": "pass"
+    },
+    {
+      "name": "Phone zoom-sized viewport has no horizontal page overflow",
+      "status": "pass"
+    },
+    {
+      "name": "All 16 captures have one visible main, labelled inputs, loaded images, no page overflow",
+      "status": "pass"
+    },
+    {
+      "name": "No browser runtime errors",
+      "status": "pass"
+    }
+  ],
+  "pages": [
+    {
+      "view": "landing",
+      "viewport": "desktop",
+      "theme": "dark",
+      "screenshot": "../../../inspiration-resources/react-review/desktop-dark-landing.png",
+      "overflow": false,
+      "width": 1440,
+      "documentWidth": 1440,
+      "visibleMains": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rows": 20,
+      "rowHeight": 0,
+      "backdrop": "none"
+    },
+    {
+      "view": "login",
+      "viewport": "desktop",
+      "theme": "dark",
+      "screenshot": "../../../inspiration-resources/react-review/desktop-dark-login.png",
+      "overflow": false,
+      "width": 1440,
+      "documentWidth": 1440,
+      "visibleMains": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rows": 20,
+      "rowHeight": 0,
+      "backdrop": "none"
+    },
+    {
+      "view": "draft",
+      "viewport": "desktop",
+      "theme": "dark",
+      "screenshot": "../../../inspiration-resources/react-review/desktop-dark-draft.png",
+      "overflow": false,
+      "width": 1440,
+      "documentWidth": 1440,
+      "visibleMains": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rows": 20,
+      "rowHeight": 28,
+      "backdrop": "none"
+    },
+    {
+      "view": "players",
+      "viewport": "desktop",
+      "theme": "dark",
+      "screenshot": "../../../inspiration-resources/react-review/desktop-dark-players.png",
+      "overflow": false,
+      "width": 1440,
+      "documentWidth": 1440,
+      "visibleMains": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rows": 20,
+      "rowHeight": 0,
+      "backdrop": "none"
+    },
+    {
+      "view": "landing",
+      "viewport": "desktop",
+      "theme": "light",
+      "screenshot": "../../../inspiration-resources/react-review/desktop-light-landing.png",
+      "overflow": false,
+      "width": 1440,
+      "documentWidth": 1440,
+      "visibleMains": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rows": 20,
+      "rowHeight": 0,
+      "backdrop": "none"
+    },
+    {
+      "view": "login",
+      "viewport": "desktop",
+      "theme": "light",
+      "screenshot": "../../../inspiration-resources/react-review/desktop-light-login.png",
+      "overflow": false,
+      "width": 1440,
+      "documentWidth": 1440,
+      "visibleMains": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rows": 20,
+      "rowHeight": 0,
+      "backdrop": "none"
+    },
+    {
+      "view": "draft",
+      "viewport": "desktop",
+      "theme": "light",
+      "screenshot": "../../../inspiration-resources/react-review/desktop-light-draft.png",
+      "overflow": false,
+      "width": 1440,
+      "documentWidth": 1440,
+      "visibleMains": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rows": 20,
+      "rowHeight": 28,
+      "backdrop": "none"
+    },
+    {
+      "view": "players",
+      "viewport": "desktop",
+      "theme": "light",
+      "screenshot": "../../../inspiration-resources/react-review/desktop-light-players.png",
+      "overflow": false,
+      "width": 1440,
+      "documentWidth": 1440,
+      "visibleMains": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rows": 20,
+      "rowHeight": 0,
+      "backdrop": "none"
+    },
+    {
+      "view": "landing",
+      "viewport": "phone",
+      "theme": "dark",
+      "screenshot": "../../../inspiration-resources/react-review/phone-dark-landing.png",
+      "overflow": false,
+      "width": 390,
+      "documentWidth": 390,
+      "visibleMains": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rows": 20,
+      "rowHeight": 0,
+      "backdrop": "none"
+    },
+    {
+      "view": "login",
+      "viewport": "phone",
+      "theme": "dark",
+      "screenshot": "../../../inspiration-resources/react-review/phone-dark-login.png",
+      "overflow": false,
+      "width": 390,
+      "documentWidth": 390,
+      "visibleMains": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rows": 20,
+      "rowHeight": 0,
+      "backdrop": "none"
+    },
+    {
+      "view": "draft",
+      "viewport": "phone",
+      "theme": "dark",
+      "screenshot": "../../../inspiration-resources/react-review/phone-dark-draft.png",
+      "overflow": false,
+      "width": 390,
+      "documentWidth": 390,
+      "visibleMains": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rows": 20,
+      "rowHeight": 28,
+      "backdrop": "none"
+    },
+    {
+      "view": "players",
+      "viewport": "phone",
+      "theme": "dark",
+      "screenshot": "../../../inspiration-resources/react-review/phone-dark-players.png",
+      "overflow": false,
+      "width": 390,
+      "documentWidth": 390,
+      "visibleMains": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rows": 20,
+      "rowHeight": 0,
+      "backdrop": "none"
+    },
+    {
+      "view": "landing",
+      "viewport": "phone",
+      "theme": "light",
+      "screenshot": "../../../inspiration-resources/react-review/phone-light-landing.png",
+      "overflow": false,
+      "width": 390,
+      "documentWidth": 390,
+      "visibleMains": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rows": 20,
+      "rowHeight": 0,
+      "backdrop": "none"
+    },
+    {
+      "view": "login",
+      "viewport": "phone",
+      "theme": "light",
+      "screenshot": "../../../inspiration-resources/react-review/phone-light-login.png",
+      "overflow": false,
+      "width": 390,
+      "documentWidth": 390,
+      "visibleMains": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rows": 20,
+      "rowHeight": 0,
+      "backdrop": "none"
+    },
+    {
+      "view": "draft",
+      "viewport": "phone",
+      "theme": "light",
+      "screenshot": "../../../inspiration-resources/react-review/phone-light-draft.png",
+      "overflow": false,
+      "width": 390,
+      "documentWidth": 390,
+      "visibleMains": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rows": 20,
+      "rowHeight": 28,
+      "backdrop": "none"
+    },
+    {
+      "view": "players",
+      "viewport": "phone",
+      "theme": "light",
+      "screenshot": "../../../inspiration-resources/react-review/phone-light-players.png",
+      "overflow": false,
+      "width": 390,
+      "documentWidth": 390,
+      "visibleMains": 1,
+      "brokenImages": [],
+      "unlabelledInputs": [],
+      "rows": 20,
+      "rowHeight": 0,
+      "backdrop": "none"
+    }
+  ],
+  "errors": [],
+  "browser": "145.0.7632.6"
+}

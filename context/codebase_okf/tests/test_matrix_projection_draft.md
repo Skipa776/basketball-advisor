@@ -84,3 +84,6 @@ assertion. E-01, E-02, E-03, and E-05 cover construction, risk polarity,
 confidence buckets, and evidence ordering. E-04 is implemented by the
 Application draft surface: stale or failed automated imports lower the
 freshness factor and append structured `DataQuality` risk evidence.
+
+The completed-draft regression verifies that a pick beyond the configured rounds
+is rejected without changing the pick list and that undo permits a replacement.

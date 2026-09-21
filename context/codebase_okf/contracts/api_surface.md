@@ -111,3 +111,19 @@ The local-loopback HTTP integration test exercises every route family,
 including decomposed projection siblings, queued `Running` imports, idempotent
 picks, last-pick undo, context review conflicts, paging metadata, health during
 degradation, framework 404s, and forced 500s.
+
+## React integration additions — 2026-09-19
+
+- `GET /api/account/session` is anonymous-readable and `Cache-Control: no-store`.
+  Returns `authenticated`, nullable minimal `user` (id/displayName/isInstanceOwner),
+  and `registrationOpen`. Registration remains enforced atomically at mutation.
+- `GET /api/leagues` requires authentication, defaults to page 1 / limit 50
+  (maximum 200), and returns only caller-owned leagues plus paging metadata.
+- `GET /api/leagues/setup` requires authentication and exposes named stat/roster
+  vocabulary and the explicit editable ESPN points starter. Creation still
+  requires the submitted scoring rules; the server never substitutes defaults.
+- `GET /api/drafts/{id}` requires explicit draft ownership and returns the
+  persisted `leagueId` and `session`, including picks, to restore on refresh.
+
+Existing numeric enum serialization stays compatible. The setup catalog supplies
+name/value mappings so React does not duplicate the C# enums.

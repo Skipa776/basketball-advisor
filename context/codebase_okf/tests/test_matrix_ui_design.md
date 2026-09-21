@@ -165,3 +165,8 @@ purpose: that list may only shrink, and adding new work to it defeats the check
 it exists for. Design review
 ([run_design_process](../tasks/run_design_process.md) step 6) runs after these are
 green, not instead of them.
+
+React migration adds `/app` as an explicit host GET route. D-28/D-29 discover
+these declarations alongside Razor `@page` routes; they do not exempt the React
+link from reachability checks. The real browser test also requests `/app`
+anonymously and verifies the rendered account-to-draft journey.

@@ -121,7 +121,7 @@ public sealed class RouteIsolationTests : IAsyncLifetime
                 endpoint.Metadata.GetMetadata<OwnedRouteMetadata>() is not null)
             .ToArray();
 
-        routes.Length.ShouldBe(10);
+        routes.Length.ShouldBe(11);
         var failures = await SweepAsync(
             client,
             routes,
@@ -129,6 +129,11 @@ public sealed class RouteIsolationTests : IAsyncLifetime
             new SweepResources(leagueId, draftId, contextEventId, playerId));
 
         failures.ShouldBeEmpty();
+
+        using var leagueList = await SendAsync(client, HttpMethod.Get, "/api/leagues", userB);
+        leagueList.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await leagueList.Content.ReadAsStringAsync(TestContext.Current.CancellationToken))
+            .ShouldNotContain(leagueId.ToString());
 
         using var contextList = await SendAsync(
             client,

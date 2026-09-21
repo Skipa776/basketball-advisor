@@ -89,3 +89,14 @@ engine, import, or number belongs to another epic and is out of scope here.
 E13 changes nothing about what the app can compute, and its boundaries —
 no CSS framework, no component library, the draft board's density and
 interaction budget unchanged — are not negotiable inside it.
+
+## Owner-authorized implementation — 2026-09-19
+
+The owner has approved execution of
+[`react-api-player-intelligence-execution.md`](docs/plans/react-api-player-intelligence-execution.md):
+React integration, API verification, explicit editable ESPN points setup, and
+three-appearance heat against the preceding expanding 10–30 appearance baseline.
+This extends the earlier E13-only objective. Preserve existing safety boundaries,
+no CSS framework/component library, and working Blazor routes during migration.
+Checkpoint evidence and remaining work in
+[`implementation-progress.md`](docs/plans/implementation-progress.md).

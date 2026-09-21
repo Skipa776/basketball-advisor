@@ -44,6 +44,10 @@ jobs:
         with:
           global-json-file: global.json
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
       - name: Run the gate
         run: scripts/gate.sh
         env:

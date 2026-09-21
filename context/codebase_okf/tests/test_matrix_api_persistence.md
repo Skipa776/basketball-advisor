@@ -106,3 +106,7 @@ request-token handler signatures. The same real host renders the Players page
 against a persisted adjusted projection and asserts baseline, adjustment, final,
 and the unverified-context marker for A-20 and A-21. Distribution rows A-22
 onward belong to E12, so this matrix remains `partial`.
+
+React bridge coverage additionally checks explicit ESPN setup against an independent
+53-point scoring golden, an eleven-team league, list defaults/invalid pagination,
+and draft reload returning the persisted picks.

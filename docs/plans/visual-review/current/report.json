@@ -1,0 +1,1061 @@
+{
+  "tool": "Playwright 1.58.2",
+  "fixture": "Disposable PostgreSQL; real Identity cookies; workers disabled; all provider HTTP blocked; fictional records only",
+  "checks": [
+    {
+      "name": "Register first fixture owner through UI",
+      "status": "pass",
+      "details": "Authenticated shell reached"
+    },
+    {
+      "name": "Create a league through UI",
+      "status": "pass"
+    },
+    {
+      "name": "Seed sixty fictional players in the isolated fixture",
+      "status": "pass",
+      "details": "60 fictional players with projection records"
+    },
+    {
+      "name": "Draft setup and type-arrow-enter pick",
+      "status": "pass",
+      "details": "Pick recorded: Zed Fictional Review."
+    },
+    {
+      "name": "Undo returns keyboard focus",
+      "status": "pass"
+    },
+    {
+      "name": "Create and verify a context event through UI",
+      "status": "pass"
+    },
+    {
+      "name": "Closed registration CTA (light)",
+      "status": "fail",
+      "details": "After first-owner registration, landing should not advertise unavailable registration."
+    },
+    {
+      "name": "Closed registration CTA (dark)",
+      "status": "fail",
+      "details": "After first-owner registration, landing should not advertise unavailable registration."
+    },
+    {
+      "name": "Logout then sign in through real form",
+      "status": "pass"
+    }
+  ],
+  "pages": [
+    {
+      "route": "/",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "desktop-light-dashboard.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "Dashboard"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/welcome",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "desktop-light-welcome.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "Set up your league"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/leagues",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "desktop-light-leagues.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "My Leagues"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/league",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "desktop-light-league.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "League Rules"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/players",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "desktop-light-players.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "Players"
+      ],
+      "mainCount": 1,
+      "rows": 34,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/draft",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "desktop-light-draft.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "Draft Assistant"
+      ],
+      "mainCount": 1,
+      "rows": 34,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/context-review",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "desktop-light-context-review.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "Context Review"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/data-sources",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "desktop-light-data-sources.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "Data Sources"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/trade",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "desktop-light-trade.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "Trade Analyzer"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/free-agents",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "desktop-light-free-agents.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "Free Agents"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/leaderboard",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "desktop-light-leaderboard.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "Leaderboard"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/account/logout",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "desktop-light-account-logout.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "Sign out"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "desktop-dark-dashboard.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "Dashboard"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/welcome",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "desktop-dark-welcome.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "Set up your league"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/leagues",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "desktop-dark-leagues.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "My Leagues"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/league",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "desktop-dark-league.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "League Rules"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/players",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "desktop-dark-players.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "Players"
+      ],
+      "mainCount": 1,
+      "rows": 34,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/draft",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "desktop-dark-draft.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "Draft Assistant"
+      ],
+      "mainCount": 1,
+      "rows": 34,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/context-review",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "desktop-dark-context-review.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "Context Review"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/data-sources",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "desktop-dark-data-sources.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "Data Sources"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/trade",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "desktop-dark-trade.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "Trade Analyzer"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/free-agents",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "desktop-dark-free-agents.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "Free Agents"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/leaderboard",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "desktop-dark-leaderboard.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "Leaderboard"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/account/logout",
+      "state": "signed-in",
+      "viewport": "desktop",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "desktop-dark-account-logout.png",
+      "width": 1440,
+      "documentWidth": 1440,
+      "overflow": false,
+      "h1": [
+        "Sign out"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "phone-light-dashboard.png",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "h1": [
+        "Dashboard"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/welcome",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "phone-light-welcome.png",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "h1": [
+        "Set up your league"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/leagues",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "phone-light-leagues.png",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "h1": [
+        "My Leagues"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/league",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "phone-light-league.png",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "h1": [
+        "League Rules"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/players",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "phone-light-players.png",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "h1": [
+        "Players"
+      ],
+      "mainCount": 1,
+      "rows": 30,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/draft",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "phone-light-draft.png",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "h1": [
+        "Draft Assistant"
+      ],
+      "mainCount": 1,
+      "rows": 30,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/context-review",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "phone-light-context-review.png",
+      "width": 390,
+      "documentWidth": 409,
+      "overflow": true,
+      "h1": [
+        "Context Review"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": [
+        {
+          "tag": "TABLE",
+          "cls": "",
+          "text": "Context events awaiting or recording human review\n            Eve"
+        },
+        {
+          "tag": "CAPTION",
+          "cls": "",
+          "text": "Context events awaiting or recording human review"
+        },
+        {
+          "tag": "THEAD",
+          "cls": "",
+          "text": "Event\n                    State\n                    Direction\n   "
+        },
+        {
+          "tag": "TR",
+          "cls": "",
+          "text": "Event\n                    State\n                    Direction\n   "
+        },
+        {
+          "tag": "TH",
+          "cls": "",
+          "text": "Action"
+        },
+        {
+          "tag": "TBODY",
+          "cls": "",
+          "text": "RotationChange\n                            Fictional UI review: p"
+        }
+      ]
+    },
+    {
+      "route": "/data-sources",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "phone-light-data-sources.png",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "h1": [
+        "Data Sources"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/trade",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "phone-light-trade.png",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "h1": [
+        "Trade Analyzer"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/free-agents",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "phone-light-free-agents.png",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "h1": [
+        "Free Agents"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/leaderboard",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "phone-light-leaderboard.png",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "h1": [
+        "Leaderboard"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/account/logout",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "phone-light-account-logout.png",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "h1": [
+        "Sign out"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "phone-dark-dashboard.png",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "h1": [
+        "Dashboard"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/welcome",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "phone-dark-welcome.png",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "h1": [
+        "Set up your league"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/leagues",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "phone-dark-leagues.png",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "h1": [
+        "My Leagues"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/league",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "phone-dark-league.png",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "h1": [
+        "League Rules"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/players",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "phone-dark-players.png",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "h1": [
+        "Players"
+      ],
+      "mainCount": 1,
+      "rows": 30,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/draft",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "phone-dark-draft.png",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "h1": [
+        "Draft Assistant"
+      ],
+      "mainCount": 1,
+      "rows": 30,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/context-review",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "phone-dark-context-review.png",
+      "width": 390,
+      "documentWidth": 409,
+      "overflow": true,
+      "h1": [
+        "Context Review"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": [
+        {
+          "tag": "TABLE",
+          "cls": "",
+          "text": "Context events awaiting or recording human review\n            Eve"
+        },
+        {
+          "tag": "CAPTION",
+          "cls": "",
+          "text": "Context events awaiting or recording human review"
+        },
+        {
+          "tag": "THEAD",
+          "cls": "",
+          "text": "Event\n                    State\n                    Direction\n   "
+        },
+        {
+          "tag": "TR",
+          "cls": "",
+          "text": "Event\n                    State\n                    Direction\n   "
+        },
+        {
+          "tag": "TH",
+          "cls": "",
+          "text": "Action"
+        },
+        {
+          "tag": "TBODY",
+          "cls": "",
+          "text": "RotationChange\n                            Fictional UI review: p"
+        }
+      ]
+    },
+    {
+      "route": "/data-sources",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "phone-dark-data-sources.png",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "h1": [
+        "Data Sources"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/trade",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "phone-dark-trade.png",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "h1": [
+        "Trade Analyzer"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/free-agents",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "phone-dark-free-agents.png",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "h1": [
+        "Free Agents"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/leaderboard",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "phone-dark-leaderboard.png",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "h1": [
+        "Leaderboard"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/account/logout",
+      "state": "signed-in",
+      "viewport": "phone",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "phone-dark-account-logout.png",
+      "width": 390,
+      "documentWidth": 390,
+      "overflow": false,
+      "h1": [
+        "Sign out"
+      ],
+      "mainCount": 1,
+      "rows": 0,
+      "unlabelledInputs": [],
+      "overflowing": []
+    },
+    {
+      "route": "/",
+      "state": "signed-out",
+      "viewport": "phone",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "phone-light-landing-anonymous.png",
+      "overflow": false,
+      "width": 390,
+      "documentWidth": 390,
+      "h1": [
+        "Draft with evidence"
+      ]
+    },
+    {
+      "route": "/account/login",
+      "state": "signed-out",
+      "viewport": "phone",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "phone-light-account-login-anonymous.png",
+      "overflow": false,
+      "width": 390,
+      "documentWidth": 390,
+      "h1": [
+        "Sign in"
+      ]
+    },
+    {
+      "route": "/account/register",
+      "state": "signed-out",
+      "viewport": "phone",
+      "theme": "light",
+      "status": 200,
+      "screenshot": "phone-light-account-register-anonymous.png",
+      "overflow": false,
+      "width": 390,
+      "documentWidth": 390,
+      "h1": [
+        "Registration is closed"
+      ]
+    },
+    {
+      "route": "/",
+      "state": "signed-out",
+      "viewport": "phone",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "phone-dark-landing-anonymous.png",
+      "overflow": false,
+      "width": 390,
+      "documentWidth": 390,
+      "h1": [
+        "Draft with evidence"
+      ]
+    },
+    {
+      "route": "/account/login",
+      "state": "signed-out",
+      "viewport": "phone",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "phone-dark-account-login-anonymous.png",
+      "overflow": false,
+      "width": 390,
+      "documentWidth": 390,
+      "h1": [
+        "Sign in"
+      ]
+    },
+    {
+      "route": "/account/register",
+      "state": "signed-out",
+      "viewport": "phone",
+      "theme": "dark",
+      "status": 200,
+      "screenshot": "phone-dark-account-register-anonymous.png",
+      "overflow": false,
+      "width": 390,
+      "documentWidth": 390,
+      "h1": [
+        "Registration is closed"
+      ]
+    }
+  ],
+  "errors": [],
+  "browser": "145.0.7632.6"
+}

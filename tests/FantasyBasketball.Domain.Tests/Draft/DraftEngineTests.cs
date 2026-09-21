@@ -11,6 +11,18 @@ namespace FantasyBasketball.Domain.Tests.Draft;
 public sealed class DraftEngineTests
 {
     [Fact]
+    public void Completed_draft_rejects_extra_picks_and_undo_reopens_it()
+    {
+        var session = new DraftSession(Guid.NewGuid(), 1, 1, 1);
+        session.MakePick(new PlayerId(Guid.NewGuid()));
+        Should.Throw<InvalidOperationException>(() => session.MakePick(new PlayerId(Guid.NewGuid())))
+            .Message.ShouldBe("The draft is complete.");
+        session.Picks.Count.ShouldBe(1);
+        session.UndoLastPick();
+        session.MakePick(new PlayerId(Guid.NewGuid())).PickNumber.ShouldBe(1);
+    }
+
+    [Fact]
     public void D01_D02_total_uses_only_five_addends()
     {
         var calculator = new DraftValueCalculator(new DraftWeightOptions());
