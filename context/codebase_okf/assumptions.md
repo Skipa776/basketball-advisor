@@ -934,3 +934,31 @@ scans, draft stability checks passed, and 77 valid concepts. Next action is the
 owned league heat query and React best/hot views over explicit dated observations.
 No live importer or production observations exist from this checkpoint. Quota
 checks returned no numerical remaining usage, so no quota estimate is recorded.
+
+## Recorded performance API/UI — 2026-09-21
+
+- An explicit dated historical view meets the owner's heat rule without inventing
+  a freshness cutoff. All results disclose unverified completeness/freshness.
+  Latest appearance and retrieval timestamps are evidence, not a live status.
+- The user chooses a recorded source/season and cutoff. No pool is silently
+  selected; empty histories are successful empty responses. No projection is
+  converted into a game observation.
+- `all` includes players with recorded DNP rows but insufficient appearances;
+  observed-player counts are not counts of qualified players. Best and hot use
+  the domain calculator's existing ordering. React only formats the response.
+- Pagination happens after ranking. Ten rows are shown per browser page; current
+  player names are read from the existing shared player API. Scored game evidence
+  stays with its league query and private response caching is disabled.
+- Current corrected history is not an as-known-at backtest. The active league's
+  current scoring is used on every GET; explicit refresh picks up external edits.
+- No live fetching, source-policy exception, identity import or production game
+  data is introduced. The next game-data prerequisite remains the documented
+  stable-policy conflict and verified real saved-page compatibility.
+
+Recorded-performance checkpoint: 277 tests pass (93 Domain, 37 Application,
+147 Integration), zero warnings/errors, coverage 89.20% / 75.21%, six clean axe
+scans, both draft stability checks and 79 valid concepts. Exact scoring rules now
+travel with the computed evidence. The final full-gate log and desktop/mobile
+review captures are linked in the implementation progress ledger. Live ingestion
+remains blocked on explicit source-policy resolution; no production game rows
+were created and no numerical usage quota was available.

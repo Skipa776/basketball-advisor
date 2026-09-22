@@ -92,7 +92,17 @@ public sealed class AuthHttpTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task React_browser_registers_creates_league_and_persists_keyboard_pick()
+    public async Task HP04_anonymous_performance_queries_require_authentication()
+    {
+        foreach (var path in new[] { "performance-pools", "performance?seasonEndYear=2026&source=manual&throughDate=2026-01-14&view=best" })
+        {
+            using var response = await client.GetAsync($"/api/leagues/{Guid.NewGuid()}/{path}", TestContext.Current.CancellationToken);
+            response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        }
+    }
+
+    [Fact]
+    public async Task HP05_React_browser_registers_creates_league_and_persists_keyboard_pick()
     {
         var token = TestContext.Current.CancellationToken;
         await using (var scope = app.Services.CreateAsyncScope())
@@ -110,6 +120,14 @@ public sealed class AuthHttpTests : IAsyncLifetime
                         null, new DataProvenance(DataSourceName.Manual, null, DateTimeOffset.UnixEpoch, null,
                             "manual-v1", DataSourceConfidence.ManualEntry, new string('a', 64))), token);
             }
+        }
+
+        await using (var scope = app.Services.CreateAsyncScope())
+        {
+            var database = scope.ServiceProvider.GetRequiredService<FantasyDbContext>();
+            var guard = await database.Players.SingleAsync(player => player.FullName == "Fixture Guard", token);
+            var center = await database.Players.SingleAsync(player => player.FullName == "Fixture Center", token);
+            await RecordedGameFixture.SeedAsync(database, guard.Id, center.Id, null, token);
         }
 
         var start = new ProcessStartInfo("node")

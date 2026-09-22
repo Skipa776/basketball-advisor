@@ -12,6 +12,19 @@ namespace FantasyBasketball.Infrastructure.Persistence.Repositories;
 
 public sealed class BoxScoreRepository(FantasyDbContext database) : IBoxScoreRepository
 {
+    public async Task<IReadOnlyList<BoxScorePool>> ListPoolsAsync(CancellationToken cancellationToken)
+    {
+        var latest = await database.BoxScoreSnapshots.AsNoTracking()
+            .GroupBy(row => new { row.SeasonEndYear, row.Source, row.GameId })
+            .Select(group => group.OrderByDescending(row => row.FetchedAt).ThenByDescending(row => row.Id).First())
+            .ToArrayAsync(cancellationToken);
+        return latest.Where(row => row.Phase == NbaGamePhase.RegularSeason.ToString())
+            .GroupBy(row => new { row.SeasonEndYear, row.Source })
+            .Select(group => new BoxScorePool(group.Key.SeasonEndYear, group.Key.Source, group.Count(),
+                group.Max(row => row.PlayedOn), group.Max(row => row.FetchedAt)))
+            .OrderByDescending(pool => pool.SeasonEndYear).ThenBy(pool => pool.Source).ToArray();
+    }
+
     public async Task<bool> AddAsync(CompletedBoxScore snapshot, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(snapshot);

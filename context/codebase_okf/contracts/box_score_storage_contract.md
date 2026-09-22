@@ -77,3 +77,12 @@ BS-07 migrate/round-trip with no user context; BS-08 duplicate/concurrent no-op;
 BS-09 corrected snapshot and season/source isolation; BS-10 rollback, cancellation
 and append-only enforcement. Heat integration consumes these stored samples; it
 does not substitute season statistics when they are absent.
+
+## Pool discovery — 2026-09-21
+
+`IBoxScoreRepository.ListPoolsAsync` groups latest regular-season snapshots by
+season/source and returns `BoxScorePool` (season, source, game count, latest game
+date, latest retrieval time). As in reads, latest correction selection precedes
+phase filtering, so reclassification removes a game from the regular-season pool.
+BS-09 and HP-01 verify this behavior. This catalog reports stored rows, not NBA
+season completeness or a live import capability.

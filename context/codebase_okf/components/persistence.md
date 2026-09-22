@@ -95,3 +95,10 @@ imports, and chooses a single latest page per source/game before phase/date
 filtering. BS-07–BS-10 cover round-trip, correction isolation, concurrency,
 rollback, cancellation and mutation rejection. The importer remains partial;
 this repository does not fetch or manufacture game observations.
+
+## Recorded performance pool discovery — 2026-09-21
+
+Latest snapshot selection now also backs season/source pool discovery. Phase is
+filtered after corrections, so a newly classified playoff/unknown game cannot
+leave a regular-season pool entry behind. BS-09 verifies reclassification and
+HP-01 verifies the catalog over persisted games through HTTP.

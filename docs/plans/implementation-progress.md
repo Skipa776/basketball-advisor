@@ -16,8 +16,8 @@ are preserved.
 | M2 — basic features | Partial | Account/session/registration availability, explicit editable ESPN setup, owned league selection, player search/detail, snake draft creation, keyboard pick, undo and URL-based reload. League-specific recalculation, ranked advice/evidence and pick/undo reranking now connected. Saved-draft listing and league settings editing remain |
 | M3 — verification | Partial | Real HTTP and PostgreSQL tests; cross-user isolation; browser journey, axe scans, desktop/mobile screenshots. Full parity matrix and owner visual acceptance remain |
 | M4 — game data | Partial | ESPN setup catalog and independent scoring golden delivered. Offline box-score parser and atomic per-game snapshots delivered; identity/import worker, live compatibility, progress and data sufficiency remain |
-| M5 — heat | Partial | Pure C# calculation and best/hot ranking logic pass 20 offline cases; stored game-data boundary delivered; API and UI integration remain |
-| M6 — player intelligence UI | Partial | Draft-value shortlist/evidence/decomposition delivered; separate observed best-performing and hot views remain |
+| M5 — heat | Partial | Pure C# calculation and best/hot ranking logic pass 20 offline cases; stored data, authenticated dated query and React views delivered; live ingestion/freshness still unverified |
+| M6 — player intelligence UI | Partial | Draft-value shortlist/evidence/decomposition delivered; separate observed best-performing/above-baseline/all views with game evidence delivered; live-data readiness and full draft-detail parity remain |
 | M7 — release | Pending | Remaining routes, distribution, full regression and owner review |
 
 ## What is implemented
@@ -95,18 +95,18 @@ continuation; restore and subsequent approved tooling commands ran successfully.
 
 ## Single next action
 
-Connect **stored appearances to the tested heat calculator and authenticated
-query/UI**. The offline parser and atomic per-game repository are now implemented.
-Read the routed game-data, heat, provenance, tenancy and scraping concepts first.
-The projection publication and draft recommendation flow is now connected; the
-remaining heat work must not treat season projections as observed game logs.
+Resolve the **game-data source-policy prerequisite**, verify the parser against a
+real saved page, then implement canonical identity/schedule/final-status checks
+and the resumable importer with visible progress. The stable scraping allowlist
+still excludes box scores despite contradictory prose; no live fetching is enabled
+until that conflict is explicitly resolved. The query/UI can be reviewed using
+synthetic offline test data, but production truthfully shows no observations.
 
-Keep the accepted heat rule unchanged: first complete comparison after appearance
-13; latest three excluded from the comparison baseline; baseline grows from ten
-to thirty and then rolls at thirty; DNP is not zero; reset at season boundaries.
-Live box-score fetching remains blocked by the recorded safety allowlist mismatch.
-Offline parser/engine work can proceed without weakening that policy. Sleeper
-adapters and league automation remain deferred.
+Preserve the accepted heat rule unchanged: first complete comparison after
+appearance 13; latest three excluded from the comparison baseline; baseline grows
+from ten to thirty and then rolls at thirty; DNP is not zero; seasons stay separate.
+No current/live hot badge or arbitrary freshness cutoff was added. Remaining React
+parity includes league settings, saved-draft listing and the accepted visual design.
 
 ## Heat calculation checkpoint — 2026-09-20
 
@@ -240,3 +240,57 @@ visible evidence and insufficient-history states. Preserve the accepted latest-3
 versus preceding expanding-10-to-30/rolling-30 policy. Until verified game ingestion
 exists, production must honestly show missing observations; synthetic test games
 must never populate the user's player rankings.
+
+## Recorded performance checkpoint — 2026-09-21
+
+Delivered:
+
+- Authenticated owned `performance-pools` and paged `performance` GET endpoints.
+  Explicit season/source/date/view, current saved league scoring, no-store responses,
+  category conflict, request validation and no write side effects. The cross-user
+  sweep now covers 15 routes; anonymous performance requests return 401.
+- Best performing, above-baseline and all-observed views. The C# calculator owns
+  ordering, scoring and windows. Responses include policy/model, sample evidence,
+  qualified counts, the exact scoring rules used, and latest recorded appearance/
+  retrieval dates.
+- React selection, paging, game-by-game evidence/provenance, insufficient/empty
+  states and retry. The section sits below the draft player table, preserving its
+  density and position. Historical results are explicitly dated and completeness/
+  freshness unverified. Zero and negative scoring remain legitimate appearances.
+- Unit tests, PostgreSQL/HTTP tests and a real-cookie Playwright journey cover
+  scoring edits, separate ranks, DNP exclusion, date/source/season isolation,
+  pagination, authorization, browser evidence and failed-read recovery.
+
+The initial browser check exposed an ambiguous season selector accessible name;
+the explicit label fix passed the repeated journey. Targeted HP verification
+passed 2 Application and 6 Integration cases. The prior parser/storage tests
+remain in the full gate. No scraping policy was changed and no production game
+observations were created. Importer/live-source verification remain outstanding.
+
+Usage checks again exposed no quota or remaining-token report. Tests only used
+throwaway PostgreSQL and synthetic fixtures.
+
+Final `bash scripts/gate.sh` passed **277 tests**: 93 Domain, 37 Application,
+147 Integration. Build had zero warnings/errors. Domain coverage **89.20%**,
+Application **75.21%**. All six axe scans passed, including open evidence and
+390px/320px layouts; no document overflow. The draft row-stability assertions
+passed and D-14 measured **0.000 CSS px** movement. **79 OKF concepts** validated.
+Final log: `/tmp/fb-performance-final-gate.log`.
+
+The first full gate also passed; final review then added the exact scoring-rule
+snapshot to the API and evidence panel, with HTTP/browser assertions and a second
+full passing gate. Desktop and narrow-layout screenshots were visually inspected.
+Owner visual acceptance remains pending. No numeric account quota was available.
+
+The working query/UI is now ready for review against the synthetic fixtures. A
+production import still needs explicit resolution of the stable scraping policy's
+path-table/prose discrepancy, verified saved-page compatibility, canonical player
+and schedule/final-status checks, resumability and visible progress. No permission
+to fetch an unlisted path has been inferred.
+
+Visual review artifacts (fictional test players):
+
+- `tests/FantasyBasketball.IntegrationTests/TestResults/react-review/performance-desktop.png`
+- `tests/FantasyBasketball.IntegrationTests/TestResults/react-review/mobile-390.png`
+- `tests/FantasyBasketball.IntegrationTests/TestResults/react-review/mobile-320.png`
+- `tests/FantasyBasketball.IntegrationTests/TestResults/react-review/report.json`

@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Application]
 test_paths: [tests/FantasyBasketball.Application.Tests]
 depends_on: [../contracts/provider_contracts.md, ../contracts/api_surface.md]
 status: implemented
-last_updated: 2026-09-20
+last_updated: 2026-09-21
 owners: [engineering]
 risk_level: medium
 done_criteria:
@@ -85,3 +85,12 @@ scoring engines and the existing transaction abstraction. Every record is
 appended within the transaction; missing data and unsupported category
 recalculation are explicit conflicts. Application fakes cover orchestration,
 invalid requests and cancellation; PostgreSQL covers rollback and coherent reads.
+
+## Recorded performance — 2026-09-21
+
+`PlayerPerformanceService` checks owned points-league availability, reads only
+regular-season observations for the explicit source/year/date, and uses the pure
+heat calculator for scores and ordering. It returns paged evidence plus qualified
+and observed counts, current policy/model and recorded freshness dates. The query
+is read-only; scoring edits are reflected on the next read. Unit and real HTTP
+HP-01–HP-03 tests cover the boundary and the unchanged calculator owns the math.

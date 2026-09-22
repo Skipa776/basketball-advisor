@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Web, src/FantasyBasketball.Api/ApiHost.cs]
 test_paths: [src/FantasyBasketball.Web/tests/workspace.mjs, tests/FantasyBasketball.IntegrationTests/Auth/AuthHttpTests.cs]
 depends_on: [../contracts/api_surface.md, ../contracts/auth_tenancy_contract.md, ../contracts/design_system_contract.md, web_ui_blazor.md]
 status: partial
-last_updated: 2026-09-20
+last_updated: 2026-09-21
 owners: [engineering]
 ---
 
@@ -68,3 +68,16 @@ The shortlist has a fixed-height scroll area and loading text reserves space
 so re-ranking does not move the player search/table. The signed-in header is
 compact. The browser journey now covers calculation, evidence/decomposition,
 recommendation removal/restoration, and player-row stability as well as auth.
+
+## Recorded performance slice — 2026-09-21
+
+An expandable section below the player pool offers explicit recorded season/source
+and game-date selection, best/above-baseline/all views, pagination and retry.
+It renders server-calculated scores and policy, actual game evidence and provenance,
+and separate insufficient/empty states. It is read-only and has no draft-pick
+shortcut or effect on the main board's density. Names use the existing player API
+for the visible ten rows. Obsolete reads cancel and league changes reset selection.
+Historical data is labelled as such; completeness and freshness are unverified.
+HP-05 covers the real-cookie browser journey, error recovery and evidence at
+1440px/390px/320px with axe scans. The data importer and visual migration remain
+partial; test fixtures are not production observations.

@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Api/Endpoints]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Api]
 depends_on: [recommendation_evidence_contract.md, scoring_rules_catalog.md]
 status: implemented
-last_updated: 2026-09-20
+last_updated: 2026-09-21
 owners: [engineering]
 risk_level: low
 done_criteria:
@@ -145,3 +145,18 @@ name/value mappings so React does not duplicate the C# enums.
 - Setup additionally supplies confidence and evidence-polarity enum mappings.
   React fetches recommendations on draft-state changes or explicit refresh;
   the existing recommendation endpoint persists evidence, so it is not polled.
+
+## Recorded performance — 2026-09-21
+
+- `GET /api/leagues/{id}/performance-pools`: owned, authenticated points-league
+  access to recorded regular-season source/season groups. Empty is successful.
+- `GET /api/leagues/{id}/performance`: requires explicit season, source,
+  ISO through-date and best/hot/all view; standard pagination bounds apply.
+  Returns ranked scored appearance windows plus date, policy, model and coverage
+  metadata. GET reads current saved scoring and writes no ranking/projection.
+- Success uses `Cache-Control: no-store`. Unknown/foreign league is 404,
+  invalid selection is 400, categories are 409, anonymous is 401. HP-01–HP-05
+  verify the pipeline including the now 15-route ownership sweep.
+
+The complete shape and historical-data limitations are owned by
+[player_performance_api_contract](player_performance_api_contract.md).

@@ -9,3 +9,7 @@
 .advice-risk{font-size:.85rem;margin:.5rem 0}
 
 .loading-status{min-height:1.5em;font-size:.85rem;margin:.5rem 0}
+
+.performance>summary{font-weight:650}.performance>p:first-of-type{margin-top:1rem}.performance form{margin-block:1.5rem}.performance-views{display:flex;flex-wrap:wrap;gap:.5rem;margin-block:1rem}.performance-views [aria-pressed=true]{background:var(--ink);color:var(--surface)}.performance-list{padding-left:1.4rem}.performance-list>li{padding:1.25rem 0;border-bottom:1px solid var(--rule)}.performance h4{font-size:1.1rem;margin:0 0 .5rem}.performance-values{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:1rem;margin:1rem 0}.performance-values dt{font-size:.8rem;color:var(--muted)}.performance-values dd{margin:0;font-size:1.5rem;font-variant-numeric:tabular-nums}.performance-provenance{white-space:normal;overflow-wrap:anywhere;max-width:24rem;padding:.5rem 0}.performance p{overflow-wrap:anywhere}
+
+.performance-scoring{margin-bottom:1rem}

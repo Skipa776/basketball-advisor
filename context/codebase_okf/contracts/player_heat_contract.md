@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Domain/Trends]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Trends/PlayerHeatTests.cs]
 depends_on: [scoring_rules_catalog.md, provenance_contract.md, rolling_window_contract.md]
 status: implemented
-last_updated: 2026-09-20
+last_updated: 2026-09-21
 owners: [engineering]
 risk_level: high
 ---
@@ -77,3 +77,13 @@ values, zero baseline, season isolation, future/incomplete exclusions, duplicate
 rejection, configured league scoring, independent current/comparison averages,
 and rankings that respond to new games and changed rules. Import/storage/API/UI
 remain separate milestones; successful math tests do not promote those modules.
+
+## Dated query/UI integration — 2026-09-21
+
+The authenticated points-league query and React recorded-performance views now
+consume this calculator under
+[player_performance_api_contract](player_performance_api_contract.md). Effective
+policy remains owned here and is returned to React. All views are explicitly dated
+and completeness/freshness unverified; no live streak label is enabled. No math,
+`TrendScore`, projection or draft-value weight changed. A production game importer
+is still absent.

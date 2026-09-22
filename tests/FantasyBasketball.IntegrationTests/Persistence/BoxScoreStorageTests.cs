@@ -96,6 +96,8 @@ public sealed partial class PersistenceTests
         await repository.AddAsync(BoxScore(game, players[..1], revision: 1, phase: NbaGamePhase.Playoffs, fetchedDay: 5),
             TestContext.Current.CancellationToken);
         (await ReadBoxScore(repository)).ShouldBeEmpty();
+        (await repository.ListPoolsAsync(TestContext.Current.CancellationToken))
+            .ShouldAllBe(pool => pool.Source == DataSourceName.BasketballReference);
         (await repository.ListAsync(2026, DataSourceName.Manual, NbaGamePhase.Playoffs,
             new DateOnly(2026, 1, 31), TestContext.Current.CancellationToken)).Count.ShouldBe(1);
         await repository.AddAsync(BoxScore(game, players[..1], revision: 2, fetchedDay: 6, playedOn: new DateOnly(2026, 2, 1)),

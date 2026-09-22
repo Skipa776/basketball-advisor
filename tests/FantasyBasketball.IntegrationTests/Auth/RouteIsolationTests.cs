@@ -112,7 +112,7 @@ public sealed class RouteIsolationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task U01_U12_every_reflected_owned_route_returns_404_without_identifiers()
+    public async Task U01_U12_HP04_every_reflected_owned_route_returns_404_without_identifiers()
     {
         var routes = ((IEndpointRouteBuilder)app).DataSources
             .SelectMany(source => source.Endpoints)
@@ -121,7 +121,7 @@ public sealed class RouteIsolationTests : IAsyncLifetime
                 endpoint.Metadata.GetMetadata<OwnedRouteMetadata>() is not null)
             .ToArray();
 
-        routes.Length.ShouldBe(13);
+        routes.Length.ShouldBe(15);
         var failures = await SweepAsync(
             client,
             routes,
@@ -341,6 +341,8 @@ public sealed class RouteIsolationTests : IAsyncLifetime
             path += $"?leagueId={resources.LeagueId}";
         }
 
+        if (path.EndsWith("/performance", StringComparison.Ordinal))
+            path += $"?seasonEndYear=2026&source={FantasyBasketball.Domain.Provenance.DataSourceName.Manual}&throughDate=2026-01-14&view=best";
         return path;
     }
 

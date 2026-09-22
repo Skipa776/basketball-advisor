@@ -5,6 +5,7 @@ import { useResource } from './useResource';
 import { ErrorNotice } from './Workspace';
 import { ProjectionControls } from './projections';
 import { DraftAdvice } from './advice';
+import { RecordedPerformance } from './performance';
 import type { Board, Draft, DraftRecord, League, Player, Ranking } from './types';
 
 const number = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 1 });
@@ -55,6 +56,7 @@ export function DraftWorkspace({ league, draftId, onDraft }: { league: League; d
     {record.result && !session && <p className="notice">This draft belongs to a different league. Choose its league or start a new draft.</p>}
     {session && <><p className="muted">Snake draft · You pick from slot {session.userSlot} · {session.roundCount} rounds. Bookmark this page to return to this saved draft.</p>{board.result?.data.banner && <p className="notice">{board.result.data.banner}</p>}<PlayerPool leagueId={league.id} session={session} rankings={board.result?.data.rankings ?? []} pick={pick} disabled={busy || record.loading || !!record.error || complete} /><PickHistory session={session} /></>}
     {!draftId && <PlayerPool leagueId={league.id} session={null} rankings={[]} pick={pick} disabled />}
+    {league.type === 0 && <RecordedPerformance key={league.id} leagueId={league.id} />}
   </section>;
 }
 

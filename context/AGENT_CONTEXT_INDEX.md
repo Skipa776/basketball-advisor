@@ -33,6 +33,7 @@ Index rows route; concepts own. Nothing here restates a concept's content.
 
 | I am about to… | Read first |
 |---|---|
+| Connect recorded performance API or React views | `codebase_okf/contracts/player_performance_api_contract.md`, `codebase_okf/tests/test_matrix_player_performance.md`, `codebase_okf/components/web_ui_react.md`, `codebase_okf/safety/tenancy_policy.md` |
 | Compute descriptive heat or recent points performance | `codebase_okf/contracts/player_heat_contract.md`, `codebase_okf/tests/test_matrix_player_heat.md`, `codebase_okf/contracts/rolling_window_contract.md`, `codebase_okf/contracts/scoring_rules_catalog.md` |
 | Compute or change a rolling window or trend | `codebase_okf/contracts/rolling_window_contract.md`, `codebase_okf/components/trend_engine.md` |
 | Import per-game box scores | `codebase_okf/components/boxscore_importer.md`, `codebase_okf/safety/scraping_policy.md` |

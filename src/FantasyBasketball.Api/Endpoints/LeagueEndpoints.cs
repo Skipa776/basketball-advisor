@@ -44,6 +44,10 @@ public static class LeagueEndpoints
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
         group.MapPost("/{id:guid}/projections", RecalculateProjectionsAsync)
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
+        group.MapGet("/{id:guid}/performance-pools", PerformanceEndpoints.PoolsAsync)
+            .WithMetadata(new OwnedRouteMetadata("league", "id"));
+        group.MapGet("/{id:guid}/performance", PerformanceEndpoints.QueryAsync)
+            .WithMetadata(new OwnedRouteMetadata("league", "id"));
         return endpoints;
     }
 

@@ -477,3 +477,21 @@ by the API host. `BoxScoreParser` accepts saved HTML only and returns external
 identities and a raw-page hash. No fetching, identity resolution, background worker
 or heat HTTP surface is introduced by this boundary. Synthetic fixture coverage
 must not be described as live data or verified provider compatibility.
+
+## Recorded performance query (2026-09-21)
+
+`PlayerPerformanceService` connects the game repository to the pure heat calculator
+using current owned league rules. `PerformanceEndpoints` exposes two owned GET
+routes registered with the league group:
+
+```text
+GET /api/leagues/{id}/performance-pools
+GET /api/leagues/{id}/performance?seasonEndYear=2026&source=manual&throughDate=2026-01-14&view=best&page=1&limit=10
+```
+
+`PlayerPerformancePage` carries scored result windows, selection, policy/model,
+observed/qualified counts and latest recorded appearance/retrieval dates; the
+standard envelope carries paging metadata. Full semantics live in
+`context/codebase_okf/contracts/player_performance_api_contract.md`. React's
+`performance.tsx` shows the dated results below the draft player pool. No live-data
+claim, importer, change to draft ranking weights or season-stat fallback is added.
