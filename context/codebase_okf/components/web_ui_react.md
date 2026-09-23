@@ -150,3 +150,20 @@ court photo strips with live reference data from `/api/public/*`
 
 Evidence: the `landingChecks` block of `tests/workspace.mjs` (mocked public data,
 motion and reduced-motion contexts, axe at 1280/390/320 px, no overflow).
+
+## Signed-in menu — 2026-09-23
+
+After sign-in `/app` is a plain white menu, "What do you want to see?", with one
+oval row per destination in the style of the portfolio projects list
+(`src/hub.tsx`): Mock draft (`/app/draft`), Teams in the league (league
+settings), Waiver wire analyzer (`/app/waiver`: public risers plus the league's
+recorded performance for a points league), Projected players, Your drafts,
+Trade analyzer, Matchup analyzer, Streaming advisor, Context review, Account
+data and, for the instance owner, Data sources. Unbuilt tools carry a "Soon" tag
+and open a page that names what they wait on and shows no numbers (row `D-33`;
+the phrase "coming soon" is never used). Old `/app?…&draft=` links still open the
+draft. The masthead is the wordmark, Menu and Sign out.
+
+"Teams in the league" opens league settings (team count, scoring, roster slots):
+there is no per-team roster capability to show. Matchup has no specification
+yet; the owner decides what it compares.

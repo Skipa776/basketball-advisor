@@ -4,6 +4,7 @@ import { api, message, post } from './api';
 import { useResource } from './useResource';
 import type { League, Player, Session, Setup } from './types';
 import { PlayerDetail } from './draft';
+import { MatchupPage, WaiverPage } from './hub';
 
 type PageProps = { onHome: () => void; onLeagueUpdated: () => void };
 type Health = { source: string; lastSuccess: string | null; lastFailure: string | null; isStale: boolean; isDegraded: boolean };
@@ -27,6 +28,8 @@ export function FunctionalPage({ name, session, onHome, onLeagueUpdated, leagueI
     {name === 'League settings' && <LeagueSettingsPage league={selectedLeague} onHome={onHome} onLeagueUpdated={onLeagueUpdated} />}
     {name === 'Context review' && <ContextReviewPage onHome={onHome} />}
     {name === 'Account data' && <AccountDataPage onHome={onHome} />}
+    {name === 'Waiver wire analyzer' && <WaiverPage league={selectedLeague} onHome={onHome} />}
+    {name === 'Matchup analyzer' && <MatchupPage onHome={onHome} />}
     {['Trade analyzer', 'Streaming advisor', 'Standings'].includes(name) && <section className="panel"><h2>{name}</h2><p>{name === 'Trade analyzer' ? 'R15 is not implemented; no trade results are available.' : name === 'Streaming advisor' ? 'R14 is not implemented; no streaming recommendations are available.' : 'Standings are deferred in the post-MVP roadmap; no leaderboard data is available.'}</p><button onClick={onHome}>Back to workspace</button></section>}
     {name === 'Page not found' && <section className="panel"><h2>Page not found</h2><p>This app page does not exist.</p><button onClick={onHome}>Back to workspace</button></section>}
   </>;
@@ -79,7 +82,7 @@ function ProjectedPlayersPage({ league, loading, onHome }: { league?: League; lo
     <p>Ranked by projected season points under this league’s scoring. Estimates, not results. Tap a name to see how it was built.</p>
     <ErrorNotice text={resource.error} retry={resource.refresh} />
     <p className="loading-status" role="status">{resource.loading ? 'Loading projections…' : '\u00a0'}</p>
-    {resource.result && !total && <p className="notice">No projections for this league yet. Import players and season stats, then open the workspace and use “Prepare league projections”. <a href={`/app?league=${encodeURIComponent(league.id)}`}>Go to workspace ↗</a></p>}
+    {resource.result && !total && <p className="notice">No projections for this league yet. Import players and season stats, then open the workspace and use “Prepare league projections”. <a href={`/app/draft?league=${encodeURIComponent(league.id)}`}>Go to workspace ↗</a></p>}
     {!!resource.result?.data.length && <><div className="table-scroll"><table><caption className="sr-only">Players ranked by projected season points</caption><thead><tr><th>Rank</th><th>Player</th><th>Position</th><th>Projected season points</th><th>ADP</th></tr></thead><tbody>{resource.result.data.map(row => <tr key={row.playerId.value}><td>{row.rank}</td><th scope="row"><button className="player-name" onClick={() => setDetail({ id: row.playerId, fullName: row.fullName, positions: row.positions })}>{row.fullName}</button>{row.hasUnverifiedContext && <span className="muted"> · unverified context</span>}</th><td>{row.positions.join(' / ') || '—'}</td><td>{points(row.projectedSeasonValue)}</td><td>{row.averageDraftPosition === null ? '—' : points(row.averageDraftPosition)}</td></tr>)}</tbody></table></div>
       <div className="pagination"><button disabled={page === 1 || resource.loading} onClick={() => setPage(page - 1)}>Previous</button><span>Page {page} of {Math.max(1, Math.ceil(total / PAGE_SIZE))} · {total} players</span><button disabled={resource.loading || page * PAGE_SIZE >= total} onClick={() => setPage(page + 1)}>Next</button></div></>}
     {detail && <PlayerDetail key={detail.id.value} player={detail} leagueId={league.id} close={() => setDetail(null)} />}
@@ -92,7 +95,7 @@ function DraftListPage({ league, onHome }: { league?: League; onHome: () => void
   if (!league) return <section className="panel"><h2>Choose a league first</h2><p>Your saved drafts are listed under a league.</p><button onClick={onHome}>Choose a league</button></section>;
   return <section className="panel functional-page"><div className="section-heading"><div><p className="eyebrow">{league.name}</p><h2>Your drafts</h2></div><button onClick={onHome}>Workspace</button></div>
     <ErrorNotice text={resource.error} retry={resource.refresh} />{resource.loading && !resource.result && <p role="status">Loading saved drafts…</p>}
-    {resource.result?.data.length ? <ul className="data-list">{resource.result.data.map(({ session }) => <li key={session.id}><div><strong>{session.picks.length === session.roundCount * session.teamCount ? 'Complete draft' : 'Draft in progress'}</strong><span>{session.picks.length} of {session.roundCount * session.teamCount} picks · seat {session.userSlot} of {session.teamCount}</span></div><a className="button-link" href={`/app?league=${encodeURIComponent(league.id)}&draft=${encodeURIComponent(session.id)}`}>Reopen draft</a></li>)}</ul> : resource.result && <p>No saved drafts for this league yet.</p>}
+    {resource.result?.data.length ? <ul className="data-list">{resource.result.data.map(({ session }) => <li key={session.id}><div><strong>{session.picks.length === session.roundCount * session.teamCount ? 'Complete draft' : 'Draft in progress'}</strong><span>{session.picks.length} of {session.roundCount * session.teamCount} picks · seat {session.userSlot} of {session.teamCount}</span></div><a className="button-link" href={`/app/draft?league=${encodeURIComponent(league.id)}&draft=${encodeURIComponent(session.id)}`}>Reopen draft</a></li>)}</ul> : resource.result && <p>No saved drafts for this league yet.</p>}
     {!!resource.result?.meta && resource.result.meta.total > 50 && <div className="form-row"><button disabled={page === 1 || resource.loading} onClick={() => setPage(page - 1)}>Previous page</button><span>Page {page} of {Math.ceil(resource.result.meta!.total / 50)}</span><button disabled={page * 50 >= resource.result.meta.total || resource.loading} onClick={() => setPage(page + 1)}>Next page</button></div>}
   </section>;
 }

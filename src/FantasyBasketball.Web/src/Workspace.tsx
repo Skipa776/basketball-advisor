@@ -6,6 +6,7 @@ import type { Session, Setup, League } from './types';
 import { DraftWorkspace } from './draft';
 import { Landing } from './Landing';
 import { FunctionalPage } from './functionalPages';
+import { Hub } from './hub';
 
 export function ErrorNotice({ text, retry }: { text: string; retry?: () => void }) {
   return text ? <div className="notice error" role="alert">{text} {retry && <button type="button" onClick={retry}>Try again</button>}</div> : null;
@@ -26,22 +27,27 @@ export function Workspace() {
     catch (error) { setError(message(error)); setBusy(false); }
   }
   const user = session.result?.data.user;
-  const pageNames = { '/app/projections': 'Projected players', '/app/data-sources': 'Data sources', '/app/drafts': 'Your drafts', '/app/league-settings': 'League settings', '/app/context-review': 'Context review', '/app/account': 'Account data', '/app/trade-analyzer': 'Trade analyzer', '/app/streaming': 'Streaming advisor', '/app/standings': 'Standings' } as Record<string, string>;
+  const pageNames = { '/app/projections': 'Projected players', '/app/data-sources': 'Data sources', '/app/drafts': 'Your drafts', '/app/league-settings': 'League settings', '/app/context-review': 'Context review', '/app/account': 'Account data', '/app/trade-analyzer': 'Trade analyzer', '/app/streaming': 'Streaming advisor', '/app/standings': 'Standings', '/app/waiver': 'Waiver wire analyzer', '/app/matchup': 'Matchup analyzer' } as Record<string, string>;
   const path = window.location.pathname.replace(/\/+$/, '');
-  const page = path === '/app' ? null : pageNames[path] ?? 'Page not found';
-  const leagueId = new URLSearchParams(window.location.search).get('league') ?? undefined;
+  const params = new URLSearchParams(window.location.search);
+  // /app is the menu; the draft lives at /app/draft. Old /app?…&draft= links still open the draft.
+  const isDraft = path === '/app/draft' || (path === '/app' && params.has('draft'));
+  const page = path === '/app' || isDraft ? null : pageNames[path] ?? 'Page not found';
+  const leagueId = params.get('league') ?? undefined;
   const pageHref = (path: string) => `${path}${leagueId ? `?league=${encodeURIComponent(leagueId)}` : ''}`;
   function goHome() { window.location.assign(pageHref('/app')); }
   return <>
     <a className="skip" href="#workspace">Skip to workspace</a>
-    <header className="masthead"><a className="wordmark" href="/app"><span aria-hidden="true">◉</span> Fastbreak</a><nav aria-label="Site">{user && <><a href={pageHref('/app/projections')}>Projected players</a><a href={pageHref('/app/drafts')}>Your drafts</a><a href={pageHref('/app/league-settings')}>League settings</a><a href="/app/context-review">Context review</a><a href="/app/account">Account data</a>{user.isInstanceOwner && <a href="/app/data-sources">Data sources</a>}<a href="/app/trade-analyzer">Trade analyzer</a><a href="/app/streaming">Streaming</a><a href="/app/standings">Standings</a><button onClick={logout} disabled={busy}>Sign out</button></>}</nav></header>
+    <header className="masthead"><a className="wordmark" href="/app"><span aria-hidden="true">◉</span> Fastbreak</a><nav aria-label="Site">{user && <><a href={pageHref('/app')}>Menu</a><button onClick={logout} disabled={busy}>Sign out</button></>}</nav></header>
     <main id="workspace" tabIndex={-1} className={session.result && !user ? 'landing' : 'workspace'}>
       <ErrorNotice text={error || session.error} retry={session.error ? session.refresh : undefined} />
       {!session.result && session.loading && <p role="status">Connecting to your workspace…</p>}
       {session.result && (user
-        ? page
-          ? <FunctionalPage name={page} session={session.result.data} leagueId={leagueId} onHome={goHome} onLeagueUpdated={() => window.location.reload()} />
-          : <><div className="intro intro-compact"><p className="eyebrow">THE WORKSPACE / DRAFT PREPARATION</p><h1>See the court. <em>Make your move.</em></h1></div><LeagueWorkspace key={user.id} /></>
+        ? isDraft
+          ? <><div className="intro intro-compact"><p className="eyebrow">THE WORKSPACE / MOCK DRAFT</p><h1>See the court. <em>Make your move.</em></h1></div><LeagueWorkspace key={user.id} /></>
+          : page
+            ? <FunctionalPage name={page} session={session.result.data} leagueId={leagueId} onHome={goHome} onLeagueUpdated={() => window.location.reload()} />
+            : <Hub session={session.result.data} pageHref={pageHref} />
         : <Landing><AccountForm session={session.result.data} onSignedIn={session.refresh} /></Landing>)}
     </main>
     {user && <footer className="site-footer"><span>Fantasy basketball. With perspective.</span><a href="/app">Workspace</a><span>2026 © Edition</span></footer>}
@@ -84,11 +90,11 @@ function LeagueWorkspace() {
   const selected = leagues.result?.data.find(league => league.id === leagueId);
   function chooseLeague(id: string) {
     setLeagueId(id); setDraftId(''); setCreating(false);
-    window.history.replaceState(null, '', `/app?league=${encodeURIComponent(id)}`);
+    window.history.replaceState(null, '', `/app/draft?league=${encodeURIComponent(id)}`);
   }
   function chooseDraft(id: string) {
     setDraftId(id);
-    window.history.replaceState(null, '', `/app?league=${encodeURIComponent(leagueId)}&draft=${encodeURIComponent(id)}`);
+    window.history.replaceState(null, '', `/app/draft?league=${encodeURIComponent(leagueId)}&draft=${encodeURIComponent(id)}`);
   }
   return <>
     <section className="league-bar" aria-label="League selection"><label>Your league<select aria-label="Your league" value={leagueId} onChange={event => chooseLeague(event.target.value)}><option value="">Choose your league</option>{leagues.result?.data.map(league => <option key={league.id} value={league.id}>{league.name} · {league.teamCount} teams</option>)}</select></label><button onClick={() => setCreating(!creating)}>{creating ? 'Close setup' : 'Create a league'} <span aria-hidden="true">＋</span></button></section>

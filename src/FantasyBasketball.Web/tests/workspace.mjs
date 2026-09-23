@@ -99,7 +99,18 @@ try {
   const fixturePassword = ['browser', 'fixture', 'long', 'password'].join(' ');
   await page.getByLabel('Password', { exact: true }).fill(fixturePassword);
   await page.getByRole('button', { name: 'Create account', exact: true }).click();
+  await visible(page.getByRole('heading', { name: 'What do you want to see?', exact: true }));
+  const menu = page.locator('.hub-list');
+  assert.deepEqual(await menu.locator('.hub-label').evaluateAll(labels => labels.map(label => label.firstChild.textContent)),
+    ['Mock draft', 'Teams in the league', 'Waiver wire analyzer', 'Projected players', 'Your drafts', 'Trade analyzer', 'Matchup analyzer', 'Streaming advisor', 'Context review', 'Account data', 'Data sources']);
+  assert.equal(await menu.locator('.hub-soon').count(), 3);
+  assert.equal(await page.getByText(/coming soon/i).count(), 0, 'D-33: unbuilt pages never say "coming soon"');
+  await accessibility('Signed-in menu');
+  await page.screenshot({ path: `${artifacts}/menu-desktop.png`, fullPage: true });
+  await page.getByRole('link', { name: /^Mock draft/ }).click();
+  await page.waitForURL(url => url.pathname === '/app/draft');
   await visible(page.getByRole('heading', { name: 'Your rules. Your court.' }));
+  checks.push('Sign-in lands on the oval-button menu; Mock draft opens the draft workspace at /app/draft');
   assert.equal(await page.getByLabel('Teams', { exact: true }).inputValue(), '7');
   await accessibility('League setup');
   const denied = await page.evaluate(async () => (await fetch('/api/leagues', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).status);
@@ -219,6 +230,9 @@ try {
   assert(projected[0].value >= projected[1].value, `Projected players must be sorted by value: ${JSON.stringify(projected)}`);
   await accessibility('Projected players');
   await page.goto(new URL(`/app/?league=${leagueId}`, base).href);
+  await visible(page.getByRole('heading', { name: 'What do you want to see?', exact: true }));
+  assert.equal(await page.getByRole('link', { name: /^Projected players/ }).getAttribute('href'), `/app/projections?league=${leagueId}`, 'menu links keep the league');
+  await page.goto(new URL(`/app/draft/?league=${leagueId}`, base).href);
   await visible(page.getByLabel('Your league', { exact: true }));
   checks.push('Projected players → league values ranked by season points; /app/ and /app/<page>/ route like their bare paths');
   await page.goto(new URL(`/app/league-settings?league=${leagueId}`, base).href);
@@ -245,7 +259,7 @@ try {
   await visible(page.getByRole('heading', { name: 'Account data', exact: true }));
   assert.equal(await page.getByRole('button', { name: 'Delete account', exact: true }).isEnabled(), false);
   await accessibility('Account data');
-  for (const [path, heading] of [['trade-analyzer', 'Trade analyzer'], ['streaming', 'Streaming advisor'], ['standings', 'Standings']]) {
+  for (const [path, heading] of [['trade-analyzer', 'Trade analyzer'], ['streaming', 'Streaming advisor'], ['standings', 'Standings'], ['matchup', 'Matchup analyzer'], [`waiver?league=${leagueId}`, 'Rising right now.']]) {
     await page.goto(new URL(`/app/${path}`, base).href);
     await visible(page.getByRole('heading', { name: heading, exact: true }));
     await accessibility(heading);
@@ -261,7 +275,7 @@ try {
     await page.screenshot({ path: `${artifacts}/mobile-${width}.png`, fullPage: true });
   }
   await page.setViewportSize({ width: 390, height: 844 });
-  for (const [path, heading] of [['/app/projections', 'Projected players'], ['/app/drafts', 'Your drafts'], ['/app/league-settings', 'League settings'], ['/app/context-review', 'Context review'], ['/app/data-sources', 'Data sources'], ['/app/account', 'Account data'], ['/app/trade-analyzer', 'Trade analyzer'], ['/app/streaming', 'Streaming advisor'], ['/app/standings', 'Standings'], ['/app/unknown', 'Page not found']]) {
+  for (const [path, heading] of [['/app/projections', 'Projected players'], ['/app/drafts', 'Your drafts'], ['/app/league-settings', 'League settings'], ['/app/context-review', 'Context review'], ['/app/data-sources', 'Data sources'], ['/app/account', 'Account data'], ['/app/trade-analyzer', 'Trade analyzer'], ['/app/streaming', 'Streaming advisor'], ['/app/standings', 'Standings'], ['/app/waiver', 'Rising right now.'], ['/app/matchup', 'Matchup analyzer'], ['/app', 'What do you want to see?'], ['/app/unknown', 'Page not found']]) {
     await page.goto(new URL(`${path}?league=${leagueId}`, base).href);
     await visible(page.getByRole('heading', { name: heading, exact: true }));
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -277,7 +291,7 @@ try {
   await page.getByLabel('Email', { exact: true }).fill('browser@example.test');
   await page.getByLabel('Password', { exact: true }).fill(fixturePassword);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await visible(page.getByLabel('Your league', { exact: true }));
+  await visible(page.getByRole('heading', { name: 'What do you want to see?', exact: true }));
   await page.goto(savedUrl);
   await enabled(pick);
   checks.push('Logout clears private state; closed registration stays hidden; login restores saved session');
