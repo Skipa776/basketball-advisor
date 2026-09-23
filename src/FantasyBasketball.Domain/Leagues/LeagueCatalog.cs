@@ -19,6 +19,32 @@ public static class LeagueCatalog
             StatKey.TOV,
         ]);
 
+    /// <summary>ESPN's default points scoring. The setup catalog and the public landing both use it.</summary>
+    public static IReadOnlyList<ScoringRule> EspnDefaultPointsRules { get; } = Rules(
+        new(StatKey.PTS, 1m),
+        new(StatKey.FG3M, 1m),
+        new(StatKey.FGM, 2m),
+        new(StatKey.FGA, -1m),
+        new(StatKey.FTM, 1m),
+        new(StatKey.FTA, -1m),
+        new(StatKey.REB, 1m),
+        new(StatKey.AST, 2m),
+        new(StatKey.STL, 4m),
+        new(StatKey.BLK, 4m),
+        new(StatKey.TOV, -2m));
+
+    /// <summary>An unsaved league used to score public reference data under ESPN defaults.</summary>
+    public static FantasyLeague CreateEspnDefaultPointsLeague() =>
+        new(
+            Guid.Parse("00000000-0000-0000-0000-00000000e5b1"),
+            "ESPN default points",
+            LeagueType.Points,
+            10,
+            EspnDefaultPointsRules,
+            [],
+            Slots(RosterSlotKind.UTIL),
+            LineupCadence.Daily);
+
     public static FantasyLeague CreateSeedPointsLeague(Guid id) =>
         new(
             id,

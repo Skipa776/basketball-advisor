@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Domain/Trends]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Trends/PlayerHeatTests.cs]
 depends_on: [scoring_rules_catalog.md, provenance_contract.md, rolling_window_contract.md]
 status: implemented
-last_updated: 2026-09-21
+last_updated: 2026-09-23
 owners: [engineering]
 risk_level: high
 ---
@@ -87,3 +87,12 @@ policy remains owned here and is returned to React. All views are explicitly dat
 and completeness/freshness unverified; no live streak label is enabled. No math,
 `TrendScore`, projection or draft-value weight changed. A production game importer
 is still absent.
+
+## Configurable windows — 2026-09-23
+
+`PlayerHeatOptions` binds from the `Heat` configuration section
+(`Heat__RecentGames`, `Heat__MinimumBaselineGames`, `Heat__MaximumBaselineGames`).
+Unset values keep the accepted policy above (3 / 10 / 30); invalid values fail
+at startup. Lowering the minimum is an explicit owner test override for short
+imported windows — responses always carry the effective `policy`, so a relaxed
+run is visible, never silent.

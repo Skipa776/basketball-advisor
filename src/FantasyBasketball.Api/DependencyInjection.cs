@@ -127,6 +127,15 @@ public static class DependencyInjection
                 limiter.QueueLimit = 0;
                 limiter.AutoReplenishment = true;
             });
+            options.AddPolicy(Endpoints.PublicEndpoints.RateLimitPolicy, context =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 60,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0,
+                    }));
         });
         services.AddScoped<IUserContext, HttpUserContext>();
         services.ConfigureApplicationCookie(options =>
@@ -199,9 +208,18 @@ public static class DependencyInjection
         services.AddScoped<ProjectionService>();
         services.AddScoped<LeagueProjectionService>();
         services.AddScoped<ProjectedPlayerService>();
-        services.AddSingleton(new FantasyBasketball.Domain.Trends.PlayerHeatOptions());
+        // Defaults are the accepted policy; a lower minimum is an explicit owner test override.
+        var heat = configuration.GetSection("Heat").Get<FantasyBasketball.Domain.Trends.PlayerHeatOptions>()
+            ?? new FantasyBasketball.Domain.Trends.PlayerHeatOptions();
+        if (!heat.IsValid())
+        {
+            throw new InvalidOperationException("Heat options are invalid.");
+        }
+
+        services.AddSingleton(heat);
         services.AddScoped<FantasyBasketball.Domain.Trends.PlayerHeatCalculator>();
         services.AddScoped<FantasyBasketball.Application.Trends.PlayerPerformanceService>();
+        services.AddScoped<FantasyBasketball.Application.Landing.LandingService>();
         services.AddSingleton<FantasyBasketball.Domain.Scoring.PointsScoringEngine>();
         services.AddScoped<ProjectionDecompositionService>();
         services.AddScoped<ContextEventService>();

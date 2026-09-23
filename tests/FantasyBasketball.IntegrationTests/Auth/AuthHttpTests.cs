@@ -340,6 +340,30 @@ public sealed class AuthHttpTests : IAsyncLifetime
     /// left un-branched turns the front door into a 500.
     /// </summary>
     [Fact]
+    public async Task Public_landing_data_is_anonymous_uncached_and_validates_input()
+    {
+        var token = TestContext.Current.CancellationToken;
+        foreach (var path in new[] { "/api/public/daily", "/api/public/risers?limit=5", "/api/public/daily?date=2025-11-16" })
+        {
+            using var response = await client.GetAsync(path, token);
+            response.StatusCode.ShouldBe(HttpStatusCode.OK, path);
+            response.Headers.CacheControl!.NoStore.ShouldBeTrue(path);
+            using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(token));
+            var data = body.RootElement.GetProperty("data");
+            data.GetProperty("source").GetString().ShouldBe(DataSourceName.BasketballReference);
+            data.GetProperty("scoring").GetString().ShouldBe("ESPN default points");
+            data.GetProperty("players").GetArrayLength().ShouldBe(0, "no games are stored in this fixture");
+        }
+
+        foreach (var path in new[] { "/api/public/daily?date=11/16/2025", "/api/public/risers?through=nope", "/api/public/risers?limit=0", "/api/public/risers?limit=51" })
+        {
+            using var response = await client.GetAsync(path, token);
+            response.StatusCode.ShouldBe(HttpStatusCode.BadRequest, path);
+            (await response.Content.ReadAsStringAsync(token)).ShouldContain("\"success\":false");
+        }
+    }
+
+    [Fact]
     public async Task D25_landing_page_renders_anonymously_without_touching_owned_data()
     {
         var cancellationToken = TestContext.Current.CancellationToken;

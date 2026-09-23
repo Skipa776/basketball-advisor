@@ -18,20 +18,9 @@ public static class LeagueSetupCatalog
         {
             Id = "espn-default-points",
             Name = "ESPN default points",
-            Rules = new ScoringRuleRequest[]
-            {
-                new(nameof(StatKey.PTS), 1m),
-                new(nameof(StatKey.FG3M), 1m),
-                new(nameof(StatKey.FGM), 2m),
-                new(nameof(StatKey.FGA), -1m),
-                new(nameof(StatKey.FTM), 1m),
-                new(nameof(StatKey.FTA), -1m),
-                new(nameof(StatKey.REB), 1m),
-                new(nameof(StatKey.AST), 2m),
-                new(nameof(StatKey.STL), 4m),
-                new(nameof(StatKey.BLK), 4m),
-                new(nameof(StatKey.TOV), -2m),
-            },
+            Rules = LeagueCatalog.EspnDefaultPointsRules
+                .Select(rule => new ScoringRuleRequest(rule.Stat.ToString(), rule.PointsPerUnit))
+                .ToArray(),
         },
     };
 }

@@ -997,3 +997,24 @@ were created and no numerical usage quota was available.
 - Owner test window for the landing/heat trial: random season day 2025-11-16,
   following month 2025-11-16 → 2025-12-15. 2025-12-16 (NBA Cup final, not a
   regular-season stat game) is excluded.
+
+## Public landing data — 2026-09-23
+
+- Featured players are an owner-approved constant list of 30 consensus top
+  fantasy players for 2025-26 (`Application/Landing/FeaturedPlayers.cs`), matched
+  by normalized name. A name with no stored appearance that day is simply absent.
+- "CAT" is categories won out of the nine standard categories versus the mean of
+  every player who played that date: counting stats beat the mean, FG%/FT% beat
+  the pool's combined makes/attempts (zero attempts never wins), fewer turnovers
+  win, ties win nothing. It is a descriptive single-day figure, not a category
+  valuation engine.
+- Points use ESPN default scoring, now owned by `LeagueCatalog.EspnDefaultPointsRules`
+  (the setup catalog reads it; previously it was typed inline there).
+- Risers exclude featured players (the "usually on the waiver" proxy — there is no
+  roster-ownership source). Status thresholds live in `RiserStatus`: Must add at
+  ≥ +40% with a 3+ game streak, Add at ≥ +20%, Watch above 0%, otherwise Hold.
+  Streak counts consecutive latest appearances above the player's baseline mean.
+- The endpoints are anonymous because the data is public reference data; they are
+  rate-limited per IP and never read owned tables.
+- Team codes are omitted from the landing payload: players carry a team id but no
+  by-id team lookup exists; add one when the cards need it.

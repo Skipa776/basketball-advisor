@@ -58,6 +58,7 @@ public static class ApiHost
         app.MapContextEndpoints();
         app.MapHealthEndpoints();
         app.MapAccountEndpoints();
+        app.MapPublicEndpoints();
         // The React app is the only UI. `/` and every `/app` route serve its
         // index; the app itself decides between landing and signed-in pages.
         IResult ReactIndex()

@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Api/Endpoints]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Api]
 depends_on: [recommendation_evidence_contract.md, scoring_rules_catalog.md]
 status: implemented
-last_updated: 2026-09-22
+last_updated: 2026-09-23
 owners: [engineering]
 risk_level: low
 done_criteria:
@@ -63,6 +63,16 @@ forces a throw and asserts the body contains none of these.*
   decomposition (observed, baseline, adjusted, value) as four sibling objects,
   never a single collapsed number. This is requirement R8, and the response
   shape *is* the requirement.
+- **`GET /api/public/daily?date=YYYY-MM-DD`** and
+  **`GET /api/public/risers?through=YYYY-MM-DD&limit=1..50`** — anonymous,
+  read-only, `Cache-Control: no-store`, rate-limited per client IP (60/min).
+  Shared NBA reference data only (stored Basketball-Reference regular-season box
+  scores), never user data. Date defaults to the latest stored game date.
+  `daily` returns the featured players who played that date with ESPN-default
+  fantasy points, categories won of the nine standard categories versus that
+  day's pool, and their box line. `risers` excludes featured players and ranks
+  the rest by points above their own baseline (heat policy), with streak,
+  percent above baseline and a waiver status. Malformed dates or limits → 400.
 - **`POST /api/imports/box-scores`** `{from, to}` (owner) — queues a
   regular-season Basketball-Reference box-score import over stored final
   balldontlie games in that US-Eastern date range; see `boxscore_importer`.
