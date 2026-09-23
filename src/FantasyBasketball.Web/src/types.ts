@@ -10,3 +10,7 @@ export type Ranking = { playerId: { value: string }; total: number; projectedSea
 export type Board = { rankings: Ranking[]; banner: string | null };
 export type Advice = { subjectPlayerId: { value: string }; score: number; confidence: number; evidence: { statement: string; polarity: number; magnitude: number | null }[] };
 export type EvidenceCatalog = { confidenceLevels: { name: string; value: number }[]; evidencePolarities: { name: string; value: number }[] };
+export type LandingLine = { playerId: string; name: string; minutes: number; fantasyPoints: number; categoriesWon: number; line: Record<string, number> };
+export type LandingDay = { date: string | null; source: string; scoring: string; poolSize: number; players: LandingLine[] };
+export type LandingRiser = { playerId: string; name: string; latestAppearance: string; categoriesWon: number; recentAverage: number; baselineAverage: number; streak: number; percentAboveBaseline: number; status: string };
+export type LandingRisers = { throughDate: string | null; source: string; scoring: string; players: LandingRiser[] };

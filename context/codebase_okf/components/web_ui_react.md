@@ -131,3 +131,22 @@ leagues get a stated limitation, not points values. `/app/` and `/app/{page}/`
 now route like their bare paths; before this, signing in at `/app/` showed
 "Page not found". The browser journey covers both and the ranking order.
 
+## Landing data — 2026-09-23
+
+The signed-out landing keeps the portfolio-derived hero (falling letters, word
+reveal, magnetic round buttons, curve and dark join section) and replaces the
+court photo strips with live reference data from `/api/public/*`
+(`src/landingData.tsx`):
+
+- **Previous game day** — two scroll-drifting rows of player cards (Commons
+  headshot, name, `CAT n/9`, ESPN points, box line). Each row is its own
+  keyboard-focusable horizontal scroller, so every card is reachable on a phone.
+  A player without a credited photo shows initials; no uncredited image ships.
+- **Rising right now** — the risers table; rows rise into place as they scroll
+  into view and reset once they leave below, so scrolling back down replays it.
+  Reduced motion shows every row in place.
+- Photo credits (`src/playerPhotos.ts`, mirrored in `ASSETS.md`) are linked from
+  the join section.
+
+Evidence: the `landingChecks` block of `tests/workspace.mjs` (mocked public data,
+motion and reduced-motion contexts, axe at 1280/390/320 px, no overflow).

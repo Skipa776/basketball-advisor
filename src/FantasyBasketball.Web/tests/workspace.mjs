@@ -24,7 +24,72 @@ async function accessibility(name) {
   assert.deepEqual(results.violations.map(item => ({ id: item.id, nodes: item.nodes.map(node => node.target) })), [], `${name} accessibility`);
   checks.push(`${name}: zero axe WCAG A/AA violations`);
 }
+// Landing with mocked public data: the test host stores no Basketball-Reference games.
+const envelope = data => ({ success: true, data, error: null, meta: null });
+const dailyFixture = envelope({ date: '2025-11-16', source: 'basketball-reference', scoring: 'ESPN default points', poolSize: 168, players: [
+  { playerId: 'p1', name: 'Luka Dončić', minutes: 36, fantasyPoints: 65.5, categoriesWon: 7, line: { PTS: 38, REB: 9, AST: 11 } },
+  { playerId: 'p2', name: 'Fixture Newcomer', minutes: 30, fantasyPoints: 30, categoriesWon: 4, line: { PTS: 20, REB: 5, AST: 3 } }] });
+const risersFixture = envelope({ throughDate: '2025-12-15', source: 'basketball-reference', scoring: 'ESPN default points', players: Array.from({ length: 12 }, (_, index) => (
+  { playerId: `r${index}`, name: `Riser ${index + 1}`, latestAppearance: '2025-12-15', categoriesWon: 5, recentAverage: 30 - index, baselineAverage: 18, streak: 3, percentAboveBaseline: 66.7, status: index === 0 ? 'Must add' : 'Add' })) });
+async function landingPage(reducedMotion, width = 1280) {
+  const landingContext = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion });
+  await landingContext.route('**/*', route => {
+    const url = new URL(route.request().url());
+    if (url.origin !== new URL(base).origin) return route.abort();
+    if (url.pathname === '/api/public/daily') return route.fulfill({ json: dailyFixture });
+    if (url.pathname === '/api/public/risers') return route.fulfill({ json: risersFixture });
+    return route.continue();
+  });
+  const landing = await landingContext.newPage();
+  landing.setDefaultTimeout(12000);
+  landing.on('pageerror', error => failures.push(error.message));
+  await landing.goto(new URL('/', base).href);
+  return landing;
+}
+async function landingChecks() {
+  const landing = await landingPage('no-preference');
+  const strip = landing.getByRole('region', { name: 'How the stars played.' });
+  await visible(strip.getByText('Luka Dončić', { exact: true }));
+  assert.equal(await strip.locator('.player-card').count(), 2);
+  await visible(strip.getByText('7/9', { exact: true }));
+  await visible(strip.getByText('65.5', { exact: true }));
+  await visible(landing.getByText('PREVIOUS GAME DAY · SUNDAY, NOV 16, 2025'));
+  const photo = strip.locator('.player-card img');
+  assert.equal(await photo.count(), 1, 'only players with a credited photo get an image');
+  await photo.scrollIntoViewIfNeeded();
+  await landing.waitForFunction(element => element.complete && element.naturalWidth > 0, await photo.elementHandle());
+  await visible(strip.getByText('FN', { exact: true }));
+  const rows = landing.locator('.risers-table tbody tr');
+  assert.equal(await rows.count(), 12);
+  assert.equal(await rows.last().evaluate(row => row.classList.contains('in')), false, 'rows below the fold wait to rise');
+  await rows.last().scrollIntoViewIfNeeded();
+  await landing.waitForFunction(() => document.querySelector('.risers-table tbody tr:last-child').classList.contains('in'));
+  await visible(landing.getByRole('row', { name: /Riser 1 .*Must add/ }));
+  await landing.evaluate(() => scrollTo(0, 0));
+  await landing.waitForFunction(() => !document.querySelector('.risers-table tbody tr:last-child').classList.contains('in'));
+  const results = await new AxeBuilder({ page: landing }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();
+  assert.deepEqual(results.violations.map(item => ({ id: item.id, nodes: item.nodes.map(node => node.target) })), [], 'Landing accessibility');
+  await landing.screenshot({ path: `${artifacts}/landing-desktop.png`, fullPage: true });
+  await landing.context().close();
+  const still = await landingPage('reduce');
+  await visible(still.getByRole('row', { name: /Riser 12/ }));
+  assert.equal(await still.locator('.risers-table tbody tr.in').count(), 12, 'reduced motion shows every row in place');
+  await still.context().close();
+  for (const width of [390, 320]) {
+    const narrow = await landingPage('reduce', width);
+    await visible(narrow.getByText('Luka Dončić', { exact: true }));
+    await visible(narrow.getByRole('row', { name: /Riser 1 / }));
+    const scroll = await narrow.evaluate(() => document.documentElement.scrollWidth);
+    assert(scroll <= width, `Landing overflows at ${width}px: ${scroll}px`);
+    const narrowAxe = await new AxeBuilder({ page: narrow }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();
+    assert.deepEqual(narrowAxe.violations.map(item => ({ id: item.id, nodes: item.nodes.map(node => node.target) })), [], `Landing accessibility ${width}px`);
+    await narrow.screenshot({ path: `${artifacts}/landing-mobile-${width}.png`, fullPage: true });
+    await narrow.context().close();
+  }
+  checks.push('Landing: featured player cards with credited photo and initials fallback, CAT and ESPN points, rows rise on scroll and reset below the fold, still under reduced motion, axe clean, no overflow at 390/320 px');
+}
 try {
+  await landingChecks();
   await page.goto(new URL('/app', base).href);
   await visible(page.getByRole('button', { name: 'New here? Create an account' }));
   await accessibility('Account');

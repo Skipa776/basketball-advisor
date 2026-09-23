@@ -1,12 +1,11 @@
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
+import { DailyStrip, PhotoCredits, RisersTable } from './landingData';
 
-// Signed-out landing, after the owner's portfolio (Skipa776/portfolio): falling
-// headline letters, word slide-up, two scroll-drifting photo strips, magnetic round
-// buttons, and a dark curved closing section. Plain CSS + one scroll listener;
-// everything holds still under prefers-reduced-motion.
-const STRIP_ONE = ['hoop-sunset', 'ball-in-flight', 'court-aerial', 'hoop-angular'];
-const STRIP_TWO = ['net-freestanding', 'streetball-court', 'net-torn', 'ball-through-hoop'];
+// Signed-out landing, after the owner's portfolio (Skipa776/portfolio, forked from
+// bettinasosa/portfolio): falling headline letters, word slide-up, two scroll-drifting
+// rows of player cards, rising table rows, magnetic round buttons, and a dark curved
+// closing section. Plain CSS + one scroll listener; still under prefers-reduced-motion.
 const HEADLINE = ['See the', 'court.', 'make your move.'];
 const PITCH = 'League-aware fantasy basketball. Your scoring, your roster, your pick.';
 
@@ -70,10 +69,8 @@ export function Landing({ children }: { children: ReactNode }) {
       </div>
     </section>
 
-    <section className="strips" aria-label="Photos">
-      {[STRIP_ONE, STRIP_TWO].map((strip, row) => <div className={`strip strip-${row + 1}`} key={row}>{strip.map(name => <img key={name} src={`/img/${name}.jpg`} alt="" loading="lazy" width="900" height="675" />)}</div>)}
-      <a className="round magnetic" href="#join">Start drafting</a>
-    </section>
+    <DailyStrip />
+    <RisersTable />
     <div className="curve" aria-hidden="true"><div /></div>
 
     <section className="join" id="join" aria-label="Sign in">
@@ -82,8 +79,9 @@ export function Landing({ children }: { children: ReactNode }) {
       <dl className="join-meta">
         <div><dt>Version</dt><dd>2026 © Edition</dd></div>
         <div><dt>Data</dt><dd>Owner managed sources</dd></div>
-        <div><dt>Photos</dt><dd>CC0 & public domain, Wikimedia Commons</dd></div>
+        <div><dt>Photos</dt><dd>Wikimedia Commons contributors · <a href="#photo-credits">credits</a></dd></div>
       </dl>
+      <PhotoCredits />
     </section>
   </div>;
 }
