@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portfolio Style & Interaction Reference</title>
+  <style>
+    :root { --ink:#141414; --paper:#fff; --blue:#1f8fff; --lilac:#e2a0ff; --mist:#eddfef; --red:#ff0800; --line:#d9d9d9; --radius:24px; --display:clamp(3.8rem,12vw,11rem); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:Arial, Helvetica, sans-serif; cursor:none; }
+    a { color:inherit; }
+    button, input, textarea { font:inherit; }
+    .cursor { position:fixed; z-index:20; width:18px; height:18px; border-radius:50%; background:var(--ink); pointer-events:none; transform:translate(-50%,-50%); mix-blend-mode:difference; transition:width .2s, height .2s, background .2s; }
+    .cursor.is-over { width:72px; height:72px; background:var(--lilac); mix-blend-mode:normal; }
+    .cursor::after { content:'open'; position:absolute; inset:0; display:grid; place-items:center; font-size:10px; opacity:0; }
+    .cursor.is-over::after { opacity:1; }
+    .loader { position:fixed; inset:0; z-index:30; display:grid; place-items:center; background:var(--ink); color:var(--paper); animation:leave 1s 1.4s forwards; pointer-events:none; }
+    .loader strong { font-size:clamp(2rem,6vw,6rem); letter-spacing:-.08em; }
+    @keyframes leave { to { opacity:0; visibility:hidden; } }
+    .topbar { display:flex; justify-content:space-between; align-items:center; padding:22px 4vw; position:absolute; width:100%; z-index:3; font-size:12px; text-transform:uppercase; letter-spacing:.12em; }
+    .hero { min-height:100svh; display:grid; align-content:end; padding:9vw 4vw 5vw; overflow:hidden; background:linear-gradient(130deg,#fff 0%,#fff 52%,var(--mist) 100%); }
+    .eyebrow, .source { color:#666; font-size:11px; line-height:1.5; letter-spacing:.08em; text-transform:uppercase; }
+    h1, h2, h3, p { margin-top:0; }
+    h1 { max-width:1000px; margin-bottom:3vw; font-size:var(--display); line-height:.8; letter-spacing:-.1em; font-weight:800; }
+    .hero-copy { max-width:510px; font-size:clamp(1rem,1.8vw,1.5rem); line-height:1.15; }
+    .section { padding:9vw 4vw; border-top:1px solid var(--line); }
+    .section-head { display:flex; justify-content:space-between; gap:30px; align-items:baseline; margin-bottom:55px; }
+    h2 { font-size:clamp(2.5rem,7vw,7rem); line-height:.85; letter-spacing:-.08em; margin-bottom:0; }
+    h3 { font-size:clamp(1.4rem,3vw,3rem); letter-spacing:-.06em; margin:0 0 15px; }
+    .grid { display:grid; grid-template-columns:repeat(12,1fr); gap:22px; }
+    .demo { grid-column:span 8; min-height:260px; padding:28px; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; position:relative; background:#fafafa; }
+    .note { grid-column:span 4; padding:8px 0; }
+    .note p { line-height:1.45; color:#505050; }
+    .pill, .magnetic { display:inline-flex; align-items:center; justify-content:center; border:0; border-radius:999px; padding:18px 28px; background:var(--ink); color:#fff; cursor:none; transition:transform .25s cubic-bezier(.2,1.5,.4,1), background .2s; }
+    .pill:hover { background:var(--blue); }
+    .field { width:100%; border:0; border-bottom:1px solid var(--ink); background:transparent; padding:17px 0; outline:0; }
+    .field:focus { border-color:var(--blue); }
+    .form { display:grid; gap:22px; max-width:520px; }
+    .reveal span { display:inline-block; opacity:0; transform:translateY(100%); animation:rise .7s forwards; animation-delay:calc(var(--i) * 45ms); }
+    @keyframes rise { to { opacity:1; transform:none; } }
+    .scroll-word { font-size:clamp(4rem,14vw,13rem); white-space:nowrap; letter-spacing:-.1em; transform:translateX(var(--scroll-x,0)); transition:transform .1s linear; }
+    .intro { min-height:35vh; display:grid; align-content:center; }
+    .gallery { grid-column:1/-1; height:600px; display:flex; gap:18px; overflow:hidden; background:var(--mist); padding:18px; }
+    .gallery-col { flex:1; display:grid; gap:18px; align-content:start; transform:translateY(var(--parallax,0)); }
+    .gallery-col:nth-child(2) { --parallax:-80px; }
+    .gallery-col:nth-child(3) { --parallax:-170px; }
+    .tile { min-height:220px; border-radius:18px; padding:24px; display:flex; align-items:end; background:var(--blue); color:#fff; font-size:clamp(1.3rem,3vw,3rem); letter-spacing:-.07em; }
+    .tile:nth-child(2n) { background:var(--lilac); color:var(--ink); }
+    .projects { grid-column:1/-1; border-top:1px solid var(--ink); }
+    .project { display:flex; justify-content:space-between; padding:24px 0; border-bottom:1px solid var(--line); font-size:clamp(1.5rem,4vw,4rem); letter-spacing:-.07em; cursor:none; }
+    .project small { font-size:12px; letter-spacing:.04em; }
+    .project:hover { color:var(--blue); }
+    .project-modal { position:fixed; z-index:10; width:220px; height:140px; display:none; padding:18px; background:var(--blue); color:#fff; border-radius:18px; pointer-events:none; transform:translate(-50%,-50%); }
+    .carousel { grid-column:1/-1; display:grid; grid-template-columns:auto 1fr auto; gap:12px; align-items:center; }
+    .carousel-stage { min-height:300px; display:grid; place-items:center; background:var(--ink); color:#fff; border-radius:var(--radius); font-size:clamp(2rem,7vw,7rem); letter-spacing:-.09em; }
+    .zoom { height:340px; display:grid; place-items:center; background:var(--blue); border-radius:var(--radius); overflow:hidden; }
+    .zoom-word { font-size:clamp(4rem,14vw,13rem); letter-spacing:-.12em; transform:scale(var(--zoom,1)); }
+    .disperse { font-size:clamp(3rem,8vw,8rem); letter-spacing:-.1em; cursor:none; }
+    .disperse span { display:inline-block; transition:transform .5s cubic-bezier(.2,1.5,.4,1); }
+    .disperse:hover span:nth-child(odd) { transform:translateY(-24px) rotate(-8deg); }
+    .disperse:hover span:nth-child(even) { transform:translateY(24px) rotate(8deg); }
+    .curve { margin-top:8vw; padding:10vw 4vw 12vw; border-radius:50% 50% 0 0 / 18% 18% 0 0; background:var(--ink); color:#fff; text-align:center; }
+    .curve h2 { max-width:800px; margin:auto; }
+    .credit { padding:20px 4vw; background:var(--ink); color:#aaa; font-size:11px; line-height:1.5; }
+    @media (max-width:700px) { body { cursor:auto; } .cursor { display:none; } .demo, .note { grid-column:1/-1; } .gallery { height:450px; } .gallery-col:nth-child(3) { display:none; } .topbar { position:relative; } .hero { padding-top:15vw; } }
+    @media (prefers-reduced-motion:reduce) { *, *::before, *::after { animation-duration:.001ms !important; animation-iteration-count:1 !important; scroll-behavior:auto !important; transition-duration:.001ms !important; } .loader { display:none; } .cursor { display:none; } .gallery-col, .zoom-word, .scroll-word { transform:none !important; } .reveal span { opacity:1; transform:none; } }
+  </style>
+</head>
+<body>
+  <div class="loader" aria-label="Loading"><strong>loading<span aria-hidden="true">...</span></strong></div>
+  <div class="cursor" aria-hidden="true"></div><div class="project-modal" aria-hidden="true">project preview<br><small>hover follows pointer</small></div>
+  <nav class="topbar"><strong>style reference / 01</strong><a href="#catalog">catalogue ↓</a></nav>
+  <header class="hero" id="top"><p class="eyebrow">Portfolio language translated into a plain HTML specimen</p><h1>Make room<br>for play.</h1><p class="hero-copy">A bright, editorial interaction kit for the FantasyBasketball landing and signed-in hub. Explore each motion pattern below.</p></header>
+  <main id="catalog">
+    <section class="section intro"><div class="section-head"><h2>Tokens<br>& controls</h2><span class="eyebrow">01 / foundation</span></div><div class="grid">
+      <div class="demo"><p class="eyebrow">Color + type tokens</p><h3 style="color:var(--blue)">Electric blue / #1f8fff</h3><h3 style="color:#a14bd1">Lilac / #e2a0ff</h3><p>Arial system sans, tight display tracking, generous white space, near-black ink.</p></div><div class="note"><p>Large type carries the voice. Color is used as a surface or a single emphatic accent, never as decoration everywhere.</p><p class="source">Source: src/app/globals.css</p></div>
+      <div class="demo"><p class="eyebrow">Rounded + magnetic button</p><button class="magnetic">Hover / pull me ↗</button> <button class="pill">Rounded action</button></div><div class="note"><p>Buttons are oval and tactile. The magnetic control follows the pointer with a spring-like CSS transform.</p><p class="source">Source: src/components/animations/magnetic.tsx; roundedButton.tsx</p></div>
+      <div class="demo"><p class="eyebrow">Contact form fields</p><form class="form" id="contact-form"><input class="field" required placeholder="Your name" aria-label="Your name"><input class="field" type="email" required placeholder="Email address" aria-label="Email address"><textarea class="field" required placeholder="What are you thinking?" aria-label="Message"></textarea><button class="pill" type="submit">Send a note ↗</button><small id="form-status" role="status"></small></form></div><div class="note"><p>Quiet underlines keep the form expressive without adding visual weight. This demo validates locally and never sends data.</p><p class="source">Source: src/app/contact/contactForm.tsx</p></div>
+    </div></section>
+    <section class="section"><div class="section-head"><h2>Scroll<br>language</h2><span class="eyebrow">02 / motion</span></div><div class="grid">
+      <div class="demo" style="grid-column:1/-1"><p class="eyebrow">Text reveal / scroll text</p><div class="reveal" data-reveal>See the court. See the signal. See what moves.</div><div class="scroll-word" data-scroll-word>SCROLL / READ / PLAY</div></div><div class="note"><p>Words enter one letter at a time, then a large line shifts with scroll. Both are content-first and become static for reduced-motion users.</p><p class="source">Source: src/components/animations/textAnimations/scrollText.tsx; textParallax.tsx</p></div>
+      <div class="demo" style="grid-column:1/-1"><p class="eyebrow">Smooth-scroll intro</p><p class="hero-copy">A long-form intro makes the next section feel like a destination.</p><a class="pill magnetic" href="#gallery">Take me to the gallery ↓</a></div><div class="note"><p>Native smooth scrolling is enough for this reference; the original uses a Lenis loop around the intro/body.</p><p class="source">Source: src/components/animations/smoothScroll/intro.tsx; body.tsx</p></div>
+    </div></section>
+    <section class="section" id="gallery"><div class="section-head"><h2>Image<br>rhythm</h2><span class="eyebrow">03 / browse</span></div><div class="grid"><div class="gallery" data-gallery><div class="gallery-col"><div class="tile">headshots</div><div class="tile">context</div><div class="tile">signals</div></div><div class="gallery-col"><div class="tile">draft room</div><div class="tile">box scores</div><div class="tile">waivers</div></div><div class="gallery-col"><div class="tile">teams</div><div class="tile">matchups</div><div class="tile">today</div></div></div><div class="note"><p>Three offset columns create a gallery parallax without a dependency. The content remains readable at rest.</p><p class="source">Source: src/components/animations/galleryParallax.tsx</p></div></div></section>
+    <section class="section"><div class="section-head"><h2>Projects<br>in motion</h2><span class="eyebrow">04 / discover</span></div><div class="grid"><div class="projects" id="projects"><div class="project" data-preview="Mock draft / live board"><span>Mock draft</span><small>01 ↗</small></div><div class="project" data-preview="Waiver wire / risers"><span>Waiver wire</span><small>02 ↗</small></div><div class="project" data-preview="Projected players / signal"><span>Projected players</span><small>03 ↗</small></div></div><div class="note"><p>Rows stay simple until the pointer asks for more. The floating preview is deliberately lightweight and can become a real route later.</p><p class="source">Source: src/app/projects/page.tsx; src/app/projects/modalContext.tsx; src/app/projects/project/modal.tsx</p></div>
+      <div class="carousel"><button class="pill" data-carousel="prev" aria-label="Previous slide">←</button><div class="carousel-stage" data-slide>PLAYERS</div><button class="pill" data-carousel="next" aria-label="Next slide">→</button></div><div class="note"><p>Carousel controls are explicit and keyboard-friendly. No drag-only interaction is required.</p><p class="source">Source: src/app/projects/project/carousel.tsx</p></div>
+      <div class="demo" style="grid-column:1/-1"><p class="eyebrow">Zoom parallax</p><div class="zoom" data-zoom><div class="zoom-word">ZOOM</div></div></div><div class="note"><p>Scroll position subtly scales the focal word, a plain transform substitute for the original project zoom treatment.</p><p class="source">Source: src/app/projects/project/zoomParallax.tsx</p></div>
+    </div></section>
+    <section class="section"><div class="section-head"><h2>Finish<br>with feeling</h2><span class="eyebrow">05 / close</span></div><div class="grid"><div class="demo"><p class="eyebrow">Text disperse</p><div class="disperse" aria-label="Hover text disperse"><span>H</span><span>E</span><span>L</span><span>L</span><span>O</span><span>!</span></div></div><div class="note"><p>Individual characters drift apart on hover to make a static invitation feel physical.</p><p class="source">Source: src/app/contact/textDisperse/textDisperse.tsx; anim.ts</p></div><div class="demo" style="grid-column:1/-1"><p class="eyebrow">Contrast cursor</p><p class="hero-copy">Move across the page. The cursor inverts over the white canvas, then expands over project rows.</p></div><div class="note"><p>The custom cursor is supplemental, never the only way to understand or activate a control.</p><p class="source">Source: src/components/animations/cursor/contrastCursor.tsx</p></div></div></section>
+  </main>
+  <section class="curve"><p class="eyebrow">Closing section / curved boundary</p><h2>Ready to see<br>what moves?</h2><a class="pill magnetic" href="#top">Back to the top ↑</a></section>
+  <footer class="credit">Original design and code by Bettina Sosa · <a href="https://www.bettinasosa.com">bettinasosa.com</a> · <a href="https://github.com/bettinasosa/portfolio">github.com/bettinasosa/portfolio</a> · MIT License (c) 2023 m6v3l9 · forked as <a href="https://github.com/Skipa776/portfolio">github.com/Skipa776/portfolio</a> · this repo's React landing adapts it.</footer>
+  <script>
+    (() => {
+      const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const cursor = document.querySelector('.cursor');
+      const modal = document.querySelector('.project-modal');
+      const move = (x, y) => { if (cursor && !reduced) { cursor.style.left = x + 'px'; cursor.style.top = y + 'px'; } };
+      addEventListener('pointermove', e => move(e.clientX, e.clientY));
+      document.querySelectorAll('.magnetic').forEach(el => el.addEventListener('pointermove', e => { if (!reduced) { const r = el.getBoundingClientRect(); el.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * .22}px, ${(e.clientY - r.top - r.height / 2) * .22}px)`; } }));
+      document.querySelectorAll('.magnetic').forEach(el => el.addEventListener('pointerleave', () => { el.style.transform = ''; }));
+      document.querySelectorAll('.project').forEach(row => { row.addEventListener('mouseenter', () => { cursor.classList.add('is-over'); modal.textContent = row.dataset.preview; modal.style.display = 'block'; }); row.addEventListener('mouseleave', () => { cursor.classList.remove('is-over'); modal.style.display = 'none'; }); row.addEventListener('pointermove', e => { modal.style.left = e.clientX + 12 + 'px'; modal.style.top = e.clientY + 12 + 'px'; }); });
+      const reveal = document.querySelector('[data-reveal]'); if (reveal) reveal.innerHTML = [...reveal.textContent].map((c, i) => `<span style="--i:${i}">${c === ' ' ? '&nbsp;' : c}</span>`).join('');
+      const word = document.querySelector('[data-scroll-word]'); const gallery = document.querySelector('[data-gallery]'); const zoom = document.querySelector('[data-zoom]');
+      const scrollEffects = () => { if (reduced) return; const y = scrollY; if (word) word.style.setProperty('--scroll-x', `${Math.max(-240, -y * .18)}px`); if (gallery) gallery.querySelectorAll('.gallery-col').forEach((col, i) => col.style.transform = `translateY(${Math.max(-180, -y * (.03 + i * .02))}px)`); if (zoom) zoom.querySelector('.zoom-word').style.setProperty('--zoom', 1 + Math.min(.55, y / 1800)); }; addEventListener('scroll', scrollEffects, { passive:true }); scrollEffects();
+      const slides = ['PLAYERS', 'RISERS', 'SIGNALS']; let slide = 0; const stage = document.querySelector('[data-slide]'); document.querySelectorAll('[data-carousel]').forEach(btn => btn.addEventListener('click', () => { slide = (slide + (btn.dataset.carousel === 'next' ? 1 : 2)) % slides.length; stage.textContent = slides[slide]; }));
+      document.querySelector('#contact-form').addEventListener('submit', e => { e.preventDefault(); document.querySelector('#form-status').textContent = 'Thanks. This local demo is ready for wiring.'; });
+    })();
+  </script>
+</body>
+</html>
