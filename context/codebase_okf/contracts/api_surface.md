@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Api/Endpoints]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Api]
 depends_on: [recommendation_evidence_contract.md, scoring_rules_catalog.md]
 status: implemented
-last_updated: 2026-09-21
+last_updated: 2026-09-22
 owners: [engineering]
 risk_level: low
 done_criteria:
@@ -88,6 +88,13 @@ forces a throw and asserts the body contains none of these.*
   count and roster-slot counts by kind return `409` after any draft session exists;
   reordering the same slots is not a structural change. Scoring
   remains a separate endpoint and requires explicit projection recalculation.
+- **`GET /api/leagues/{id}/projected-players?page=&limit=`** — requires league
+  ownership. Returns the league's current published values, the same set the
+  draft board ranks, ordered by projected season value (ties by player id), each
+  with rank, name, positions, latest ADP and the unverified-context flag. An
+  empty list means no current values; it is `200`, not an error.
+- **League names** — create and settings return `400` with a `name` field error
+  for an empty name or one longer than 100 characters.
 
 # Invariants
 

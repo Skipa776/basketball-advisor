@@ -95,6 +95,17 @@ the planned in-app missing-key state cannot be reached without changing that
 policy. The owner page shows source freshness and import runs after startup.
 Import controls were not activated and no external provider was contacted.
 
+## Live blank-page repair — 2026-09-22
+
+The running local host served the new `/app` index after a frontend rebuild,
+but its startup static-asset manifest did not include the newly fingerprinted
+JavaScript and CSS. Anonymous asset requests were redirected or received HTML,
+so the browser could not mount React. The host now serves physical public files
+before endpoint routing. An offline HTTP regression creates a new JavaScript
+file after host startup and checks for `200` with a JavaScript content type.
+The full gate passed 280 tests with zero build warnings; the live app rendered
+after another frontend rebuild with no browser errors.
+
 Verification: `bash scripts/gate.sh` passed on 2026-09-22 after allowing its
 loopback test processes. React and .NET built with zero warnings; 93 Domain,
 37 Application, and 149 Integration tests passed. The browser journey opened

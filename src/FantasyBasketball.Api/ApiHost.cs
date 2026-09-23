@@ -25,6 +25,11 @@ public static class ApiHost
             app.UseHttpsRedirection();
         }
 
+        // Vite replaces fingerprinted files during a rebuild. Serve the current
+        // public files before endpoint routing so a running host can load a new
+        // bundle that was not in its startup static-asset manifest.
+        app.UseStaticFiles();
+        app.UseRouting();
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseRateLimiter();

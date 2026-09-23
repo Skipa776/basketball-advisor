@@ -204,6 +204,7 @@ public static class DependencyInjection
         services.AddScoped<ImportRunQueryService>();
         services.AddScoped<ProjectionService>();
         services.AddScoped<LeagueProjectionService>();
+        services.AddScoped<ProjectedPlayerService>();
         services.AddSingleton(new FantasyBasketball.Domain.Trends.PlayerHeatOptions());
         services.AddScoped<FantasyBasketball.Domain.Trends.PlayerHeatCalculator>();
         services.AddScoped<FantasyBasketball.Application.Trends.PlayerPerformanceService>();

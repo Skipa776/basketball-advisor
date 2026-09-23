@@ -144,6 +144,18 @@ try {
   await visible(page.getByRole('heading', { name: 'Your drafts', exact: true }));
   await visible(page.getByRole('link', { name: 'Reopen draft', exact: true }));
   await accessibility('Saved drafts');
+  // Trailing slash on purpose: /app/<page>/ and /app/ must route like their bare forms.
+  await page.goto(new URL(`/app/projections/?league=${leagueId}`, base).href);
+  await visible(page.getByRole('heading', { name: 'Projected players', exact: true }));
+  await visible(page.locator('table tbody tr').first());
+  const projected = await page.locator('table tbody tr').evaluateAll(rows => rows.map(row => ({ rank: Number(row.cells[0].textContent), name: row.querySelector('th button').textContent, value: Number(row.cells[3].textContent.replace(/,/g, '')) })));
+  assert.deepEqual(projected.map(row => row.rank), [1, 2]);
+  assert.deepEqual(projected.map(row => row.name).sort(), ['Fixture Center', 'Fixture Guard']);
+  assert(projected[0].value >= projected[1].value, `Projected players must be sorted by value: ${JSON.stringify(projected)}`);
+  await accessibility('Projected players');
+  await page.goto(new URL(`/app/?league=${leagueId}`, base).href);
+  await visible(page.getByLabel('Your league', { exact: true }));
+  checks.push('Projected players → league values ranked by season points; /app/ and /app/<page>/ route like their bare paths');
   await page.goto(new URL(`/app/league-settings?league=${leagueId}`, base).href);
   await visible(page.getByRole('heading', { name: 'League settings', exact: true }));
   assert.equal(await page.getByLabel('PG', { exact: true }).inputValue(), '2');
@@ -184,7 +196,7 @@ try {
     await page.screenshot({ path: `${artifacts}/mobile-${width}.png`, fullPage: true });
   }
   await page.setViewportSize({ width: 390, height: 844 });
-  for (const [path, heading] of [['/app/drafts', 'Your drafts'], ['/app/league-settings', 'League settings'], ['/app/context-review', 'Context review'], ['/app/data-sources', 'Data sources'], ['/app/account', 'Account data'], ['/app/trade-analyzer', 'Trade analyzer'], ['/app/streaming', 'Streaming advisor'], ['/app/standings', 'Standings'], ['/app/unknown', 'Page not found']]) {
+  for (const [path, heading] of [['/app/projections', 'Projected players'], ['/app/drafts', 'Your drafts'], ['/app/league-settings', 'League settings'], ['/app/context-review', 'Context review'], ['/app/data-sources', 'Data sources'], ['/app/account', 'Account data'], ['/app/trade-analyzer', 'Trade analyzer'], ['/app/streaming', 'Streaming advisor'], ['/app/standings', 'Standings'], ['/app/unknown', 'Page not found']]) {
     await page.goto(new URL(`${path}?league=${leagueId}`, base).href);
     await visible(page.getByRole('heading', { name: heading, exact: true }));
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);

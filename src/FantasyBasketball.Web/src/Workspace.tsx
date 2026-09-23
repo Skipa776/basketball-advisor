@@ -26,14 +26,15 @@ export function Workspace() {
     catch (error) { setError(message(error)); setBusy(false); }
   }
   const user = session.result?.data.user;
-  const pageNames = { '/app/data-sources': 'Data sources', '/app/drafts': 'Your drafts', '/app/league-settings': 'League settings', '/app/context-review': 'Context review', '/app/account': 'Account data', '/app/trade-analyzer': 'Trade analyzer', '/app/streaming': 'Streaming advisor', '/app/standings': 'Standings' } as Record<string, string>;
-  const page = window.location.pathname === '/app' ? null : pageNames[window.location.pathname] ?? 'Page not found';
+  const pageNames = { '/app/projections': 'Projected players', '/app/data-sources': 'Data sources', '/app/drafts': 'Your drafts', '/app/league-settings': 'League settings', '/app/context-review': 'Context review', '/app/account': 'Account data', '/app/trade-analyzer': 'Trade analyzer', '/app/streaming': 'Streaming advisor', '/app/standings': 'Standings' } as Record<string, string>;
+  const path = window.location.pathname.replace(/\/+$/, '');
+  const page = path === '/app' ? null : pageNames[path] ?? 'Page not found';
   const leagueId = new URLSearchParams(window.location.search).get('league') ?? undefined;
   const pageHref = (path: string) => `${path}${leagueId ? `?league=${encodeURIComponent(leagueId)}` : ''}`;
   function goHome() { window.location.assign(pageHref('/app')); }
   return <>
     <a className="skip" href="#workspace">Skip to workspace</a>
-    <header className="masthead"><a className="wordmark" href="/app"><span aria-hidden="true">◉</span> Fastbreak</a><nav aria-label="Site"><a href="/">Existing app ↗</a>{user && <><a href={pageHref('/app/drafts')}>Your drafts</a><a href={pageHref('/app/league-settings')}>League settings</a><a href="/app/context-review">Context review</a><a href="/app/account">Account data</a>{user.isInstanceOwner && <a href="/app/data-sources">Data sources</a>}<a href="/app/trade-analyzer">Trade analyzer</a><a href="/app/streaming">Streaming</a><a href="/app/standings">Standings</a><button onClick={logout} disabled={busy}>Sign out</button></>}</nav></header>
+    <header className="masthead"><a className="wordmark" href="/app"><span aria-hidden="true">◉</span> Fastbreak</a><nav aria-label="Site"><a href="/">Existing app ↗</a>{user && <><a href={pageHref('/app/projections')}>Projected players</a><a href={pageHref('/app/drafts')}>Your drafts</a><a href={pageHref('/app/league-settings')}>League settings</a><a href="/app/context-review">Context review</a><a href="/app/account">Account data</a>{user.isInstanceOwner && <a href="/app/data-sources">Data sources</a>}<a href="/app/trade-analyzer">Trade analyzer</a><a href="/app/streaming">Streaming</a><a href="/app/standings">Standings</a><button onClick={logout} disabled={busy}>Sign out</button></>}</nav></header>
     <main id="workspace" tabIndex={-1} className={session.result && !user ? 'landing' : 'workspace'}>
       <ErrorNotice text={error || session.error} retry={session.error ? session.refresh : undefined} />
       {!session.result && session.loading && <p role="status">Connecting to your workspace…</p>}

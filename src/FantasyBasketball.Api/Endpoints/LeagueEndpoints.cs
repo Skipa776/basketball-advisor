@@ -52,6 +52,8 @@ public static class LeagueEndpoints
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
         group.MapPost("/{id:guid}/projections", RecalculateProjectionsAsync)
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
+        group.MapGet("/{id:guid}/projected-players", ProjectedPlayersAsync)
+            .WithMetadata(new OwnedRouteMetadata("league", "id"));
         group.MapGet("/{id:guid}/performance-pools", PerformanceEndpoints.PoolsAsync)
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
         group.MapGet("/{id:guid}/performance", PerformanceEndpoints.QueryAsync)
@@ -65,6 +67,18 @@ public static class LeagueEndpoints
     {
         await authorization.RequireLeagueAsync(id, cancellationToken);
         return ApiResults.Success(await service.ListPoolsAsync(cancellationToken));
+    }
+
+    public static async Task<IResult> ProjectedPlayersAsync(
+        Guid id, int? page, int? limit, ProjectedPlayerService service,
+        OwnedResourceAuthorizationService authorization, CancellationToken cancellationToken)
+    {
+        await authorization.RequireLeagueAsync(id, cancellationToken);
+        var currentPage = page ?? 1;
+        var pageSize = limit ?? Paging.DefaultLimit;
+        Paging.Validate(currentPage, pageSize);
+        var result = await service.ListAsync(id, currentPage, pageSize, cancellationToken);
+        return ApiResults.Success(result.Items, meta: new ApiMeta(result.Total, result.Page, result.Limit));
     }
 
     public static async Task<IResult> RecalculateProjectionsAsync(
@@ -151,10 +165,7 @@ public static class LeagueEndpoints
     {
         await authorization.RequireLeagueAsync(id, cancellationToken);
         var fields = new Dictionary<string, string[]>();
-        if (string.IsNullOrWhiteSpace(request.Name))
-        {
-            fields["name"] = ["Name is required."];
-        }
+        ValidateName(request.Name, fields);
 
         if (request.TeamCount <= 0)
         {
@@ -188,15 +199,27 @@ public static class LeagueEndpoints
         return await service.GetAsync(id, cancellationToken);
     }
 
+    // Matches the maxLength on every league name input.
+    private const int MaxNameLength = 100;
+
+    private static void ValidateName(string? name, Dictionary<string, string[]> fields)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            fields["name"] = ["Name is required."];
+        }
+        else if (name.Length > MaxNameLength)
+        {
+            fields["name"] = [$"Name must be {MaxNameLength} characters or fewer."];
+        }
+    }
+
     private static FantasyLeague BuildLeague(
         Guid id,
         CreateLeagueRequest request)
     {
         var fields = new Dictionary<string, string[]>();
-        if (string.IsNullOrWhiteSpace(request.Name))
-        {
-            fields["name"] = ["Name is required."];
-        }
+        ValidateName(request.Name, fields);
 
         if (!Enum.TryParse<LeagueType>(
                 request.Type,

@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Api]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Api]
 depends_on: [../contracts/api_surface.md, ../safety/secrets_policy.md]
 status: implemented
-last_updated: 2026-07-29
+last_updated: 2026-09-22
 owners: [engineering]
 risk_level: medium
 done_criteria:
@@ -31,8 +31,11 @@ middleware, configuration, and logging. Routes and semantics are owned by
   with data annotations, and registered `ValidateOnStart` so misconfiguration
   fails at boot rather than mid-import.
 - **Middleware order**: exception handling outermost, then request logging, then
-  routing. Exception handling must wrap everything or an error escapes the
-  envelope.
+  public static files, routing, authentication, and authorization. Exception
+  handling must wrap everything or an error escapes the envelope. Physical
+  `wwwroot` files are served before routing so a running host can load a newly
+  built fingerprinted React bundle that was absent from its startup endpoint
+  manifest. API routes still require their own authorization.
 - **Logging** is built-in `ILogger` with structured message templates
   (`"Imported {RowCount} rows from {Source}"` — named holes, never string
   interpolation, or the structure is lost).

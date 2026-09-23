@@ -3,11 +3,13 @@ import type { FormEvent } from 'react';
 import { api, message, post } from './api';
 import { useResource } from './useResource';
 import type { League, Player, Session, Setup } from './types';
+import { PlayerDetail } from './draft';
 
 type PageProps = { onHome: () => void; onLeagueUpdated: () => void };
 type Health = { source: string; lastSuccess: string | null; lastFailure: string | null; isStale: boolean; isDegraded: boolean };
 type ImportRun = { id: string; source: string; status: number | string; startedAt: string; finishedAt: string | null; rowsWritten: number; pendingIdentityMatches: number; failureDetail: string | null };
 type ContextEvent = { id: string; type: number; typeName: string; summary: string; verification: number; verificationName: string; effectiveFrom: string; expectedExpiration: string | null; affectedPlayerIds: { value: string }[] };
+type ProjectedPlayer = { rank: number; playerId: { value: string }; fullName: string; positions: string[]; projectedSeasonValue: number; averageDraftPosition: number | null; hasUnverifiedContext: boolean };
 type DraftRecord = { leagueId: string; session: { id: string; teamCount: number; roundCount: number; userSlot: number; currentPick: number; picks: { pickNumber: number }[] } };
 
 function ErrorNotice({ text, retry }: { text: string; retry?: () => void }) {
@@ -20,6 +22,7 @@ export function FunctionalPage({ name, session, onHome, onLeagueUpdated, leagueI
   return <>
     <div className="intro intro-compact"><p className="eyebrow">THE WORKSPACE / {name.toUpperCase()}</p><h1>{name}.</h1></div>
     {name === 'Data sources' && <DataSourcesPage session={session} onHome={onHome} />}
+    {name === 'Projected players' && <ProjectedPlayersPage league={selectedLeague} loading={leagues.loading} onHome={onHome} />}
     {name === 'Your drafts' && <DraftListPage league={selectedLeague} onHome={onHome} />}
     {name === 'League settings' && <LeagueSettingsPage league={selectedLeague} onHome={onHome} onLeagueUpdated={onLeagueUpdated} />}
     {name === 'Context review' && <ContextReviewPage onHome={onHome} />}
@@ -59,6 +62,27 @@ function DataSourcesPage({ session, onHome }: { session: Session; onHome: () => 
     })}</ul>
     <h3>Recent import runs</h3>{runs.loading && !runs.result && <p role="status">Loading import history…</p>}
     {runs.result?.data.length ? <ul className="data-list">{runs.result.data.map(run => <li key={run.id}><strong>{run.source} · {typeof run.status === 'number' ? ['Running', 'Succeeded', 'Failed'][run.status] ?? 'Unknown' : run.status}</strong><span>{run.rowsWritten} rows · started {new Date(run.startedAt).toLocaleString()}</span>{run.failureDetail && <span role="status">{run.failureDetail}</span>}</li>)}</ul> : runs.result && <p>No imports have run yet.</p>}
+  </section>;
+}
+
+const PAGE_SIZE = 50;
+const points = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 1 });
+
+function ProjectedPlayersPage({ league, loading, onHome }: { league?: League; loading: boolean; onHome: () => void }) {
+  const [page, setPage] = useState(1);
+  const [detail, setDetail] = useState<Player | null>(null);
+  const resource = useResource<ProjectedPlayer[]>(league?.type === 0 ? `/api/leagues/${league.id}/projected-players?page=${page}&limit=${PAGE_SIZE}` : null);
+  if (!league) return loading ? <p role="status">Loading your league…</p> : <section className="panel"><h2>Choose a league first</h2><p>Projections are calculated per league, under its scoring.</p><button onClick={onHome}>Choose a league</button></section>;
+  if (league.type !== 0) return <section className="panel"><h2>Points leagues only</h2><p>Projected values are calculated for points scoring. Category leagues have no ranked list yet.</p><button onClick={onHome}>Back to workspace</button></section>;
+  const total = resource.result?.meta?.total ?? 0;
+  return <section className="panel functional-page" aria-labelledby="projected-title"><div className="section-heading"><div><p className="eyebrow">{league.name}</p><h2 id="projected-title">Projected players</h2></div><button onClick={onHome}>Workspace</button></div>
+    <p>Ranked by projected season points under this league’s scoring. Estimates, not results. Tap a name to see how it was built.</p>
+    <ErrorNotice text={resource.error} retry={resource.refresh} />
+    <p className="loading-status" role="status">{resource.loading ? 'Loading projections…' : '\u00a0'}</p>
+    {resource.result && !total && <p className="notice">No projections for this league yet. Import players and season stats, then open the workspace and use “Prepare league projections”. <a href={`/app?league=${encodeURIComponent(league.id)}`}>Go to workspace ↗</a></p>}
+    {!!resource.result?.data.length && <><div className="table-scroll"><table><caption className="sr-only">Players ranked by projected season points</caption><thead><tr><th>Rank</th><th>Player</th><th>Position</th><th>Projected season points</th><th>ADP</th></tr></thead><tbody>{resource.result.data.map(row => <tr key={row.playerId.value}><td>{row.rank}</td><th scope="row"><button className="player-name" onClick={() => setDetail({ id: row.playerId, fullName: row.fullName, positions: row.positions })}>{row.fullName}</button>{row.hasUnverifiedContext && <span className="muted"> · unverified context</span>}</th><td>{row.positions.join(' / ') || '—'}</td><td>{points(row.projectedSeasonValue)}</td><td>{row.averageDraftPosition === null ? '—' : points(row.averageDraftPosition)}</td></tr>)}</tbody></table></div>
+      <div className="pagination"><button disabled={page === 1 || resource.loading} onClick={() => setPage(page - 1)}>Previous</button><span>Page {page} of {Math.max(1, Math.ceil(total / PAGE_SIZE))} · {total} players</span><button disabled={resource.loading || page * PAGE_SIZE >= total} onClick={() => setPage(page + 1)}>Next</button></div></>}
+    {detail && <PlayerDetail key={detail.id.value} player={detail} leagueId={league.id} close={() => setDetail(null)} />}
   </section>;
 }
 

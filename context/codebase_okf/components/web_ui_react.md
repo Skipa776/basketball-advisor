@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Web, src/FantasyBasketball.Api/ApiHost.cs]
 test_paths: [src/FantasyBasketball.Web/tests/workspace.mjs, tests/FantasyBasketball.IntegrationTests/Auth/AuthHttpTests.cs]
 depends_on: [../contracts/api_surface.md, ../contracts/auth_tenancy_contract.md, ../contracts/design_system_contract.md, web_ui_blazor.md]
 status: partial
-last_updated: 2026-09-21
+last_updated: 2026-09-22
 owners: [engineering]
 ---
 
@@ -39,7 +39,10 @@ Pinned dependencies live in `package.json`/`package-lock.json` and are mirrored 
 `stack_config.toml`. The gate installs them using `npm ci --ignore-scripts`, then
 builds before .NET so static asset discovery includes the generated bundle.
 Generated `wwwroot/app` assets are ignored. `/app` is served by the .NET host;
-API authorization applies independently of access to the public JavaScript.
+physical bundles are public static files even when a running host sees a new
+Vite hash after a rebuild. API authorization applies independently of access
+to the public JavaScript. An anonymous HTTP test writes a new bundle after host
+startup and checks its JavaScript MIME type to catch a blank landing page.
 
 The Playwright test runs inside the real-cookie HTTP test fixture against its
 throwaway PostgreSQL database. External browser requests are blocked. It covers
@@ -115,8 +118,16 @@ secrets policy. The React source page shows run and freshness status after a
 valid configuration has booted; it does not imply that a missing-key state is
 reachable inside a running app.
 
-The React production build passes. The new HTTP and browser tests compile, but
-test execution is pending: this environment denies the local socket bind needed
-by VSTest, Kestrel, and Playwright. Do not treat compilation as passing tests or
-promote this component's status until the repository gate runs in an environment
-that permits its offline loopback and disposable-PostgreSQL fixtures.
+The 2026-09-22 full gate passes 280 tests with loopback Kestrel, disposable
+PostgreSQL, and the browser journey. The live local `/app` also renders after a
+frontend rebuild with no browser errors. This component remains partial because
+live game ingestion and remaining Blazor migration are still outstanding.
+
+## Projected players and routing — 2026-09-22
+
+`/app/projections` lists a points league's current published values ranked by
+projected season points, 50 per page, with player detail on click. Category
+leagues get a stated limitation, not points values. `/app/` and `/app/{page}/`
+now route like their bare paths; before this, signing in at `/app/` showed
+"Page not found". The browser journey covers both and the ranking order.
+

@@ -260,6 +260,85 @@ public sealed partial class ApiHttpTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Projected_players_are_ranked_by_season_value_and_paged()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var leagueId = await CreateLeagueAsync(token);
+        await AssertProjectedPlayersAsync(leagueId, 1, 50, [], 0, token);
+
+        var low = await AddPlayerAsync("Low Value Player", token);
+        var high = await AddPlayerAsync("High Value Player", token);
+        var middle = await AddPlayerAsync("Middle Value Player", token);
+        await SeedProjectionAsync(low, leagueId, token, seasonTotal: 300m);
+        await SeedProjectionAsync(high, leagueId, token, seasonTotal: 900m);
+        await SeedProjectionAsync(middle, leagueId, token, seasonTotal: 600m);
+
+        await AssertProjectedPlayersAsync(
+            leagueId, 1, 2, [(1, "High Value Player", 900m), (2, "Middle Value Player", 600m)], 3, token);
+        await AssertProjectedPlayersAsync(
+            leagueId, 2, 2, [(3, "Low Value Player", 300m)], 3, token);
+    }
+
+    [Fact]
+    public async Task League_names_over_100_characters_are_rejected_on_create_and_settings()
+    {
+        var token = TestContext.Current.CancellationToken;
+        object Request(string name) => new
+        {
+            Name = name,
+            Type = "Points",
+            TeamCount = 10,
+            ScoringRules = new[] { new { Stat = nameof(StatKey.PTS), PointsPerUnit = 1m } },
+            Categories = Array.Empty<string>(),
+            RosterSlots = new[] { "UTIL" },
+            Cadence = "Daily",
+        };
+
+        using var tooLong = await client.PostAsJsonAsync("/api/leagues", Request(new string('x', 101)), token);
+        tooLong.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        using (var error = await ReadEnvelopeAsync(tooLong, token))
+        {
+            error.RootElement.GetProperty("error").GetProperty("fields")
+                .TryGetProperty("name", out _).ShouldBeTrue();
+        }
+
+        using var atLimit = await client.PostAsJsonAsync("/api/leagues", Request(new string('x', 100)), token);
+        atLimit.StatusCode.ShouldBe(HttpStatusCode.Created);
+        using var created = await ReadEnvelopeAsync(atLimit, token);
+        var leagueId = created.RootElement.GetProperty("data").GetProperty("id").GetGuid();
+
+        using var rename = await client.PutAsJsonAsync(
+            $"/api/leagues/{leagueId}/settings",
+            new { Name = new string('y', 101), TeamCount = 10, Cadence = "Daily", RosterSlots = new[] { "UTIL" } },
+            token);
+        rename.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    private async Task AssertProjectedPlayersAsync(
+        Guid leagueId,
+        int page,
+        int limit,
+        IReadOnlyList<(int Rank, string Name, decimal Value)> expected,
+        int expectedTotal,
+        CancellationToken cancellationToken)
+    {
+        using var response = await client.GetAsync(
+            $"/api/leagues/{leagueId}/projected-players?page={page}&limit={limit}",
+            cancellationToken);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using var document = await ReadEnvelopeAsync(response, cancellationToken);
+        var rows = document.RootElement.GetProperty("data").EnumerateArray()
+            .Select(row => (
+                row.GetProperty("rank").GetInt32(),
+                row.GetProperty("fullName").GetString()!,
+                row.GetProperty("projectedSeasonValue").GetDecimal()))
+            .ToArray();
+        rows.ShouldBe(expected);
+        document.RootElement.GetProperty("meta").GetProperty("total").GetInt32()
+            .ShouldBe(expectedTotal);
+    }
+
+    [Fact]
     public async Task Category_league_setup_accepts_explicit_categories_without_points_defaults()
     {
         using var response = await client.PostAsJsonAsync("/api/leagues", new
@@ -937,7 +1016,8 @@ public sealed partial class ApiHttpTests : IAsyncLifetime
         PlayerId playerId,
         Guid leagueId,
         CancellationToken cancellationToken,
-        bool hasUnverifiedContext = false)
+        bool hasUnverifiedContext = false,
+        decimal seasonTotal = 700m)
     {
         var provenance = new DataProvenance(
             DataSourceName.Manual,
@@ -1012,7 +1092,7 @@ public sealed partial class ApiHttpTests : IAsyncLifetime
                 playerId,
                 leagueId,
                 10m,
-                700m,
+                seasonTotal,
                 adjusted.Id),
             (await services.GetRequiredService<ILeagueRepository>().GetAsync(leagueId, cancellationToken))!,
             DateTimeOffset.UnixEpoch,

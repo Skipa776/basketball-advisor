@@ -102,6 +102,30 @@ public sealed class AuthHttpTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Anonymous_react_bundle_added_after_host_start_is_served_as_javascript()
+    {
+        var assetDirectory = Path.Combine(app.Environment.WebRootPath, "app", "assets");
+        Directory.CreateDirectory(assetDirectory);
+        var assetName = $"test-{Guid.NewGuid():N}.js";
+        var assetPath = Path.Combine(assetDirectory, assetName);
+        try
+        {
+            await File.WriteAllTextAsync(
+                assetPath, "export const ready = true;", TestContext.Current.CancellationToken);
+            using var response = await client.GetAsync(
+                $"/app/assets/{assetName}", TestContext.Current.CancellationToken);
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            response.Content.Headers.ContentType?.MediaType.ShouldBe("text/javascript");
+            (await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken))
+                .ShouldContain("ready = true");
+        }
+        finally
+        {
+            File.Delete(assetPath);
+        }
+    }
+
+    [Fact]
     public async Task HP05_React_browser_registers_creates_league_and_persists_keyboard_pick()
     {
         var token = TestContext.Current.CancellationToken;
