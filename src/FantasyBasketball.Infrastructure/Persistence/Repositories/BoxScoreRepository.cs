@@ -25,6 +25,10 @@ public sealed class BoxScoreRepository(FantasyDbContext database) : IBoxScoreRep
             .OrderByDescending(pool => pool.SeasonEndYear).ThenBy(pool => pool.Source).ToArray();
     }
 
+    public Task<bool> ExistsAsync(Guid gameId, string source, CancellationToken cancellationToken) =>
+        database.BoxScoreSnapshots.AsNoTracking()
+            .AnyAsync(row => row.GameId == gameId && row.Source == source, cancellationToken);
+
     public async Task<bool> AddAsync(CompletedBoxScore snapshot, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(snapshot);

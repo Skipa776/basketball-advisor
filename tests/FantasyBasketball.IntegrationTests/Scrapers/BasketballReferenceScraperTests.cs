@@ -27,6 +27,40 @@ public sealed class BasketballReferenceScraperTests
     }
 
     [Fact]
+    public void S10_box_score_builder_allows_only_dated_game_pages()
+    {
+        var builder = new BbrefUrlBuilder();
+
+        builder.CreateBoxScoreUri(new DateOnly(2025, 11, 16), "BOS")
+            .AbsoluteUri.ShouldBe(
+                "https://www.basketball-reference.com/boxscores/202511160BOS.html");
+        foreach (var path in new[]
+        {
+            "/boxscores/?month=11&day=16&year=2025",
+            "/boxscores/202511160BOS.html?x=1",
+            "/boxscores/202511160bos.html",
+            "/boxscores/pbp/202511160BOS.html",
+            "/boxscores/shot-chart/202511160BOS.html",
+            "/players/h/hardeja01/gamelog/2026",
+        })
+        {
+            Should.Throw<InvalidOperationException>(() => builder.CreateUri(path));
+        }
+    }
+
+    [Fact]
+    public void Team_codes_map_between_balldontlie_and_basketball_reference()
+    {
+        BbrefTeamCodes.FromBallDontLie("BKN").ShouldBe("BRK");
+        BbrefTeamCodes.FromBallDontLie("CHA").ShouldBe("CHO");
+        BbrefTeamCodes.FromBallDontLie("PHX").ShouldBe("PHO");
+        BbrefTeamCodes.FromBallDontLie("BOS").ShouldBe("BOS");
+        BbrefTeamCodes.ToBallDontLie("BRK").ShouldBe("BKN");
+        BbrefTeamCodes.ToBallDontLie("PHO").ShouldBe("PHX");
+        BbrefTeamCodes.ToBallDontLie("LAC").ShouldBe("LAC");
+    }
+
+    [Fact]
     public async Task I04_I05_and_S13_three_tables_parse_purely()
     {
         var parser = new SeasonTableParser();

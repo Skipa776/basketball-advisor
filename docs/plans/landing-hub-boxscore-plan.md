@@ -9,7 +9,7 @@ tests passing and one conventional commit**. Never commit `CLAUDE.md` (it is
 | Question | Decision |
 |---|---|
 | Box-score source | Basketball-Reference **game pages** `/boxscores/{yyyyMMdd}0{TEAM}.html`, owner-authorized. Schedule (which games, home team) comes from balldontlie `/v1/games` (free tier, verified 200). balldontlie `/v1/stats` is 401 on the free tier — that is the recorded blocker. |
-| Test window | Random season day **2025-11-16**; test month **2025-11-16 → 2025-12-16** (2025-26 season). |
+| Test window | Random season day **2025-11-16**; test month **2025-11-16 → 2025-12-15** (2025-26 season; Dec 16 is the NBA Cup final, not a regular-season stat game). |
 | Thresholds | For this test only, ignore minimum-history thresholds (e.g. 10-game baseline) via an explicit, default-off setting. Production defaults unchanged. |
 | CAT figure | **Categories won**: of the 9 default cats (PTS, REB, AST, STL, BLK, 3PM, FG%, FT%, TO — TO lower is better), how many the player beat that day's pool average in. Shown `CAT 7/9`. |
 | Points figure | ESPN default points profile already in the app (`/api/leagues/setup` points profile). |

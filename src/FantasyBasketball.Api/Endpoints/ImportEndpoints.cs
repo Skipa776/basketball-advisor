@@ -6,6 +6,9 @@ namespace FantasyBasketball.Api.Endpoints;
 
 public sealed record ScheduleImportRequest(DateOnly From, DateOnly To);
 
+/// <summary>The owner asserts the range is regular season; phase is never inferred.</summary>
+public sealed record BoxScoreImportRequest(DateOnly From, DateOnly To);
+
 public sealed record SeasonStatsImportRequest(int SeasonEndYear);
 
 public sealed record AdpImportRequest(string? Csv);
@@ -22,6 +25,7 @@ public static class ImportEndpoints
         group.MapPost("/schedule", ImportScheduleAsync);
         group.MapPost("/season-stats", ImportSeasonStatsAsync);
         group.MapPost("/adp", ImportAdpAsync);
+        group.MapPost("/box-scores", ImportBoxScoresAsync);
         group.MapGet("/runs", ListRunsAsync);
         return endpoints;
     }
@@ -57,6 +61,19 @@ public static class ImportEndpoints
                 new ImportJobRequest(
                     ImportJobKind.SeasonStats,
                     SeasonEndYear: request.SeasonEndYear),
+                cancellationToken),
+            StatusCodes.Status202Accepted);
+
+    public static async Task<IResult> ImportBoxScoresAsync(
+        BoxScoreImportRequest request,
+        IImportJobQueue queue,
+        CancellationToken cancellationToken) =>
+        ApiResults.Success(
+            await queue.EnqueueAsync(
+                new ImportJobRequest(
+                    ImportJobKind.BoxScores,
+                    From: request.From,
+                    To: request.To),
                 cancellationToken),
             StatusCodes.Status202Accepted);
 

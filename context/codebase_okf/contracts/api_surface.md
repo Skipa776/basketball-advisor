@@ -63,6 +63,9 @@ forces a throw and asserts the body contains none of these.*
   decomposition (observed, baseline, adjusted, value) as four sibling objects,
   never a single collapsed number. This is requirement R8, and the response
   shape *is* the requirement.
+- **`POST /api/imports/box-scores`** `{from, to}` (owner) — queues a
+  regular-season Basketball-Reference box-score import over stored final
+  balldontlie games in that US-Eastern date range; see `boxscore_importer`.
 - **`POST /api/imports/*`** — returns the created `DataImportRun` id immediately
   with status `Running`; poll `GET /api/imports/runs`. A failed import returns
   `200` with a failed run, not `500` — a failed import is data, not a server

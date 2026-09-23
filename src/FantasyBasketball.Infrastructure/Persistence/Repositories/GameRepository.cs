@@ -35,6 +35,23 @@ public sealed class GameRepository(FantasyDbContext database) : IGameRepository
         await database.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<ScheduledGame>> ListFinalAsync(
+        string source,
+        DateTimeOffset fromUtc,
+        DateTimeOffset toUtc,
+        CancellationToken cancellationToken)
+    {
+        var rows = await database.NbaGames
+            .AsNoTracking()
+            .Where(game => game.Source == source && game.Status == "Final"
+                && game.StartsAt >= fromUtc && game.StartsAt < toUtc)
+            .Join(database.NbaTeams, game => game.HomeTeamId, team => team.Id,
+                (game, team) => new { Game = game, team.Abbreviation })
+            .OrderBy(row => row.Game.StartsAt)
+            .ToArrayAsync(cancellationToken);
+        return rows.Select(row => new ScheduledGame(ToDomain(row.Game), row.Abbreviation)).ToArray();
+    }
+
     public async Task<NbaGame?> GetBySourceAsync(
         string source,
         string externalId,

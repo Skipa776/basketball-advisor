@@ -3,11 +3,11 @@ type: component
 title: Box-Score Importer
 description: The rate-limited historical importer that unblocks rolling windows, and why it can never be an interactive request.
 tags: [component, ingestion, scrapers]
-source_paths: [src/FantasyBasketball.Infrastructure/Scrapers/BasketballReference, src/FantasyBasketball.Infrastructure/Workers/BoxScoreImportWorker.cs]
-test_paths: [tests/FantasyBasketball.IntegrationTests/Scrapers]
+source_paths: [src/FantasyBasketball.Infrastructure/Scrapers/BasketballReference, src/FantasyBasketball.Infrastructure/Scrapers/BasketballReference/BoxScoreImporter.cs, src/FantasyBasketball.Infrastructure/Workers/ImportJobQueue.cs]
+test_paths: [tests/FantasyBasketball.IntegrationTests/Scrapers, tests/FantasyBasketball.IntegrationTests/Persistence/BoxScoreImportTests.cs]
 depends_on: [../safety/scraping_policy.md, scrapers.md, ../contracts/rolling_window_contract.md]
 status: partial
-last_updated: 2026-09-21
+last_updated: 2026-09-23
 owners: [engineering]
 risk_level: high
 done_criteria:
@@ -91,3 +91,33 @@ path table excludes box scores although its prose describes them as permitted.
 No live request or URL-builder expansion is enabled; that conflict needs explicit
 policy resolution before any fetching. Existing gamelog rejection is unchanged.
 Unknown game phase never silently becomes regular season.
+
+## Owner-authorized importer — 2026-09-23
+
+The owner resolved the path-table conflict: `scraping_policy` now lists
+`/boxscores/{yyyymmdd}0{TEAM}.html`. `BbrefUrlBuilder.CreateBoxScoreUri` builds
+only that shape; the day index, `pbp/`, `shot-chart/` and `gamelog/` stay
+unreachable (row S-10). The parser was checked against one real saved page
+(`202511160BOS`: 27 rows, 7 DNP) before any bulk fetch; that page is
+third-party content and is not committed.
+
+Rather than a separate worker, the import is an owner job on the existing queue:
+`POST /api/imports/box-scores {from, to}` → `ImportJobKind.BoxScores` →
+`BoxScoreImporter`. It lists stored balldontlie games with status `Final` whose
+US-Eastern date falls in the range, skips any game with a stored
+Basketball-Reference snapshot (S-30/S-31: progress is the database), maps team
+codes (`BKN→BRK`, `CHA→CHO`, `PHX→PHO`), resolves players through the existing
+identity resolver (unresolved rows are counted as pending matches) and stores
+one atomic snapshot per game. A failed page fails that game only; the run
+records every failed game id (S-33). Progress is logged per game and the run is
+visible as `Running` in the queue; a per-game counter in the run list (S-34) is
+not built.
+
+Phase is never inferred: the stored schedule does not keep balldontlie's
+`postseason` flag, so the owner request asserts the range is regular season.
+The NBA Cup championship game does not count toward regular-season statistics
+and cannot be told apart in the stored schedule; exclude its date from ranges.
+
+Evidence: `S30_S33_box_score_import_skips_stored_games_and_isolates_a_failed_page`
+(Testcontainers PostgreSQL, fixture HTML, fake HTTP), `S10_box_score_builder_allows_only_dated_game_pages`,
+`Team_codes_map_between_balldontlie_and_basketball_reference`.

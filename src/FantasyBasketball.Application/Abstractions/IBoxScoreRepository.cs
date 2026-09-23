@@ -9,6 +9,8 @@ public interface IBoxScoreRepository
 {
     Task<IReadOnlyList<BoxScorePool>> ListPoolsAsync(CancellationToken cancellationToken);
 
+    Task<bool> ExistsAsync(Guid gameId, string source, CancellationToken cancellationToken);
+
     Task<bool> AddAsync(CompletedBoxScore snapshot, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<PlayerGameSample>> ListAsync(

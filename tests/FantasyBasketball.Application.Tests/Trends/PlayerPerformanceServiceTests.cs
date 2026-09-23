@@ -85,6 +85,7 @@ public sealed class PlayerPerformanceServiceTests
         public Task<IReadOnlyList<FantasyLeague>> ListAsync(CancellationToken token) => throw new NotSupportedException();
         public Task SaveScoringAsync(FantasyLeague league, CancellationToken token) => throw new NotSupportedException();
         public Task SaveSettingsAsync(FantasyLeague league, CancellationToken token) => throw new NotSupportedException();
+        public Task<bool> ExistsAsync(Guid gameId, string source, CancellationToken token) => throw new NotSupportedException();
         public Task<bool> AddAsync(CompletedBoxScore snapshot, CancellationToken token) => throw new NotSupportedException();
     }
 }

@@ -984,3 +984,16 @@ were created and no numerical usage quota was available.
   process was granted the local socket it needs: 279 tests, browser navigation,
   accessibility and mobile checks, and coverage floors. React migration remains
   partial because live imports and the remaining Blazor routes are not complete.
+
+## Box-score import — 2026-09-23
+
+- balldontlie `/v1/stats` returns 401 on the free tier, so per-game lines come
+  from Basketball-Reference game pages, owner-authorized 2026-09-23.
+- The importer runs as an `ImportJobKind` on the existing owner job queue rather
+  than a new hosted worker: the queue already serializes imports, records runs
+  and shares the host rate limiter. A recurring box-score worker is not built.
+- Game dates use US Eastern time because the NBA schedules and Basketball-
+  Reference game ids use the local Eastern date; balldontlie stores UTC tip-off.
+- Owner test window for the landing/heat trial: random season day 2025-11-16,
+  following month 2025-11-16 → 2025-12-15. 2025-12-16 (NBA Cup final, not a
+  regular-season stat game) is excluded.

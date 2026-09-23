@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Infrastructure/Scrapers, src/FantasyBasketb
 test_paths: [tests/FantasyBasketball.IntegrationTests/Scrapers]
 depends_on: [../contracts/provider_contracts.md]
 status: implemented
-last_updated: 2026-07-29
+last_updated: 2026-09-23
 owners: [engineering]
 risk_level: high
 edit_policy: stable_contract
@@ -39,6 +39,7 @@ minute** and jails the session for up to a day.
 | `/leagues/NBA_{year}_totals.html` | Season totals — the per-minute rate input |
 | `/leagues/NBA_{year}_advanced.html` | Usage rate |
 | `/players/{letter}/{slug}.html` | Player metadata, only when identity resolution needs it |
+| `/boxscores/{yyyymmdd}0{TEAM}.html` | Completed game box score — **owner-authorized 2026-09-23** (resolves the table/prose discrepancy below). One page per final game, through the shared limiter. The day-index page (`/boxscores/?month=…`) carries a query string and stays unreachable. |
 
 **Disallowed by robots — never request:**
 `*/gamelog/`, `*/splits/`, `*/on-off/`, `*/lineups/`, `*/shooting/`,

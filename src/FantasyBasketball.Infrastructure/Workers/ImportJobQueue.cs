@@ -4,6 +4,7 @@ using FantasyBasketball.Application.Abstractions;
 using FantasyBasketball.Application.Ingestion;
 using FantasyBasketball.Domain.Provenance;
 using FantasyBasketball.Infrastructure.Import;
+using FantasyBasketball.Infrastructure.Scrapers.BasketballReference;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -134,6 +135,14 @@ public sealed class ImportJobQueue(
                         queued.Run.Id,
                         cancellationToken);
                 break;
+            case ImportJobKind.BoxScores:
+                await services.GetRequiredService<BoxScoreImporter>()
+                    .ImportRegularSeasonAsync(
+                        queued.Request.From!.Value,
+                        queued.Request.To!.Value,
+                        queued.Run.Id,
+                        cancellationToken);
+                break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(queued));
         }
@@ -162,13 +171,13 @@ public sealed class ImportJobQueue(
 
     private static void Validate(ImportJobRequest request)
     {
-        if (request.Kind == ImportJobKind.Schedule
+        if (request.Kind is ImportJobKind.Schedule or ImportJobKind.BoxScores
             && (request.From is null
                 || request.To is null
                 || request.To < request.From))
         {
             throw new ArgumentException(
-                "Schedule imports require a valid date range.",
+                "Schedule and box-score imports require a valid date range.",
                 nameof(request));
         }
 
@@ -186,7 +195,8 @@ public sealed class ImportJobQueue(
         {
             ImportJobKind.Players or ImportJobKind.Schedule =>
                 DataSourceName.BallDontLie,
-            ImportJobKind.SeasonStats => DataSourceName.BasketballReference,
+            ImportJobKind.SeasonStats or ImportJobKind.BoxScores =>
+                DataSourceName.BasketballReference,
             ImportJobKind.Adp when request.Csv is not null => DataSourceName.Csv,
             ImportJobKind.Adp => DataSourceName.FantasyPros,
             _ => throw new ArgumentOutOfRangeException(nameof(request)),

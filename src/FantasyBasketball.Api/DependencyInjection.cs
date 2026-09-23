@@ -226,6 +226,7 @@ public static class DependencyInjection
         services.AddScoped<IScheduleProvider>(serviceProvider =>
             serviceProvider.GetRequiredService<BallDontLieProvider>());
         services.AddScoped<BasketballReferenceStatsScraper>();
+        services.AddScoped<BoxScoreImporter>();
         services.AddScoped<IPlayerStatsProvider>(serviceProvider =>
             serviceProvider.GetRequiredService<BasketballReferenceStatsScraper>());
         services.AddScoped<FantasyProsAdpScraper>();

@@ -30,6 +30,13 @@ public sealed partial class BbrefUrlBuilder
         return CreateUri($"/leagues/NBA_{seasonEndYear}_{suffix}.html");
     }
 
+    /// <summary>One completed game page. Owner-authorized 2026-09-23; see scraping_policy.</summary>
+    public Uri CreateBoxScoreUri(DateOnly playedOn, string bbrefHomeCode) =>
+        CreateUri($"/boxscores/{CreateBoxScoreGameId(playedOn, bbrefHomeCode)}.html");
+
+    public static string CreateBoxScoreGameId(DateOnly playedOn, string bbrefHomeCode) =>
+        $"{playedOn:yyyyMMdd}0{bbrefHomeCode}";
+
     public Uri CreateUri(string pathOrUri)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(pathOrUri);
@@ -49,7 +56,8 @@ public sealed partial class BbrefUrlBuilder
             || !string.IsNullOrEmpty(uri.Query)
             || !string.IsNullOrEmpty(uri.Fragment)
             || (!SeasonPath().IsMatch(uri.AbsolutePath)
-                && !PlayerMetadataPath().IsMatch(uri.AbsolutePath)))
+                && !PlayerMetadataPath().IsMatch(uri.AbsolutePath)
+                && !BoxScorePath().IsMatch(uri.AbsolutePath)))
         {
             throw new InvalidOperationException(
                 $"Basketball-Reference path '{pathOrUri}' is not allowlisted.");
@@ -67,4 +75,9 @@ public sealed partial class BbrefUrlBuilder
         "^/players/[a-z]/[a-z0-9]+\\.html$",
         RegexOptions.CultureInvariant)]
     private static partial Regex PlayerMetadataPath();
+
+    [GeneratedRegex(
+        "^/boxscores/[0-9]{8}0[A-Z]{3}\\.html$",
+        RegexOptions.CultureInvariant)]
+    private static partial Regex BoxScorePath();
 }
