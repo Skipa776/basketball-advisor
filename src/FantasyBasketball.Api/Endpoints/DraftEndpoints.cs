@@ -1,7 +1,8 @@
+using FantasyBasketball.Api.Middleware;
 using FantasyBasketball.Application.Draft;
+using FantasyBasketball.Application.Players;
 using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Infrastructure.Identity;
-using FantasyBasketball.Api.Middleware;
 
 namespace FantasyBasketball.Api.Endpoints;
 
@@ -22,6 +23,8 @@ public static class DraftEndpoints
         var group = endpoints.MapGroup("/api/drafts");
         group.AddEndpointFilter<CookieAntiforgeryFilter>();
         group.RequireAuthorization();
+        group.MapGet("/", ListAsync)
+            .WithMetadata(new OwnedRouteMetadata("league", "query:leagueId"));
         group.MapGet("/{id:guid}", GetAsync)
             .WithMetadata(new OwnedRouteMetadata("draft", "id"));
         group.MapPost("/", CreateAsync)
@@ -35,6 +38,36 @@ public static class DraftEndpoints
         group.MapGet("/{id:guid}/recommendations", GetRecommendationsAsync)
             .WithMetadata(new OwnedRouteMetadata("draft", "id"));
         return endpoints;
+    }
+
+    public static async Task<IResult> ListAsync(
+        Guid? leagueId,
+        int? page,
+        int? limit,
+        DraftSessionService service,
+        OwnedResourceAuthorizationService authorization,
+        CancellationToken cancellationToken)
+    {
+        if (leagueId is null || leagueId == Guid.Empty)
+        {
+            throw new RequestValidationException(new Dictionary<string, string[]>
+            {
+                ["leagueId"] = ["Choose a league to list its drafts."],
+            });
+        }
+
+        await authorization.RequireLeagueAsync(leagueId.Value, cancellationToken);
+        var currentPage = page ?? 1;
+        var pageSize = limit ?? Paging.DefaultLimit;
+        Paging.Validate(currentPage, pageSize);
+        var result = await service.ListAsync(
+            leagueId.Value,
+            currentPage,
+            pageSize,
+            cancellationToken);
+        return ApiResults.Success(
+            result.Items,
+            meta: new ApiMeta(result.Total, result.Page, result.Limit));
     }
 
     public static async Task<IResult> GetAsync(

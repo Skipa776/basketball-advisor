@@ -9,6 +9,54 @@ namespace FantasyBasketball.Infrastructure.Persistence.Repositories;
 
 public sealed class DraftRepository(FantasyDbContext database) : IDraftRepository
 {
+    public async Task<PagedResult<DraftSessionRecord>> ListAsync(
+        Guid leagueId,
+        int page,
+        int limit,
+        CancellationToken cancellationToken)
+    {
+        var query = database.DraftSessions.AsNoTracking()
+            .Where(value => value.FantasyLeagueId == leagueId);
+        var total = await query.CountAsync(cancellationToken);
+        var rows = await query.OrderBy(value => value.Id)
+            .Skip((int)Math.Min((long)(page - 1) * limit, int.MaxValue))
+            .Take(limit)
+            .ToArrayAsync(cancellationToken);
+        var rowIds = rows.Select(value => value.Id).ToArray();
+        var picks = rowIds.Length == 0
+            ? []
+            : await database.DraftPicks.AsNoTracking()
+                .Where(value => rowIds.Contains(value.DraftSessionId))
+                .OrderBy(value => value.DraftSessionId)
+                .ThenBy(value => value.PickNumber)
+                .Select(value => new DraftPick(
+                    value.Id,
+                    value.DraftSessionId,
+                    new PlayerId(value.PlayerId),
+                    value.PickNumber))
+                .ToArrayAsync(cancellationToken);
+        var result = new List<DraftSessionRecord>(rows.Length);
+        foreach (var row in rows)
+        {
+            result.Add(new DraftSessionRecord(
+                new DraftSession(
+                    row.Id,
+                    row.TeamCount,
+                    row.RoundCount,
+                    row.UserSlot,
+                    picks.Where(pick => pick.DraftSessionId == row.Id).ToArray()),
+                row.FantasyLeagueId));
+        }
+
+        return new PagedResult<DraftSessionRecord>(result, total, page, limit);
+    }
+
+    public Task<bool> HasAnyForLeagueAsync(
+        Guid leagueId,
+        CancellationToken cancellationToken) =>
+        database.DraftSessions.AsNoTracking()
+            .AnyAsync(value => value.FantasyLeagueId == leagueId, cancellationToken);
+
     public async Task AddSessionAsync(
         DraftSession session,
         Guid leagueId,

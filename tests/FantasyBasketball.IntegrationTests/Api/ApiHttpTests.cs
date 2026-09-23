@@ -7,11 +7,14 @@ using System.Text.Json;
 using AngleSharp.Dom;
 using AngleSharp.Html.Parser;
 using FantasyBasketball.Api;
+using FantasyBasketball.Api.Endpoints;
+using FantasyBasketball.Application.Common;
 using FantasyBasketball.Application.Abstractions;
 using FantasyBasketball.Application.Ingestion;
 using FantasyBasketball.Application.Players;
 using FantasyBasketball.Domain.Accounts;
 using FantasyBasketball.Domain.Context;
+using FantasyBasketball.Domain.Leagues;
 using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Domain.Projections;
 using FantasyBasketball.Domain.Provenance;
@@ -23,6 +26,7 @@ using FantasyBasketball.Infrastructure.Persistence.Repositories;
 using FantasyBasketball.Infrastructure.Workers;
 using FantasyBasketball.IntegrationTests.TestSupport;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
@@ -34,7 +38,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Shouldly;
 using Testcontainers.PostgreSql;
 
@@ -201,6 +204,83 @@ public sealed partial class ApiHttpTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Saved_drafts_are_paged_and_league_settings_refuse_structural_edits_after_draft_creation()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var league = await CreateLeagueAsync(token);
+        var firstDraft = await CreateDraftAsync(league, token);
+        var secondDraft = await CreateDraftAsync(league, token);
+
+        using var list = await client.GetAsync(
+            $"/api/drafts?leagueId={league}&page=1&limit=1",
+            token);
+        list.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using var page = await ReadEnvelopeAsync(list, token);
+        page.RootElement.GetProperty("data").GetArrayLength().ShouldBe(1);
+        page.RootElement.GetProperty("meta").GetProperty("total").GetInt32().ShouldBe(2);
+
+        using var structuralEdit = await client.PutAsJsonAsync(
+            $"/api/leagues/{league}/settings",
+            new { Name = "Renamed league", TeamCount = 10, Cadence = "Weekly", RosterSlots = new[] { "PG", "BENCH" } },
+            token);
+        structuralEdit.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+
+        using var presentationEdit = await client.PutAsJsonAsync(
+            $"/api/leagues/{league}/settings",
+            new { Name = "Renamed league", TeamCount = 10, Cadence = "Weekly", RosterSlots = new[] { "UTIL" } },
+            token);
+        presentationEdit.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using var saved = await ReadEnvelopeAsync(presentationEdit, token);
+        saved.RootElement.GetProperty("data").GetProperty("name").GetString().ShouldBe("Renamed league");
+        saved.RootElement.GetProperty("data").GetProperty("cadence").GetInt32()
+            .ShouldBe((int)LineupCadence.Weekly);
+        var draft = await CreateDraftAsync(league, token);
+        draft.ShouldNotBe(firstDraft);
+        draft.ShouldNotBe(secondDraft);
+
+        using var reorderedLeagueResponse = await client.PostAsJsonAsync("/api/leagues", new
+        {
+            Name = "Ordered roster",
+            Type = "Points",
+            TeamCount = 10,
+            ScoringRules = new[] { new { Stat = nameof(StatKey.PTS), PointsPerUnit = 1m } },
+            Categories = Array.Empty<string>(),
+            RosterSlots = new[] { "SG", "PG" },
+            Cadence = "Daily",
+        }, token);
+        reorderedLeagueResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
+        using var reorderedLeague = await ReadEnvelopeAsync(reorderedLeagueResponse, token);
+        var reorderedLeagueId = reorderedLeague.RootElement.GetProperty("data").GetProperty("id").GetGuid();
+        await CreateDraftAsync(reorderedLeagueId, token);
+        using var sameSlots = await client.PutAsJsonAsync(
+            $"/api/leagues/{reorderedLeagueId}/settings",
+            new { Name = "Renamed ordered roster", TeamCount = 10, Cadence = "Weekly", RosterSlots = new[] { "PG", "SG" } },
+            token);
+        sameSlots.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Category_league_setup_accepts_explicit_categories_without_points_defaults()
+    {
+        using var response = await client.PostAsJsonAsync("/api/leagues", new
+        {
+            Name = "Category configuration",
+            Type = "Categories",
+            TeamCount = 12,
+            ScoringRules = Array.Empty<object>(),
+            Categories = new[] { "PTS", "REB", "AST" },
+            RosterSlots = new[] { "PG", "SG", "UTIL", "BENCH" },
+            Cadence = "Weekly",
+        }, TestContext.Current.CancellationToken);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        using var document = await ReadEnvelopeAsync(response, TestContext.Current.CancellationToken);
+        var data = document.RootElement.GetProperty("data");
+        data.GetProperty("type").GetInt32().ShouldBe(1);
+        data.GetProperty("scoringRules").GetArrayLength().ShouldBe(0);
+        data.GetProperty("categories").GetArrayLength().ShouldBe(3);
+    }
+
+    [Fact]
     public async Task A10_through_A14_http_contract_and_lifecycles_hold()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
@@ -364,11 +444,20 @@ public sealed partial class ApiHttpTests : IAsyncLifetime
             HttpStatusCode.Conflict,
             "conflict",
             cancellationToken);
-        await AssertSuccessAsync(
-            await client.GetAsync(
-                "/api/context-events?page=1&limit=50",
-                cancellationToken),
-            cancellationToken);
+        using (var contextList = await client.GetAsync(
+            "/api/context-events?page=1&limit=50",
+            cancellationToken))
+        {
+            contextList.StatusCode.ShouldBe(HttpStatusCode.OK);
+            using var contextDocument = await ReadEnvelopeAsync(contextList, cancellationToken);
+            var verified = contextDocument.RootElement.GetProperty("data")
+                .EnumerateArray()
+                .Single(value => value.GetProperty("id").GetGuid() == contextEventId);
+            verified.GetProperty("type").ValueKind.ShouldBe(JsonValueKind.Number);
+            verified.GetProperty("typeName").GetString().ShouldBe("RotationChange");
+            verified.GetProperty("verification").ValueKind.ShouldBe(JsonValueKind.Number);
+            verified.GetProperty("verificationName").GetString().ShouldBe("Verified");
+        }
 
         await AssertSuccessAsync(
             await client.GetAsync(

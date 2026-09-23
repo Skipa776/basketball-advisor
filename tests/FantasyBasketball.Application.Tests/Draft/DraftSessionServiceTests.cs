@@ -116,6 +116,10 @@ public sealed class DraftSessionServiceTests
             FantasyLeague value,
             CancellationToken cancellationToken) =>
             Task.CompletedTask;
+
+        public Task SaveSettingsAsync(
+            FantasyLeague value,
+            CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
     private sealed class FakeDraftRepository : IDraftRepository
@@ -123,6 +127,16 @@ public sealed class DraftSessionServiceTests
         private DraftSessionRecord? record;
 
         public int AddedPicks { get; private set; }
+
+        public Task<FantasyBasketball.Application.Common.PagedResult<DraftSessionRecord>> ListAsync(
+            Guid leagueId,
+            int page,
+            int limit,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new FantasyBasketball.Application.Common.PagedResult<DraftSessionRecord>([], 0, page, limit));
+
+        public Task<bool> HasAnyForLeagueAsync(Guid leagueId, CancellationToken cancellationToken) =>
+            Task.FromResult(record?.LeagueId == leagueId);
 
         public Task AddSessionAsync(
             DraftSession session,

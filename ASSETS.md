@@ -24,11 +24,22 @@ invisible until it is expensive, and this repository is public and MIT licensed.
 
 ## Assets
 
-**None.** No binary image ships today and `wwwroot/img/` does not exist. Row
-`D-34` is vacuously green, which is the intended state: the check was in place
-before the first asset needed it, not after.
+Every photo is CC0 or public domain, so attribution is not legally required; it
+is recorded anyway. None shows an identifiable person or a team mark. Each was
+resized and recompressed for the web; nothing else was changed.
 
-Everything visual in the app is drawn. The favicon, the court backdrop and every
+| File | Used by | Source | Licence | Author | Retrieved |
+|---|---|---|---|---|---|
+| `img/hoop-sunset.jpg` | React `/app` image strip | [Wikimedia Commons: 2009-365-10 Sunset on the Hoop](https://commons.wikimedia.org/wiki/File:2009-365-10_Sunset_on_the_Hoop_(3186039611).jpg) | CC0 1.0 | cogdogblog (Alan Levine), via Flickr | 2026-09-22 |
+| `img/court-aerial.jpg` | React `/app` image strip | [Wikimedia Commons: Espace de basket 2](https://commons.wikimedia.org/wiki/File:Espace_de_basket_2.jpg) | CC0 1.0 | Abdoulayelelewal237 | 2026-09-22 |
+| `img/hoop-angular.jpg` | React `/app` image strip | [Wikimedia Commons: Angular Basketball Hoop](https://commons.wikimedia.org/wiki/File:Angular_Basketball_Hoop.jpg) | CC0 1.0 | MarkBuckawicki | 2026-09-22 |
+| `img/ball-in-flight.jpg` | React `/app` image strip | [Wikimedia Commons: Basketball hitting a basketball goal](https://commons.wikimedia.org/wiki/File:Basketball_hitting_a_basketball_goal.jpg) | CC0 1.0 | noahsilliman, via Unsplash | 2026-09-22 |
+| `img/net-freestanding.jpg` | React `/app` image strip | [Wikimedia Commons: Freestanding basketball net (Unsplash)](https://commons.wikimedia.org/wiki/File:Freestanding_basketball_net_(Unsplash).jpg) | CC0 1.0 | Andy Hu, via Unsplash | 2026-09-22 |
+| `img/net-torn.jpg` | React `/app` image strip | [Wikimedia Commons: Basketball hoop](https://commons.wikimedia.org/wiki/File:Basketball_hoop.JPG) | Public domain | HTO | 2026-09-22 |
+| `img/ball-through-hoop.jpg` | React `/app` sign-in section | [Wikimedia Commons: Basketball through hoop](https://commons.wikimedia.org/wiki/File:Basketball_through_hoop.jpg) | Public domain (U.S. Air Force work) | Airman 1st Class Kerelin Molina | 2026-09-22 |
+| `img/streetball-court.jpg` | React `/app` image strip | [Wikimedia Commons: Streetball court Ornskoldsvik](https://commons.wikimedia.org/wiki/File:Streetball_court_Ornskoldsvik.jpg) | Public domain | Petey21 | 2026-09-22 |
+
+Everything else visual in the app is drawn. The favicon, the court backdrop and every
 icon are SVG written against the tokens, so they theme with the palette and
 carry no attribution burden. The one self-hosted binary, the Anton display face
 under `wwwroot/fonts/`, is a typeface rather than imagery; it ships under the SIL

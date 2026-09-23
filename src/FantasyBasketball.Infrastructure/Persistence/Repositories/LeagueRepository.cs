@@ -98,4 +98,24 @@ public sealed class LeagueRepository(FantasyDbContext database) : ILeagueReposit
                 ordinal)));
         await database.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task SaveSettingsAsync(
+        FantasyLeague league,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(league);
+        var existing = await database.FantasyLeagues
+            .Include(value => value.RosterSlots)
+            .SingleOrDefaultAsync(value => value.Id == league.Id, cancellationToken)
+            ?? throw new KeyNotFoundException($"League '{league.Id}' was not found.");
+        existing.UpdateSettings(
+            league.Name,
+            league.TeamCount,
+            league.Cadence.ToString());
+        database.RosterSlots.RemoveRange(existing.RosterSlots);
+        existing.RosterSlots.Clear();
+        existing.RosterSlots.AddRange(league.RosterSlots.Select((slot, ordinal) =>
+            RosterSlotRow.Create(league.Id, slot.Kind.ToString(), ordinal)));
+        await database.SaveChangesAsync(cancellationToken);
+    }
 }

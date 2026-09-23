@@ -63,6 +63,13 @@ public static class ApiHost
                 ? Results.File(index, "text/html")
                 : Results.NotFound();
         }).AllowAnonymous();
+        app.MapGet("/app/{**path}", () =>
+        {
+            var index = Path.Combine(app.Environment.WebRootPath, "app", "index.html");
+            return File.Exists(index)
+                ? Results.File(index, "text/html")
+                : Results.NotFound();
+        }).AllowAnonymous();
         app.MapFallback(
             "/api/{**path}",
             () => ApiResults.Failure(

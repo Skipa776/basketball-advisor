@@ -13,10 +13,10 @@ export function DraftAdvice({ draft, leagueId, version, disabled, pick }: { draf
   const available = recommendations.result?.data.filter(item => !drafted.has(item.subjectPlayerId.value)).slice(0, 5) ?? [];
   const complete = draft.currentPick > draft.teamCount * draft.roundCount;
   return <section className="advice" aria-labelledby="advice-title"><div className="advice-heading"><h3 id="advice-title" tabIndex={-1}>{complete ? 'Draft complete' : 'Next-pick shortlist'}</h3><button onClick={recommendations.refresh} disabled={recommendations.loading || disabled}>Refresh advice</button></div>
-    <p className="muted">Ranked by your league’s draft value, available players and roster fit. Open a player to inspect the underlying estimates.</p>
+    <p className="muted">Ranked by draft value and roster fit. Tap a name for details.</p>
     <ErrorNotice text={recommendations.error || catalog.error} retry={() => { recommendations.refresh(); catalog.refresh(); }} />
     <p className="loading-status">{recommendations.loading ? 'Updating advice…' : '\u00a0'}</p>
-    {!recommendations.loading && recommendations.result && !available.length && <p>No current recommendations. Calculate projections from an imported season, or continue recording picks using player search.</p>}
+    {!recommendations.loading && recommendations.result && !available.length && <p>No suggestions yet. Calculate projections or keep picking.</p>}
     {!complete && <ol className="advice-list">{available.map(item => <AdviceRow key={item.subjectPlayerId.value} item={item} catalog={catalog.result?.data} disabled={disabled || recommendations.loading} pick={pick} detail={setDetail} />)}</ol>}
     {detail && <PlayerDetail key={`${detail.id.value}:${version}`} player={detail} leagueId={leagueId} close={() => setDetail(null)} />}
   </section>;

@@ -41,6 +41,7 @@ try {
   assert.equal(denied, 400, 'Cookie mutation without CSRF must fail');
   await page.getByLabel('League name').fill('Browser points league');
   await page.getByRole('button', { name: 'Add slot', exact: true }).click();
+  await page.getByRole('button', { name: 'Add slot', exact: true }).click();
   await page.getByRole('checkbox', { name: 'Use these reviewed scoring rules for my league.' }).check();
   await page.getByRole('button', { name: 'Save league' }).click();
   await visible(page.getByRole('heading', { name: 'Browser points league', exact: true }));
@@ -137,6 +138,44 @@ try {
   await visible(results.getByRole('heading', { name: 'Above baseline', exact: true }));
   await results.getByText('Games behind this result', { exact: true }).click();
   checks.push('Recorded games → separate best/above-baseline views, disjoint evidence, insufficient history, empty cutoff and failed-read retry');
+
+  const leagueId = new URL(savedUrl).searchParams.get('league');
+  await page.goto(new URL(`/app/drafts?league=${leagueId}`, base).href);
+  await visible(page.getByRole('heading', { name: 'Your drafts', exact: true }));
+  await visible(page.getByRole('link', { name: 'Reopen draft', exact: true }));
+  await accessibility('Saved drafts');
+  await page.goto(new URL(`/app/league-settings?league=${leagueId}`, base).href);
+  await visible(page.getByRole('heading', { name: 'League settings', exact: true }));
+  assert.equal(await page.getByLabel('PG', { exact: true }).inputValue(), '2');
+  await accessibility('League settings');
+  await page.goto(new URL('/app/context-review', base).href);
+  await visible(page.getByRole('heading', { name: 'Context review', exact: true }));
+  await accessibility('Context review');
+  await page.getByLabel('Find a player', { exact: true }).fill('Fixture Guard');
+  await page.waitForResponse(response => response.url().includes('search=Fixture%20Guard') && response.status() === 200);
+  await page.getByLabel('Player', { exact: true }).selectOption({ label: 'Fixture Guard' });
+  await page.getByLabel('Effective from', { exact: true }).fill('2026-01-14');
+  await page.getByLabel('Summary', { exact: true }).fill('Fixture injury review proposal');
+  await page.getByRole('button', { name: 'Add proposal', exact: true }).click();
+  await visible(page.getByText('Fixture injury review proposal', { exact: true }));
+  await page.getByRole('button', { name: 'Verify', exact: true }).click();
+  await visible(page.getByText('Injury · Verified', { exact: true }));
+  await page.goto(new URL('/app/data-sources', base).href);
+  await visible(page.getByRole('heading', { name: 'Data sources', exact: true }));
+  assert.equal(await page.getByRole('button', { name: 'Import players', exact: true }).isEnabled(), true);
+  await accessibility('Data sources');
+  await page.goto(new URL('/app/account', base).href);
+  await visible(page.getByRole('heading', { name: 'Account data', exact: true }));
+  assert.equal(await page.getByRole('button', { name: 'Delete account', exact: true }).isEnabled(), false);
+  await accessibility('Account data');
+  for (const [path, heading] of [['trade-analyzer', 'Trade analyzer'], ['streaming', 'Streaming advisor'], ['standings', 'Standings']]) {
+    await page.goto(new URL(`/app/${path}`, base).href);
+    await visible(page.getByRole('heading', { name: heading, exact: true }));
+    await accessibility(heading);
+  }
+  checks.push('Owner navigation reaches saved drafts, league settings, context review, imports, account data and explicit unsupported-capability pages');
+  await page.goto(savedUrl);
+  await enabled(page.getByRole('button', { name: 'Pick Fixture Guard', exact: true }));
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 844 });
     const overflow = await page.evaluate(() => ({ width: innerWidth, scroll: document.documentElement.scrollWidth, nodes: [...document.querySelectorAll('body *')].filter(element => { const box = element.getBoundingClientRect(); return box.right > innerWidth + 1 && getComputedStyle(element).position !== 'absolute' && !element.closest('.table-scroll'); }).map(element => ({ tag: element.tagName, class: element.className, width: element.getBoundingClientRect().width, right: element.getBoundingClientRect().right })) }));
@@ -144,8 +183,19 @@ try {
     await accessibility(`Draft and performance ${width}px`);
     await page.screenshot({ path: `${artifacts}/mobile-${width}.png`, fullPage: true });
   }
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const [path, heading] of [['/app/drafts', 'Your drafts'], ['/app/league-settings', 'League settings'], ['/app/context-review', 'Context review'], ['/app/data-sources', 'Data sources'], ['/app/account', 'Account data'], ['/app/trade-analyzer', 'Trade analyzer'], ['/app/streaming', 'Streaming advisor'], ['/app/standings', 'Standings'], ['/app/unknown', 'Page not found']]) {
+    await page.goto(new URL(`${path}?league=${leagueId}`, base).href);
+    await visible(page.getByRole('heading', { name: heading, exact: true }));
+    const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+    assert(scrollWidth <= 390, `${path} overflows at 390px: ${scrollWidth}px`);
+  }
+  await page.goto(savedUrl);
+  await enabled(page.getByRole('button', { name: 'Pick Fixture Guard', exact: true }));
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
   await visible(page.getByRole('heading', { name: 'Welcome back' }));
+  assert((await page.evaluate(() => document.documentElement.scrollWidth)) <= 390, 'Landing overflows at 390px');
+  await page.screenshot({ path: `${artifacts}/landing-390.png`, fullPage: true });
   assert.equal(await page.getByRole('button', { name: 'New here? Create an account' }).count(), 0);
   await page.getByLabel('Email', { exact: true }).fill('browser@example.test');
   await page.getByLabel('Password', { exact: true }).fill(fixturePassword);

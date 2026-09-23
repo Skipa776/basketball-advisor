@@ -1,10 +1,11 @@
 using FantasyBasketball.Application.Abstractions;
 using FantasyBasketball.Application.Common;
 using FantasyBasketball.Domain.Leagues;
+using FantasyBasketball.Domain.Stats;
 
 namespace FantasyBasketball.Application.Leagues;
 
-public sealed class LeagueService(ILeagueRepository leagues)
+public sealed class LeagueService(ILeagueRepository leagues, IDraftRepository drafts)
 {
     public async Task<FantasyLeague> CreateAsync(
         FantasyLeague league,
@@ -48,6 +49,38 @@ public sealed class LeagueService(ILeagueRepository leagues)
             existing.RosterSlots,
             existing.Cadence);
         await leagues.SaveScoringAsync(replacement, cancellationToken);
+        return replacement;
+    }
+
+    public async Task<FantasyLeague> UpdateSettingsAsync(
+        Guid id,
+        string name,
+        int teamCount,
+        LineupCadence cadence,
+        IReadOnlyList<RosterSlot> rosterSlots,
+        CancellationToken cancellationToken)
+    {
+        var existing = await GetAsync(id, cancellationToken);
+        var structuralChange = existing.TeamCount != teamCount
+            || !existing.RosterSlots.OrderBy(slot => slot.Kind)
+                .SequenceEqual(rosterSlots.OrderBy(slot => slot.Kind));
+        if (structuralChange
+            && await drafts.HasAnyForLeagueAsync(id, cancellationToken))
+        {
+            throw new ResourceConflictException(
+                "Team count and roster slots cannot change after a draft has been created.");
+        }
+
+        var replacement = new FantasyLeague(
+            existing.Id,
+            name,
+            existing.Type,
+            teamCount,
+            existing.ScoringRules,
+            existing.Categories,
+            rosterSlots,
+            cadence);
+        await leagues.SaveSettingsAsync(replacement, cancellationToken);
         return replacement;
     }
 }

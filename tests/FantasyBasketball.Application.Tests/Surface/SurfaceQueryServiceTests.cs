@@ -23,7 +23,7 @@ public sealed class SurfaceQueryServiceTests
     public async Task League_service_persists_and_replaces_points_scoring()
     {
         var repository = new FakeLeagueRepository();
-        var service = new LeagueService(repository);
+        var service = new LeagueService(repository, new FakeDraftRepository());
         var league = PointsLeague();
 
         (await service.CreateAsync(
@@ -46,7 +46,7 @@ public sealed class SurfaceQueryServiceTests
     public async Task League_service_rejects_missing_or_category_scoring_replacement()
     {
         var repository = new FakeLeagueRepository();
-        var service = new LeagueService(repository);
+        var service = new LeagueService(repository, new FakeDraftRepository());
         await Should.ThrowAsync<ResourceNotFoundException>(() =>
             service.GetAsync(
                 Guid.NewGuid(),
@@ -278,6 +278,15 @@ public sealed class SurfaceQueryServiceTests
             leagues[league.Id] = league;
             return Task.CompletedTask;
         }
+
+        public Task SaveSettingsAsync(
+            FantasyLeague league,
+            CancellationToken cancellationToken)
+        {
+            Saved = league;
+            leagues[league.Id] = league;
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class FakePlayerRepository(Player player) : IPlayerRepository
@@ -395,9 +404,25 @@ public sealed class SurfaceQueryServiceTests
         public IReadOnlyList<DataImportRun> GetActive() => active;
     }
 
-    private sealed class FakeDraftRepository(DraftSessionRecord record)
+    private sealed class FakeDraftRepository(DraftSessionRecord? record = null)
         : IDraftRepository
     {
+        public Task<PagedResult<DraftSessionRecord>> ListAsync(
+            Guid leagueId,
+            int page,
+            int limit,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new PagedResult<DraftSessionRecord>(
+                record is not null && record.LeagueId == leagueId ? [record] : [],
+                record is not null && record.LeagueId == leagueId ? 1 : 0,
+                page,
+                limit));
+
+        public Task<bool> HasAnyForLeagueAsync(
+            Guid leagueId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(record?.LeagueId == leagueId);
+
         public Task AddSessionAsync(
             DraftSession session,
             Guid leagueId,
@@ -407,7 +432,7 @@ public sealed class SurfaceQueryServiceTests
         public Task<DraftSessionRecord?> GetSessionAsync(
             Guid id,
             CancellationToken cancellationToken) =>
-            Task.FromResult(id == record.Session.Id ? record : null);
+            Task.FromResult(record?.Session.Id == id ? record : null);
 
         public Task AddPickAsync(
             DraftPick pick,

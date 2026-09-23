@@ -25,12 +25,12 @@ export function ProjectionControls({ leagueId, onPublished }: { leagueId: string
     finally { setBusy(false); }
   }
   return <details className="projection-controls panel"><summary>Prepare league projections</summary>
-    <p>Choose the imported season behind your draft estimates. Recalculate after changing scoring or reviewing context. Manual stat corrections take precedence.</p>
+    <p>Pick a season, then calculate. Recalculate after scoring changes. Manual corrections win.</p>
     <ErrorNotice text={error || pools.error} retry={pools.error ? pools.refresh : undefined} />
     {pools.loading && <p>Loading imported seasons…</p>}
-    {pools.result?.data.length === 0 && <p>No season statistics have been imported. <a href="/data-sources">Open data sources</a>, then <button onClick={pools.refresh}>Reload seasons</button>.</p>}
+    {pools.result?.data.length === 0 && <p>No seasons imported. <a href="/app/data-sources">View data sources ↗</a> then <button onClick={pools.refresh}>Reload seasons</button></p>}
     {!!pools.result?.data.length && <form onSubmit={calculate} className="form-row"><label>Projection season and source<select aria-label="Projection season and source" required value={selected} disabled={busy} onChange={event => setSelected(event.target.value)}><option value="">Choose imported data</option>{pools.result.data.map(pool => <option key={`${pool.seasonEndYear}:${pool.source}`} value={`${pool.seasonEndYear}:${pool.source}`}>{pool.seasonEndYear - 1}–{pool.seasonEndYear} · {pool.source} · {pool.playerCount} source players</option>)}</select></label><button disabled={!selected || busy || pools.loading}>{busy ? 'Calculating…' : 'Calculate projections'}</button></form>}
     {published && <p>Saved estimates for {published.playerCount} players from {published.seasonEndYear - 1}–{published.seasonEndYear} · {published.source}. Calculated {new Date(published.computedAt).toLocaleString()}.</p>}
-    <p className="muted">Season projections are estimates. Recorded performance below uses separate game observations.</p>
+    <p className="muted">Estimates, not results. Game logs live below.</p>
   </details>;
 }

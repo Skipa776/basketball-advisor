@@ -1,6 +1,6 @@
 # React and player intelligence implementation progress
 
-Updated: 2026-09-21. Accepted decisions and full scope are in
+Updated: 2026-09-22. Accepted decisions and full scope are in
 [the execution plan](react-api-player-intelligence-execution.md).
 
 ## Current checkpoint
@@ -13,12 +13,12 @@ are preserved.
 |---|---|---|
 | M0 — baseline | Complete | SSH.NET security repair; approved scope/toolchain recorded; baseline gate green |
 | M1 — React foundation | Partial | Pinned React/TypeScript/Vite project, .NET-served `/app`, typed API boundary, loading/error states. Continuous animated landing and complete design-system port remain |
-| M2 — basic features | Partial | Account/session/registration availability, explicit editable ESPN setup, owned league selection, player search/detail, snake draft creation, keyboard pick, undo and URL-based reload. League-specific recalculation, ranked advice/evidence and pick/undo reranking now connected. Saved-draft listing and league settings editing remain |
+| M2 — basic features | Partial | Account/session, editable ESPN setup, league selection/settings, player search/detail, snake draft, saved-draft list, recommendations, pick/undo and URL reload are connected. Live imported data and full category analysis remain |
 | M3 — verification | Partial | Real HTTP and PostgreSQL tests; cross-user isolation; browser journey, axe scans, desktop/mobile screenshots. Full parity matrix and owner visual acceptance remain |
 | M4 — game data | Partial | ESPN setup catalog and independent scoring golden delivered. Offline box-score parser and atomic per-game snapshots delivered; identity/import worker, live compatibility, progress and data sufficiency remain |
 | M5 — heat | Partial | Pure C# calculation and best/hot ranking logic pass 20 offline cases; stored data, authenticated dated query and React views delivered; live ingestion/freshness still unverified |
 | M6 — player intelligence UI | Partial | Draft-value shortlist/evidence/decomposition delivered; separate observed best-performing/above-baseline/all views with game evidence delivered; live-data readiness and full draft-detail parity remain |
-| M7 — release | Pending | Remaining routes, distribution, full regression and owner review |
+| M7 — release | Pending | Remaining Blazor migration, distribution, live-data regression and owner review |
 
 ## What is implemented
 
@@ -78,6 +78,36 @@ Browser screenshots/report (generated under ignored test output):
 - `tests/FantasyBasketball.IntegrationTests/TestResults/react-review/mobile-320.png`
 - `tests/FantasyBasketball.IntegrationTests/TestResults/react-review/report.json`
 
+## Functional app pages checkpoint — 2026-09-22
+
+Added React pages for owner data imports and freshness, saved drafts, league
+settings, context review, and account archive/delete actions. The `/app/{page}`
+host route serves the same client; all destinations are in signed-in navigation.
+Trade, streaming, and standings pages state their unimplemented requirement and
+show no invented scores. Category creation is supported; category draft analysis
+is clearly unavailable.
+
+Added owner-scoped, paged `GET /api/drafts?leagueId=` and
+`PUT /api/leagues/{id}/settings`. The latter permits name/cadence changes while
+drafts exist and refuses team-count or roster-slot changes after the first
+session. Stable secrets policy still requires the BallDontLie key at startup, so
+the planned in-app missing-key state cannot be reached without changing that
+policy. The owner page shows source freshness and import runs after startup.
+Import controls were not activated and no external provider was contacted.
+
+Verification: `bash scripts/gate.sh` passed on 2026-09-22 after allowing its
+loopback test processes. React and .NET built with zero warnings; 93 Domain,
+37 Application, and 149 Integration tests passed. The browser journey opened
+all new destinations, scanned accessibility, checked phone overflow, and verified
+draft-row stability. Coverage floors passed (Domain 89.20%, Application 73.51%);
+80 OKF concepts validated, including the planned seasonal player evidence
+contract. No provider was contacted by tests.
+
+One immediately preceding full-gate attempt timed out in the older Blazor D-14
+post-pick offset check after the pick had committed. Its isolated rerun and this
+full rerun both passed with a 0.000 CSS-pixel offset delta. This is an
+intermittent browser-gate risk to watch during owner testing.
+
 The browser runs inside the real-cookie integration fixture with its own
 throwaway PostgreSQL database and blocks external requests. No developer data
 or live provider was used. Screenshots contain clearly named fictional test data.
@@ -105,8 +135,9 @@ synthetic offline test data, but production truthfully shows no observations.
 Preserve the accepted heat rule unchanged: first complete comparison after
 appearance 13; latest three excluded from the comparison baseline; baseline grows
 from ten to thirty and then rolls at thirty; DNP is not zero; seasons stay separate.
-No current/live hot badge or arbitrary freshness cutoff was added. Remaining React
-parity includes league settings, saved-draft listing and the accepted visual design.
+No current/live hot badge or arbitrary freshness cutoff was added. League
+settings, saved-draft listing, and the visual design now have tested React pages;
+live game ingestion and the remaining Blazor migration are separate work.
 
 ## Heat calculation checkpoint — 2026-09-20
 

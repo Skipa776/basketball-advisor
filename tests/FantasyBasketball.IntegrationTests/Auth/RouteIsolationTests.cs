@@ -121,7 +121,7 @@ public sealed class RouteIsolationTests : IAsyncLifetime
                 endpoint.Metadata.GetMetadata<OwnedRouteMetadata>() is not null)
             .ToArray();
 
-        routes.Length.ShouldBe(15);
+        routes.Length.ShouldBe(17);
         var failures = await SweepAsync(
             client,
             routes,
@@ -129,6 +129,21 @@ public sealed class RouteIsolationTests : IAsyncLifetime
             new SweepResources(leagueId, draftId, contextEventId, playerId));
 
         failures.ShouldBeEmpty();
+
+        using var ownDrafts = await SendAsync(
+            client,
+            HttpMethod.Get,
+            $"/api/drafts?leagueId={leagueId}",
+            userA);
+        ownDrafts.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await ownDrafts.Content.ReadAsStringAsync(TestContext.Current.CancellationToken))
+            .ShouldContain(draftId.ToString());
+        using var foreignDrafts = await SendAsync(
+            client,
+            HttpMethod.Get,
+            $"/api/drafts?leagueId={leagueId}",
+            userB);
+        foreignDrafts.StatusCode.ShouldBe(HttpStatusCode.NotFound);
 
         using var leagueList = await SendAsync(client, HttpMethod.Get, "/api/leagues", userB);
         leagueList.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -341,6 +356,11 @@ public sealed class RouteIsolationTests : IAsyncLifetime
             path += $"?leagueId={resources.LeagueId}";
         }
 
+        if (route is "/api/drafts/" or "/api/drafts")
+        {
+            path += $"?leagueId={resources.LeagueId}";
+        }
+
         if (path.EndsWith("/performance", StringComparison.Ordinal))
             path += $"?seasonEndYear=2026&source={FantasyBasketball.Domain.Provenance.DataSourceName.Manual}&throughDate=2026-01-14&view=best";
         return path;
@@ -358,6 +378,17 @@ public sealed class RouteIsolationTests : IAsyncLifetime
 
         if (method == HttpMethods.Put)
         {
+            if (path.EndsWith("/settings", StringComparison.Ordinal))
+            {
+                return new
+                {
+                    Name = "Foreign league",
+                    TeamCount = 10,
+                    Cadence = "Daily",
+                    RosterSlots = new[] { "UTIL" },
+                };
+            }
+
             return new
             {
                 ScoringRules = new[]

@@ -14,4 +14,8 @@ public interface ILeagueRepository
     Task SaveScoringAsync(
         FantasyLeague league,
         CancellationToken cancellationToken);
+
+    Task SaveSettingsAsync(
+        FantasyLeague league,
+        CancellationToken cancellationToken);
 }

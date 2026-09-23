@@ -109,6 +109,7 @@ public sealed class LeagueProjectionServiceTests
         public Task AddAsync(FantasyLeague league, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<IReadOnlyList<FantasyLeague>> ListAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task SaveScoringAsync(FantasyLeague league, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task SaveSettingsAsync(FantasyLeague league, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task AddAsync(SeasonStatLine statLine, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<SeasonStatLine?> GetAsync(PlayerId playerId, int seasonEndYear, string source, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<ObservedStats?> GetLatestObservedAsync(PlayerId playerId, CancellationToken cancellationToken) => throw new NotSupportedException();

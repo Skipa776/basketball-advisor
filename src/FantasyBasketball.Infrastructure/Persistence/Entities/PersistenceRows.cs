@@ -269,6 +269,13 @@ public sealed class FantasyLeagueRow : IOwnedResource
             Categories = categories,
             Cadence = cadence,
         };
+
+    public void UpdateSettings(string name, int teamCount, string cadence)
+    {
+        Name = name;
+        TeamCount = teamCount;
+        Cadence = cadence;
+    }
 }
 
 public sealed class ScoringRuleRow : IOwnedResource

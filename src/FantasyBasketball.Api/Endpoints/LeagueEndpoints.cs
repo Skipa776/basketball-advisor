@@ -23,6 +23,12 @@ public sealed record CreateLeagueRequest(
 public sealed record ReplaceScoringRequest(
     IReadOnlyList<ScoringRuleRequest>? ScoringRules);
 
+public sealed record UpdateLeagueSettingsRequest(
+    string Name,
+    int TeamCount,
+    string Cadence,
+    IReadOnlyList<string>? RosterSlots);
+
 public sealed record RecalculateProjectionsRequest(int SeasonEndYear, string Source);
 
 public static class LeagueEndpoints
@@ -39,6 +45,8 @@ public static class LeagueEndpoints
         group.MapGet("/{id:guid}", GetAsync)
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
         group.MapPut("/{id:guid}/scoring", ReplaceScoringAsync)
+            .WithMetadata(new OwnedRouteMetadata("league", "id"));
+        group.MapPut("/{id:guid}/settings", UpdateSettingsAsync)
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
         group.MapGet("/{id:guid}/projection-pools", ProjectionPoolsAsync)
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
@@ -132,6 +140,42 @@ public static class LeagueEndpoints
         var rules = ParseScoringRules(request.ScoringRules);
         return ApiResults.Success(
             await service.ReplaceScoringAsync(id, rules, cancellationToken));
+    }
+
+    public static async Task<IResult> UpdateSettingsAsync(
+        Guid id,
+        UpdateLeagueSettingsRequest request,
+        LeagueService service,
+        OwnedResourceAuthorizationService authorization,
+        CancellationToken cancellationToken)
+    {
+        await authorization.RequireLeagueAsync(id, cancellationToken);
+        var fields = new Dictionary<string, string[]>();
+        if (string.IsNullOrWhiteSpace(request.Name))
+        {
+            fields["name"] = ["Name is required."];
+        }
+
+        if (request.TeamCount <= 0)
+        {
+            fields["teamCount"] = ["Team count must be greater than zero."];
+        }
+
+        if (!Enum.TryParse<LineupCadence>(request.Cadence, true, out var cadence)
+            || !Enum.IsDefined(cadence))
+        {
+            fields["cadence"] = ["Cadence must be Daily or Weekly."];
+        }
+
+        var slots = ParseRosterSlots(request.RosterSlots, fields);
+        ThrowIfInvalid(fields);
+        return ApiResults.Success(await service.UpdateSettingsAsync(
+            id,
+            request.Name,
+            request.TeamCount,
+            cadence,
+            slots,
+            cancellationToken));
     }
 
     private static async Task<FantasyLeague> RequireAndGetAsync(

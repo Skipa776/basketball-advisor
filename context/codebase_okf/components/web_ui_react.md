@@ -81,3 +81,42 @@ Historical data is labelled as such; completeness and freshness are unverified.
 HP-05 covers the real-cookie browser journey, error recovery and evidence at
 1440px/390px/320px with axe scans. The data importer and visual migration remain
 partial; test fixtures are not production observations.
+
+## Visual refresh — 2026-09-22
+
+`/app` adopts the owner's portfolio (github.com/Skipa776/portfolio) visual language,
+rebuilt in plain CSS plus one scroll listener in `Landing.tsx` (no framework, no
+animation library): white page, pill buttons with a rising hover fill, hairline
+rows, and a dark closing section. Signed-out visitors get falling headline letters,
+a word slide-up pitch, two scroll-drifting photo strips, magnetic round CTAs and a
+curved edge into the dark sign-in section. Motion stops under reduced motion. The
+signed-in intro stays compact and the board keeps its row height. Photos are CC0 or
+public domain and attributed in `ASSETS.md` (row D-34). Copy is shortened, but the
+unverified/estimate labels and every string the browser journey checks are kept.
+
+## Functional page checkpoint — 2026-09-22
+
+React navigation now reaches owner data sources, saved drafts, league settings,
+context review and account data through `/app/{page}`. Trade, streaming and
+standings destinations state the owning requirement or deferred roadmap entry
+and show no player/team values. Category league setup is available; the main
+draft interface remains points-only and says so for category leagues.
+
+New pages use the same-origin API client, cookie anti-forgery for mutations and
+no local storage. Import controls queue work only after an explicit click; tests
+do not invoke them. Saved drafts are listed under a selected league and reopen
+through the persisted session URL. Settings preserve the scoring endpoint and
+explicit recalculation step; structural edits are rejected after draft creation.
+The ownership and API behavior are specified in
+[`api_surface`](../contracts/api_surface.md).
+
+The host validates the required BallDontLie key at startup under the stable
+secrets policy. The React source page shows run and freshness status after a
+valid configuration has booted; it does not imply that a missing-key state is
+reachable inside a running app.
+
+The React production build passes. The new HTTP and browser tests compile, but
+test execution is pending: this environment denies the local socket bind needed
+by VSTest, Kestrel, and Playwright. Do not treat compilation as passing tests or
+promote this component's status until the repository gate runs in an environment
+that permits its offline loopback and disposable-PostgreSQL fixtures.

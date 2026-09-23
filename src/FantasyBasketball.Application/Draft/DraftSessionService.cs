@@ -1,5 +1,6 @@
 using FantasyBasketball.Application.Abstractions;
 using FantasyBasketball.Application.Common;
+using FantasyBasketball.Application.Players;
 using FantasyBasketball.Domain.Draft;
 using FantasyBasketball.Domain.Players;
 
@@ -25,6 +26,16 @@ public sealed class DraftSessionService(
             userSlot);
         await drafts.AddSessionAsync(session, leagueId, cancellationToken);
         return session;
+    }
+
+    public Task<PagedResult<DraftSessionRecord>> ListAsync(
+        Guid leagueId,
+        int page,
+        int limit,
+        CancellationToken cancellationToken)
+    {
+        Paging.Validate(page, limit);
+        return drafts.ListAsync(leagueId, page, limit, cancellationToken);
     }
 
     public async Task<DraftPick> RecordPickAsync(

@@ -55,7 +55,29 @@ public static class ContextEndpoints
             limit ?? Paging.DefaultLimit,
             cancellationToken);
         return ApiResults.Success(
-            result.Items,
+            result.Items.Select(contextEvent => new
+            {
+                contextEvent.Id,
+                contextEvent.Type,
+                TypeName = contextEvent.Type.ToString(),
+                contextEvent.TeamId,
+                contextEvent.PrimaryPlayerId,
+                contextEvent.AffectedPlayerIds,
+                contextEvent.CreatedAt,
+                contextEvent.EffectiveFrom,
+                contextEvent.ExpectedExpiration,
+                contextEvent.Direction,
+                DirectionName = contextEvent.Direction.ToString(),
+                contextEvent.Magnitude,
+                contextEvent.Confidence,
+                ConfidenceName = contextEvent.Confidence.ToString(),
+                contextEvent.SourceUrl,
+                contextEvent.SourceName,
+                contextEvent.RawText,
+                contextEvent.Summary,
+                contextEvent.Verification,
+                VerificationName = contextEvent.Verification.ToString(),
+            }),
             meta: new ApiMeta(result.Total, result.Page, result.Limit));
     }
 

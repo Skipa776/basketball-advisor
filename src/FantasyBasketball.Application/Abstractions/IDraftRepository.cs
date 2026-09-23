@@ -1,4 +1,5 @@
 using FantasyBasketball.Domain.Draft;
+using FantasyBasketball.Application.Common;
 
 namespace FantasyBasketball.Application.Abstractions;
 
@@ -13,6 +14,16 @@ public interface IDraftRepository
 
     Task<DraftSessionRecord?> GetSessionAsync(
         Guid id,
+        CancellationToken cancellationToken);
+
+    Task<PagedResult<DraftSessionRecord>> ListAsync(
+        Guid leagueId,
+        int page,
+        int limit,
+        CancellationToken cancellationToken);
+
+    Task<bool> HasAnyForLeagueAsync(
+        Guid leagueId,
         CancellationToken cancellationToken);
 
     Task AddPickAsync(

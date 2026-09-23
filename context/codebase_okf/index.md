@@ -7,7 +7,7 @@ source_paths: []
 test_paths: []
 depends_on: []
 status: partial
-last_updated: 2026-09-21
+last_updated: 2026-09-22
 owners: [engineering]
 ---
 
@@ -46,6 +46,7 @@ paste-ready prompts are in `docs/epics/`.
 | [box_score_storage_contract](contracts/box_score_storage_contract.md) | Atomic completed-game snapshots, phase selection and offline parsing | E06 slice |
 | [player_performance_api_contract](contracts/player_performance_api_contract.md) | Owned dated performance queries and React evidence | E06 slice |
 | [player_heat_contract](contracts/player_heat_contract.md) | Owner-selected descriptive heat and recent performance | E06 slice |
+| [player_season_intelligence_contract](contracts/player_season_intelligence_contract.md) | Planned played-game distribution, availability, and season/draft label vocabulary | owner extension |
 | [rolling_window_contract](contracts/rolling_window_contract.md) | Windows, the exact three-way production decomposition, trend score | E06 |
 | [category_value_contract](contracts/category_value_contract.md) | Z-scores with volume-weighted ratios, win probability, punt ceiling | E07 |
 | [draft_intelligence_contract](contracts/draft_intelligence_contract.md) | Survival probability, tiers, the OpportunityCost replacement | E07 |

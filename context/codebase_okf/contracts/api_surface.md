@@ -80,6 +80,14 @@ forces a throw and asserts the body contains none of these.*
 - **`GET /api/health/data-sources`** — per source: last success, last failure,
   staleness, current degradation. Always `200`, even when everything is broken;
   that *is* the information.
+- **`GET /api/drafts?leagueId=&page=&limit=`** — requires ownership of the
+  selected league, returns only that league's saved sessions and paging metadata.
+  A missing league id is `400`; another user's league is `404`.
+- **`PUT /api/leagues/{id}/settings`** — changes name, cadence, team count and
+  roster slots. Name and cadence remain editable with existing drafts. Team
+  count and roster-slot counts by kind return `409` after any draft session exists;
+  reordering the same slots is not a structural change. Scoring
+  remains a separate endpoint and requires explicit projection recalculation.
 
 # Invariants
 
@@ -127,6 +135,26 @@ degradation, framework 404s, and forced 500s.
 
 Existing numeric enum serialization stays compatible. The setup catalog supplies
 name/value mappings so React does not duplicate the C# enums.
+
+## React functional pages — 2026-09-22
+
+- `/app/{page}` serves the same React client for data sources, saved drafts,
+  league settings, context review, account data and named unsupported-capability
+  surfaces. Unknown page names show a way back to the workspace.
+- `GET /api/drafts?leagueId=&page=&limit=` checks league ownership before
+  returning a bounded, league-scoped list. Its items contain the persisted
+  session and picks so the interface can show progress and reopen by id.
+- `PUT /api/leagues/{id}/settings` has cookie anti-forgery and explicit owner
+  authorization. It validates the entire replacement before saving. Structural
+  changes are refused after a draft exists; name and cadence remain editable.
+- The React data-source page combines source freshness with saved runs to
+  distinguish running, failed, no rows, stale and ready states.
+- `BallDontLie:ApiKey` remains required at startup under the stable
+  [secrets policy](../safety/secrets_policy.md).
+- Context list responses retain numeric enum fields and add corresponding names
+  for review controls; create/verify/reject use the existing human-review endpoints.
+- Import actions are manual only. The browser journey does not click an import
+  and no provider is contacted by tests.
 
 ## Projection publication — 2026-09-20
 

@@ -239,6 +239,7 @@ GET    /api/leagues/setup                    explicit starter and enum catalog
 POST   /api/leagues                          create a league
 GET    /api/leagues/{id}
 PUT    /api/leagues/{id}/scoring             replace scoring rules
+PUT    /api/leagues/{id}/settings            replace identity, cadence and roster settings
 GET    /api/leagues/{id}/projection-pools    imported seasons/sources (owned trigger)
 POST   /api/leagues/{id}/projections         atomically calculate a points-league pool
 
@@ -253,6 +254,7 @@ POST   /api/imports/adp                      fantasypros, or CSV body
 GET    /api/imports/runs                     DataImportRun history
 
 GET    /api/drafts/{id}                      persisted session and league id
+GET    /api/drafts?leagueId=&page=&limit=    caller-owned saved drafts for one league
 POST   /api/drafts                           create session
 GET    /api/drafts/{id}/board?leagueId=      available pool, re-ranked
 POST   /api/drafts/{id}/picks                record a pick

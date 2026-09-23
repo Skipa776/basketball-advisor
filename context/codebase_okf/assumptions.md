@@ -962,3 +962,25 @@ travel with the computed evidence. The final full-gate log and desktop/mobile
 review captures are linked in the implementation progress ledger. Live ingestion
 remains blocked on explicit source-policy resolution; no production game rows
 were created and no numerical usage quota was available.
+
+## React functional pages — 2026-09-22
+
+- Category league setup can persist explicit categories, but category valuation,
+  draft rankings and performance analysis are not implemented. Until those
+  capabilities exist, the React workspace hides points-based advice for category
+  leagues and explains the limitation. This keeps a category selection from
+  implying points values are category-aware.
+- Saved-draft lists are scoped to a selected league because ownership is enforced
+  at league boundaries. The interface uses opaque league/draft ids in URLs and
+  displays pick counts without claiming creation order; draft rows have no
+  creation timestamp.
+- Roster-slot order is display order, while structural draft compatibility depends
+  on team count and counts of each slot kind. Reordering the same slots must not
+  block a league name or cadence edit after a draft exists.
+- Trade, streaming and standings remain clear not-built destinations so signed-in
+  navigation can expose the intended product path without fabricating engine
+  output.
+- The full loopback/Testcontainers gate passed on 2026-09-22 after the test
+  process was granted the local socket it needs: 279 tests, browser navigation,
+  accessibility and mobile checks, and coverage floors. React migration remains
+  partial because live imports and the remaining Blazor routes are not complete.
