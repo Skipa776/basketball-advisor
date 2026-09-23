@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Api]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Api]
 depends_on: [../contracts/api_surface.md, ../safety/secrets_policy.md]
 status: implemented
-last_updated: 2026-09-22
+last_updated: 2026-09-23
 owners: [engineering]
 risk_level: medium
 done_criteria:
@@ -39,8 +39,9 @@ middleware, configuration, and logging. Routes and semantics are owned by
 - **Logging** is built-in `ILogger` with structured message templates
   (`"Imported {RowCount} rows from {Source}"` — named holes, never string
   interpolation, or the structure is lost).
-- Blazor Server components are hosted by this same project — one host, one port,
-  no CORS to configure.
+- The React bundle is served by this same project — one host, one port, no CORS
+  to configure. `/`, `/app` and `/app/**` return the React index (Blazor was
+  retired 2026-09-23).
 
 # Invariants
 
@@ -76,13 +77,12 @@ adapters. `BallDontLieOptions`, projection/draft weights, and source-health
 options are bound, validated, and checked on start. Exception handling is
 outermost, request logs use named structured holes, every endpoint forwards its
 request token, and a loopback HTTP test covers the complete route surface.
-Razor components and interactive server rendering share the same host; a
-specific `/api` fallback preserves the envelope for unknown API routes while
-the Blazor router owns human-facing routes.
+A specific `/api` fallback preserves the envelope for unknown API routes; the
+React index owns human-facing routes (Razor hosting removed 2026-09-23).
 
 ## React API bridge
 
 Session discovery is anonymous-readable but non-cacheable; league setup/list and
 draft detail retain cookie authentication, anti-forgery on mutations and existing
 ownership enforcement. These endpoints support a separate React client without
-changing the envelope or existing Blazor routes.
+changing the envelope.

@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Infrastructure/Identity]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Auth]
 depends_on: [required_gates.md, ../contracts/auth_tenancy_contract.md, ../safety/tenancy_policy.md]
 status: implemented
-last_updated: 2026-07-29
+last_updated: 2026-09-23
 owners: [engineering]
 ---
 
@@ -44,7 +44,7 @@ standing between two users' league data.
 | `U-09` | Five failed logins | Locked out for 15 minutes | ✅ |
 | `U-10` | Captured logs across an auth flow | No password, hash, or cookie value present | ✅ |
 | `U-17` | Identity tables | In the one `DbContext` and the one migration history | ✅ |
-| `U-18` | **Register and log in through the rendered HTML forms**, not the JSON API | The form's own `action` reaches its handler and authenticates; static assets are reachable anonymously so the page is styled and Blazor boots | ✅ |
+| `U-18` | **Register and log in through the rendered sign-in UI** in a real browser, not by calling the JSON API directly | The rendered form authenticates; the anonymous bundle and styles load so the page is usable (React since 2026-09-23; Blazor HTML forms retired) | ✅ |
 
 `U-18` exists because every other row here drives `/api/account/*`. That left the
 path a human actually takes — submit the form on `/account/login` — untested, and
@@ -52,6 +52,9 @@ it was broken: a Razor page route answers every HTTP method, so a `MapPost` on t
 page's own path made routing throw `AmbiguousMatchException` before either handler
 ran. The API worked throughout. **A row that authenticates by the convenient path
 does not cover the path users take.**
+
+Since 2026-09-23 the path users take is the React sign-in form; `HP05_U18_…`
+registers and signs in through it with a real browser and cookies.
 
 # Filters, deletion, export (`U-13`–`U-15`)
 

@@ -12,22 +12,19 @@
 #   3. scripts/dev.sh
 #
 # Flags, all optional:
-#   --demo      labelled-fictional sample content on the landing page
 #   --open-reg  allow registration even after the instance is claimed
 #   --no-workers  stop the recurring refreshers competing for the API rate
 #                 budget, so a manual import gets the whole allowance
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-DEMO=false
 OPEN_REG=false
 NO_WORKERS=false
 for argument in "$@"; do
     case "$argument" in
-        --demo) DEMO=true ;;
         --open-reg) OPEN_REG=true ;;
         --no-workers) NO_WORKERS=true ;;
-        -h|--help) sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h|--help) sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) echo "Unknown option: $argument" >&2; exit 2 ;;
     esac
 done
@@ -61,10 +58,6 @@ fi
 # Written as if-blocks, not `[ test ] && command`. Under `set -e` the short
 # form is a trap: whether a false test ends the script depends on where it sits
 # in the and-or list, and the answer is not worth having to remember.
-if [ "$DEMO" = true ]; then
-    export Demo__Enabled=true
-fi
-
 if [ "$OPEN_REG" = true ]; then
     export Auth__OpenRegistration=true
 fi
@@ -74,9 +67,6 @@ if [ "$NO_WORKERS" = true ]; then
 fi
 
 echo "Starting Fastbreak on http://localhost:${PORT:-5280}"
-if [ "$DEMO" = true ]; then
-    echo "  demo content: on (labelled fictional)"
-fi
 
 if [ "$OPEN_REG" = true ]; then
     echo "  open registration: on"

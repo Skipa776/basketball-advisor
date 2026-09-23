@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Web, src/FantasyBasketball.Api/ApiHost.cs]
 test_paths: [src/FantasyBasketball.Web/tests/workspace.mjs, tests/FantasyBasketball.IntegrationTests/Auth/AuthHttpTests.cs]
 depends_on: [../contracts/api_surface.md, ../contracts/auth_tenancy_contract.md, ../contracts/design_system_contract.md, web_ui_blazor.md]
 status: partial
-last_updated: 2026-09-22
+last_updated: 2026-09-23
 owners: [engineering]
 ---
 
@@ -15,8 +15,8 @@ owners: [engineering]
 
 Owns the incremental React workspace at `/app`, authorized by the owner in
 [the execution plan](../../../docs/plans/react-api-player-intelligence-execution.md).
-Existing Blazor pages remain reachable. The dashboard links into React and React
-links back to the existing app and data sources; neither is an orphan route.
+Since 2026-09-23 it is the only UI: the owner retired Blazor, and `/` serves the
+same React index as `/app`.
 
 # Boundaries
 
@@ -29,7 +29,7 @@ links back to the existing app and data sources; neither is an orphan route.
 - The server setup catalog owns scoring values and enum vocabulary. ESPN is an
   explicit editable choice; an empty scoring request is still invalid.
 - No CSS framework/component library. `workspace.css` owns the React surface's
-  styles during migration; existing Blazor tokens and interaction gates remain.
+  styles.
 - Table rows stay in place after a pick. The keyboard search/pick path restores
   focus, values show server evidence, and unverified context is visibly labelled.
 
@@ -121,7 +121,7 @@ reachable inside a running app.
 The 2026-09-22 full gate passes 280 tests with loopback Kestrel, disposable
 PostgreSQL, and the browser journey. The live local `/app` also renders after a
 frontend rebuild with no browser errors. This component remains partial because
-live game ingestion and remaining Blazor migration are still outstanding.
+live game ingestion was still outstanding (Blazor was later retired, 2026-09-23).
 
 ## Projected players and routing — 2026-09-22
 

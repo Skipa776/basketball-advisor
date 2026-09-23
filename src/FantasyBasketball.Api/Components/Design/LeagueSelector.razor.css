@@ -1,6 +1,0 @@
-.league-switch {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: end;
-    gap: var(--space-3);
-}

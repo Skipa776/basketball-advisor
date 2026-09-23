@@ -1,4 +1,0 @@
-.skeleton-row {
-    height: var(--board-row-height);
-    border-block-end: var(--rule-width) solid var(--color-rule);
-}

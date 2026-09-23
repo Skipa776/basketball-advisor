@@ -49,7 +49,7 @@ what is deliberately unenforced.
 
 ## Stack
 
-.NET 10 · ASP.NET Core · Blazor Server · EF Core · PostgreSQL 17 · xUnit v3 ·
+.NET 10 · ASP.NET Core · React 19 (Vite) · EF Core · PostgreSQL 17 · xUnit v3 ·
 Testcontainers · AngleSharp
 
 ## Running it
@@ -66,8 +66,7 @@ scripts/gate.sh                 # format, build, test, and the bundle validator
 ```bash
 cp .env.example .env            # then put your balldontlie key in it
 scripts/dev.sh                  # loads .env, then runs scripts/run.sh
-scripts/dev.sh --demo           # plus labelled-fictional sample content
-scripts/dev.sh --demo --open-reg   # plus registration after the instance is claimed
+scripts/dev.sh --open-reg        # registration after the instance is claimed
 ```
 
 `.env` is gitignored and `.env.example` holds no values, so the key stays out of

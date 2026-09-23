@@ -83,11 +83,6 @@ public static class DependencyInjection
             .ValidateOnStart();
         services.AddOptions<AuthOptions>()
             .Bind(configuration.GetSection(AuthOptions.SectionName));
-        services.AddOptions<Components.Design.DemoContentOptions>()
-            .Bind(configuration.GetSection(
-                Components.Design.DemoContentOptions.SectionName));
-        services.AddOptions<GoogleSignInOptions>()
-            .Bind(configuration.GetSection(GoogleSignInOptions.SectionName));
         services.AddDbContext<FantasyDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("Fantasy")));
         services.AddIdentity<FantasyUser, IdentityRole<Guid>>(options =>
@@ -110,7 +105,6 @@ public static class DependencyInjection
         });
         services.AddCascadingAuthenticationState();
         services.AddHttpContextAccessor();
-        services.AddScoped<ActiveLeague>();
         services.AddHttpsRedirection(options =>
         {
             options.HttpsPort = 443;
@@ -140,7 +134,7 @@ public static class DependencyInjection
             options.Cookie.HttpOnly = true;
             options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             options.Cookie.SameSite = SameSiteMode.Lax;
-            options.LoginPath = "/account/login";
+            options.LoginPath = "/app";
             options.Events.OnRedirectToLogin = context =>
             {
                 if (context.Request.Path.StartsWithSegments("/api"))

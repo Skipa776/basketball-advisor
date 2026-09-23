@@ -1,6 +1,5 @@
 using FantasyBasketball.Api.Endpoints;
 using FantasyBasketball.Api.Middleware;
-using FantasyBasketball.Api.Components;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Routing;
 
@@ -10,8 +9,6 @@ public static class ApiHost
 {
     public static void ConfigureServices(WebApplicationBuilder builder)
     {
-        builder.Services.AddRazorComponents()
-            .AddInteractiveServerComponents();
         builder.Services.AddExternalDataHttpClients(builder.Configuration);
     }
 
@@ -61,20 +58,19 @@ public static class ApiHost
         app.MapContextEndpoints();
         app.MapHealthEndpoints();
         app.MapAccountEndpoints();
-        app.MapGet("/app", () =>
+        // The React app is the only UI. `/` and every `/app` route serve its
+        // index; the app itself decides between landing and signed-in pages.
+        IResult ReactIndex()
         {
             var index = Path.Combine(app.Environment.WebRootPath, "app", "index.html");
             return File.Exists(index)
                 ? Results.File(index, "text/html")
                 : Results.NotFound();
-        }).AllowAnonymous();
-        app.MapGet("/app/{**path}", () =>
-        {
-            var index = Path.Combine(app.Environment.WebRootPath, "app", "index.html");
-            return File.Exists(index)
-                ? Results.File(index, "text/html")
-                : Results.NotFound();
-        }).AllowAnonymous();
+        }
+
+        app.MapGet("/", ReactIndex).AllowAnonymous();
+        app.MapGet("/app", ReactIndex).AllowAnonymous();
+        app.MapGet("/app/{**path}", ReactIndex).AllowAnonymous();
         app.MapFallback(
             "/api/{**path}",
             () => ApiResults.Failure(
@@ -86,30 +82,10 @@ public static class ApiHost
         // Static assets are endpoints, so the RequireAuthenticatedUser fallback
         // policy applies to them unless they opt out. Without this the login page
         // -- the first screen a new self-hoster ever sees -- 302s its own
-        // stylesheet, theme script, and blazor.web.js to itself and renders
-        // completely unstyled with no interactivity. Nothing here is user data:
+        // stylesheet and scripts to itself and renders unstyled. Nothing here is user data:
         // it is the CSS and JS that make the anonymous pages usable at all.
         app.MapStaticAssets(
                 "FantasyBasketball.Api.staticwebassets.endpoints.json")
             .AllowAnonymous();
-        app.MapRazorComponents<App>()
-            .AddInteractiveServerRenderMode()
-            // The SignalR transport is an endpoint too, so the
-            // RequireAuthenticatedUser fallback caught it: an anonymous visitor's
-            // negotiate 302'd to the login page and the client tried to parse
-            // that HTML as JSON. Only the /_blazor transport opts out -- page
-            // routes keep the fallback policy, and a circuit opened without a
-            // user is an anonymous circuit that can still only render what
-            // AuthorizeView lets it.
-            .Add(endpoint =>
-            {
-                if (endpoint is RouteEndpointBuilder route
-                    && route.RoutePattern.RawText?.StartsWith(
-                        "/_blazor",
-                        StringComparison.Ordinal) is true)
-                {
-                    endpoint.Metadata.Add(new AllowAnonymousAttribute());
-                }
-            });
     }
 }

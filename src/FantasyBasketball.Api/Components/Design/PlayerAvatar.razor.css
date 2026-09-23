@@ -1,8 +1,0 @@
-.avatar {
-    display: inline-flex;
-    min-width: var(--target-min);
-    min-height: var(--target-min);
-    align-items: center;
-    justify-content: center;
-    border: var(--rule-width) solid var(--color-border-strong);
-}

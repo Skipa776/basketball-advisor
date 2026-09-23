@@ -3,11 +3,11 @@ type: task
 title: Run the Design Process
 description: Which design skills to run, in what order, what each produces, and which steps need a human's taste rather than an agent.
 tags: [task, design, ui, workflow]
-source_paths: [DESIGN.md, DESIGN_BRIEF.md, src/FantasyBasketball.Api/Components/Design]
+source_paths: [DESIGN.md, DESIGN_BRIEF.md, src/FantasyBasketball.Web/src/workspace.css]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Api]
 depends_on: [../contracts/design_system_contract.md, ../components/design_system.md]
 status: partial
-last_updated: 2026-07-30
+last_updated: 2026-09-23
 owners: [engineering]
 ---
 
@@ -110,7 +110,7 @@ requirement that is a performance requirement.
 - **Do not skip step 0.** A consultation that has to interview you about what
   fantasy basketball is wastes the part of the process only you can do.
 - **Do not treat the a11y gate as the design bar.** Zero violations is the floor.
-- **Do not let a design skill edit `Components/`.** Its output is `DESIGN.md`, token
+- **Do not let a design skill edit `src/FantasyBasketball.Web/src/`.** Its output is `DESIGN.md`, token
   values, and reference artifacts. An agent ports; a design tool proposes.
 
 # Verification

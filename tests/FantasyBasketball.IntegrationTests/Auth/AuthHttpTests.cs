@@ -126,7 +126,7 @@ public sealed class AuthHttpTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task HP05_React_browser_registers_creates_league_and_persists_keyboard_pick()
+    public async Task HP05_U18_A20_A36_D13_D14_D18_D30_React_browser_registers_creates_league_and_persists_keyboard_pick()
     {
         var token = TestContext.Current.CancellationToken;
         await using (var scope = app.Services.CreateAsyncScope())
@@ -348,16 +348,9 @@ public sealed class AuthHttpTests : IAsyncLifetime
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var html = await response.Content.ReadAsStringAsync(cancellationToken);
-        html.ShouldContain("Draft with evidence");
-        html.ShouldContain("Bring your league from");
-        // Nominative use, and the disclaimer travels with it.
-        html.ShouldContain("Not affiliated with");
+        // `/` serves the React shell; the app decides landing vs workspace.
+        html.ShouldContain("<div id=\"root\">");
 
-        // The dashboard's own sections read owned tables. Their absence is what
-        // makes this a landing page rather than a dashboard that happened to
-        // survive; it is also the observable half of the guard, because the
-        // page's catch would otherwise swallow the CurrentUserId throw and
-        // render the same 200 either way.
         foreach (var authenticatedOnly in new[]
             {
                 "Data freshness",
@@ -377,144 +370,6 @@ public sealed class AuthHttpTests : IAsyncLifetime
                 StringComparison.Ordinal));
     }
 
-    /// <summary>
-    /// D-26. Row A-26 requires demo data to be labelled fictional and opt-in.
-    /// This fixture leaves the flag off, so the landing page must carry neither
-    /// the badge nor any of the invented players.
-    /// </summary>
-    [Fact]
-    public async Task D26_sample_content_is_absent_until_the_demo_flag_is_set()
-    {
-        var cancellationToken = TestContext.Current.CancellationToken;
-
-        using var response = await client.GetAsync("/", cancellationToken);
-        var html = await response.Content.ReadAsStringAsync(cancellationToken);
-
-        html.Contains("data-demo-label", StringComparison.Ordinal)
-            .ShouldBeFalse("the sample badge must not render with the flag off");
-        foreach (var invented in new[] { "Dario Vance", "Emeka Baptiste", "Example Wire" })
-        {
-            html.Contains(invented, StringComparison.Ordinal)
-                .ShouldBeFalse($"'{invented}' is demo content and the flag is off");
-        }
-    }
-
-    /// <summary>
-    /// D-26, the other half: with the flag on, every surface that renders
-    /// invented content also renders the label that says so.
-    /// </summary>
-    [Fact]
-    public async Task D26_sample_content_is_labelled_fictional_when_enabled()
-    {
-        var cancellationToken = TestContext.Current.CancellationToken;
-        var builder = WebApplication.CreateBuilder(new WebApplicationOptions
-        {
-            EnvironmentName = Environments.Development,
-        });
-        builder.Logging.ClearProviders();
-        builder.WebHost.ConfigureKestrel(options =>
-            options.Listen(IPAddress.Loopback, 0));
-        builder.Configuration.AddInMemoryCollection(
-            new Dictionary<string, string?>
-            {
-                ["BallDontLie:ApiKey"] = "fixture-api-key",
-                ["ConnectionStrings:Fantasy"] = postgres.GetConnectionString(),
-                ["Demo:Enabled"] = "true",
-            });
-        ApiHost.ConfigureServices(builder);
-        builder.Services.RemoveAll<IHostedService>();
-        var demoApp = builder.Build();
-        ApiHost.Configure(demoApp);
-        await demoApp.StartAsync(cancellationToken);
-
-        try
-        {
-            using var demoClient = new HttpClient(new HttpClientHandler
-            {
-                AllowAutoRedirect = false,
-                UseCookies = false,
-            })
-            {
-                BaseAddress = Address(demoApp),
-            };
-
-            using var response = await demoClient.GetAsync("/", cancellationToken);
-            response.StatusCode.ShouldBe(HttpStatusCode.OK);
-            var html = await response.Content.ReadAsStringAsync(cancellationToken);
-
-            html.ShouldContain("Dario Vance");
-            html.ShouldContain("data-demo-label");
-            html.ShouldContain("Fictional players and headlines");
-        }
-        finally
-        {
-            await demoApp.StopAsync(cancellationToken);
-            await demoApp.DisposeAsync();
-        }
-    }
-
-    [Fact]
-    public async Task U18_register_and_log_in_through_the_rendered_html_form()
-    {
-        var cancellationToken = TestContext.Current.CancellationToken;
-
-        // Anonymous static assets first: without them the login page renders with
-        // no stylesheet and Blazor never boots, which is the same outage wearing a
-        // different hat -- and invisible to any test that only parses the HTML.
-        foreach (var asset in new[]
-            {
-                "/FantasyBasketball.Api.styles.css",
-                "/_framework/blazor.web.js",
-            })
-        {
-            using var assetResponse = await client.GetAsync(asset, cancellationToken);
-            assetResponse.StatusCode.ShouldBe(
-                HttpStatusCode.OK,
-                $"{asset} must be reachable without authentication");
-        }
-
-        var (registerAction, registerToken, registerCookie) =
-            await ReadFormAsync("/account/register", cancellationToken);
-        using var registered = await PostFormAsync(
-            registerAction,
-            registerCookie,
-            new Dictionary<string, string>
-            {
-                ["displayName"] = "Form User",
-                ["email"] = "form-user@local.test",
-                ["password"] = "form-password-1234",
-                ["__RequestVerificationToken"] = registerToken,
-            },
-            cancellationToken);
-        registered.StatusCode.ShouldBe(
-            HttpStatusCode.Redirect,
-            "the register form's own action must reach its handler");
-
-        var (loginAction, loginToken, loginCookie) =
-            await ReadFormAsync("/account/login", cancellationToken);
-        using var loggedIn = await PostFormAsync(
-            loginAction,
-            loginCookie,
-            new Dictionary<string, string>
-            {
-                ["email"] = "form-user@local.test",
-                ["password"] = "form-password-1234",
-                ["__RequestVerificationToken"] = loginToken,
-            },
-            cancellationToken);
-        loggedIn.StatusCode.ShouldBe(HttpStatusCode.Redirect);
-        loggedIn.Headers.Location!.OriginalString.ShouldBe("/");
-
-        var authCookie = loggedIn.Headers.GetValues("Set-Cookie")
-            .Select(header => header.Split(';')[0])
-            .First(header => header.StartsWith(".AspNetCore.Identity", StringComparison.Ordinal));
-        using var dashboard = new HttpRequestMessage(HttpMethod.Get, "/");
-        dashboard.Headers.Add("Cookie", authCookie);
-        using var dashboardResponse = await client.SendAsync(dashboard, cancellationToken);
-        dashboardResponse.StatusCode.ShouldBe(
-            HttpStatusCode.OK,
-            "the cookie the form issued must authenticate a page request");
-    }
 
     /// <summary>
     /// Reads the form's declared action and anti-forgery token straight out of the

@@ -3,11 +3,11 @@ type: contract
 title: Design System Contract
 description: Token vocabulary, component inventory, the draft-board interaction budget, evidence and confidence presentation rules, and the WCAG 2.2 AA floor.
 tags: [contract, design, ui, accessibility]
-source_paths: [src/FantasyBasketball.Api/Components/Design, DESIGN.md]
+source_paths: [src/FantasyBasketball.Web/src/workspace.css, DESIGN.md]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Api]
-depends_on: [recommendation_evidence_contract.md, ../components/web_ui_blazor.md]
-status: implemented
-last_updated: 2026-07-31
+depends_on: [recommendation_evidence_contract.md, ../components/web_ui_react.md]
+status: partial
+last_updated: 2026-09-23
 owners: [engineering]
 risk_level: medium
 edit_policy: stable_contract
@@ -333,3 +333,12 @@ Blazor remains supported. Its interim styles are owned by `workspace.css` in
 for Blazor. No CSS framework or component library is introduced. This changes
 the rendering technology and style location, not the accessibility floor or
 the requirement to show evidence and unverified-context labels.
+
+## Blazor retired — 2026-09-23
+
+The owner retired the Blazor UI in favor of the React app
+(`src/FantasyBasketball.Web`). The Razor component inventory, its token file
+and the static checks that read them were deleted, so this concept drops to
+`partial`: React uses its own CSS custom properties in `workspace.css` and no
+component inventory yet. Rows re-covered in React are listed in
+[test_matrix_ui_design](../tests/test_matrix_ui_design.md).

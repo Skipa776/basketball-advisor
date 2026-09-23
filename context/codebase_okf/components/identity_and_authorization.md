@@ -3,11 +3,11 @@ type: component
 title: Identity and Authorization
 description: ASP.NET Identity wiring, the query-filter layer, the ownership retrofit migration, and the reflection-driven isolation sweep.
 tags: [component, auth, tenancy]
-source_paths: [src/FantasyBasketball.Infrastructure/Identity, src/FantasyBasketball.Api/Components/Pages/Account]
+source_paths: [src/FantasyBasketball.Infrastructure/Identity, src/FantasyBasketball.Api/Endpoints/AccountEndpoints.cs, src/FantasyBasketball.Web/src/Workspace.tsx]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Auth]
 depends_on: [../contracts/auth_tenancy_contract.md, ../safety/tenancy_policy.md]
 status: implemented
-last_updated: 2026-07-29
+last_updated: 2026-09-23
 owners: [engineering]
 risk_level: high
 done_criteria:
@@ -94,3 +94,10 @@ non-null only after first-registration claiming. Marker-driven query filters,
 endpoint authorization, throwing worker context, account pages, portable account
 archives, and cascade deletion are implemented. U-01 reflects over all 10 owned
 routes and U-02 proves the sweep detects a planted leak; U-01 through U-17 pass.
+
+## Blazor retired — 2026-09-23
+
+Sign-in and registration are the React form posting to `/api/account/*`
+(cookie + antiforgery unchanged). The Razor account pages and their HTML
+form-post endpoints (`/account/*/submit`, `/account/active-league/submit`) were
+removed with Blazor; unauthenticated page requests now redirect to `/app`.

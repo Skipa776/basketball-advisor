@@ -3,11 +3,11 @@ type: component
 title: Design System
 description: The Blazor component library built from tokens, how DESIGN.md output is ported into it, and the accessibility gate.
 tags: [component, ui, design, blazor]
-source_paths: [src/FantasyBasketball.Api/Components/Design, DESIGN.md]
+source_paths: [src/FantasyBasketball.Web/src/workspace.css, DESIGN.md]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Api]
-depends_on: [../contracts/design_system_contract.md, web_ui_blazor.md]
-status: implemented
-last_updated: 2026-07-30
+depends_on: [../contracts/design_system_contract.md, web_ui_react.md]
+status: partial
+last_updated: 2026-09-23
 owners: [engineering]
 risk_level: medium
 done_criteria:
@@ -90,3 +90,12 @@ D-21.
 The incremental React workspace is owned by [web_ui_react](web_ui_react.md).
 Its axe browser checks complement the existing Blazor gates; the broader animated
 landing and complete token/component migration are still pending.
+
+## Blazor retired — 2026-09-23
+
+The owner retired the Blazor UI in favor of the React app
+(`src/FantasyBasketball.Web`). The Razor component inventory, its token file
+and the static checks that read them were deleted, so this concept drops to
+`partial`: React uses its own CSS custom properties in `workspace.css` and no
+component inventory yet. Rows re-covered in React are listed in
+[test_matrix_ui_design](../tests/test_matrix_ui_design.md).

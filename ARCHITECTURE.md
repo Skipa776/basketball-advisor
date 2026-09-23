@@ -62,15 +62,17 @@ src/
     Import/           CsvAdpImporter.cs  DataImportRunRecorder.cs
     Workers/          ScheduleRefreshWorker.cs  StatRefreshWorker.cs  AdpRefreshWorker.cs
 
-  FantasyBasketball.Api/             # ASP.NET Core host + Blazor Server UI
+  FantasyBasketball.Api/             # ASP.NET Core host; serves the React bundle at / and /app
     Program.cs  DependencyInjection.cs
     Endpoints/        LeagueEndpoints.cs  PlayerEndpoints.cs  DraftEndpoints.cs
                       ProjectionEndpoints.cs  ContextEndpoints.cs  HealthEndpoints.cs
     Middleware/       ExceptionHandlingMiddleware.cs  RequestLoggingMiddleware.cs
     Options/          BallDontLieOptions.cs  ScrapingOptions.cs  DraftWeightOptions.cs
-    Components/       App.razor  Routes.razor  Layout/*.razor
-      Pages/          Dashboard.razor  MyLeague.razor  Players.razor
-                      DraftAssistant.razor  ContextReview.razor  DataSources.razor
+    wwwroot/app/      React build output (git-ignored)
+
+  FantasyBasketball.Web/             # React 19 + TypeScript + Vite (Node is build-time only)
+    src/              Workspace.tsx  Landing.tsx  draft.tsx  functionalPages.tsx  workspace.css
+    tests/            workspace.mjs (Playwright + axe browser journey)
 
 tests/
   FantasyBasketball.Domain.Tests/          # no DB, no network, no I/O
@@ -311,10 +313,8 @@ src/FantasyBasketball.Infrastructure/
   Workers/                       BoxScoreImportWorker.cs  TrendRefreshWorker.cs
   Telemetry/                     Metrics.cs
 
-src/FantasyBasketball.Api/
-  Components/Pages/  Trends.razor  FreeAgents.razor  Streamers.razor
-                     Trades.razor  Matchup.razor  Account/*.razor
-  Components/Design/ Tokens.razor.css  <design-system components>
+src/FantasyBasketball.Web/src/   React pages for trends, free agents, streamers,
+                                 trades and matchups (Blazor retired 2026-09-23)
 
 tests/
   FantasyBasketball.Domain.Tests/{Trends,Categories,Streaming,Trades}

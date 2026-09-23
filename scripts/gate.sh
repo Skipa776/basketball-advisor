@@ -140,7 +140,6 @@ PY
 dotnet format --verify-no-changes
 dotnet build --no-restore -c Release
 dotnet test --no-build -c Release --collect:"XPlat Code Coverage"
-node scripts/ui-browser-gate.mjs
 
 python3 - <<'PY'
 from __future__ import annotations

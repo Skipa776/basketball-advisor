@@ -97,6 +97,7 @@ The owner has approved execution of
 React integration, API verification, explicit editable ESPN points setup, and
 three-appearance heat against the preceding expanding 10–30 appearance baseline.
 This extends the earlier E13-only objective. Preserve existing safety boundaries,
-no CSS framework/component library, and working Blazor routes during migration.
+and no CSS framework/component library. **Blazor was retired 2026-09-23** by the
+owner; the React app is the only UI (see `context/codebase_okf/components/web_ui_blazor.md`).
 Checkpoint evidence and remaining work in
 [`implementation-progress.md`](docs/plans/implementation-progress.md).

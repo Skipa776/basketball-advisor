@@ -3,11 +3,11 @@ type: test_matrix
 title: Test Matrix — UI and Design System
 description: Required cases for token discipline, contrast in both themes, the draft-board interaction budget, and the accessibility gate.
 tags: [tests, ui, design, accessibility, matrix]
-source_paths: [src/FantasyBasketball.Api/Components]
+source_paths: [src/FantasyBasketball.Web/src]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Api]
-depends_on: [required_gates.md, ../contracts/design_system_contract.md, ../components/web_ui_blazor.md]
+depends_on: [required_gates.md, ../contracts/design_system_contract.md, ../components/web_ui_react.md]
 status: partial
-last_updated: 2026-07-31
+last_updated: 2026-09-23
 owners: [engineering]
 ---
 
@@ -21,10 +21,10 @@ who has never seen the app can get anywhere in it.
 
 | ID | Case | Expected | Required |
 |---|---|---|---|
-| `D-10` | Scan `.razor` and `.razor.css` | No hex colour, raw `px` spacing, or `ms` duration outside the token file | ✅ |
-| `D-19` | `Components/Design` types | No service or repository dependency — components are presentational | ✅ |
-| `D-20` | Every page | Composed from inventory components; defines no page-level styles. `PageHeader` **or** `AuthPanel` supplies the heading | ✅ |
-| `D-23` | Every rule using `--color-accent` in a board stylesheet | Every comma-separated selector part names the recommendation. Orange is free elsewhere and rationed here | ✅ |
+| `D-10` | Scan `.razor` and `.razor.css` | No hex colour, raw `px` spacing, or `ms` duration outside the token file | ⏳ React re-coverage pending (Blazor check retired 2026-09-23) |
+| `D-19` | `Components/Design` types | No service or repository dependency — components are presentational | ⏳ React re-coverage pending (Blazor check retired 2026-09-23) |
+| `D-20` | Every page | Composed from inventory components; defines no page-level styles. `PageHeader` **or** `AuthPanel` supplies the heading | ⏳ React re-coverage pending (Blazor check retired 2026-09-23) |
+| `D-23` | Every rule using `--color-accent` in a board stylesheet | Every comma-separated selector part names the recommendation. Orange is free elsewhere and rationed here | ⏳ React re-coverage pending (Blazor check retired 2026-09-23) |
 
 `D-23` is the executable half of the accent rule. The accent became the brand
 colour when the marketing surfaces landed, and a brand colour sprayed across the
@@ -37,7 +37,7 @@ so `.anything, .recommendation` cannot smuggle a rule past it.
 | ID | Case | Expected | Required |
 |---|---|---|---|
 | `D-25` | `GET /` with no session | `200` with the landing content, and **none** of the dashboard's owned-data sections | ✅ |
-| `D-26` | Landing page with the demo flag off, then on | Off: no badge and none of the invented players. On: the content **and** its fictional label | ✅ |
+| `D-26` | Landing page with the demo flag off, then on | Off: no badge and none of the invented players. On: the content **and** its fictional label | retired — demo landing removed with Blazor |
 
 `D-25` asserts the absence of the owned sections rather than the presence of a
 guard, because the page's own catch would swallow a `CurrentUserId` throw and
@@ -48,15 +48,15 @@ worth pinning.
 
 | ID | Case | Expected | Required |
 |---|---|---|---|
-| `D-11` | Every foreground token × every surface token, **both themes** | 4.5:1 body, 3:1 UI boundaries; **and** no colour token exists that no pair covers and no exemption names | ✅ |
-| `D-12` | Every evidence item | Renders an icon **and** a text label — never colour alone | ✅ |
-| `D-15` | Board row stylesheet and the scroll-anchor script | No row transitions a geometry property and the correction never animates — re-rank is instant by construction, so there is no motion left to reduce | ✅ |
-| `D-16` | Live regions on the draft board | Announce the pick made and a top-recommendation change; **not** every re-ranked row | ✅ |
-| `D-17` | Every page rendered with no data | A styled first-run surface — `EmptyState`, `AuthPanel`, or `NotBuiltState`. Pages populated in every state are exempt **by name**, never by omission | ✅ |
+| `D-11` | Every foreground token × every surface token, **both themes** | 4.5:1 body, 3:1 UI boundaries; **and** no colour token exists that no pair covers and no exemption names | ⏳ React re-coverage pending (Blazor check retired 2026-09-23) |
+| `D-12` | Every evidence item | Renders an icon **and** a text label — never colour alone | ⏳ React re-coverage pending (Blazor check retired 2026-09-23) |
+| `D-15` | Board row stylesheet and the scroll-anchor script | No row transitions a geometry property and the correction never animates — re-rank is instant by construction, so there is no motion left to reduce | ⏳ React re-coverage pending (Blazor check retired 2026-09-23) |
+| `D-16` | Live regions on the draft board | Announce the pick made and a top-recommendation change; **not** every re-ranked row | ⏳ React re-coverage pending (Blazor check retired 2026-09-23) |
+| `D-17` | Every page rendered with no data | A styled first-run surface — `EmptyState`, `AuthPanel`, or `NotBuiltState`. Pages populated in every state are exempt **by name**, never by omission | ⏳ React re-coverage pending (Blazor check retired 2026-09-23) |
 | `D-18` | Automated a11y scan, every page, both themes | Zero violations (`accessibility_violations_allowed = 0`) | ✅ |
-| `D-22` | Every pair **inside `.on-dark`**, plus the island's own token values | Meets its floor against the island's surfaces, and matches the dark set exactly | ✅ |
-| `D-24` | Carousel script and markup | Reduced-motion guard, operable pause, hover and focus suspension, and slides that do not announce themselves (WCAG 2.2.2) | ✅ |
-| `D-27` | Every rule applying `--font-display` | Never lands on a numeric selector; `[data-numeric]` stays mono and tabular | ✅ |
+| `D-22` | Every pair **inside `.on-dark`**, plus the island's own token values | Meets its floor against the island's surfaces, and matches the dark set exactly | ⏳ React re-coverage pending (Blazor check retired 2026-09-23) |
+| `D-24` | Carousel script and markup | Reduced-motion guard, operable pause, hover and focus suspension, and slides that do not announce themselves (WCAG 2.2.2) | ⏳ React re-coverage pending (Blazor check retired 2026-09-23) |
+| `D-27` | Every rule applying `--font-display` | Never lands on a numeric selector; `[data-numeric]` stays mono and tabular | ⏳ React re-coverage pending (Blazor check retired 2026-09-23) |
 
 `D-22` exists because `.on-dark` renders the same fill in both themes, so nothing
 about the ambient theme predicts what is legible inside it. The pair that fails
@@ -72,12 +72,12 @@ each is a row and not a guideline.
 
 | ID | Case | Expected | Required |
 |---|---|---|---|
-| `D-28` | Every `@page` route, enumerated by reflection | Reachable from a link or nav entry on some rendered page. An orphan route fails | ✅ |
-| `D-29` | Every marketing CTA, rendered anonymously | Its destination is reachable under the instance's current configuration — a CTA that lands on "unavailable" is a failure, not a redirect | ✅ |
+| `D-28` | Every `@page` route, enumerated by reflection | Reachable from a link or nav entry on some rendered page. An orphan route fails | ⏳ React re-coverage pending (Blazor check retired 2026-09-23) |
+| `D-29` | Every marketing CTA, rendered anonymously | Its destination is reachable under the instance's current configuration — a CTA that lands on "unavailable" is a failure, not a redirect | ⏳ React re-coverage pending (Blazor check retired 2026-09-23) |
 | `D-30` | Every page at **390 CSS px**, public *and* signed-in | No horizontal document overflow. Decorative backdrops may exceed the viewport; content and controls may not | ✅ |
 | `D-31` | The app landing page and `site/index.html` | Same product name and wordmark. Two front doors naming two products fails | ✅ |
-| `D-32` | Every input whose label names an identifier | Either a `<select>`, or an `aria-describedby` that resolves to text naming where the value comes from | ✅ |
-| `D-33` | Every page with no backing capability | Renders `NotBuiltState` naming its requirement or roadmap entry, and renders **no** numeric player or team data. The string "coming soon" fails | ✅ |
+| `D-32` | Every input whose label names an identifier | Either a `<select>`, or an `aria-describedby` that resolves to text naming where the value comes from | ⏳ React re-coverage pending (Blazor check retired 2026-09-23) |
+| `D-33` | Every page with no backing capability | Renders `NotBuiltState` naming its requirement or roadmap entry, and renders **no** numeric player or team data. The string "coming soon" fails | ⏳ React re-coverage pending (Blazor check retired 2026-09-23) |
 | `D-34` | Every binary under `wwwroot/img` | Has an `ASSETS.md` entry with source, licence, author, and retrieval date | ✅ |
 
 `D-30` walked only the three signed-out routes until 2026-08-03, which was the
@@ -124,7 +124,7 @@ review from being spent on defects a grep could have found.
 |---|---|---|---|
 | `D-13` | Enter a pick with the keyboard only | ≤ 3 keystrokes to commit; focus returns to the search field | ✅ |
 | `D-14` | **Record row offsets before and after a pick** | No reflow above the current scroll position — the board does not shift under the cursor | ✅ |
-| `D-21` | Render the full player pool | Bounded DOM node count — the table is virtualized | ✅ |
+| `D-21` | Render the full player pool | Bounded DOM node count — the table is virtualized | ⏳ React re-coverage pending (Blazor check retired 2026-09-23) |
 
 `D-14` exists because a board that reflows the instant a rank changes will cause a
 misclick on the wrong player during a live draft. It is the highest-consequence UI
@@ -170,3 +170,17 @@ React migration adds `/app` as an explicit host GET route. D-28/D-29 discover
 these declarations alongside Razor `@page` routes; they do not exempt the React
 link from reachability checks. The real browser test also requests `/app`
 anonymously and verifies the rendered account-to-draft journey.
+
+# Blazor retired — 2026-09-23
+
+The Blazor UI and the static checks that parsed `.razor` files were deleted.
+Evidence that survives, all against the React app:
+
+| Row | Test |
+|---|---|
+| `D-13`, `D-14`, `D-18`, `D-30` | `HP05_U18_A20_A36_D13_D14_D18_D30_React_browser_…` runs `src/FantasyBasketball.Web/tests/workspace.mjs`: keyboard pick, stationary player-pool rows after re-rank, axe on every page, no overflow at 390/320 px |
+| `D-25` | `D25_landing_page_renders_anonymously_without_touching_owned_data` — `/` serves the React shell |
+| `D-31`, `D-34` | `UiInteractionPathTests` — framework-neutral file checks |
+
+Every other row is marked pending until a React-specific check exists. They
+are not deleted: the requirement is unchanged, only the Blazor evidence is gone.

@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Api, src/FantasyBasketball.Infrastructure/P
 test_paths: [tests/FantasyBasketball.IntegrationTests]
 depends_on: [required_gates.md, ../contracts/persistence_contract.md, ../contracts/api_surface.md]
 status: partial
-last_updated: 2026-07-29
+last_updated: 2026-09-23
 owners: [engineering]
 ---
 
@@ -56,7 +56,7 @@ database rules, and the HTTP contract.
 | ID | Case | Expected | Required |
 |---|---|---|---|
 | `A-20` | Render a player projection | Shows baseline, adjustment, and final separately — never the final number alone (R8) | ✅ |
-| `A-21` | Render a number affected by an unverified event | Visibly marked as unverified | ✅ |
+| `A-21` | Render a number affected by an unverified event | Visibly marked as unverified | ⏳ React re-coverage pending (Blazor render test retired 2026-09-23) |
 | `A-36` | **Create a league, then request `/league` and `/draft` again** | Both show it: the summary carries the ID, the draft page offers it as an option | ✅ |
 
 `A-35` and `A-36` are both "the second request" rows. Every route in `A-14`'s sweep
@@ -110,3 +110,10 @@ onward belong to E12, so this matrix remains `partial`.
 React bridge coverage additionally checks explicit ESPN setup against an independent
 53-point scoring golden, an eleven-team league, list defaults/invalid pagination,
 and draft reload returning the persisted picks.
+
+## Blazor retired — 2026-09-23
+
+`A-20` and `A-36` are now evidenced by the React journey
+(`HP05_A20_A36_…` → `workspace.mjs`): the player detail shows Baseline,
+Adjusted and Final separately, and a saved league/draft survives a reload.
+`A-21` (visible unverified marking) has no React assertion yet.
