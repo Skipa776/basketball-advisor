@@ -178,3 +178,4 @@ main.landing{overflow-x:clip}
 .trade-sides{padding-left:1.1rem}
 .provider-teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:.5rem 1.5rem}.provider-teams .check{display:flex;align-items:center;gap:.5rem;white-space:nowrap}.provider-teams .check input{width:auto}.provider-notes{padding-left:1.1rem;color:var(--muted)}
 .injury{display:inline-block;margin-left:.35em;padding:0 .5em;border-radius:999px;border:1px solid var(--accent);color:var(--accent);font-size:.75em;font-weight:600;white-space:nowrap}
+.hub-league{display:flex;flex-wrap:wrap;align-items:end;gap:1rem;margin:-1.5rem 0 2rem}.hub-league label{display:grid;gap:.35rem;min-width:min(100%,22rem)}

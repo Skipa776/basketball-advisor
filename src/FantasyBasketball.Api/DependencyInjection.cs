@@ -241,6 +241,7 @@ public static class DependencyInjection
         services.AddScoped<ContextEventQueryService>();
         services.AddScoped<DraftSessionService>();
         services.AddScoped<DraftBoardService>();
+        services.AddScoped<DraftAssistService>();
         services.AddScoped<LeagueService>();
         services.AddScoped<PlayerQueryService>();
         services.AddScoped<DataSourceHealthService>();

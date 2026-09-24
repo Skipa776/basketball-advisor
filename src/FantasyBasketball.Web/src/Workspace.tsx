@@ -12,6 +12,11 @@ export function ErrorNotice({ text, retry }: { text: string; retry?: () => void 
   return text ? <div className="notice error" role="alert">{text} {retry && <button type="button" onClick={retry}>Try again</button>}</div> : null;
 }
 
+const LEAGUE_KEY = 'fastbreak:league';
+// The chosen league is remembered per browser so every page opens with it (storage may be blocked).
+export function rememberedLeague() { try { return localStorage.getItem(LEAGUE_KEY) ?? undefined; } catch { return undefined; } }
+export function rememberLeague(id: string) { try { if (id) localStorage.setItem(LEAGUE_KEY, id); else localStorage.removeItem(LEAGUE_KEY); } catch { /* per-browser convenience only */ } }
+
 export function Workspace() {
   const session = useResource<Session>('/api/account/session');
   const [error, setError] = useState('');
@@ -34,7 +39,11 @@ export function Workspace() {
   // /app is the menu; the draft lives at /app/draft. Old /app?…&draft= links still open the draft.
   const isDraft = path === '/app/draft' || (path === '/app' && params.has('draft'));
   const page = path === '/app' || isDraft ? null : pageNames[path] ?? 'Page not found';
-  const leagueId = params.get('league') ?? undefined;
+  const [leagueId, setLeagueId] = useState(params.get('league') ?? rememberedLeague());
+  function chooseLeague(id: string) {
+    rememberLeague(id); setLeagueId(id || undefined);
+    window.history.replaceState(null, '', `${window.location.pathname}${id ? `?league=${encodeURIComponent(id)}` : ''}`);
+  }
   const pageHref = (path: string) => `${path}${leagueId ? `?league=${encodeURIComponent(leagueId)}` : ''}`;
   function goHome() { window.location.assign(pageHref('/app')); }
   return <>
@@ -48,7 +57,7 @@ export function Workspace() {
           ? <><div className="intro intro-compact"><p className="eyebrow">THE WORKSPACE / MOCK DRAFT</p><h1>See the court. <em>Make your move.</em></h1></div><LeagueWorkspace key={user.id} /></>
           : page
             ? <FunctionalPage name={page} session={session.result.data} leagueId={leagueId} onHome={goHome} onLeagueUpdated={() => window.location.reload()} />
-            : <Hub session={session.result.data} pageHref={pageHref} />
+            : <Hub session={session.result.data} pageHref={pageHref} leagueId={leagueId} onLeague={chooseLeague} />
         : <Landing><AccountForm session={session.result.data} onSignedIn={session.refresh} /></Landing>)}
     </main>
     {user && <footer className="site-footer"><span>Fantasy basketball. With perspective.</span><a href="/app">Workspace</a><span>2026 © Edition</span></footer>}
@@ -85,12 +94,12 @@ function LeagueWorkspace() {
   const leagues = useResource<League[]>('/api/leagues?limit=200');
   const setup = useResource<Setup>('/api/leagues/setup');
   const initial = new URLSearchParams(window.location.search);
-  const [leagueId, setLeagueId] = useState(initial.get('league') ?? '');
+  const [leagueId, setLeagueId] = useState(initial.get('league') ?? rememberedLeague() ?? '');
   const [creating, setCreating] = useState(false);
   const [draftId, setDraftId] = useState(initial.get('draft') ?? '');
   const selected = leagues.result?.data.find(league => league.id === leagueId);
   function chooseLeague(id: string) {
-    setLeagueId(id); setDraftId(''); setCreating(false);
+    setLeagueId(id); setDraftId(''); setCreating(false); rememberLeague(id);
     window.history.replaceState(null, '', `/app/draft?league=${encodeURIComponent(id)}`);
   }
   function chooseDraft(id: string) {

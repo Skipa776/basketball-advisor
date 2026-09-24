@@ -1079,3 +1079,14 @@ draft value contract's own definition. See that contract's correction note.
   2026-03-04 replay shows it as not applied rather than mixing seasons.
 - Players are matched by Sleeper id, then by a unique normalized name; unmatched
   reports are counted, never create players.
+
+## Draft opponents and league choice — 2026-09-24
+
+- Owner: the draft must work solo (see how it plays out) and as a companion
+  next to Sleeper's draft room. Solo: "Sim other teams to my pick" has every
+  other team take the best available player by ADP (projected value when no
+  ADP); deterministic, never picks for the user. Companion: picks pasted in
+  order, one name per line, are recorded at the current pick whoever's turn it
+  is; the paste stops at the first unknown, ambiguous or already-drafted name.
+- The league is chosen on the menu and remembered per browser, so every page
+  opens with it.

@@ -15,6 +15,8 @@ public sealed record RecordDraftPickRequest(
     int PickNumber,
     Guid PlayerId);
 
+public sealed record TakenPicksRequest(IReadOnlyList<string> Names);
+
 public static class DraftEndpoints
 {
     public static IEndpointRouteBuilder MapDraftEndpoints(
@@ -34,6 +36,10 @@ public static class DraftEndpoints
         group.MapPost("/{id:guid}/picks", RecordPickAsync)
             .WithMetadata(new OwnedRouteMetadata("draft", "id"));
         group.MapDelete("/{id:guid}/picks/{pickNumber:int}", UndoPickAsync)
+            .WithMetadata(new OwnedRouteMetadata("draft", "id"));
+        group.MapPost("/{id:guid}/picks/simulate", SimulateAsync)
+            .WithMetadata(new OwnedRouteMetadata("draft", "id"));
+        group.MapPost("/{id:guid}/picks/taken", RecordTakenAsync)
             .WithMetadata(new OwnedRouteMetadata("draft", "id"));
         group.MapGet("/{id:guid}/recommendations", GetRecommendationsAsync)
             .WithMetadata(new OwnedRouteMetadata("draft", "id"));
@@ -151,6 +157,35 @@ public static class DraftEndpoints
             id,
             pickNumber,
             cancellationToken));
+    }
+
+    public static async Task<IResult> SimulateAsync(
+        Guid id,
+        DraftAssistService service,
+        OwnedResourceAuthorizationService authorization,
+        CancellationToken cancellationToken)
+    {
+        await authorization.RequireDraftAsync(id, cancellationToken);
+        return ApiResults.Success(new { Picks = await service.SimulateToUserTurnAsync(id, cancellationToken) });
+    }
+
+    public static async Task<IResult> RecordTakenAsync(
+        Guid id,
+        TakenPicksRequest request,
+        DraftAssistService service,
+        OwnedResourceAuthorizationService authorization,
+        CancellationToken cancellationToken)
+    {
+        await authorization.RequireDraftAsync(id, cancellationToken);
+        if (request.Names is not { Count: > 0 and <= 400 })
+        {
+            throw new RequestValidationException(new Dictionary<string, string[]>
+            {
+                ["names"] = ["Paste between 1 and 400 player names, one per line."],
+            });
+        }
+
+        return ApiResults.Success(await service.RecordTakenAsync(id, request.Names, cancellationToken));
     }
 
     public static async Task<IResult> GetRecommendationsAsync(

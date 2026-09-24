@@ -9,6 +9,9 @@ import { RecordedPerformance } from './performance';
 import type { Board, Draft, DraftRecord, League, Player, Ranking } from './types';
 
 const number = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 1 });
+/** Snake order: odd rounds run 1→N, even rounds N→1. */
+export const slotOnClock = (pick: number, teams: number) => { const index = (pick - 1) % teams; return Math.ceil(pick / teams) % 2 === 1 ? index + 1 : teams - index; };
+type Taken = { recorded: number; currentPick: number; stoppedAt: string | null; reason: string | null };
 
 export function DraftWorkspace({ league, draftId, onDraft }: { league: League; draftId: string; onDraft: (id: string) => void }) {
   const record = useResource<DraftRecord>(draftId ? `/api/drafts/${draftId}` : null, 5000);
@@ -19,6 +22,30 @@ export function DraftWorkspace({ league, draftId, onDraft }: { league: League; d
   const [announcement, setAnnouncement] = useState('');
   const session = record.result?.data.leagueId === league.id ? record.result.data.session : null;
   const complete = !!session && session.currentPick > session.teamCount * session.roundCount;
+  const onClock = session && !complete ? slotOnClock(session.currentPick, session.teamCount) : 0;
+  const myTurn = !!session && onClock === session.userSlot;
+  const [takenText, setTakenText] = useState('');
+  async function simulate() {
+    if (!session || busy || complete || myTurn) return;
+    setBusy(true); setError('');
+    try { const made = (await post<{ picks: number }>(`/api/drafts/${draftId}/picks/simulate`, {})).data.picks; setAnnouncement(`Other teams made ${made} ${made === 1 ? 'pick' : 'picks'}. You are on the clock.`); }
+    catch (error) { setError(message(error)); }
+    finally { record.refresh(); board.refresh(); setBusy(false); }
+  }
+  async function recordTaken(event: FormEvent) {
+    event.preventDefault();
+    if (!session || busy) return;
+    setBusy(true); setError('');
+    try {
+      const result = (await post<Taken>(`/api/drafts/${draftId}/picks/taken`, { names: takenText.split(/\r?\n|,/) })).data;
+      const lines = takenText.split(/\r?\n|,/).map(line => line.trim()).filter(Boolean);
+      const stopped = result.stoppedAt ? lines.indexOf(result.stoppedAt.trim()) : -1;
+      setTakenText(stopped >= 0 ? lines.slice(stopped).join('\n') : '');
+      setAnnouncement(`Recorded ${result.recorded} ${result.recorded === 1 ? 'pick' : 'picks'}.`);
+      if (result.stoppedAt) setError(`Recorded ${result.recorded}, then stopped at “${result.stoppedAt}”: ${result.reason} Fix that line and record again, or pick him from the list below.`);
+    } catch (error) { setError(message(error)); }
+    finally { record.refresh(); board.refresh(); setBusy(false); }
+  }
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError('');
     const form = new FormData(event.currentTarget);
@@ -47,20 +74,26 @@ export function DraftWorkspace({ league, draftId, onDraft }: { league: League; d
     } catch (error) { setError(message(error)); }
     finally { record.refresh(); board.refresh(); setBusy(false); }
   }
-  return <section className="draft" aria-labelledby="draft-title"><div className="section-heading"><div><p className="eyebrow">02 / PREPARE & PICK</p><h2 id="draft-title">{league.name}</h2><p>{league.teamCount} teams · {league.type === 0 ? 'Points' : 'Category'} league</p></div>{session && <div className="on-clock"><span>{complete ? 'DRAFT COMPLETE' : 'CURRENT PICK'}</span><strong>{complete ? session.picks.length : session.currentPick}</strong><button disabled={busy || record.loading || !session.picks.length} onClick={undo}>Undo last pick</button></div>}</div>
+  return <section className="draft" aria-labelledby="draft-title"><div className="section-heading"><div><p className="eyebrow">02 / PREPARE & PICK</p><h2 id="draft-title">{league.name}</h2><p>{league.teamCount} teams · {league.type === 0 ? 'Points' : 'Category'} league</p></div>{session && <div className="on-clock"><span>{complete ? 'DRAFT COMPLETE' : myTurn ? 'YOUR PICK' : `TEAM ${onClock} PICKING`}</span><strong>{complete ? session.picks.length : session.currentPick}</strong><button disabled={busy || record.loading || !session.picks.length} onClick={undo}>Undo last pick</button></div>}</div>
     <ErrorNotice text={error || record.error || board.error} retry={record.error || board.error ? () => { record.refresh(); board.refresh(); } : undefined} /><p className="sr-only" role="status">{announcement}</p>
     {league.type === 0 && <ProjectionControls key={league.id} leagueId={league.id} onPublished={() => { setProjectionRevision(value => value + 1); board.refresh(); }} />}
+    {session && !complete && <section className="panel draft-others" aria-labelledby="others-title">
+      <h3 id="others-title">Other teams’ picks</h3>
+      <p className="muted">{myTurn ? 'You are on the clock. Draft from the shortlist or the list below.' : `Pick ${session.currentPick} belongs to team ${onClock}. Any player you pick now is recorded for them.`}</p>
+      <div className="form-row"><button onClick={simulate} disabled={busy || myTurn}>Sim other teams to my pick</button><span className="muted">Solo mock: each team takes the best available player by ADP.</span></div>
+      <form onSubmit={recordTaken}><label>Picks made in your draft room, in order<textarea rows={3} value={takenText} onChange={event => setTakenText(event.target.value)} placeholder={'One player per line, e.g.\nNikola Jokić\nShai Gilgeous-Alexander'} /></label><button disabled={busy || !takenText.trim()}>Record these picks</button></form>
+    </section>}
     {session && league.type === 0 && <DraftAdvice draft={session} leagueId={league.id} version={projectionRevision} disabled={busy || record.loading || !!record.error || complete} pick={pick} />}
     {!draftId && <form className="draft-start panel" onSubmit={create}><h3>Start a snake draft</h3><p>Choose your slot and rounds. We’ll save it.</p><div className="form-row"><label>Your draft position<input type="number" name="position" required min="1" max={league.teamCount} /></label><label>Rounds<input type="number" name="rounds" required min="1" /></label><button className="primary" disabled={busy}>{busy ? 'Starting…' : 'Start draft'} ↗</button></div></form>}
     {draftId && !record.result && record.loading && <p role="status">Restoring your saved draft…</p>}
     {record.result && !session && <p className="notice">This draft is from another league. Switch leagues or start fresh.</p>}
-    {session && <><p className="muted">Snake · Slot {session.userSlot} · {session.roundCount} rounds. Bookmark to come back.</p>{board.result?.data.banner && <p className="notice">{board.result.data.banner}</p>}<PlayerPool leagueId={league.id} session={session} rankings={board.result?.data.rankings ?? []} pick={pick} disabled={busy || record.loading || !!record.error || complete} /><PickHistory session={session} /></>}
+    {session && <><p className="muted">Snake · Slot {session.userSlot} · {session.roundCount} rounds. Bookmark to come back.</p>{board.result?.data.banner && <p className="notice">{board.result.data.banner}</p>}<PlayerPool leagueId={league.id} session={session} rankings={board.result?.data.rankings ?? []} pick={pick} disabled={busy || record.loading || !!record.error || complete} actionLabel={myTurn ? 'Pick' : `Taken by ${onClock}`} /><PickHistory session={session} /></>}
     {!draftId && <PlayerPool leagueId={league.id} session={null} rankings={[]} pick={pick} disabled />}
     {league.type === 0 && <RecordedPerformance key={league.id} leagueId={league.id} />}
   </section>;
 }
 
-function PlayerPool({ leagueId, session, rankings, pick, disabled }: { leagueId: string; session: Draft | null; rankings: Ranking[]; pick: (player: Player) => Promise<void>; disabled: boolean }) {
+function PlayerPool({ leagueId, session, rankings, pick, disabled, actionLabel = 'Pick' }: { leagueId: string; session: Draft | null; rankings: Ranking[]; pick: (player: Player) => Promise<void>; disabled: boolean; actionLabel?: string }) {
   const [search, setSearch] = useState('');
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
@@ -88,7 +121,7 @@ function PlayerPool({ leagueId, session, rankings, pick, disabled }: { leagueId:
     {players.result?.data.length === 0 && <p className="notice">{query ? 'No players match this search.' : <>No players yet. <a href="/app/data-sources">View data sources ↗</a></>}</p>}
     {!!players.result?.data.length && <><div className="table-scroll"><table><caption className="sr-only">Player pool and draft actions</caption><thead><tr><th>Player</th><th>Position</th><th>Draft value</th><th>Action</th></tr></thead><tbody ref={rows}>{players.result.data.map(player => {
       const value = values.get(player.id.value); const taken = drafted.has(player.id.value);
-      return <tr key={player.id.value}><th scope="row"><button className="player-name" onClick={() => setDetail(player)}>{player.fullName}</button></th><td>{player.positions.join(' / ') || '—'}</td><td>{value ? <details><summary>{number(value.total)}</summary><div className="evidence"><p>Projected season: {number(value.projectedSeasonValue)}</p>{value.evidence.map((item, i) => <p key={i}>{item.statement}</p>)}</div></details> : <span className="muted">{taken ? 'Drafted' : session ? 'No projection' : 'Ranked once a draft starts'}</span>}</td><td><button className="pick" disabled={disabled || taken || players.loading} onClick={() => recordPick(player)} onKeyDown={event => { const buttons = [...(rows.current?.querySelectorAll('button.pick:not(:disabled)') ?? [])]; move(event, buttons.indexOf(event.currentTarget)); }}>{taken ? 'Drafted' : 'Pick'}<span className="sr-only"> {player.fullName}</span></button></td></tr>;
+      return <tr key={player.id.value}><th scope="row"><button className="player-name" onClick={() => setDetail(player)}>{player.fullName}</button></th><td>{player.positions.join(' / ') || '—'}</td><td>{value ? <details><summary>{number(value.total)}</summary><div className="evidence"><p>Projected season: {number(value.projectedSeasonValue)}</p>{value.evidence.map((item, i) => <p key={i}>{item.statement}</p>)}</div></details> : <span className="muted">{taken ? 'Drafted' : session ? 'No projection' : 'Ranked once a draft starts'}</span>}</td><td><button className="pick" disabled={disabled || taken || players.loading} onClick={() => recordPick(player)} onKeyDown={event => { const buttons = [...(rows.current?.querySelectorAll('button.pick:not(:disabled)') ?? [])]; move(event, buttons.indexOf(event.currentTarget)); }}>{taken ? 'Drafted' : actionLabel}<span className="sr-only"> {player.fullName}</span></button></td></tr>;
     })}</tbody></table></div><div className="pagination"><button disabled={page === 1 || players.loading} onClick={() => setPage(page - 1)}>Previous</button><span>Page {page} · {players.result.meta?.total} players</span><button disabled={players.loading || page * (players.result.meta?.limit ?? 50) >= (players.result.meta?.total ?? 0)} onClick={() => setPage(page + 1)}>Next</button></div></>}
     {session && !rankings.length && <p className="notice">No projections yet. Keep picking, or calculate projections above.</p>}
     {!session && <p className="muted">Draft value depends on the pick you are on, so it appears once a draft starts. <a href={`/app/projections?league=${encodeURIComponent(leagueId)}`}>See projected players ranked by season value ↗</a></p>}
@@ -97,11 +130,11 @@ function PlayerPool({ leagueId, session, rankings, pick, disabled }: { leagueId:
 }
 
 function PickHistory({ session }: { session: Draft }) {
-  return <details className="history"><summary>Pick history · {session.picks.length} recorded</summary><ol>{session.picks.map(pick => <PickName key={pick.pickNumber} id={pick.playerId.value} number={pick.pickNumber} />)}</ol></details>;
+  return <details className="history"><summary>Pick history · {session.picks.length} recorded</summary><ol>{session.picks.map(pick => <PickName key={pick.pickNumber} id={pick.playerId.value} number={pick.pickNumber} team={slotOnClock(pick.pickNumber, session.teamCount) === session.userSlot ? 'You' : `Team ${slotOnClock(pick.pickNumber, session.teamCount)}`} />)}</ol></details>;
 }
-function PickName({ id, number: pickNumber }: { id: string; number: number }) {
+function PickName({ id, number: pickNumber, team }: { id: string; number: number; team: string }) {
   const player = useResource<Player>(`/api/players/${id}`);
-  return <li value={pickNumber}>{player.result?.data.fullName ?? (player.error ? 'Player unavailable' : 'Loading player…')}</li>;
+  return <li value={pickNumber}>{player.result?.data.fullName ?? (player.error ? 'Player unavailable' : 'Loading player…')} <span className="muted">· {team}</span></li>;
 }
 
 type StatValues = { values: Record<string, number> };

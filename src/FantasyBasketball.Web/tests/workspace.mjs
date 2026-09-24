@@ -142,10 +142,11 @@ try {
   await page.getByRole('button', { name: 'Calculate projections', exact: true }).click();
   await visible(page.getByText(/Saved estimates for 2 players/));
   await page.getByText('Prepare league projections', { exact: true }).click();
-  await page.getByLabel('Your draft position', { exact: true }).fill('2');
+  await page.getByLabel('Your draft position', { exact: true }).fill('1');
   await page.getByLabel('Rounds', { exact: true }).fill('2');
   await page.getByRole('button', { name: 'Start draft' }).click();
-  await visible(page.getByText('CURRENT PICK', { exact: true }));
+  await visible(page.getByText('YOUR PICK', { exact: true }));
+  assert.equal(await page.getByRole('button', { name: 'Sim other teams to my pick', exact: true }).isDisabled(), true, 'never simulates the user\'s own pick');
   const shortlist = page.getByRole('region', { name: 'Next-pick shortlist' });
   await visible(shortlist.getByRole('button', { name: 'Fixture Guard', exact: true }));
   const originalAdvice = await shortlist.locator('.advice-list > li').evaluateAll(rows => rows.map(row => row.dataset.playerId));

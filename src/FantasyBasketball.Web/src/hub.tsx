@@ -1,4 +1,5 @@
 import type { League, Session } from './types';
+import { useResource } from './useResource';
 import { RisersTable } from './landingData';
 import { RecordedPerformance } from './performance';
 
@@ -20,12 +21,22 @@ const ITEMS: HubItem[] = [
   { label: 'Data sources', path: '/app/data-sources', note: 'Imports and freshness', ownerOnly: true },
 ];
 
-export function Hub({ session, pageHref }: { session: Session; pageHref: (path: string) => string }) {
+export function Hub({ session, pageHref, leagueId, onLeague }: { session: Session; pageHref: (path: string) => string; leagueId?: string; onLeague: (id: string) => void }) {
   const user = session.user!;
   const items = ITEMS.filter(item => !item.ownerOnly || user.isInstanceOwner);
+  const leagues = useResource<League[]>('/api/leagues?limit=200');
+  const known = leagues.result?.data.some(league => league.id === leagueId);
   return <section className="hub" aria-labelledby="hub-title">
     <p className="eyebrow">WELCOME BACK, {user.displayName.toUpperCase()}</p>
     <h1 id="hub-title">What do you want to see?</h1>
+    <div className="hub-league">
+      <label>Your league<select value={known ? leagueId : ''} onChange={event => onLeague(event.target.value)}>
+        <option value="">{leagues.loading ? 'Loading leagues…' : 'Choose your league'}</option>
+        {leagues.result?.data.map(league => <option key={league.id} value={league.id}>{league.name} · {league.teamCount} teams</option>)}
+      </select></label>
+      {leagues.result && !leagues.result.data.length && <a href="/app/draft">Create your first league ↗</a>}
+      {leagues.result && !known && !!leagues.result.data.length && <span className="muted">Every page below uses this league.</span>}
+    </div>
     <ul className="hub-list">{items.map(item => <li key={item.path}>
       <a className="hub-pill" href={pageHref(item.path)}>
         <span className="hub-label">{item.label}{item.soon && <span className="hub-soon">Soon</span>}</span>
