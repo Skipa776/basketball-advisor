@@ -15,6 +15,9 @@ public interface IGameRepository
 
     Task AddAsync(NbaGame game, CancellationToken cancellationToken);
 
+    /// <summary>Refreshes a stored game's tip-off, status, score and provenance from the same source record.</summary>
+    Task SaveResultAsync(NbaGame latest, CancellationToken cancellationToken);
+
     Task<NbaGame?> GetBySourceAsync(
         string source,
         string externalId,

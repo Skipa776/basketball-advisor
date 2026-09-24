@@ -66,6 +66,32 @@ public sealed class WorkerTests
     }
 
     [Fact]
+    public void Nightly_box_scores_stay_inside_the_owner_regular_season_window()
+    {
+        var season = new BoxScoreRefreshOptions
+        {
+            Enabled = true,
+            RegularSeasonStart = new DateOnly(2026, 10, 20),
+            RegularSeasonEnd = new DateOnly(2027, 4, 11),
+            ExcludedDates = [new DateOnly(2026, 12, 15)],
+        };
+        ImportJobRequest? On(int year, int month, int day, BoxScoreRefreshOptions? options = null) =>
+            BoxScoreRefreshWorker.RequestFor(new DateOnly(year, month, day), options ?? season);
+
+        On(2026, 10, 25).ShouldBe(new ImportJobRequest(ImportJobKind.BoxScores, From: new DateOnly(2026, 10, 22), To: new DateOnly(2026, 10, 24)));
+        On(2026, 10, 20).ShouldBeNull("opening day has no completed games yet");
+        On(2026, 10, 21).ShouldBe(new ImportJobRequest(ImportJobKind.BoxScores, From: new DateOnly(2026, 10, 20), To: new DateOnly(2026, 10, 20)));
+        On(2027, 4, 14).ShouldBe(new ImportJobRequest(ImportJobKind.BoxScores, From: new DateOnly(2027, 4, 11), To: new DateOnly(2027, 4, 11)), "play-in days are outside");
+        On(2027, 4, 20).ShouldBeNull("the playoffs are never imported as regular season");
+        On(2026, 12, 17).ShouldBe(new ImportJobRequest(ImportJobKind.BoxScores, From: new DateOnly(2026, 12, 16), To: new DateOnly(2026, 12, 16)), "the Cup final is skipped");
+        On(2026, 10, 25, new BoxScoreRefreshOptions()).ShouldBeNull("off by default");
+
+        new BoxScoreRefreshOptions().IsValid().ShouldBeTrue();
+        new BoxScoreRefreshOptions { Enabled = true }.IsValid().ShouldBeFalse("enabling requires the season dates");
+        season.IsValid().ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task W04_import_queue_shutdown_is_not_reported_as_a_failure()
     {
         var probe = new WorkerProbe();

@@ -22,10 +22,41 @@ public sealed class RefreshWorkerOptions
 
     public AdpRefreshOptions Adp { get; set; } = new();
 
+    public BoxScoreRefreshOptions BoxScores { get; set; } = new();
+
     public bool IsValid() =>
         Schedule.IsValid()
         && Stats.IsValid()
-        && Adp.IsValid();
+        && Adp.IsValid()
+        && BoxScores.IsValid();
+}
+
+/// <summary>
+/// Nightly Basketball-Reference box scores (owner-authorized path). Off by default;
+/// enabling it requires the season's regular-season dates, set by the owner each year.
+/// </summary>
+public sealed class BoxScoreRefreshOptions
+{
+    public bool Enabled { get; set; }
+
+    public TimeSpan StartupDelay { get; set; } = TimeSpan.FromMinutes(20);
+
+    public TimeSpan Cadence { get; set; } = TimeSpan.FromDays(1);
+
+    public int LookbackDays { get; set; } = 3;
+
+    public DateOnly? RegularSeasonStart { get; set; }
+
+    public DateOnly? RegularSeasonEnd { get; set; }
+
+    /// <summary>Dates inside the window that are not regular-season stat games, e.g. the NBA Cup final.</summary>
+    public List<DateOnly> ExcludedDates { get; set; } = [];
+
+    public bool IsValid() =>
+        StartupDelay >= TimeSpan.Zero
+        && Cadence > TimeSpan.Zero
+        && LookbackDays is >= 1 and <= 14
+        && (!Enabled || RegularSeasonStart <= RegularSeasonEnd);
 }
 
 public sealed class ScheduleRefreshOptions

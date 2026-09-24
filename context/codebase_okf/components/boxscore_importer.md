@@ -121,3 +121,28 @@ and cannot be told apart in the stored schedule; exclude its date from ranges.
 Evidence: `S30_S33_box_score_import_skips_stored_games_and_isolates_a_failed_page`
 (Testcontainers PostgreSQL, fixture HTML, fake HTTP), `S10_box_score_builder_allows_only_dated_game_pages`,
 `Team_codes_map_between_balldontlie_and_basketball_reference`.
+
+## Nightly refresh — 2026-09-23
+
+`BoxScoreRefreshWorker` enqueues the last `LookbackDays` (default 3) completed
+days as an `ImportJobKind.BoxScores` job once a day. It is **off by default** and
+cannot be enabled without the owner-set `RegularSeasonStart`/`RegularSeasonEnd`
+(the phase guard: the stored schedule cannot tell preseason, play-in or playoff
+games apart). `ExcludedDates` removes non-stat days inside the window, such as the
+NBA Cup final. Evidence: `Nightly_box_scores_stay_inside_the_owner_regular_season_window`,
+and U11 now runs it with a throwing user context.
+
+A schedule re-import now updates an already-stored game's tip-off, status, score
+and provenance. Before this, games imported days ahead as "Scheduled" never
+became "Final", so the nightly import would have found nothing. Evidence:
+`Schedule_reimport_moves_a_scheduled_game_to_final_and_skips_unchanged_games`.
+
+Enable for a season (example for 2026-27; confirm the dates when the NBA
+publishes them):
+
+```bash
+export RefreshWorkers__BoxScores__Enabled=true
+export RefreshWorkers__BoxScores__RegularSeasonStart=2026-10-20
+export RefreshWorkers__BoxScores__RegularSeasonEnd=2027-04-11
+export RefreshWorkers__BoxScores__ExcludedDates__0=2026-12-15
+```

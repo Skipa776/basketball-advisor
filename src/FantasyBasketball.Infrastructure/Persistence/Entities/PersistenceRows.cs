@@ -444,6 +444,28 @@ public sealed class NbaGameRow
 
     public string RawRecordHash { get; private set; } = string.Empty;
 
+    public void RecordResult(
+        DateTimeOffset startsAt,
+        int? homeScore,
+        int? awayScore,
+        string status,
+        DateTimeOffset fetchedAt,
+        DateTimeOffset? sourceTimestamp,
+        string parserVersion,
+        decimal confidence,
+        string rawRecordHash)
+    {
+        StartsAt = startsAt;
+        HomeScore = homeScore;
+        AwayScore = awayScore;
+        Status = status;
+        FetchedAt = fetchedAt;
+        SourceTimestamp = sourceTimestamp;
+        ParserVersion = parserVersion;
+        Confidence = confidence;
+        RawRecordHash = rawRecordHash;
+    }
+
     public static NbaGameRow Create(
         Guid id,
         int seasonEndYear,

@@ -35,11 +35,18 @@ public sealed class ImportScheduleService(
                         var externalId = game.Provenance.ExternalId
                             ?? throw new InvalidOperationException(
                                 "Schedule provenance requires an external id.");
-                        if (await games.GetBySourceAsync(
-                                provider.Name,
-                                externalId,
-                                token) is not null)
+                        // Games are first seen days ahead as "Scheduled"; later runs must
+                        // move them to "Final" or the box-score import never sees them.
+                        var stored = await games.GetBySourceAsync(provider.Name, externalId, token);
+                        if (stored is not null)
                         {
+                            if (stored.Status != game.Status || stored.HomeScore != game.HomeScore
+                                || stored.AwayScore != game.AwayScore || stored.StartsAt != game.StartsAt)
+                            {
+                                await games.SaveResultAsync(game, token);
+                                written++;
+                            }
+
                             continue;
                         }
 
