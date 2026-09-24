@@ -1,3 +1,5 @@
+using FantasyBasketball.Domain.Players;
+using FantasyBasketball.Domain.Trades;
 using FantasyBasketball.Application.Leagues;
 using FantasyBasketball.Application.Projections;
 using FantasyBasketball.Domain.Provenance;
@@ -10,6 +12,10 @@ using FantasyBasketball.Api.Middleware;
 namespace FantasyBasketball.Api.Endpoints;
 
 public sealed record RosterCsvRequest(string? Csv);
+
+public sealed record TradeLegRequest(Guid FromTeamId, Guid ToTeamId, Guid PlayerId);
+
+public sealed record TradeRequest(IReadOnlyList<TradeLegRequest>? Legs);
 
 public sealed record ScoringRuleRequest(string Stat, decimal PointsPerUnit);
 
@@ -72,6 +78,8 @@ public static class LeagueEndpoints
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
         group.MapGet("/{id:guid}/streaming", StreamingAsync)
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
+        group.MapPost("/{id:guid}/trades/evaluate", EvaluateTradeAsync)
+            .WithMetadata(new OwnedRouteMetadata("league", "id"));
         return endpoints;
     }
 
@@ -131,6 +139,28 @@ public static class LeagueEndpoints
         }
 
         return ApiResults.Success(await service.WeekAsync(id, opponent, day, cancellationToken));
+    }
+
+    public static async Task<IResult> EvaluateTradeAsync(
+        Guid id, TradeRequest request, TradeService service,
+        OwnedResourceAuthorizationService authorization, CancellationToken cancellationToken)
+    {
+        await authorization.RequireLeagueAsync(id, cancellationToken);
+        if (request.Legs is null or { Count: 0 or > 30 })
+        {
+            throw new RequestValidationException(new Dictionary<string, string[]> { ["legs"] = ["Send between 1 and 30 player moves."] });
+        }
+
+        try
+        {
+            return ApiResults.Success(await service.EvaluateAsync(id,
+                request.Legs.Select(leg => new TradeLeg(leg.FromTeamId, leg.ToTeamId, new PlayerId(leg.PlayerId))).ToArray(),
+                cancellationToken));
+        }
+        catch (TradeRuleException exception)
+        {
+            throw new RequestValidationException(new Dictionary<string, string[]> { ["trade"] = [exception.Message] });
+        }
     }
 
     public static async Task<IResult> StreamingAsync(

@@ -8,6 +8,7 @@ import { WaiverPage } from './hub';
 import { MatchupPage } from './matchup';
 import { TeamsPage } from './teams';
 import { StreamingPage } from './streaming';
+import { TradePage } from './trade';
 
 type PageProps = { onHome: () => void; onLeagueUpdated: () => void };
 type Health = { source: string; lastSuccess: string | null; lastFailure: string | null; isStale: boolean; isDegraded: boolean };
@@ -34,8 +35,9 @@ export function FunctionalPage({ name, session, onHome, onLeagueUpdated, leagueI
     {name === 'Waiver wire analyzer' && <WaiverPage league={selectedLeague} onHome={onHome} />}
     {name === 'Matchup analyzer' && <MatchupPage league={selectedLeague} onHome={onHome} />}
     {name === 'Streaming advisor' && <StreamingPage league={selectedLeague} onHome={onHome} />}
+    {name === 'Trade analyzer' && <TradePage league={selectedLeague} onHome={onHome} />}
     {name === 'Teams in the league' && <TeamsPage league={selectedLeague} onHome={onHome} />}
-    {['Trade analyzer', 'Standings'].includes(name) && <section className="panel"><h2>Not built yet</h2><p>{name === 'Trade analyzer' ? 'R15 is not implemented; no trade results are available.' : 'Standings are deferred in the post-MVP roadmap; no leaderboard data is available.'}</p><button onClick={onHome}>Back to workspace</button></section>}
+    {name === 'Standings' && <section className="panel"><h2>Not built yet</h2><p>Standings are deferred in the post-MVP roadmap; no leaderboard data is available.</p><button onClick={onHome}>Back to workspace</button></section>}
     {name === 'Page not found' && <section className="panel"><h2>Page not found</h2><p>This app page does not exist.</p><button onClick={onHome}>Back to workspace</button></section>}
   </>;
 }

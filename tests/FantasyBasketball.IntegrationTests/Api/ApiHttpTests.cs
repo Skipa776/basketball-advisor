@@ -705,6 +705,56 @@ public sealed partial class ApiHttpTests : IAsyncLifetime
         }
     }
 
+    [Fact]
+    public async Task Trade_evaluation_scores_the_users_side_and_refuses_illegal_trades()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var leagueId = await CreateLeagueAsync(token);
+        var mine = await AddPlayerAsync("Trade Mine", token, "PG");
+        var theirs = await AddPlayerAsync("Trade Theirs", token, "PG");
+        await SeedProjectionAsync(mine, leagueId, token, seasonTotal: 700m);
+        await SeedProjectionAsync(theirs, leagueId, token, seasonTotal: 900m);
+        using (var imported = await client.PostAsJsonAsync($"/api/leagues/{leagueId}/teams/csv",
+            new { Csv = "Team,Player,Mine\nMine,Trade Mine,yes\nTheirs,Trade Theirs,\n" }, token))
+        {
+            imported.StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+
+        Guid myTeam, theirTeam;
+        using (var listed = await client.GetAsync($"/api/leagues/{leagueId}/teams", token))
+        using (var body = await ReadEnvelopeAsync(listed, token))
+        {
+            var teams = body.RootElement.GetProperty("data");
+            myTeam = teams[0].GetProperty("id").GetGuid();
+            theirTeam = teams[1].GetProperty("id").GetGuid();
+        }
+
+        using (var evaluated = await client.PostAsJsonAsync($"/api/leagues/{leagueId}/trades/evaluate", new
+        {
+            Legs = new[]
+            {
+                new { FromTeamId = myTeam, ToTeamId = theirTeam, PlayerId = mine.Value },
+                new { FromTeamId = theirTeam, ToTeamId = myTeam, PlayerId = theirs.Value },
+            },
+        }, token))
+        {
+            evaluated.StatusCode.ShouldBe(HttpStatusCode.OK);
+            using var body = await ReadEnvelopeAsync(evaluated, token);
+            var data = body.RootElement.GetProperty("data");
+            data.GetProperty("valueBefore").GetDecimal().ShouldBe(700m);
+            data.GetProperty("valueAfter").GetDecimal().ShouldBe(900m);
+            data.GetProperty("verdict").GetString().ShouldBe("ClearWin");
+            data.GetProperty("sides")[0].GetProperty("team").GetString().ShouldBe("Mine");
+        }
+
+        using var illegal = await client.PostAsJsonAsync($"/api/leagues/{leagueId}/trades/evaluate", new
+        {
+            Legs = new[] { new { FromTeamId = theirTeam, ToTeamId = myTeam, PlayerId = mine.Value } },
+        }, token);
+        illegal.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await illegal.Content.ReadAsStringAsync(token)).ShouldContain("must come from the roster that sends him");
+    }
+
     private async Task<Guid> CreateLeagueAsync(CancellationToken cancellationToken)
     {
         using var response = await client.PostAsJsonAsync(
@@ -733,14 +783,15 @@ public sealed partial class ApiHttpTests : IAsyncLifetime
 
     private async Task<PlayerId> AddPlayerAsync(
         string name,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string position = "G")
     {
         var player = new Player(
             new PlayerId(Guid.NewGuid()),
             name,
             PlayerName.Normalize(name),
             null,
-            ["G"],
+            [position],
             null);
         await using var scope = app.Services.CreateAsyncScope();
         await scope.ServiceProvider.GetRequiredService<IPlayerRepository>()

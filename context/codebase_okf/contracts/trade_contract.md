@@ -6,8 +6,8 @@ tags: [contract, trades, math]
 source_paths: [src/FantasyBasketball.Domain/Trades, src/FantasyBasketball.Application/Trades]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Trades]
 depends_on: [category_value_contract.md, draft_value_contract.md]
-status: planned
-last_updated: 2026-07-29
+status: partial
+last_updated: 2026-09-24
 owners: [engineering]
 risk_level: medium
 done_criteria:
@@ -121,3 +121,19 @@ R-01 … R-07 — one commit.
 
 [test_matrix_advanced_decisions](../tests/test_matrix_advanced_decisions.md),
 rows R-01 through R-07.
+
+## Points leagues built — 2026-09-24
+
+`TradeEvaluator` (Domain/Trades) and `TradeService`: legality first (players must
+come from the sending roster, move once, involve your team, leave every roster at
+or under the league's non-IR slot count, and every player you receive must fit a
+slot), then the best starting assignment before and after (most-constrained first,
+as in streaming) with open starting slots backfilled at replacement value (the
+draft contract's value at rank teams × starters), bands 2% / 8%, confidence from
+how many involved players have projections, and evidence. `POST
+/api/leagues/{id}/trades/evaluate` takes legs `{fromTeamId, toTeamId, playerId}`
+(multi-team supported, verdict for your side only); a broken rule is a 400 naming
+it. Trades use primary positions (owner: league eligibility is draft-only for
+now). Not built: category leagues (R-04, owner-deferred) and the trade deadline
+(not stored; stated as evidence). Rows R-01, R-02, R-03, R-05, R-06, R-07 are
+evidenced in `TradeEvaluatorTests`.

@@ -6,8 +6,8 @@ tags: [component, trades, domain]
 source_paths: [src/FantasyBasketball.Domain/Trades, src/FantasyBasketball.Application/Trades]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Trades]
 depends_on: [../contracts/trade_contract.md, category_analyzer.md]
-status: planned
-last_updated: 2026-07-29
+status: partial
+last_updated: 2026-09-24
 owners: [engineering]
 risk_level: medium
 done_criteria:
@@ -58,3 +58,10 @@ advisor — same commit, both test sets.
 
 [test_matrix_advanced_decisions](../tests/test_matrix_advanced_decisions.md), rows
 R-01 through R-09.
+
+## Status — 2026-09-24
+
+Points-league evaluation is built end to end (see trade_contract): `/app/trade-analyzer`
+builds a trade from imported rosters (one or more partner teams) and shows the
+verdict, lineup value before and after, both sides, starters before and after and
+the evidence. Category leagues are deferred by the owner.

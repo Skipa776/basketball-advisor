@@ -70,7 +70,7 @@ four.
 | `R-01` | 2-for-1 | Replacement backfill credited for the vacated slot | ✅ |
 | `R-02` | Receive a third startable center | Delta far below his raw value — displacement counted | ✅ |
 | `R-03` | Trade leaving an illegal roster | `validation_failed`, never scored | ✅ |
-| `R-04` | Category trade: raw value up, expected wins down | Verdict follows expected wins; divergence produces evidence | ✅ |
+| `R-04` | Category trade: raw value up, expected wins down | Verdict follows expected wins; divergence produces evidence | ⏳ category leagues deferred by the owner |
 | `R-05` | Trade a player for himself | Exactly neutral — the identity case | ✅ |
 | `R-06` | Three-team trade | Exactly one verdict, for the user | ✅ |
 | `R-07` | Any evaluation | Carries evidence and a confidence level | ✅ |

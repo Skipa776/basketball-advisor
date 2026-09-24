@@ -168,3 +168,11 @@ main.landing{overflow-x:clip}
 .stream-moves{list-style:none;padding:0;margin:1.5rem 0;display:grid;gap:.75rem}
 .stream-moves>li{display:grid;grid-template-columns:4.5rem 1fr;gap:1rem;align-items:start;border:1px solid var(--rule);border-radius:18px;padding:1rem 1.25rem}
 .stream-moves p{margin:0 0 .25rem}.stream-day{font-size:1.5rem;font-weight:600;letter-spacing:-.02em}
+
+/* Trade analyzer */
+.trade-partners{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem}
+.trade-columns{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:1.5rem;margin:1rem 0}
+.trade-row{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}.trade-row select{width:auto}
+.trade-result h2{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem}.trade-result .status{font-size:.95rem;letter-spacing:0;line-height:1.4;padding:.3rem .9rem}
+.verdict-ClearWin,.verdict-SlightWin{background:var(--ink);color:#fff}.verdict-ClearLoss,.verdict-SlightLoss{background:var(--accent);border-color:var(--accent);color:#fff}.verdict-Neutral{background:var(--lavender);border-color:var(--lavender)}
+.trade-sides{padding-left:1.1rem}

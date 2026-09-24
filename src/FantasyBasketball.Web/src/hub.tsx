@@ -11,7 +11,7 @@ const ITEMS: HubItem[] = [
   { label: 'Waiver wire analyzer', path: '/app/waiver', note: 'Who is rising against their own baseline' },
   { label: 'Projected players', path: '/app/projections', note: 'Season values under your scoring' },
   { label: 'Your drafts', path: '/app/drafts', note: 'Reopen a saved draft' },
-  { label: 'Trade analyzer', path: '/app/trade-analyzer', note: 'Waits on the trade engine (R15)', soon: true },
+  { label: 'Trade analyzer', path: '/app/trade-analyzer', note: 'What a trade does to your starting lineup' },
   { label: 'Matchup analyzer', path: '/app/matchup', note: 'This week’s points against one opponent' },
   { label: 'Streaming advisor', path: '/app/streaming', note: 'Add/drops that buy usable games this week' },
   { label: 'League settings', path: '/app/league-settings', note: 'Team count, scoring and roster slots' },

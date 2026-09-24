@@ -121,7 +121,7 @@ public sealed class RouteIsolationTests : IAsyncLifetime
                 endpoint.Metadata.GetMetadata<OwnedRouteMetadata>() is not null)
             .ToArray();
 
-        routes.Length.ShouldBe(23);
+        routes.Length.ShouldBe(24);
         var failures = await SweepAsync(
             client,
             routes,
@@ -371,6 +371,11 @@ public sealed class RouteIsolationTests : IAsyncLifetime
         string method,
         SweepResources resources)
     {
+        if (path.EndsWith("/trades/evaluate", StringComparison.Ordinal))
+        {
+            return new { Legs = new[] { new { FromTeamId = Guid.NewGuid(), ToTeamId = Guid.NewGuid(), PlayerId = Guid.NewGuid() } } };
+        }
+
         if (path.EndsWith("/teams/csv", StringComparison.Ordinal))
         {
             return new { Csv = "Team,Player\nForeign,Nobody" };

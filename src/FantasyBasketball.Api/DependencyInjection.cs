@@ -194,6 +194,7 @@ public static class DependencyInjection
         services.AddScoped<FantasyBasketball.Application.Leagues.LeagueWaiverService>();
         services.AddScoped<FantasyBasketball.Application.Leagues.MatchupService>();
         services.AddScoped<FantasyBasketball.Application.Leagues.StreamingService>();
+        services.AddScoped<FantasyBasketball.Application.Leagues.TradeService>();
         services.AddScoped<IProjectionRepository, ProjectionRepository>();
         services.AddScoped<IProjectionQueryRepository, ProjectionRepository>();
         services.AddScoped<IContextEventRepository, ContextEventRepository>();

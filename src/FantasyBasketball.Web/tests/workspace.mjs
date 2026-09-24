@@ -116,7 +116,7 @@ try {
   const menu = page.locator('.hub-list');
   assert.deepEqual(await menu.locator('.hub-label').evaluateAll(labels => labels.map(label => label.firstChild.textContent)),
     ['Mock draft', 'Teams in the league', 'Waiver wire analyzer', 'Projected players', 'Your drafts', 'Trade analyzer', 'Matchup analyzer', 'Streaming advisor', 'League settings', 'Context review', 'Account data', 'Data sources']);
-  assert.equal(await menu.locator('.hub-soon').count(), 1);
+  assert.equal(await menu.locator('.hub-soon').count(), 0);
   assert.equal(await page.getByText(/coming soon/i).count(), 0, 'D-33: unbuilt pages never say "coming soon"');
   await accessibility('Signed-in menu');
   await page.screenshot({ path: `${artifacts}/menu-desktop.png`, fullPage: true });
@@ -276,6 +276,16 @@ try {
   await visible(page.getByText('How this plan was made', { exact: true }));
   await accessibility('Streaming plan');
   checks.push('Streaming: dated add/drop plan (or an explained hold) for the league');
+  await page.goto(new URL(`/app/trade-analyzer?league=${leagueId}`, base).href);
+  await page.getByRole('checkbox', { name: 'Rivals' }).check();
+  await page.getByRole('group', { name: /You send/ }).getByRole('checkbox', { name: 'Fixture Guard' }).check();
+  await page.getByRole('group', { name: 'You receive from Rivals' }).getByRole('checkbox', { name: 'Fixture Center' }).check();
+  await page.getByRole('button', { name: /Evaluate trade/ }).click();
+  await visible(page.getByRole('heading', { name: /season points/ }));
+  await visible(page.getByText('This judges what the trade does to your team, not whether it is fair to the other manager.'));
+  await accessibility('Trade analyzer');
+  await page.screenshot({ path: `${artifacts}/trade-desktop.png`, fullPage: true });
+  checks.push('Trade: two-team trade evaluated for your side with verdict, lineup before/after and evidence');
   await page.goto(new URL(`/app/league-settings?league=${leagueId}`, base).href);
   await visible(page.getByRole('heading', { name: 'League settings', exact: true }));
   assert.equal(await page.getByLabel('PG', { exact: true }).inputValue(), '2');
