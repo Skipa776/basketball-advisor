@@ -336,3 +336,30 @@ Visual review artifacts (fictional test players):
 - `tests/FantasyBasketball.IntegrationTests/TestResults/react-review/mobile-390.png`
 - `tests/FantasyBasketball.IntegrationTests/TestResults/react-review/mobile-320.png`
 - `tests/FantasyBasketball.IntegrationTests/TestResults/react-review/report.json`
+
+## Full-season replay — 2026-09-23 (plan phase 7)
+
+Data loaded into the dev database (owner-authorized sources, policy rates):
+
+- **2025-26 regular season: all 1,230 games** (2025-10-21 → 2026-04-12) from
+  Basketball-Reference game pages via the balldontlie schedule; 0 failed pages,
+  0 unmatched players. Play-in (Apr 14–17, flagged `postseason: false` by
+  balldontlie) and the Dec 16 NBA Cup final were excluded by date.
+- **Season stats: 582 players** (NBA_2026 pages; required the v2 season parser).
+- **ADP: 223 players** from the live 2026-27 FantasyPros page (v2 ADP parser).
+
+Replay with `Landing:AsOf=2026-03-04` on a throwaway copy of that database:
+
+| Check | Result |
+|---|---|
+| Landing cards (previous game day Mar 3) | 28 of 30 stars shown; Tatum and Haliburton did not play in 2025-26. Edwards 79 ESPN pts, 7/9 CAT |
+| Risers through Mar 3 | Standard 10-game baseline (no override needed with a full season) |
+| League projections | 582 players; top per-game: Jokić 60.6, Dončić 55.0, SGA 51.4 |
+| Mock draft, pick 5 of 10 | Advice: Jokić, Dončić, SGA, Maxey, Wembanyama (after the market-sign fix; before it, Gillespie and Bey ranked above Jokić) |
+| Rosters | 10 × 13 snake-drafted from 2026 ADP; 130/130 names matched |
+| League waiver | Excludes the 130 rostered; top: Reed Sheppard, Precious Achiuwa, Micah Potter |
+| Matchup, week Mar 2–8 | Scored-so-far + games left × last-10 average for both sides |
+
+Known limits: no injury/availability feed, so injured players still count
+their scheduled games in the matchup; lineup limits are not modelled; category
+leagues are deferred by the owner. Every replayed view is labelled as a replay.
