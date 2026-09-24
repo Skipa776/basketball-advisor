@@ -4,7 +4,8 @@ import { api, message, post } from './api';
 import { useResource } from './useResource';
 import type { League, Player, Session, Setup } from './types';
 import { PlayerDetail } from './draft';
-import { MatchupPage, WaiverPage } from './hub';
+import { WaiverPage } from './hub';
+import { MatchupPage } from './matchup';
 import { TeamsPage } from './teams';
 
 type PageProps = { onHome: () => void; onLeagueUpdated: () => void };
@@ -30,7 +31,7 @@ export function FunctionalPage({ name, session, onHome, onLeagueUpdated, leagueI
     {name === 'Context review' && <ContextReviewPage onHome={onHome} />}
     {name === 'Account data' && <AccountDataPage onHome={onHome} />}
     {name === 'Waiver wire analyzer' && <WaiverPage league={selectedLeague} onHome={onHome} />}
-    {name === 'Matchup analyzer' && <MatchupPage onHome={onHome} />}
+    {name === 'Matchup analyzer' && <MatchupPage league={selectedLeague} onHome={onHome} />}
     {name === 'Teams in the league' && <TeamsPage league={selectedLeague} onHome={onHome} />}
     {['Trade analyzer', 'Streaming advisor', 'Standings'].includes(name) && <section className="panel"><h2>Not built yet</h2><p>{name === 'Trade analyzer' ? 'R15 is not implemented; no trade results are available.' : name === 'Streaming advisor' ? 'R14 is not implemented; no streaming recommendations are available.' : 'Standings are deferred in the post-MVP roadmap; no leaderboard data is available.'}</p><button onClick={onHome}>Back to workspace</button></section>}
     {name === 'Page not found' && <section className="panel"><h2>Page not found</h2><p>This app page does not exist.</p><button onClick={onHome}>Back to workspace</button></section>}

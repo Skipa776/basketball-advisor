@@ -6,6 +6,13 @@ public sealed record ScheduledGame(NbaGame Game, string HomeAbbreviation);
 
 public interface IGameRepository
 {
+    /// <summary>Every game (any status) from one schedule source starting in [fromUtc, toUtc).</summary>
+    Task<IReadOnlyList<NbaGame>> ListScheduledAsync(
+        string source,
+        DateTimeOffset fromUtc,
+        DateTimeOffset toUtc,
+        CancellationToken cancellationToken);
+
     /// <summary>Final games from one schedule source starting in [fromUtc, toUtc).</summary>
     Task<IReadOnlyList<ScheduledGame>> ListFinalAsync(
         string source,

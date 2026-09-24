@@ -1029,3 +1029,19 @@ were created and no numerical usage quota was available.
   accepted 10-game baseline applies; no heat override is needed.
 - The featured strip shows every featured player's most recent game rather than
   only those who played the resolved day, so it is full on light schedules.
+
+## Rosters, waiver and matchup — 2026-09-23
+
+- Owner: rosters from the platforms. With no Sleeper league to validate against,
+  only the CSV rung ships; ESPN stays CSV/manual per R16.
+- Waiver availability = not on any imported roster. Without rosters the featured
+  stars are excluded instead, and the page says so.
+- Matchup (owner: weekly points total). Weeks run Monday–Sunday on US-Eastern
+  dates, as ESPN and Yahoo weekly matchups do. Per-game projection is the average
+  over the last 10 appearances under the league's scoring (recent form, available
+  all season); a player without appearances contributes nothing and is labelled.
+  Games left come from the stored balldontlie schedule for the player's current
+  team (weekly directory refresh). Lineup limits and daily start/sit are not
+  modelled: every rostered player's games count.
+- Category support is deferred by the owner; waiver and matchup return 409 for
+  category leagues.

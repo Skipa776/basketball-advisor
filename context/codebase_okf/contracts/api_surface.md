@@ -227,3 +227,10 @@ rules. It leaves out every rostered player (`excludes: "rostered"`,
 `excludedPlayers`); without imported rosters it leaves out the featured stars and
 says so (`excludes: "featured"`). Category leagues → 409 (points only for now,
 owner decision).
+
+**Matchup — 2026-09-23.** `GET /api/leagues/{id}/matchup?opponent=&date=`
+(owned, no-store): Monday–Sunday week containing `date` (default: `Landing:AsOf`,
+else today's US-Eastern date). Each side = points scored this week through
+yesterday + games left from today × average over the last 10 appearances, all
+under the league's points rules. 409 names the missing step (rosters, your team,
+an opponent) or a category league.

@@ -66,6 +66,8 @@ public static class LeagueEndpoints
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
         group.MapGet("/{id:guid}/waiver", WaiverAsync)
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
+        group.MapGet("/{id:guid}/matchup", MatchupAsync)
+            .WithMetadata(new OwnedRouteMetadata("league", "id"));
         return endpoints;
     }
 
@@ -107,6 +109,24 @@ public static class LeagueEndpoints
         }
 
         return ApiResults.Success(await service.RisersAsync(id, date, size, cancellationToken));
+    }
+
+    public static async Task<IResult> MatchupAsync(
+        Guid id, Guid? opponent, string? date, MatchupService service,
+        OwnedResourceAuthorizationService authorization, HttpContext context, CancellationToken cancellationToken)
+    {
+        await authorization.RequireLeagueAsync(id, cancellationToken);
+        context.Response.Headers.CacheControl = "no-store";
+        DateOnly? day = null;
+        if (!string.IsNullOrEmpty(date))
+        {
+            day = DateOnly.TryParseExact(date, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out var parsed)
+                ? parsed
+                : throw new RequestValidationException(new Dictionary<string, string[]> { ["date"] = ["Use a date in YYYY-MM-DD format."] });
+        }
+
+        return ApiResults.Success(await service.WeekAsync(id, opponent, day, cancellationToken));
     }
 
     public static async Task<IResult> ImportTeamsCsvAsync(

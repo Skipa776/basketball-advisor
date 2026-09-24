@@ -12,7 +12,7 @@ const ITEMS: HubItem[] = [
   { label: 'Projected players', path: '/app/projections', note: 'Season values under your scoring' },
   { label: 'Your drafts', path: '/app/drafts', note: 'Reopen a saved draft' },
   { label: 'Trade analyzer', path: '/app/trade-analyzer', note: 'Waits on the trade engine (R15)', soon: true },
-  { label: 'Matchup analyzer', path: '/app/matchup', note: 'Waits on an owner definition', soon: true },
+  { label: 'Matchup analyzer', path: '/app/matchup', note: 'This week’s points against one opponent' },
   { label: 'Streaming advisor', path: '/app/streaming', note: 'Waits on the streaming engine (R14)', soon: true },
   { label: 'League settings', path: '/app/league-settings', note: 'Team count, scoring and roster slots' },
   { label: 'Context review', path: '/app/context-review', note: 'Verify news before it moves a number' },
@@ -43,10 +43,4 @@ export function WaiverPage({ league, onHome }: { league?: League; onHome: () => 
       ? <RecordedPerformance key={league.id} leagueId={league.id} />
       : <section className="panel"><h2>Your league’s view</h2><p>Open this page from a points league to also see recorded performance under your league’s own scoring.</p><button onClick={onHome}>Back to the menu</button></section>}
   </>;
-}
-
-export function MatchupPage({ onHome }: { onHome: () => void }) {
-  return <section className="panel"><h2>Not built yet</h2>
-    <p>The requirements do not define a matchup comparison yet, so no matchup numbers are shown. The owner needs to specify what it compares (for example, projected weekly categories against one opponent).</p>
-    <button onClick={onHome}>Back to the menu</button></section>;
 }
