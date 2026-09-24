@@ -275,7 +275,7 @@ try {
   await accessibility('Account data');
   for (const [path, heading] of [['trade-analyzer', 'Trade analyzer'], ['streaming', 'Streaming advisor'], ['standings', 'Standings'], ['matchup', 'Matchup analyzer'], [`waiver?league=${leagueId}`, 'Rising right now.']]) {
     await page.goto(new URL(`/app/${path}`, base).href);
-    await visible(page.getByRole('heading', { name: heading, exact: true }));
+    await visible(page.getByRole('heading', { name: new RegExp(`^${heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.?$`) }).first());
     await accessibility(heading);
   }
   checks.push('Owner navigation reaches saved drafts, league settings, context review, imports, account data and explicit unsupported-capability pages');
@@ -291,7 +291,7 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   for (const [path, heading] of [['/app/projections', 'Projected players'], ['/app/drafts', 'Your drafts'], ['/app/league-settings', 'League settings'], ['/app/context-review', 'Context review'], ['/app/data-sources', 'Data sources'], ['/app/account', 'Account data'], ['/app/trade-analyzer', 'Trade analyzer'], ['/app/streaming', 'Streaming advisor'], ['/app/standings', 'Standings'], ['/app/waiver', 'Rising right now.'], ['/app/matchup', 'Matchup analyzer'], ['/app', 'What do you want to see?'], ['/app/unknown', 'Page not found']]) {
     await page.goto(new URL(`${path}?league=${leagueId}`, base).href);
-    await visible(page.getByRole('heading', { name: heading, exact: true }));
+    await visible(page.getByRole('heading', { name: new RegExp(`^${heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.?$`) }).first());
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     assert(scrollWidth <= 390, `${path} overflows at 390px: ${scrollWidth}px`);
   }

@@ -45,7 +45,7 @@ export function WaiverPage({ league, onHome }: { league?: League; onHome: () => 
 }
 
 export function MatchupPage({ onHome }: { onHome: () => void }) {
-  return <section className="panel"><h2>Matchup analyzer</h2>
-    <p>Not built. The requirements do not define a matchup comparison yet, so no matchup numbers are shown. The owner needs to specify what it compares (for example, projected weekly categories against one opponent).</p>
+  return <section className="panel"><h2>Not built yet</h2>
+    <p>The requirements do not define a matchup comparison yet, so no matchup numbers are shown. The owner needs to specify what it compares (for example, projected weekly categories against one opponent).</p>
     <button onClick={onHome}>Back to the menu</button></section>;
 }
