@@ -289,6 +289,8 @@ try {
   await page.goto(new URL('/app/data-sources', base).href);
   await visible(page.getByRole('heading', { name: 'Data sources', exact: true }));
   assert.equal(await page.getByRole('button', { name: 'Import players', exact: true }).isEnabled(), true);
+  // Offline test: the box-score action is present and enabled, never clicked.
+  assert.equal(await page.getByRole('group', { name: 'Box scores (Basketball-Reference)' }).getByRole('button', { name: 'Import box scores' }).isEnabled(), true);
   await accessibility('Data sources');
   await page.goto(new URL('/app/account', base).href);
   await visible(page.getByRole('heading', { name: 'Account data', exact: true }));

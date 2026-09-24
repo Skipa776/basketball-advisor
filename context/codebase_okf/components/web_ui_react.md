@@ -186,3 +186,8 @@ players, or the featured stars with a prompt to import rosters.
 total): opponent picker, both projected totals with a share bar and the winner's
 margin, and per-player tables (so far, games left, recent average, projected
 rest). A player with no games shows "no games yet", never a zero average.
+
+**Data sources — 2026-09-23.** The owner page gains a box-score import (date
+range, regular-season-only warning, time cost) in place of the outdated
+"no live importer" notice. The browser journey checks it is enabled but never
+clicks it (tests stay offline).

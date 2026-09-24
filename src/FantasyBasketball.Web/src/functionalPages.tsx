@@ -48,6 +48,9 @@ function DataSourcesPage({ session, onHome }: { session: Session; onHome: () => 
   const [scheduleFrom, setScheduleFrom] = useState(`${new Date().getUTCFullYear()}-01-01`);
   const [scheduleTo, setScheduleTo] = useState(`${new Date().getUTCFullYear()}-12-31`);
   const [adpCsv, setAdpCsv] = useState('');
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const [boxFrom, setBoxFrom] = useState(yesterday);
+  const [boxTo, setBoxTo] = useState(yesterday);
   if (!owner) return <section className="panel"><h2>Owner access required</h2><p>Data import actions are available to the instance owner.</p><button onClick={onHome}>Back to workspace</button></section>;
   async function start(kind: string, body: unknown = {}) {
     setBusy(kind); setError('');
@@ -59,7 +62,11 @@ function DataSourcesPage({ session, onHome }: { session: Session; onHome: () => 
     <p>Imports run in the background. This page shows recorded status and source freshness; it never starts an import automatically.</p>
     <ErrorNotice text={health.error || runs.error || error} retry={() => { health.refresh(); runs.refresh(); }} />
     <div className="import-actions"><button disabled={!!busy} onClick={() => start('players')}>{busy === 'players' ? 'Queueing…' : 'Import players'}</button><div className="form-row"><label>Season ending<input type="number" min="1947" max={new Date().getUTCFullYear() + 1} value={seasonEndYear} onChange={event => setSeasonEndYear(Number(event.target.value))} /></label><button disabled={!!busy || !seasonEndYear} onClick={() => start('season-stats', { seasonEndYear })}>{busy === 'season-stats' ? 'Queueing…' : 'Import season stats'}</button></div><div className="form-row"><label>Schedule from<input type="date" value={scheduleFrom} onChange={event => setScheduleFrom(event.target.value)} /></label><label>Schedule to<input type="date" min={scheduleFrom} value={scheduleTo} onChange={event => setScheduleTo(event.target.value)} /></label><button disabled={!!busy || !scheduleFrom || !scheduleTo || scheduleFrom > scheduleTo} onClick={() => start('schedule', { from: scheduleFrom, to: scheduleTo })}>{busy === 'schedule' ? 'Queueing…' : 'Import schedule'}</button></div><label>ADP CSV, optional<textarea value={adpCsv} onChange={event => setAdpCsv(event.target.value)} rows={3} placeholder="Paste a CSV or leave blank to use FantasyPros" /></label><button disabled={!!busy} onClick={() => start('adp', { csv: adpCsv || null })}>{busy === 'adp' ? 'Queueing…' : 'Import ADP'}</button></div>
-    <p className="notice">Recorded game logs have no live importer yet. Their source-policy review is pending, so the performance view will remain empty until approved observations are loaded.</p>
+    <fieldset><legend>Box scores (Basketball-Reference)</legend>
+      <p>Regular-season dates only: the stored schedule cannot tell preseason, play-in or playoff games apart. One page per final game at the polite rate (about 20 seconds each); games already stored are skipped. Import the schedule for these dates first.</p>
+      <div className="form-row"><label>From<input type="date" value={boxFrom} onChange={event => setBoxFrom(event.target.value)} /></label><label>To<input type="date" value={boxTo} onChange={event => setBoxTo(event.target.value)} /></label>
+        <button disabled={!!busy || !boxFrom || !boxTo || boxTo < boxFrom} onClick={() => start('box-scores', { from: boxFrom, to: boxTo })}>{busy === 'box-scores' ? 'Queueing…' : 'Import box scores'}</button></div>
+    </fieldset>
     <h3>Source freshness</h3>{health.loading && !health.result && <p role="status">Loading source health…</p>}
     <ul className="data-list">{health.result?.data.map(source => {
       const latest = runs.result?.data.find(run => run.source === source.source);
