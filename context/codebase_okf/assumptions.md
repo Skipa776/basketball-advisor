@@ -1045,3 +1045,8 @@ were created and no numerical usage quota was available.
   modelled: every rostered player's games count.
 - Category support is deferred by the owner; waiver and matchup return 409 for
   category leagues.
+
+## Draft market sign — 2026-09-23
+
+Owner-approved: `MarketValue = (currentPick − ADP) × valuePerPick`, matching the
+draft value contract's own definition. See that contract's correction note.

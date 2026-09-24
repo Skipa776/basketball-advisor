@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Domain/Draft]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Draft]
 depends_on: [projection_pipeline_contract.md, scoring_rules_catalog.md, recommendation_evidence_contract.md]
 status: implemented
-last_updated: 2026-09-20
+last_updated: 2026-09-23
 owners: [engineering]
 risk_level: high
 edit_policy: stable_contract
@@ -103,7 +103,7 @@ added to point-denominated terms:
 
 ```text
 valuePerPick = (bestAvailableValue − ReplacementValue) / max(1, replacementRank)
-MarketValue  = (ADP − currentPick) × valuePerPick
+MarketValue  = (currentPick − ADP) × valuePerPick
 ```
 
 Positive when a player is available past their ADP (a value), negative when
@@ -179,3 +179,12 @@ redundancy, and market value from the currently available pool on every call.
 Tests cover D-01 through D-07 and rerank 300 players inside the 500 ms target.
 Missing ADP is zero with explicit market evidence, and category leagues carry
 the required fallback banner. This contract's done criteria are implemented.
+
+## Owner-approved correction — 2026-09-23
+
+The V1 formula read `(ADP − currentPick)`, the opposite of this section's own
+definition ("positive when a player is available past their ADP"). On the real
+2026 FantasyPros ADP it recommended Collin Gillespie and Saddiq Bey above Nikola
+Jokić at pick 5, because a late ADP earned a bonus. The owner approved correcting
+the formula to `(currentPick − ADP)`; code and tests changed in the same commit.
+Evidence: `Market_value_rewards_players_past_their_adp_and_penalises_reaches`.

@@ -111,6 +111,29 @@ public sealed class DraftEngineTests
     }
 
     [Fact]
+    public void Market_value_rewards_players_past_their_adp_and_penalises_reaches()
+    {
+        // Pick 5 of a 10-team draft: the star (ADP 1.5) is still here, the depth piece goes ~150th.
+        var session = new DraftSession(Guid.NewGuid(), 10, 13, 5);
+        for (var pick = 0; pick < 4; pick++)
+        {
+            session.MakePick(new PlayerId(Guid.NewGuid()));
+        }
+
+        var star = Candidate(4000m, ["C"], 1.5m);
+        var depth = Candidate(3000m, ["PG"], 150m);
+        var filler = Enumerable.Range(1, 130).Select(rank => Candidate(2500m - rank * 10m, ["SF"], null)).ToArray();
+
+        var board = CreateBoard().Rank(session, LeagueCatalog.CreateSeedPointsLeague(Guid.NewGuid()), [star, depth, .. filler], []);
+
+        ValueFor(board, star.PlayerId).MarketValue.ShouldBeGreaterThan(0m, "still available past his ADP");
+        ValueFor(board, depth.PlayerId).MarketValue.ShouldBeLessThan(0m, "taking him now is a reach");
+        board.Rankings[0].PlayerId.ShouldBe(star.PlayerId);
+        ValueFor(board, depth.PlayerId).Evidence.ShouldContain(item =>
+            item.Kind == EvidenceKind.Market && item.Polarity == EvidencePolarity.Risk);
+    }
+
+    [Fact]
     public void D05_D06_missing_adp_is_zero_with_evidence()
     {
         var candidate = Candidate(100m, ["PG"], null);

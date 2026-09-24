@@ -68,8 +68,10 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
                 userRoster,
                 league,
                 replacementValue);
+            // Positive when the player is still here past his ADP (a value), negative when
+            // taking him now is a reach. Owner-approved sign correction 2026-09-23.
             var market = candidate.AverageDraftPosition is { } adp
-                ? (adp - session.CurrentPick) * valuePerPick
+                ? (session.CurrentPick - adp) * valuePerPick
                 : 0m;
             var evidence = CreateEvidence(
                 varValue,
