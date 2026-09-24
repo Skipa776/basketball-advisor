@@ -177,3 +177,7 @@ the copy. A card from an earlier day carries a date chip.
 **Teams — 2026-09-23.** `/app/teams` shows each roster as a card (your team
 highlighted) and imports a pasted roster CSV with a downloadable template and an
 unmatched-name report. League settings moved to its own menu row.
+
+**League waiver — 2026-09-23.** For a points league the Waiver analyzer reads
+`/api/leagues/{id}/waiver` and states what it excludes: the league's rostered
+players, or the featured stars with a prompt to import rosters.

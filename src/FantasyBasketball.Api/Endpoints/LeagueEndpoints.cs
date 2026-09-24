@@ -64,6 +64,8 @@ public static class LeagueEndpoints
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
         group.MapPost("/{id:guid}/teams/csv", ImportTeamsCsvAsync)
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
+        group.MapGet("/{id:guid}/waiver", WaiverAsync)
+            .WithMetadata(new OwnedRouteMetadata("league", "id"));
         return endpoints;
     }
 
@@ -81,6 +83,30 @@ public static class LeagueEndpoints
     {
         await authorization.RequireLeagueAsync(id, cancellationToken);
         return ApiResults.Success(await service.ListAsync(id, cancellationToken));
+    }
+
+    public static async Task<IResult> WaiverAsync(
+        Guid id, string? through, int? limit, LeagueWaiverService service,
+        OwnedResourceAuthorizationService authorization, HttpContext context, CancellationToken cancellationToken)
+    {
+        await authorization.RequireLeagueAsync(id, cancellationToken);
+        context.Response.Headers.CacheControl = "no-store";
+        DateOnly? date = null;
+        if (!string.IsNullOrEmpty(through))
+        {
+            date = DateOnly.TryParseExact(through, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out var parsed)
+                ? parsed
+                : throw new RequestValidationException(new Dictionary<string, string[]> { ["through"] = ["Use a date in YYYY-MM-DD format."] });
+        }
+
+        var size = limit ?? 25;
+        if (size is < 1 or > 50)
+        {
+            throw new RequestValidationException(new Dictionary<string, string[]> { ["limit"] = ["Limit must be between 1 and 50."] });
+        }
+
+        return ApiResults.Success(await service.RisersAsync(id, date, size, cancellationToken));
     }
 
     public static async Task<IResult> ImportTeamsCsvAsync(

@@ -38,7 +38,7 @@ export function Hub({ session, pageHref }: { session: Session; pageHref: (path: 
 
 export function WaiverPage({ league, onHome }: { league?: League; onHome: () => void }) {
   return <>
-    <RisersTable />
+    <RisersTable path={league?.type === 0 ? `/api/leagues/${league.id}/waiver?limit=25` : undefined} />
     {league?.type === 0
       ? <RecordedPerformance key={league.id} leagueId={league.id} />
       : <section className="panel"><h2>Your league’s view</h2><p>Open this page from a points league to also see recorded performance under your league’s own scoring.</p><button onClick={onHome}>Back to the menu</button></section>}

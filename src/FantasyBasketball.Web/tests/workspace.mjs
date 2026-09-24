@@ -260,6 +260,9 @@ try {
   await accessibility('League rosters');
   await page.screenshot({ path: `${artifacts}/teams-desktop.png`, fullPage: true });
   checks.push('Teams: CSV roster import with unmatched-name report, your-team badge, axe clean');
+  await page.goto(new URL(`/app/waiver?league=${leagueId}`, base).href);
+  await visible(page.getByText('The 2 players on your league’s rosters are left out.', { exact: false }));
+  checks.push('League waiver: scored under the league, leaving out rostered players');
   await page.goto(new URL(`/app/league-settings?league=${leagueId}`, base).href);
   await visible(page.getByRole('heading', { name: 'League settings', exact: true }));
   assert.equal(await page.getByLabel('PG', { exact: true }).inputValue(), '2');

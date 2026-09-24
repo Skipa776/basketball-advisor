@@ -56,8 +56,8 @@ export function DailyStrip() {
 }
 
 /** Waiver risers; each row rises into place as it scrolls up into view, and again on the way back down. */
-export function RisersTable() {
-  const risers = useResource<LandingRisers>('/api/public/risers?limit=15');
+export function RisersTable({ path }: { path?: string }) {
+  const risers = useResource<LandingRisers>(path ?? '/api/public/risers?limit=15');
   const body = useRef<HTMLTableSectionElement>(null);
   const data = risers.result?.data;
   useEffect(() => {
@@ -74,7 +74,9 @@ export function RisersTable() {
     <div className="section-intro">
       <p className="eyebrow">{data?.throughDate ? `ON THE WIRE · THROUGH ${shortDate(data.throughDate).toUpperCase()}` : 'ON THE WIRE'}</p>
       <h2 id="risers-title">Rising right now.</h2>
-      <p className="muted">Last three games against each player’s own earlier games, in {data?.scoring ?? 'ESPN default points'}. The stars above are left out.</p>
+      <p className="muted">Last three games against each player’s own earlier games, in {data?.scoring ?? 'ESPN default points'}. {data?.excludes === 'rostered'
+        ? `The ${data.excludedPlayers} players on your league’s rosters are left out.`
+        : path ? 'The featured stars are left out; import your league’s rosters to leave out everyone who is owned.' : 'The stars above are left out.'}</p>
     </div>
     <ErrorNotice text={risers.error} retry={risers.refresh} />
     {risers.loading && <p role="status">Loading risers…</p>}

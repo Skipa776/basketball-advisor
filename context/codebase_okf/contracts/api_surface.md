@@ -220,3 +220,10 @@ the last stored game day strictly before it, for `daily` and `risers` alike.
 `{csv}` replaces them from `Team,Player[,Mine]` rows and returns counts plus
 unmatched names; malformed input → 400 naming the line or rule. Both are owned
 league routes (404 for another user's league).
+
+**League waiver — 2026-09-23.** `GET /api/leagues/{id}/waiver?through=&limit=`
+(owned, no-store) returns the risers shape scored under the league's own points
+rules. It leaves out every rostered player (`excludes: "rostered"`,
+`excludedPlayers`); without imported rosters it leaves out the featured stars and
+says so (`excludes: "featured"`). Category leagues → 409 (points only for now,
+owner decision).

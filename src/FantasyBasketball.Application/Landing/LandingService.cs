@@ -31,7 +31,7 @@ public sealed record LandingRiser(
 
 public sealed record LandingRisers(
     DateOnly? ThroughDate, string Source, string Scoring, PlayerHeatOptions Policy,
-    IReadOnlyList<LandingRiser> Players);
+    IReadOnlyList<LandingRiser> Players, string Excludes = "featured", int ExcludedPlayers = 0);
 
 /// <summary>Waiver-status thresholds for the public risers table, owner-approved 2026-09-23.</summary>
 public static class RiserStatus
@@ -99,7 +99,22 @@ public sealed class LandingService(
             lines.OrderByDescending(line => line.PlayedOn).ThenByDescending(line => line.FantasyPoints).ToArray());
     }
 
-    public async Task<LandingRisers> RisersAsync(DateOnly? throughDate, int limit, CancellationToken token)
+    public Task<LandingRisers> RisersAsync(DateOnly? throughDate, int limit, CancellationToken token) =>
+        RisersExcludingFeaturedAsync(throughDate, limit, Scoring, token);
+
+    public async Task<LandingRisers> RisersExcludingFeaturedAsync(DateOnly? throughDate, int limit,
+        FantasyLeague scoring, CancellationToken token)
+    {
+        var featured = (await FeaturedIdsAsync(token)).Select(entry => entry.Id).ToHashSet();
+        return await RankRisersAsync(throughDate, limit, scoring, featured, "featured", token);
+    }
+
+    /// <summary>
+    /// Players rising against their own baseline under <paramref name="scoring"/>, leaving out
+    /// <paramref name="excluded"/> (the featured stars publicly, a league's rostered players privately).
+    /// </summary>
+    public async Task<LandingRisers> RankRisersAsync(DateOnly? throughDate, int limit, FantasyLeague scoring,
+        IReadOnlySet<PlayerId> excluded, string excludes, CancellationToken token)
     {
         if (limit is < 1 or > 50)
         {
@@ -109,16 +124,15 @@ public sealed class LandingService(
         var resolved = await ResolveDateAsync(throughDate, token);
         if (resolved is null)
         {
-            return new LandingRisers(null, Source, Scoring.Name, policy, []);
+            return new LandingRisers(null, Source, scoring.Name, policy, [], excludes, excluded.Count);
         }
 
         var through = resolved.Value;
         var samples = await ListThroughAsync(through, token);
-        var featured = (await FeaturedIdsAsync(token)).Select(entry => entry.Id).ToHashSet();
         var season = SeasonEndYear(through);
-        var ranked = samples.Where(sample => !featured.Contains(sample.PlayerId))
+        var ranked = samples.Where(sample => !excluded.Contains(sample.PlayerId))
             .GroupBy(sample => sample.PlayerId)
-            .Select(group => calculator.Calculate(group.Key, Scoring, season, through, group.ToArray()))
+            .Select(group => calculator.Calculate(group.Key, scoring, season, through, group.ToArray()))
             .Where(result => result.PointsAboveBaseline > 0m && result.RelativeLift.HasValue)
             .OrderByDescending(result => result.PointsAboveBaseline)
             .ThenBy(result => result.PlayerId.Value)
@@ -142,7 +156,7 @@ public sealed class LandingService(
                 RiserStatus.For(result.RelativeLift.Value, streak)));
         }
 
-        return new LandingRisers(through, Source, Scoring.Name, policy, risers);
+        return new LandingRisers(through, Source, scoring.Name, policy, risers, excludes, excluded.Count);
     }
 
     private async Task<DateOnly?> ResolveDateAsync(DateOnly? requested, CancellationToken token)
