@@ -23,7 +23,8 @@ public sealed record LandingOptions
 }
 
 public sealed record LandingDay(
-    DateOnly? Date, string Source, string Scoring, int PoolSize, IReadOnlyList<LandingLine> Players);
+    DateOnly? Date, string Source, string Scoring, int PoolSize, IReadOnlyList<LandingLine> Players,
+    DateOnly? SimulatedToday = null);
 
 public sealed record LandingRiser(
     Guid PlayerId, string Name, DateOnly LatestAppearance, int CategoriesWon, decimal RecentAverage,
@@ -72,7 +73,7 @@ public sealed class LandingService(
         var resolved = await ResolveDateAsync(date, token);
         if (resolved is null)
         {
-            return new LandingDay(null, Source, Scoring.Name, 0, []);
+            return new LandingDay(null, Source, Scoring.Name, 0, [], options.AsOf);
         }
 
         var day = resolved.Value;
@@ -96,7 +97,8 @@ public sealed class LandingService(
         }
 
         return new LandingDay(day, Source, Scoring.Name, pools.GetValueOrDefault(day)?.Length ?? 0,
-            lines.OrderByDescending(line => line.PlayedOn).ThenByDescending(line => line.FantasyPoints).ToArray());
+            lines.OrderByDescending(line => line.PlayedOn).ThenByDescending(line => line.FantasyPoints).ToArray(),
+            options.AsOf);
     }
 
     public Task<LandingRisers> RisersAsync(DateOnly? throughDate, int limit, CancellationToken token) =>

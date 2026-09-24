@@ -55,7 +55,9 @@ public sealed class LandingServiceTests
         var service = new LandingService(store, store, Calculator(), Policy, new LandingOptions { AsOf = new DateOnly(2025, 11, 5) });
         var token = TestContext.Current.CancellationToken;
 
-        (await service.DailyAsync(null, token)).Date.ShouldBe(new DateOnly(2025, 11, 4));
+        var daily = await service.DailyAsync(null, token);
+        daily.Date.ShouldBe(new DateOnly(2025, 11, 4));
+        daily.SimulatedToday.ShouldBe(new DateOnly(2025, 11, 5), "a replay says so");
         store.Requested!.Value.Item4.ShouldBe(new DateOnly(2025, 11, 4));
         var risers = await service.RisersAsync(null, 10, token);
         risers.ThroughDate.ShouldBe(new DateOnly(2025, 11, 4));

@@ -34,6 +34,7 @@ export function DailyStrip() {
   const players = data?.players ?? [];
   return <section className="strips daily" aria-labelledby="daily-title">
     <div className="section-intro">
+      {data?.simulatedToday && <p className="replay-pill" role="note">Replaying the 2025–26 season as if today were {longDate(data.simulatedToday)}</p>}
       <p className="eyebrow">{data?.date ? `PREVIOUS GAME DAY · ${longDate(data.date).toUpperCase()}` : 'PREVIOUS GAME DAY'}</p>
       <h2 id="daily-title">How the stars played.</h2>
       <p className="muted">Each star’s latest game (dated if it wasn’t that day). CAT: categories won of 9 against everyone who played that day. PTS: {data?.scoring ?? 'ESPN default points'}.</p>

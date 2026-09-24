@@ -26,7 +26,7 @@ async function accessibility(name) {
 }
 // Landing with mocked public data: the test host stores no Basketball-Reference games.
 const envelope = data => ({ success: true, data, error: null, meta: null });
-const dailyFixture = envelope({ date: '2025-11-16', source: 'basketball-reference', scoring: 'ESPN default points', poolSize: 168, players: [
+const dailyFixture = envelope({ date: '2025-11-16', source: 'basketball-reference', scoring: 'ESPN default points', poolSize: 168, simulatedToday: '2025-11-17', players: [
   { playerId: 'p1', name: 'Luka Dončić', playedOn: '2025-11-16', minutes: 36, fantasyPoints: 65.5, categoriesWon: 7, line: { PTS: 38, REB: 9, AST: 11 } },
   { playerId: 'p2', name: 'Fixture Newcomer', playedOn: '2025-11-14', minutes: 30, fantasyPoints: 30, categoriesWon: 4, line: { PTS: 20, REB: 5, AST: 3 } }] });
 const risersFixture = envelope({ throughDate: '2025-12-15', source: 'basketball-reference', scoring: 'ESPN default points', players: Array.from({ length: 12 }, (_, index) => (
@@ -63,6 +63,7 @@ async function landingChecks() {
   assert.equal(await strip.getByRole('button', { name: 'Play rotation' }).getAttribute('aria-pressed'), 'true');
   assert.equal(await track.evaluate(element => getComputedStyle(element).animationPlayState), 'paused');
   await visible(landing.getByText('PREVIOUS GAME DAY · SUNDAY, NOV 16, 2025'));
+  await visible(landing.getByRole('note').filter({ hasText: 'Replaying the 2025–26 season as if today were Monday, Nov 17, 2025' }));
   const photo = cards.locator('img');
   assert.equal(await photo.count(), 1, 'only players with a credited photo get an image');
   await photo.scrollIntoViewIfNeeded();

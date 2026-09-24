@@ -161,3 +161,5 @@ main.landing{overflow-x:clip}
 .matchup-total{font-size:clamp(2.5rem,7vw,4.5rem);font-weight:600;letter-spacing:-.03em;line-height:1.05;font-variant-numeric:tabular-nums}
 .matchup-bar{height:.6rem;border-radius:999px;background:var(--lavender);overflow:hidden;margin-bottom:1rem}.matchup-bar span{display:block;height:100%;background:var(--ink);border-radius:999px}
 .matchup-sides{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:2rem;margin-top:1rem}.matchup-side h3{margin-bottom:.5rem}
+
+.replay-pill{display:inline-block;margin:0 0 1rem;padding:.3rem .9rem;border-radius:999px;background:var(--lavender);font-size:.8rem;font-weight:600}
