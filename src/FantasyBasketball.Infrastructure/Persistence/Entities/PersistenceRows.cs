@@ -390,6 +390,28 @@ public sealed class LeagueRosterEntryRow : IOwnedResource
         new() { Id = Guid.NewGuid(), LeagueTeamId = leagueTeamId, PlayerId = playerId, Ordinal = ordinal };
 }
 
+public sealed class LeagueEligibilityRow : IOwnedResource
+{
+    private LeagueEligibilityRow()
+    {
+    }
+
+    public Guid Id { get; private set; }
+
+    public Guid? OwnerId { get; private set; }
+
+    public Guid FantasyLeagueId { get; private set; }
+
+    public Guid PlayerId { get; private set; }
+
+    public string[] Positions { get; private set; } = [];
+
+    public static LeagueEligibilityRow Create(Guid fantasyLeagueId, Guid playerId, string[] positions) =>
+        new() { Id = Guid.NewGuid(), FantasyLeagueId = fantasyLeagueId, PlayerId = playerId, Positions = positions };
+
+    public void SetPositions(string[] positions) => Positions = positions;
+}
+
 public sealed class SeasonStatLineRow
 {
     private SeasonStatLineRow()

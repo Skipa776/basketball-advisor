@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Application/Leagues/RosterCsv.cs, src/Fanta
 test_paths: [tests/FantasyBasketball.Application.Tests/Leagues, tests/FantasyBasketball.IntegrationTests/Api]
 depends_on: [provider_contracts.md, scoring_rules_catalog.md, player_identity_contract.md]
 status: partial
-last_updated: 2026-09-23
+last_updated: 2026-09-24
 owners: [engineering]
 risk_level: high
 done_criteria:
@@ -154,3 +154,14 @@ ESPN stays CSV/manual. Evidence: `RosterCsvTests`,
 `League_rosters_import_from_csv_replace_on_reimport_and_report_unmatched_names`,
 the 20-route isolation sweep, `U14_export_import_…` with roster rows, and the
 browser journey's Teams step.
+
+## League eligibility — 2026-09-23
+
+Owner decision: a player's positions can differ by league (platform eligibility).
+`league_player_eligibility` (owned, per league and player) overrides the
+Basketball-Reference primary position; it is filled by the roster CSV's optional
+`Positions` column (PG/SG/SF/PF/C, separated by `/`, `,`, `;` or spaces;
+anything else fails by line) and will be filled by platform imports. **Only the
+draft uses it for now** (`DraftCandidateRepository`); streaming and trades keep the
+primary position. Evidence: `Csv_positions_become_league_eligibility_for_matched_players`,
+the eligibility step in `ProjectionPublicationTests`, `U14_…` with an eligibility row.

@@ -83,6 +83,14 @@ public sealed partial class PersistenceTests
         var candidates = await new DraftCandidateRepository(database).ListAsync(league.Id, token);
         candidates.Count.ShouldBe(1);
         candidates[0].PlayerId.ShouldBe(first);
+
+        // League-specific eligibility reaches this league's draft only.
+        var primary = candidates[0].Positions;
+        await new LeagueEligibilityRepository(database).SaveAsync(league.Id,
+            new Dictionary<PlayerId, IReadOnlyList<string>> { [first] = ["PG", "SG"] }, token);
+        (await new DraftCandidateRepository(database).ListAsync(league.Id, token))[0].Positions.ShouldBe(["PG", "SG"]);
+        (await new DraftCandidateRepository(database).ListAsync(otherLeague.Id, token))
+            .Single(candidate => candidate.PlayerId == first).Positions.ShouldBe(primary);
         (await repository.GetFantasyValueAsync(second, league.Id, token)).ShouldBeNull();
         var latest = (await repository.GetLatestDecompositionAsync(first, league.Id, token))!;
         latest.Value.PerGame.ShouldBe(120m);

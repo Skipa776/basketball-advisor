@@ -84,7 +84,7 @@ public sealed class OwnershipClaimTests : IAsyncLifetime
             (await CountOwnedColumnsAsync(
                 database,
                 "NO",
-                cancellationToken)).ShouldBe(12, "every owned table requires an owner, including league_team and league_roster_entry");
+                cancellationToken)).ShouldBe(13, "every owned table requires an owner, including the roster and eligibility tables");
             (await CountOwnedColumnsAsync(
                 database,
                 "YES",

@@ -23,7 +23,7 @@ public sealed class LeagueServicesTests
         var jokic = store.AddPlayer("Nikola Jokić");
         store.AddPlayer("Twin Name");
         store.AddPlayer("Twin Name");
-        var service = new LeagueRosterService(store, store, store);
+        var service = new LeagueRosterService(store, store, store, store);
 
         var result = await service.ImportCsvAsync(store.League.Id,
             "Team,Player,Mine\nMine,Nikola Jokic,yes\nMine,Twin Name,yes\nOthers,Ghost Player,\n", TestContext.Current.CancellationToken);
@@ -37,13 +37,26 @@ public sealed class LeagueServicesTests
         (await service.ListAsync(store.League.Id, TestContext.Current.CancellationToken))[0].Players.ShouldHaveSingleItem().Name.ShouldBe("Nikola Jokić");
     }
 
+    [Fact]
+    public async Task Csv_positions_become_league_eligibility_for_matched_players()
+    {
+        var jokic = store.AddPlayer("Nikola Jokić");
+        var curry = store.AddPlayer("Stephen Curry");
+        await new LeagueRosterService(store, store, store, store).ImportCsvAsync(store.League.Id,
+            "Team,Player,Positions\nMine,Nikola Jokic,C\nMine,Stephen Curry,\"PG, SG\"\n", TestContext.Current.CancellationToken);
+
+        store.Eligibility[jokic.Id].ShouldBe(["C"]);
+        store.Eligibility[curry.Id].ShouldBe(["PG", "SG"]);
+    }
+
     [Theory]
     [InlineData("Team,Player\nA,X\nB,X\nC,X", "the league has 2")]
     [InlineData("Team,Player,Mine\nA,X,yes\nB,X,yes", "Mark only one team")]
     [InlineData("Name,Club\nA,X", "header with Team and Player")]
+    [InlineData("Team,Player,Positions\nA,X,PG/QB", "unknown position 'QB'")]
     public async Task Csv_import_rejects_rules_by_name(string csv, string reason)
     {
-        var service = new LeagueRosterService(store, store, store);
+        var service = new LeagueRosterService(store, store, store, store);
         (await Should.ThrowAsync<ArgumentException>(() => service.ImportCsvAsync(store.League.Id, csv, TestContext.Current.CancellationToken)))
             .Message.ShouldContain(reason);
         store.Teams.ShouldBeEmpty();
@@ -52,7 +65,7 @@ public sealed class LeagueServicesTests
     [Fact]
     public async Task Unknown_league_is_not_found()
     {
-        var service = new LeagueRosterService(store, store, store);
+        var service = new LeagueRosterService(store, store, store, store);
         await Should.ThrowAsync<ResourceNotFoundException>(() => service.ListAsync(Guid.NewGuid(), TestContext.Current.CancellationToken));
     }
 
@@ -90,8 +103,24 @@ public sealed class LeagueServicesTests
     private LeagueWaiverService Waiver() =>
         new(store, store, new LandingService(store, store, new PlayerHeatCalculator(new PointsScoringEngine(), Policy), Policy, new LandingOptions()));
 
-    private sealed class Store : ILeagueRepository, ILeagueTeamRepository, IPlayerRepository, IBoxScoreRepository
+    private sealed class Store : ILeagueRepository, ILeagueTeamRepository, IPlayerRepository, IBoxScoreRepository, ILeagueEligibilityRepository
     {
+        public Dictionary<PlayerId, IReadOnlyList<string>> Eligibility { get; } = [];
+
+
+        Task<IReadOnlyDictionary<PlayerId, IReadOnlyList<string>>> ILeagueEligibilityRepository.ListAsync(Guid leagueId, CancellationToken token) =>
+            Task.FromResult<IReadOnlyDictionary<PlayerId, IReadOnlyList<string>>>(Eligibility);
+
+        public Task SaveAsync(Guid leagueId, IReadOnlyDictionary<PlayerId, IReadOnlyList<string>> positions, CancellationToken token)
+        {
+            foreach (var (player, eligible) in positions)
+            {
+                Eligibility[player] = eligible;
+            }
+
+            return Task.CompletedTask;
+        }
+
         private readonly List<Player> players = [];
         private readonly List<PlayerGameSample> samples = [];
 

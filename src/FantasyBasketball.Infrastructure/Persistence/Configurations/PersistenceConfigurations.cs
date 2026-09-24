@@ -187,6 +187,28 @@ public sealed class ScoringRuleConfiguration : IEntityTypeConfiguration<ScoringR
     }
 }
 
+public sealed class LeagueEligibilityConfiguration : IEntityTypeConfiguration<LeagueEligibilityRow>
+{
+    public void Configure(EntityTypeBuilder<LeagueEligibilityRow> builder)
+    {
+        builder.ToTable("league_player_eligibility");
+        builder.HasKey(value => value.Id);
+        builder.Property(value => value.Id).HasColumnName("id").ValueGeneratedNever();
+        builder.Property(value => value.FantasyLeagueId).HasColumnName("fantasy_league_id");
+        builder.Property(value => value.PlayerId).HasColumnName("player_id");
+        builder.Property(value => value.Positions).HasColumnName("positions").IsRequired();
+        builder.HasOne<FantasyLeagueRow>()
+            .WithMany()
+            .HasForeignKey(value => value.FantasyLeagueId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne<PlayerRow>()
+            .WithMany()
+            .HasForeignKey(value => value.PlayerId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(value => new { value.FantasyLeagueId, value.PlayerId }).IsUnique();
+    }
+}
+
 public sealed class LeagueTeamConfiguration : IEntityTypeConfiguration<LeagueTeamRow>
 {
     public void Configure(EntityTypeBuilder<LeagueTeamRow> builder)

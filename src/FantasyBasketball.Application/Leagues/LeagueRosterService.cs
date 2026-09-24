@@ -14,7 +14,8 @@ public sealed record RosterImportResult(int Teams, int Players, IReadOnlyList<st
 
 /// <summary>League rosters from the CSV rung of the league import ladder.</summary>
 public sealed class LeagueRosterService(
-    ILeagueRepository leagues, ILeagueTeamRepository teams, IPlayerRepository players)
+    ILeagueRepository leagues, ILeagueTeamRepository teams, IPlayerRepository players,
+    ILeagueEligibilityRepository eligibility)
 {
     public async Task<IReadOnlyList<RosterTeamView>> ListAsync(Guid leagueId, CancellationToken token)
     {
@@ -49,6 +50,7 @@ public sealed class LeagueRosterService(
 
         var unmatched = new List<string>();
         var built = new List<LeagueTeam>();
+        var positions = new Dictionary<PlayerId, IReadOnlyList<string>>();
         foreach (var group in byTeam)
         {
             var roster = new List<PlayerId>();
@@ -59,6 +61,10 @@ public sealed class LeagueRosterService(
                 if (matches.Count == 1 && !roster.Contains(matches[0].Id))
                 {
                     roster.Add(matches[0].Id);
+                    if (row.Positions is { } eligible)
+                    {
+                        positions[matches[0].Id] = eligible;
+                    }
                 }
                 else if (matches.Count != 1)
                 {
@@ -75,6 +81,10 @@ public sealed class LeagueRosterService(
         }
 
         await teams.ReplaceAsync(leagueId, built, token);
+        if (positions.Count > 0)
+        {
+            await eligibility.SaveAsync(leagueId, positions, token);
+        }
         return new RosterImportResult(built.Count, built.Sum(team => team.Players.Count), unmatched,
             await ViewsAsync(built, token));
     }

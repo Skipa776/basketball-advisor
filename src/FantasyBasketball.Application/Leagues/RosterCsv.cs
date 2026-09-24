@@ -1,16 +1,17 @@
 namespace FantasyBasketball.Application.Leagues;
 
-public sealed record RosterCsvRow(int Line, string Team, string Player, bool Mine);
+public sealed record RosterCsvRow(int Line, string Team, string Player, bool Mine, IReadOnlyList<string>? Positions = null);
 
 /// <summary>
-/// The guaranteed roster import rung: <c>Team,Player[,Mine]</c> with a header row.
+/// The guaranteed roster import rung: <c>Team,Player[,Mine][,Positions]</c> with a header row.
+/// Positions is the league's eligibility for that player, e.g. <c>PG/SG</c>.
 /// Quoted fields (as platform exports write them) are supported; anything malformed
 /// fails with its line number rather than being guessed at.
 /// </summary>
 public static class RosterCsv
 {
     public const int MaximumLength = 64 * 1024;
-    public const string Template = "Team,Player,Mine\nMy Team,Nikola Jokic,yes\nMy Team,Stephen Curry,yes\nRival Team,Luka Doncic,\n";
+    public const string Template = "Team,Player,Mine,Positions\nMy Team,Nikola Jokic,yes,C\nMy Team,Stephen Curry,yes,PG/SG\nRival Team,Luka Doncic,,PG/SG\n";
 
     public static IReadOnlyList<RosterCsvRow> Parse(string csv)
     {
@@ -24,6 +25,7 @@ public static class RosterCsv
         var team = Array.IndexOf(header, "team");
         var player = Array.IndexOf(header, "player");
         var mine = Array.IndexOf(header, "mine");
+        var eligibility = Array.IndexOf(header, "positions");
         if (team < 0 || player < 0)
         {
             throw new FormatException("The first line must be a header with Team and Player columns.");
@@ -45,10 +47,28 @@ public static class RosterCsv
             }
 
             rows.Add(new RosterCsvRow(index + 1, At(team), At(player),
-                At(mine).ToLowerInvariant() is "yes" or "y" or "true" or "1" or "x"));
+                At(mine).ToLowerInvariant() is "yes" or "y" or "true" or "1" or "x",
+                Positions(At(eligibility), index + 1)));
         }
 
         return rows.Count == 0 ? throw new FormatException("The CSV has no roster rows.") : rows;
+    }
+
+    private static readonly string[] KnownPositions = ["PG", "SG", "SF", "PF", "C"];
+
+    private static IReadOnlyList<string>? Positions(string value, int lineNumber)
+    {
+        if (value.Length == 0)
+        {
+            return null;
+        }
+
+        var positions = value.Split(['/', ',', ';', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(position => position.ToUpperInvariant()).Distinct().ToArray();
+        var unknown = positions.FirstOrDefault(position => !KnownPositions.Contains(position));
+        return unknown is null
+            ? positions
+            : throw new FormatException($"Line {lineNumber} has unknown position '{unknown}'; use PG, SG, SF, PF or C.");
     }
 
     private static List<string> Fields(string line, int lineNumber)

@@ -15,6 +15,10 @@ public sealed class DraftCandidateRepository(FantasyDbContext database)
         CancellationToken cancellationToken)
     {
         var values = await CurrentFantasyValues.ListAsync(database, leagueId, cancellationToken);
+        // League-specific eligibility (e.g. PG/SG on this platform) wins over the primary position.
+        var eligibility = await database.LeagueEligibility.AsNoTracking()
+            .Where(row => row.FantasyLeagueId == leagueId)
+            .ToDictionaryAsync(row => row.PlayerId, row => row.Positions, cancellationToken);
         var results = new List<DraftCandidate>(values.Count);
 
         foreach (var value in values)
@@ -46,7 +50,7 @@ public sealed class DraftCandidateRepository(FantasyDbContext database)
             results.Add(new DraftCandidate(
                 new PlayerId(value.PlayerId),
                 value.SeasonTotal,
-                player.Positions,
+                eligibility.GetValueOrDefault(value.PlayerId) ?? player.Positions,
                 adp,
                 0m,
                 0m,

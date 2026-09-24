@@ -144,7 +144,7 @@ public sealed class AccountDataTests : IAsyncLifetime
                 .ExportAsync(TestContext.Current.CancellationToken);
         }
 
-        exported.Tables.Count.ShouldBe(13, "league teams and roster entries travel with the account");
+        exported.Tables.Count.ShouldBe(14, "league teams, roster entries and eligibility travel with the account");
         PortablePayload(restored).ShouldBe(
             PortablePayload(exported),
             ignoreOrder: true);
@@ -220,6 +220,7 @@ public sealed class AccountDataTests : IAsyncLifetime
         var team = LeagueTeamRow.Create(teamId, leagueId, $"{suffix} team", true, 0);
         team.Entries.Add(LeagueRosterEntryRow.Create(teamId, playerId, 0));
         database.LeagueTeams.Add(team);
+        database.LeagueEligibility.Add(LeagueEligibilityRow.Create(leagueId, playerId, ["PG", "SG"]));
         database.DraftSessions.Add(DraftSessionRow.Create(
             draftId,
             leagueId,

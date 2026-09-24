@@ -8,7 +8,7 @@ import type { League } from './types';
 type RosterTeam = { id: string; name: string; isUsersTeam: boolean; players: { playerId: string; name: string }[] };
 type RosterImport = { teams: number; players: number; unmatchedPlayers: string[] };
 
-const TEMPLATE = 'Team,Player,Mine\nMy Team,Nikola Jokic,yes\nMy Team,Stephen Curry,yes\nRival Team,Luka Doncic,\n';
+const TEMPLATE = 'Team,Player,Mine,Positions\nMy Team,Nikola Jokic,yes,C\nMy Team,Stephen Curry,yes,PG/SG\nRival Team,Luka Doncic,,PG/SG\n';
 
 /** League rosters from a pasted CSV (ESPN, Yahoo or Sleeper rosters copied into Team,Player rows). */
 export function TeamsPage({ league, onHome }: { league?: League; onHome: () => void }) {
@@ -36,7 +36,7 @@ export function TeamsPage({ league, onHome }: { league?: League; onHome: () => v
     {teams.result && !rosters.length && <p className="notice">No rosters yet. Paste them below to make the waiver list show only players nobody owns.</p>}
     <section className="panel" aria-labelledby="roster-import-title">
       <h2 id="roster-import-title">{rosters.length ? 'Replace rosters' : 'Import rosters'}</h2>
-      <p>One row per rostered player: <code>Team,Player</code>, plus <code>Mine</code> = yes on your team’s rows. Copy rosters from ESPN, Yahoo or Sleeper into this shape; names are matched without accents. An import replaces the league’s rosters.</p>
+      <p>One row per rostered player: <code>Team,Player</code>, plus <code>Mine</code> = yes on your team’s rows and optional <code>Positions</code> (e.g. PG/SG) as your platform lists them; positions are used by the draft for this league. Copy rosters from ESPN, Yahoo or Sleeper into this shape; names are matched without accents. An import replaces the league’s rosters.</p>
       <form onSubmit={submit} className="roster-form">
         <label>Roster CSV<textarea value={csv} onChange={event => setCsv(event.target.value)} rows={8} required spellCheck={false} placeholder={TEMPLATE} /></label>
         <div className="form-row">

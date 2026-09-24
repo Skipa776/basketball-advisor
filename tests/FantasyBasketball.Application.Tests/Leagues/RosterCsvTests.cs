@@ -16,6 +16,11 @@ public sealed class RosterCsvTests
         RosterCsv.Parse(RosterCsv.Template).Count(row => row.Mine).ShouldBe(2);
     }
 
+    [Fact]
+    public void Positions_column_accepts_slash_comma_or_space_separated_base_positions() =>
+        RosterCsv.Parse("Team,Player,Positions\nA,Curry,pg/sg\nA,Jokic,\nA,Tatum,\"SF, PF\"\n")
+            .Select(row => row.Positions).ShouldBe([["PG", "SG"], null, ["SF", "PF"]]);
+
     [Theory]
     [InlineData("", "at most")]
     [InlineData("Name,Club\nA,B", "header with Team and Player")]
