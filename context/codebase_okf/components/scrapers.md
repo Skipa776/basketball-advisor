@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Infrastructure/Scrapers]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Scrapers, tests/FantasyBasketball.IntegrationTests/Fixtures/Html]
 depends_on: [../safety/scraping_policy.md, ../contracts/stat_vocabulary.md]
 status: implemented
-last_updated: 2026-07-29
+last_updated: 2026-09-23
 owners: [engineering]
 risk_level: high
 done_criteria:
@@ -91,3 +91,21 @@ parses a saved fixture through an isolated pure parser, stamps
 `fantasypros-v1` provenance, and fails loudly when a required column changes.
 Both scraper implementations and both URL gates now meet this component's done
 criteria.
+
+## 2025-26 season pages — 2026-09-23
+
+A live import of `NBA_2026_{per_game,totals,advanced}` failed; the saved pages
+showed three layout facts the synthetic fixtures lacked. `SeasonTableParser`
+(now `basketball-reference-v2`) handles exactly these, and fails as before on
+anything else:
+
+- The body ends with a **"League Average"** summary row with no player id; only
+  that exact row is skipped.
+- A player traded mid-season has one row per team plus a combined **`nTM`** row;
+  the combined row is the season line. Duplicates without exactly one `nTM` row
+  fail.
+- Per-game values are rounded to 0.1 independently, so per-game
+  `REB = OREB + DREB` may differ by exactly 0.1; whole-number totals must match.
+
+Verified by parsing the saved live pages (582 players) and by fixture-edit tests
+`S13_league_average_…`, `S13_traded_player_…`, `S13_per_game_rebounds_…`.

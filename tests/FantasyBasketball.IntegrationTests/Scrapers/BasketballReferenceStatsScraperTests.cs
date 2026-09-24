@@ -48,7 +48,7 @@ public sealed class BasketballReferenceStatsScraperTests : IDisposable
         line.Provenance.Source.ShouldBe(DataSourceName.BasketballReference);
         line.Provenance.ExternalId.ShouldBe("jokicni01");
         line.Provenance.FetchedAt.ShouldBe(fetchedAt);
-        line.Provenance.ParserVersion.ShouldBe("basketball-reference-v1");
+        line.Provenance.ParserVersion.ShouldBe("basketball-reference-v2");
         line.Provenance.Confidence.ShouldBe(DataSourceConfidence.HtmlScraper);
         line.Provenance.RawRecordHash.Length.ShouldBe(64);
         (await players.GetAsync(

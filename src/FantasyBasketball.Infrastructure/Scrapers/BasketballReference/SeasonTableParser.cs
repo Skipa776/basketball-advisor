@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using AngleSharp.Dom;
@@ -16,9 +17,13 @@ public sealed record ParsedSeasonStatLine(
     decimal? UsageRate,
     string RawFragment);
 
-public sealed class SeasonTableParser
+public sealed partial class SeasonTableParser
 {
+    private const string LeagueAverageRow = "League Average";
+
     private const string PlayerColumn = "Player";
+    private const string TeamColumn = "Team";
+    private const decimal PerGameRounding = 0.1m;
     private const string GamesColumn = "G";
     private const string UsageColumn = "USG%";
 
@@ -68,8 +73,10 @@ public sealed class SeasonTableParser
 
             var perGameStats = CreateStatLine(perGameRow);
             var totalStats = CreateStatLine(totalsRow);
-            EnsureReboundIdentity(perGameStats, perGameRow.ExternalPlayerId);
-            EnsureReboundIdentity(totalStats, perGameRow.ExternalPlayerId);
+            // Per-game values are each rounded to 0.1, so they can disagree by exactly 0.1;
+            // whole-number totals must match exactly.
+            EnsureReboundIdentity(perGameStats, perGameRow.ExternalPlayerId, PerGameRounding);
+            EnsureReboundIdentity(totalStats, perGameRow.ExternalPlayerId, 0m);
             var usageRate = ParseDecimal(advancedRow, UsageColumn) / 100m;
 
             results.Add(new ParsedSeasonStatLine(
@@ -145,6 +152,13 @@ public sealed class SeasonTableParser
             }
 
             var playerCell = cells[columnIndexes[PlayerColumn]];
+            // Since the 2025-26 pages the body ends with a league-wide summary row.
+            // Only that exact row is skipped; any other row without identity still fails.
+            if (playerCell.TextContent.Trim() == LeagueAverageRow)
+            {
+                continue;
+            }
+
             var playerId = playerCell.GetAttribute("data-append-csv")
                 ?? ReadPlayerIdFromHref(playerCell);
             var playerName = playerCell.TextContent.Trim();
@@ -167,17 +181,41 @@ public sealed class SeasonTableParser
                 row.OuterHtml));
         }
 
-        return rows;
+        return SeasonTotalsOnly(rows, tableId);
     }
+
+    /// <summary>
+    /// A player traded mid-season has one row per team plus a combined row whose team
+    /// reads "2TM", "3TM", …. The season line is the combined row; any other duplicate
+    /// identity is still malformed.
+    /// </summary>
+    private static List<ParsedRow> SeasonTotalsOnly(List<ParsedRow> rows, string tableId) =>
+        rows.GroupBy(row => row.ExternalPlayerId)
+            .Select(group =>
+            {
+                if (group.Count() == 1)
+                {
+                    return group.Single();
+                }
+
+                var combined = group
+                    .Where(row => CombinedTeams().IsMatch(row.Values.GetValueOrDefault(TeamColumn, string.Empty)))
+                    .ToArray();
+                return combined.Length == 1
+                    ? combined[0]
+                    : throw new InvalidDataException(
+                        $"Table '{tableId}' repeats player '{group.Key}' without one combined-team row.");
+            })
+            .ToList();
 
     private static StatLine CreateStatLine(ParsedRow row) =>
         new(StatSourceColumnMap.SeasonTableCounting.ToDictionary(
             entry => entry.Value,
             entry => ParseDecimal(row, entry.Key)));
 
-    private static void EnsureReboundIdentity(StatLine line, string playerId)
+    private static void EnsureReboundIdentity(StatLine line, string playerId, decimal tolerance)
     {
-        if (line[StatKey.REB] != line[StatKey.OREB] + line[StatKey.DREB])
+        if (Math.Abs(line[StatKey.REB] - (line[StatKey.OREB] + line[StatKey.DREB])) > tolerance)
         {
             throw new InvalidDataException(
                 $"Player '{playerId}' violates REB = OREB + DREB.");
@@ -239,4 +277,7 @@ public sealed class SeasonTableParser
         string PlayerName,
         IReadOnlyDictionary<string, string> Values,
         string RawFragment);
+
+    [GeneratedRegex("^[0-9]+TM$", RegexOptions.CultureInvariant)]
+    private static partial Regex CombinedTeams();
 }

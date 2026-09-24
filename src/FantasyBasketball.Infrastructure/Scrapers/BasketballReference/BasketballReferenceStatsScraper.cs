@@ -12,7 +12,7 @@ public sealed class BasketballReferenceStatsScraper(
     PlayerIdentityResolver identityResolver,
     TimeProvider timeProvider) : IPlayerStatsProvider
 {
-    private const string ParserVersion = "basketball-reference-v1";
+    private const string ParserVersion = "basketball-reference-v2";
     private readonly BbrefUrlBuilder urlBuilder = new();
     private readonly SeasonTableParser parser = new();
 

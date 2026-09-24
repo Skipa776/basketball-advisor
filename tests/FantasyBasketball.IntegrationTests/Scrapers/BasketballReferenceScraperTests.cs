@@ -117,6 +117,70 @@ public sealed class BasketballReferenceScraperTests
         exception.Message.ShouldContain("TRB");
     }
 
+    // Live 2025-26 season pages (verified 2026-09-23) end the table body with a
+    // league summary row, list traded players once per team plus an "nTM" row, and
+    // round per-game rebounds independently. The fixtures are edited to match.
+    [Fact]
+    public async Task S13_league_average_row_is_skipped_but_other_unidentified_rows_fail()
+    {
+        var (perGame, totals, advanced) = await SeasonFixturesAsync();
+        var summary = perGame.Replace("</tbody>", "<tr><td>League Average</td><td></td></tr></tbody>", StringComparison.Ordinal);
+        new SeasonTableParser().Parse(summary, totals, advanced).ShouldHaveSingleItem().ExternalPlayerId.ShouldBe("jokicni01");
+
+        var unknown = perGame.Replace("</tbody>", "<tr><td>Mystery Row</td><td></td></tr></tbody>", StringComparison.Ordinal);
+        Should.Throw<InvalidDataException>(() => new SeasonTableParser().Parse(unknown, totals, advanced));
+    }
+
+    [Fact]
+    public async Task S13_traded_player_uses_the_combined_team_row()
+    {
+        var (perGame, totals, advanced) = await SeasonFixturesAsync();
+        var parser = new SeasonTableParser();
+
+        var traded = parser.Parse(WithTeams(perGame, "2TM", "DEN", "LAL"), WithTeams(totals, "2TM", "DEN", "LAL"), advanced);
+        traded.ShouldHaveSingleItem().PerGame[StatKey.PTS].ShouldBe(27.1m, "the per-team copies score 99.9");
+
+        Should.Throw<InvalidDataException>(() => parser.Parse(WithTeams(perGame, "DEN", "LAL"), totals, advanced))
+            .Message.ShouldContain("without one combined-team row");
+    }
+
+    [Fact]
+    public async Task S13_per_game_rebounds_allow_rounding_but_totals_must_add_up()
+    {
+        var (perGame, totals, advanced) = await SeasonFixturesAsync();
+        var parser = new SeasonTableParser();
+
+        // ORB 3.1 + DRB 9.2 = 12.3: 12.4 is rounding, 12.5 is wrong.
+        parser.Parse(perGame.Replace("<td>12.3</td>", "<td>12.4</td>", StringComparison.Ordinal), totals, advanced)
+            .ShouldHaveSingleItem();
+        Should.Throw<InvalidDataException>(() =>
+            parser.Parse(perGame.Replace("<td>12.3</td>", "<td>12.5</td>", StringComparison.Ordinal), totals, advanced));
+        Should.Throw<InvalidDataException>(() =>
+            parser.Parse(perGame, totals.Replace("<td>885.6</td>", "<td>885.7</td>", StringComparison.Ordinal), advanced));
+    }
+
+    private static async Task<(string PerGame, string Totals, string Advanced)> SeasonFixturesAsync() =>
+        (await ReadFixtureAsync("basketball-reference-per-game-2026-07-29.html"),
+            await ReadFixtureAsync("basketball-reference-totals-2026-07-29.html"),
+            await ReadFixtureAsync("basketball-reference-advanced-2026-07-29.html"));
+
+    // Adds a Team column and repeats the single player row once per team. Rows after the
+    // first score 99.9 points so a wrongly chosen row is visible.
+    private static string WithTeams(string html, params string[] teams)
+    {
+        var start = html.IndexOf("<tbody>", StringComparison.Ordinal) + "<tbody>".Length;
+        var end = html.IndexOf("</tbody>", StringComparison.Ordinal);
+        var row = html[start..end];
+        var firstCellEnd = row.IndexOf("</td>", StringComparison.Ordinal) + "</td>".Length;
+        var rows = teams.Select((team, index) =>
+        {
+            var withTeam = row[..firstCellEnd] + $"<td>{team}</td>" + row[firstCellEnd..];
+            return index == 0 ? withTeam : withTeam.Replace("<td>27.1</td>", "<td>99.9</td>", StringComparison.Ordinal);
+        });
+        return html[..start].Replace("<th>Player</th>", "<th>Player</th><th>Team</th>", StringComparison.Ordinal)
+            + string.Concat(rows) + html[end..];
+    }
+
     private static Task<string> ReadFixtureAsync(string name) =>
         File.ReadAllTextAsync(
             Path.Combine(AppContext.BaseDirectory, "Fixtures", "Html", name),
