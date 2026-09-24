@@ -1,0 +1,12 @@
+[
+ {
+  "user_id": "100",
+  "display_name": "Fixture Owner",
+  "is_owner": true,
+  "is_bot": false,
+  "league_id": "1000000000000000001",
+  "metadata": {},
+  "avatar": null,
+  "settings": null
+ }
+]

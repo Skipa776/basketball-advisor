@@ -195,6 +195,8 @@ public static class DependencyInjection
         services.AddScoped<FantasyBasketball.Application.Leagues.MatchupService>();
         services.AddScoped<FantasyBasketball.Application.Leagues.StreamingService>();
         services.AddScoped<FantasyBasketball.Application.Leagues.TradeService>();
+        services.AddScoped<FantasyBasketball.Application.Leagues.LeagueImportService>();
+        services.AddScoped<IFantasyLeagueProvider, FantasyBasketball.Infrastructure.Providers.Sleeper.SleeperLeagueProvider>();
         services.AddScoped<IProjectionRepository, ProjectionRepository>();
         services.AddScoped<IProjectionQueryRepository, ProjectionRepository>();
         services.AddScoped<IContextEventRepository, ContextEventRepository>();
@@ -285,6 +287,13 @@ public static class DependencyInjection
             services,
             DataSourceName.FantasyPros,
             new Uri("https://www.fantasypros.com"));
+        // Rosters change daily, so league reads are only reused briefly (preview then import);
+        // the provider caches the player map for a day itself.
+        AddSourceClient(
+            services,
+            DataSourceName.Sleeper,
+            new Uri("https://api.sleeper.app"),
+            TimeSpan.FromMinutes(5));
 
         return services;
     }
@@ -292,7 +301,8 @@ public static class DependencyInjection
     private static void AddSourceClient(
         IServiceCollection services,
         string name,
-        Uri baseAddress)
+        Uri baseAddress,
+        TimeSpan? freshness = null)
     {
         var clientBuilder = services.AddHttpClient(
                 name,
@@ -314,7 +324,7 @@ public static class DependencyInjection
             .AddHttpMessageHandler(serviceProvider =>
                 new ResponseCacheHandler(
                     serviceProvider.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>(),
-                    CacheFreshness));
+                    freshness ?? CacheFreshness));
         // The defaults allow 10s per attempt, and balldontlie's free tier
         // regularly takes ~9s to answer a players page. Every import therefore
         // timed out, retried, and recorded a failed run against a working API

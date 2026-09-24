@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Application/Abstractions]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Providers]
 depends_on: [provenance_contract.md, player_identity_contract.md]
 status: implemented
-last_updated: 2026-07-29
+last_updated: 2026-09-24
 owners: [engineering]
 risk_level: medium
 done_criteria:
@@ -158,3 +158,11 @@ produce the same validated provider record; the import service maps every rung
 to the same canonical persisted entity. I-08 proves CSV and manual remain
 usable with the scraper absent. All MVP provider categories now meet this
 contract's done criteria.
+
+## Fantasy league providers — 2026-09-24
+
+`IFantasyLeagueProvider.GetLeagueAsync(externalLeagueId)` returns the
+provider-neutral `ExternalLeagueSnapshot` (league name, team count, raw lineup
+slots and scoring, teams with players and their per-league positions). The first
+implementation is `SleeperLeagueProvider` (read-only, owner-authorized). Yahoo is
+not built; ESPN stays CSV/manual.

@@ -253,6 +253,12 @@ try {
   checks.push('Projected players → league values ranked by season points; /app/ and /app/<page>/ route like their bare paths');
   await page.goto(new URL(`/app/teams?league=${leagueId}`, base).href);
   await visible(page.getByText('No rosters yet.', { exact: false }));
+  // Offline: the Sleeper panel is present and only enables once a league id is recognised; it is never sent.
+  const sleeperPreview = page.getByRole('button', { name: 'Preview league' });
+  assert.equal(await sleeperPreview.isEnabled(), false);
+  await page.getByLabel('Sleeper league link or ID').fill('https://sleeper.com/leagues/1000000000000000001/league');
+  assert.equal(await sleeperPreview.isEnabled(), true);
+  await page.getByLabel('Sleeper league link or ID').fill('');
   await page.getByLabel('Roster CSV').fill('Team,Player,Mine\nBrowser Squad,Fixture Guard,yes\nRivals,Fixture Center,\nRivals,Nobody Real,');
   await page.getByRole('button', { name: /Import rosters/ }).click();
   await visible(page.getByRole('status').filter({ hasText: 'Imported 2 teams and 2 players.' }));

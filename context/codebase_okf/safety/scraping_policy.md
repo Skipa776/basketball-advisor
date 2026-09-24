@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Infrastructure/Scrapers, src/FantasyBasketb
 test_paths: [tests/FantasyBasketball.IntegrationTests/Scrapers]
 depends_on: [../contracts/provider_contracts.md]
 status: implemented
-last_updated: 2026-09-23
+last_updated: 2026-09-24
 owners: [engineering]
 risk_level: high
 edit_policy: stable_contract
@@ -142,3 +142,19 @@ paths, and is covered by the S-10 gamelog rejection test.
 port, user-info, and foreign-host forms. Both scrapers use their builders and
 the shared process-wide limiter, so the policy's done criteria are implemented;
 no permitted or disallowed path was changed.
+
+## api.sleeper.app — owner-authorized 2026-09-24
+
+A documented, read-only public API (no authentication, no user session). Only
+these paths, enforced by `SleeperUrlBuilder`:
+
+| Permitted | Purpose |
+|---|---|
+| `/v1/league/{id}` | League settings (sport must be `nba`) |
+| `/v1/league/{id}/users` | Owner display names |
+| `/v1/league/{id}/rosters` | Rosters (player ids per roster) |
+| `/v1/players/nba` | Player map, **at most once a day** (cached 24 h, as Sleeper asks) |
+
+Requests go through the same shared per-host limiter as every other source; league
+reads are reused for 5 minutes so a preview and its import cost one fetch. Nothing
+is written to Sleeper. ESPN remains CSV/manual only.

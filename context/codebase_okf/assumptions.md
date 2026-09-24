@@ -1057,3 +1057,12 @@ draft value contract's own definition. See that contract's correction note.
   through the existing `RosterSlot.Accepts` mapping; no multi-position eligibility.
 - Weekly acquisitions (owner): per league, default 7 (ESPN's common default),
   1–99, editable on create and in League settings.
+
+## Sleeper import — 2026-09-24
+
+- Owner: Sleeper only for now. Rosters and per-league eligibility are imported;
+  settings are compared and reported, never applied (no diff-and-confirm flow yet).
+- The user picks which Sleeper roster is theirs; the roster with an owner is
+  preselected. Unclaimed rosters are named "Team {roster id}".
+- Sleeper's per-player `injury_status` is available in the player map and is not
+  used yet; it is a candidate availability feed.

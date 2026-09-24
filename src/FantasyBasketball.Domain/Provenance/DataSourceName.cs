@@ -7,6 +7,7 @@ public static class DataSourceName
     public const string FantasyPros = "fantasypros";
     public const string Csv = "csv";
     public const string Manual = "manual";
+    public const string Sleeper = "sleeper";
 
     private static readonly HashSet<string> Values =
         new(StringComparer.Ordinal)
@@ -16,6 +17,7 @@ public static class DataSourceName
             FantasyPros,
             Csv,
             Manual,
+            Sleeper,
         };
 
     public static bool IsKnown(string value) => Values.Contains(value);

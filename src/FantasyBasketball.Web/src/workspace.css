@@ -176,3 +176,4 @@ main.landing{overflow-x:clip}
 .trade-result h2{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem}.trade-result .status{font-size:.95rem;letter-spacing:0;line-height:1.4;padding:.3rem .9rem}
 .verdict-ClearWin,.verdict-SlightWin{background:var(--ink);color:#fff}.verdict-ClearLoss,.verdict-SlightLoss{background:var(--accent);border-color:var(--accent);color:#fff}.verdict-Neutral{background:var(--lavender);border-color:var(--lavender)}
 .trade-sides{padding-left:1.1rem}
+.provider-teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:.4rem 1rem}.provider-notes{padding-left:1.1rem;color:var(--muted)}

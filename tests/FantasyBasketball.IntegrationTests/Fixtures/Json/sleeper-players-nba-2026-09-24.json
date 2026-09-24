@@ -1,0 +1,2080 @@
+{
+ "1000": {
+  "player_id": "1000",
+  "full_name": "Jimmy Butler",
+  "first_name": "Jimmy",
+  "last_name": "Butler",
+  "team": "GSW",
+  "position": "SF",
+  "fantasy_positions": [
+   "PF",
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1054": {
+  "player_id": "1054",
+  "full_name": "Kyrie Irving",
+  "first_name": "Kyrie",
+  "last_name": "Irving",
+  "team": "DAL",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1074": {
+  "player_id": "1074",
+  "full_name": "Paul George",
+  "first_name": "Paul",
+  "last_name": "George",
+  "team": "BOS",
+  "position": "SF",
+  "fantasy_positions": [
+   "PF",
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1081": {
+  "player_id": "1081",
+  "full_name": "Klay Thompson",
+  "first_name": "Klay",
+  "last_name": "Thompson",
+  "team": "MIA",
+  "position": "SF",
+  "fantasy_positions": [
+   "PF",
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1082": {
+  "player_id": "1082",
+  "full_name": "Draymond Green",
+  "first_name": "Draymond",
+  "last_name": "Green",
+  "team": "GSW",
+  "position": "PF",
+  "fantasy_positions": [
+   "C",
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1085": {
+  "player_id": "1085",
+  "full_name": "Stephen Curry",
+  "first_name": "Stephen",
+  "last_name": "Curry",
+  "team": "GSW",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1240": {
+  "player_id": "1240",
+  "full_name": "James Harden",
+  "first_name": "James",
+  "last_name": "Harden",
+  "team": "CLE",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1265": {
+  "player_id": "1265",
+  "full_name": "Jrue Holiday",
+  "first_name": "Jrue",
+  "last_name": "Holiday",
+  "team": "POR",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1272": {
+  "player_id": "1272",
+  "full_name": "Anthony Davis",
+  "first_name": "Anthony",
+  "last_name": "Davis",
+  "team": "WAS",
+  "position": "C",
+  "fantasy_positions": [
+   "C",
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1308": {
+  "player_id": "1308",
+  "full_name": "Kawhi Leonard",
+  "first_name": "Kawhi",
+  "last_name": "Leonard",
+  "team": "TOR",
+  "position": "SF",
+  "fantasy_positions": [
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1321": {
+  "player_id": "1321",
+  "full_name": "DeMar DeRozan",
+  "first_name": "DeMar",
+  "last_name": "DeRozan",
+  "team": "DEN",
+  "position": "SF",
+  "fantasy_positions": [
+   "PF",
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1350": {
+  "player_id": "1350",
+  "full_name": "Rudy Gobert",
+  "first_name": "Rudy",
+  "last_name": "Gobert",
+  "team": "MIN",
+  "position": "C",
+  "fantasy_positions": [
+   "C"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1362": {
+  "player_id": "1362",
+  "full_name": "LeBron James",
+  "first_name": "LeBron",
+  "last_name": "James",
+  "team": "PHI",
+  "position": "PF",
+  "fantasy_positions": [
+   "PF",
+   "PG",
+   "SF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1380": {
+  "player_id": "1380",
+  "full_name": "Giannis Antetokounmpo",
+  "first_name": "Giannis",
+  "last_name": "Antetokounmpo",
+  "team": "MIA",
+  "position": "PF",
+  "fantasy_positions": [
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1433": {
+  "player_id": "1433",
+  "full_name": "Kevin Durant",
+  "first_name": "Kevin",
+  "last_name": "Durant",
+  "team": "HOU",
+  "position": "SF",
+  "fantasy_positions": [
+   "PF",
+   "SF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1444": {
+  "player_id": "1444",
+  "full_name": "Damian Lillard",
+  "first_name": "Damian",
+  "last_name": "Lillard",
+  "team": "POR",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1450": {
+  "player_id": "1450",
+  "full_name": "CJ McCollum",
+  "first_name": "CJ",
+  "last_name": "McCollum",
+  "team": "ATL",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1486": {
+  "player_id": "1486",
+  "full_name": "Nikola Vučević",
+  "first_name": "Nikola",
+  "last_name": "Vučević",
+  "team": "ORL",
+  "position": "C",
+  "fantasy_positions": [
+   "C"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1487": {
+  "player_id": "1487",
+  "full_name": "Tobias Harris",
+  "first_name": "Tobias",
+  "last_name": "Harris",
+  "team": "SAS",
+  "position": "PF",
+  "fantasy_positions": [
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1511": {
+  "player_id": "1511",
+  "full_name": "Joel Embiid",
+  "first_name": "Joel",
+  "last_name": "Embiid",
+  "team": "PHI",
+  "position": "C",
+  "fantasy_positions": [
+   "C"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1525": {
+  "player_id": "1525",
+  "full_name": "Andrew Wiggins",
+  "first_name": "Andrew",
+  "last_name": "Wiggins",
+  "team": "MIA",
+  "position": "SF",
+  "fantasy_positions": [
+   "PF",
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1526": {
+  "player_id": "1526",
+  "full_name": "Zach LaVine",
+  "first_name": "Zach",
+  "last_name": "LaVine",
+  "team": "SAC",
+  "position": "SG",
+  "fantasy_positions": [
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1535": {
+  "player_id": "1535",
+  "full_name": "Julius Randle",
+  "first_name": "Julius",
+  "last_name": "Randle",
+  "team": "BKN",
+  "position": "PF",
+  "fantasy_positions": [
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1585": {
+  "player_id": "1585",
+  "full_name": "Aaron Gordon",
+  "first_name": "Aaron",
+  "last_name": "Gordon",
+  "team": "DEN",
+  "position": "PF",
+  "fantasy_positions": [
+   "C",
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1590": {
+  "player_id": "1590",
+  "full_name": "Kristaps Porziņģis",
+  "first_name": "Kristaps",
+  "last_name": "Porziņģis",
+  "team": "GSW",
+  "position": "C",
+  "fantasy_positions": [
+   "C"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1595": {
+  "player_id": "1595",
+  "full_name": "Myles Turner",
+  "first_name": "Myles",
+  "last_name": "Turner",
+  "team": "MIL",
+  "position": "C",
+  "fantasy_positions": [
+   "C"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1604": {
+  "player_id": "1604",
+  "full_name": "Kelly Oubre",
+  "first_name": "Kelly",
+  "last_name": "Oubre",
+  "team": "IND",
+  "position": "PF",
+  "fantasy_positions": [
+   "PF",
+   "SF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1613": {
+  "player_id": "1613",
+  "full_name": "Karl-Anthony Towns",
+  "first_name": "Karl-Anthony",
+  "last_name": "Towns",
+  "team": "NYK",
+  "position": "C",
+  "fantasy_positions": [
+   "C",
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1637": {
+  "player_id": "1637",
+  "full_name": "Norman Powell",
+  "first_name": "Norman",
+  "last_name": "Powell",
+  "team": "CHI",
+  "position": "SF",
+  "fantasy_positions": [
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1648": {
+  "player_id": "1648",
+  "full_name": "Devin Booker",
+  "first_name": "Devin",
+  "last_name": "Booker",
+  "team": "PHX",
+  "position": "SG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1658": {
+  "player_id": "1658",
+  "full_name": "Nikola Jokić",
+  "first_name": "Nikola",
+  "last_name": "Jokić",
+  "team": "DEN",
+  "position": "C",
+  "fantasy_positions": [
+   "C"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1697": {
+  "player_id": "1697",
+  "full_name": "Ivica Zubac",
+  "first_name": "Ivica",
+  "last_name": "Zubac",
+  "team": "IND",
+  "position": "C",
+  "fantasy_positions": [
+   "C"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1698": {
+  "player_id": "1698",
+  "full_name": "Brandon Ingram",
+  "first_name": "Brandon",
+  "last_name": "Ingram",
+  "team": "LAC",
+  "position": "SF",
+  "fantasy_positions": [
+   "PF",
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1711": {
+  "player_id": "1711",
+  "full_name": "Jaylen Brown",
+  "first_name": "Jaylen",
+  "last_name": "Brown",
+  "team": "PHI",
+  "position": "SF",
+  "fantasy_positions": [
+   "PF",
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1713": {
+  "player_id": "1713",
+  "full_name": "Dejounte Murray",
+  "first_name": "Dejounte",
+  "last_name": "Murray",
+  "team": "NOP",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1716": {
+  "player_id": "1716",
+  "full_name": "Pascal Siakam",
+  "first_name": "Pascal",
+  "last_name": "Siakam",
+  "team": "IND",
+  "position": "PF",
+  "fantasy_positions": [
+   "C",
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1718": {
+  "player_id": "1718",
+  "full_name": "Jakob Poeltl",
+  "first_name": "Jakob",
+  "last_name": "Poeltl",
+  "team": "TOR",
+  "position": "C",
+  "fantasy_positions": [
+   "C"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1739": {
+  "player_id": "1739",
+  "full_name": "Domantas Sabonis",
+  "first_name": "Domantas",
+  "last_name": "Sabonis",
+  "team": "SAC",
+  "position": "C",
+  "fantasy_positions": [
+   "C",
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1747": {
+  "player_id": "1747",
+  "full_name": "Jamal Murray",
+  "first_name": "Jamal",
+  "last_name": "Murray",
+  "team": "DEN",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1752": {
+  "player_id": "1752",
+  "full_name": "Lauri Markkanen",
+  "first_name": "Lauri",
+  "last_name": "Markkanen",
+  "team": "UTA",
+  "position": "PF",
+  "fantasy_positions": [
+   "PF",
+   "SF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1779": {
+  "player_id": "1779",
+  "full_name": "Malik Monk",
+  "first_name": "Malik",
+  "last_name": "Monk",
+  "team": "SAC",
+  "position": "SG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1787": {
+  "player_id": "1787",
+  "full_name": "Jarrett Allen",
+  "first_name": "Jarrett",
+  "last_name": "Allen",
+  "team": "CLE",
+  "position": "C",
+  "fantasy_positions": [
+   "C"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1792": {
+  "player_id": "1792",
+  "full_name": "Dillon Brooks",
+  "first_name": "Dillon",
+  "last_name": "Brooks",
+  "team": "PHX",
+  "position": "SF",
+  "fantasy_positions": [
+   "PF",
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1803": {
+  "player_id": "1803",
+  "full_name": "Josh Hart",
+  "first_name": "Josh",
+  "last_name": "Hart",
+  "team": "NYK",
+  "position": "SG",
+  "fantasy_positions": [
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1809": {
+  "player_id": "1809",
+  "full_name": "John Collins",
+  "first_name": "John",
+  "last_name": "Collins",
+  "team": "DET",
+  "position": "PF",
+  "fantasy_positions": [
+   "C",
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1822": {
+  "player_id": "1822",
+  "full_name": "Jayson Tatum",
+  "first_name": "Jayson",
+  "last_name": "Tatum",
+  "team": "BOS",
+  "position": "SF",
+  "fantasy_positions": [
+   "PF",
+   "SF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1830": {
+  "player_id": "1830",
+  "full_name": "Derrick White",
+  "first_name": "Derrick",
+  "last_name": "White",
+  "team": "BOS",
+  "position": "SG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1831": {
+  "player_id": "1831",
+  "full_name": "OG Anunoby",
+  "first_name": "OG",
+  "last_name": "Anunoby",
+  "team": "NYK",
+  "position": "PF",
+  "fantasy_positions": [
+   "PF",
+   "SF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1845": {
+  "player_id": "1845",
+  "full_name": "Donovan Mitchell",
+  "first_name": "Donovan",
+  "last_name": "Mitchell",
+  "team": "CLE",
+  "position": "SG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1846": {
+  "player_id": "1846",
+  "full_name": "Bam Adebayo",
+  "first_name": "Bam",
+  "last_name": "Adebayo",
+  "team": "MIA",
+  "position": "C",
+  "fantasy_positions": [
+   "C",
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1872": {
+  "player_id": "1872",
+  "full_name": "De'Aaron Fox",
+  "first_name": "De'Aaron",
+  "last_name": "Fox",
+  "team": "SAS",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1913": {
+  "player_id": "1913",
+  "full_name": "Miles Bridges",
+  "first_name": "Miles",
+  "last_name": "Bridges",
+  "team": "PHX",
+  "position": "PF",
+  "fantasy_positions": [
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1924": {
+  "player_id": "1924",
+  "full_name": "Jaren Jackson",
+  "first_name": "Jaren",
+  "last_name": "Jackson",
+  "team": "UTA",
+  "position": "C",
+  "fantasy_positions": [
+   "C",
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1934": {
+  "player_id": "1934",
+  "full_name": "Isaiah Hartenstein",
+  "first_name": "Isaiah",
+  "last_name": "Hartenstein",
+  "team": "OKC",
+  "position": "C",
+  "fantasy_positions": [
+   "C"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1945": {
+  "player_id": "1945",
+  "full_name": "Trae Young",
+  "first_name": "Trae",
+  "last_name": "Young",
+  "team": "WAS",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1957": {
+  "player_id": "1957",
+  "full_name": "Shai Gilgeous-Alexander",
+  "first_name": "Shai",
+  "last_name": "Gilgeous-Alexander",
+  "team": "OKC",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1964": {
+  "player_id": "1964",
+  "full_name": "Donte DiVincenzo",
+  "first_name": "Donte",
+  "last_name": "DiVincenzo",
+  "team": "MIN",
+  "position": "SG",
+  "fantasy_positions": [
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1967": {
+  "player_id": "1967",
+  "full_name": "Jalen Brunson",
+  "first_name": "Jalen",
+  "last_name": "Brunson",
+  "team": "NYK",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1970": {
+  "player_id": "1970",
+  "full_name": "Luka Dončić",
+  "first_name": "Luka",
+  "last_name": "Dončić",
+  "team": "LAL",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1974": {
+  "player_id": "1974",
+  "full_name": "Deandre Ayton",
+  "first_name": "Deandre",
+  "last_name": "Ayton",
+  "team": "WAS",
+  "position": "C",
+  "fantasy_positions": [
+   "C"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1975": {
+  "player_id": "1975",
+  "full_name": "Mikal Bridges",
+  "first_name": "Mikal",
+  "last_name": "Bridges",
+  "team": "NYK",
+  "position": "SF",
+  "fantasy_positions": [
+   "PF",
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1983": {
+  "player_id": "1983",
+  "full_name": "Anfernee Simons",
+  "first_name": "Anfernee",
+  "last_name": "Simons",
+  "team": "PHI",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1988": {
+  "player_id": "1988",
+  "full_name": "Michael Porter",
+  "first_name": "Michael",
+  "last_name": "Porter",
+  "team": "BKN",
+  "position": "SF",
+  "fantasy_positions": [
+   "PF",
+   "SF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "1998": {
+  "player_id": "1998",
+  "full_name": "Coby White",
+  "first_name": "Coby",
+  "last_name": "White",
+  "team": "CHA",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2001": {
+  "player_id": "2001",
+  "full_name": "RJ Barrett",
+  "first_name": "RJ",
+  "last_name": "Barrett",
+  "team": "TOR",
+  "position": "SF",
+  "fantasy_positions": [
+   "PF",
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2007": {
+  "player_id": "2007",
+  "full_name": "Darius Garland",
+  "first_name": "Darius",
+  "last_name": "Garland",
+  "team": "LAC",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2009": {
+  "player_id": "2009",
+  "full_name": "Kevin Porter",
+  "first_name": "Kevin",
+  "last_name": "Porter",
+  "team": "MIL",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2012": {
+  "player_id": "2012",
+  "full_name": "Jordan Poole",
+  "first_name": "Jordan",
+  "last_name": "Poole",
+  "team": "NOP",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2029": {
+  "player_id": "2029",
+  "full_name": "P.J. Washington",
+  "first_name": "P.J.",
+  "last_name": "Washington",
+  "team": "DAL",
+  "position": "PF",
+  "fantasy_positions": [
+   "C",
+   "PF",
+   "SF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2032": {
+  "player_id": "2032",
+  "full_name": "Nic Claxton",
+  "first_name": "Nic",
+  "last_name": "Claxton",
+  "team": "CHI",
+  "position": "C",
+  "fantasy_positions": [
+   "C",
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2036": {
+  "player_id": "2036",
+  "full_name": "Naz Reid",
+  "first_name": "Naz",
+  "last_name": "Reid",
+  "team": "CHA",
+  "position": "C",
+  "fantasy_positions": [
+   "C",
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2040": {
+  "player_id": "2040",
+  "full_name": "Ja Morant",
+  "first_name": "Ja",
+  "last_name": "Morant",
+  "team": "POR",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2054": {
+  "player_id": "2054",
+  "full_name": "Zion Williamson",
+  "first_name": "Zion",
+  "last_name": "Williamson",
+  "team": "NOP",
+  "position": "PF",
+  "fantasy_positions": [
+   "PF",
+   "SF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2055": {
+  "player_id": "2055",
+  "full_name": "Nickeil Alexander-Walker",
+  "first_name": "Nickeil",
+  "last_name": "Alexander-Walker",
+  "team": "ATL",
+  "position": "SG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2086": {
+  "player_id": "2086",
+  "full_name": "Tyler Herro",
+  "first_name": "Tyler",
+  "last_name": "Herro",
+  "team": "MIL",
+  "position": "SG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2091": {
+  "player_id": "2091",
+  "full_name": "Cameron Johnson",
+  "first_name": "Cameron",
+  "last_name": "Johnson",
+  "team": "DEN",
+  "position": "SF",
+  "fantasy_positions": [
+   "PF",
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2126": {
+  "player_id": "2126",
+  "full_name": "Tyrese Maxey",
+  "first_name": "Tyrese",
+  "last_name": "Maxey",
+  "team": "PHI",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2133": {
+  "player_id": "2133",
+  "full_name": "Anthony Edwards",
+  "first_name": "Anthony",
+  "last_name": "Edwards",
+  "team": "MIN",
+  "position": "SG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2135": {
+  "player_id": "2135",
+  "full_name": "Jaden McDaniels",
+  "first_name": "Jaden",
+  "last_name": "McDaniels",
+  "team": "MIN",
+  "position": "SF",
+  "fantasy_positions": [
+   "PF",
+   "SF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2136": {
+  "player_id": "2136",
+  "full_name": "Onyeka Okongwu",
+  "first_name": "Onyeka",
+  "last_name": "Okongwu",
+  "team": "ATL",
+  "position": "C",
+  "fantasy_positions": [
+   "C"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2142": {
+  "player_id": "2142",
+  "full_name": "Payton Pritchard",
+  "first_name": "Payton",
+  "last_name": "Pritchard",
+  "team": "BOS",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2143": {
+  "player_id": "2143",
+  "full_name": "Desmond Bane",
+  "first_name": "Desmond",
+  "last_name": "Bane",
+  "team": "ORL",
+  "position": "SG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2144": {
+  "player_id": "2144",
+  "full_name": "Aaron Nesmith",
+  "first_name": "Aaron",
+  "last_name": "Nesmith",
+  "team": "IND",
+  "position": "SF",
+  "fantasy_positions": [
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2146": {
+  "player_id": "2146",
+  "full_name": "Devin Vassell",
+  "first_name": "Devin",
+  "last_name": "Vassell",
+  "team": "SAS",
+  "position": "SF",
+  "fantasy_positions": [
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2157": {
+  "player_id": "2157",
+  "full_name": "Immanuel Quickley",
+  "first_name": "Immanuel",
+  "last_name": "Quickley",
+  "team": "TOR",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2161": {
+  "player_id": "2161",
+  "full_name": "Tyrese Haliburton",
+  "first_name": "Tyrese",
+  "last_name": "Haliburton",
+  "team": "IND",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2179": {
+  "player_id": "2179",
+  "full_name": "LaMelo Ball",
+  "first_name": "LaMelo",
+  "last_name": "Ball",
+  "team": "MIN",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2181": {
+  "player_id": "2181",
+  "full_name": "Deni Avdija",
+  "first_name": "Deni",
+  "last_name": "Avdija",
+  "team": "POR",
+  "position": "PF",
+  "fantasy_positions": [
+   "PF",
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2255": {
+  "player_id": "2255",
+  "full_name": "Ayo Dosunmu",
+  "first_name": "Ayo",
+  "last_name": "Dosunmu",
+  "team": "MIN",
+  "position": "SG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2259": {
+  "player_id": "2259",
+  "full_name": "Evan Mobley",
+  "first_name": "Evan",
+  "last_name": "Mobley",
+  "team": "CLE",
+  "position": "C",
+  "fantasy_positions": [
+   "C",
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2267": {
+  "player_id": "2267",
+  "full_name": "Cade Cunningham",
+  "first_name": "Cade",
+  "last_name": "Cunningham",
+  "team": "DET",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2278": {
+  "player_id": "2278",
+  "full_name": "Cam Thomas",
+  "first_name": "Cam",
+  "last_name": "Thomas",
+  "team": null,
+  "position": "SG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2281": {
+  "player_id": "2281",
+  "full_name": "Santi Aldama",
+  "first_name": "Santi",
+  "last_name": "Aldama",
+  "team": "DAL",
+  "position": "PF",
+  "fantasy_positions": [
+   "PF",
+   "SF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2284": {
+  "player_id": "2284",
+  "full_name": "Jalen Johnson",
+  "first_name": "Jalen",
+  "last_name": "Johnson",
+  "team": "ATL",
+  "position": "PF",
+  "fantasy_positions": [
+   "PF",
+   "SF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2285": {
+  "player_id": "2285",
+  "full_name": "Trey Murphy",
+  "first_name": "Trey",
+  "last_name": "Murphy",
+  "team": "NOP",
+  "position": "SG",
+  "fantasy_positions": [
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2289": {
+  "player_id": "2289",
+  "full_name": "Scottie Barnes",
+  "first_name": "Scottie",
+  "last_name": "Barnes",
+  "team": "TOR",
+  "position": "PF",
+  "fantasy_positions": [
+   "PF",
+   "SF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2304": {
+  "player_id": "2304",
+  "full_name": "Franz Wagner",
+  "first_name": "Franz",
+  "last_name": "Wagner",
+  "team": "ORL",
+  "position": "SF",
+  "fantasy_positions": [
+   "PF",
+   "SF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2305": {
+  "player_id": "2305",
+  "full_name": "Jalen Suggs",
+  "first_name": "Jalen",
+  "last_name": "Suggs",
+  "team": "ORL",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2308": {
+  "player_id": "2308",
+  "full_name": "Alperen Şengün",
+  "first_name": "Alperen",
+  "last_name": "Şengün",
+  "team": "HOU",
+  "position": "C",
+  "fantasy_positions": [
+   "C",
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2309": {
+  "player_id": "2309",
+  "full_name": "Jalen Green",
+  "first_name": "Jalen",
+  "last_name": "Green",
+  "team": "PHX",
+  "position": "SG",
+  "fantasy_positions": [
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2313": {
+  "player_id": "2313",
+  "full_name": "Josh Giddey",
+  "first_name": "Josh",
+  "last_name": "Giddey",
+  "team": "CHI",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2316": {
+  "player_id": "2316",
+  "full_name": "Austin Reaves",
+  "first_name": "Austin",
+  "last_name": "Reaves",
+  "team": "LAL",
+  "position": "SG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2435": {
+  "player_id": "2435",
+  "full_name": "Bennedict Mathurin",
+  "first_name": "Bennedict",
+  "last_name": "Mathurin",
+  "team": "NOP",
+  "position": "SF",
+  "fantasy_positions": [
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2438": {
+  "player_id": "2438",
+  "full_name": "Jalen Duren",
+  "first_name": "Jalen",
+  "last_name": "Duren",
+  "team": "DET",
+  "position": "C",
+  "fantasy_positions": [
+   "C"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2441": {
+  "player_id": "2441",
+  "full_name": "Walker Kessler",
+  "first_name": "Walker",
+  "last_name": "Kessler",
+  "team": "LAL",
+  "position": "C",
+  "fantasy_positions": [
+   "C"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2445": {
+  "player_id": "2445",
+  "full_name": "Jabari Smith",
+  "first_name": "Jabari",
+  "last_name": "Smith",
+  "team": "HOU",
+  "position": "PF",
+  "fantasy_positions": [
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2447": {
+  "player_id": "2447",
+  "full_name": "Tari Eason",
+  "first_name": "Tari",
+  "last_name": "Eason",
+  "team": "HOU",
+  "position": "SG",
+  "fantasy_positions": [
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2449": {
+  "player_id": "2449",
+  "full_name": "Dyson Daniels",
+  "first_name": "Dyson",
+  "last_name": "Daniels",
+  "team": "ATL",
+  "position": "SG",
+  "fantasy_positions": [
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2453": {
+  "player_id": "2453",
+  "full_name": "Jalen Williams",
+  "first_name": "Jalen",
+  "last_name": "Williams",
+  "team": "OKC",
+  "position": "PF",
+  "fantasy_positions": [
+   "PF",
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2454": {
+  "player_id": "2454",
+  "full_name": "Peyton Watson",
+  "first_name": "Peyton",
+  "last_name": "Watson",
+  "team": "CLE",
+  "position": "SF",
+  "fantasy_positions": [
+   "PF",
+   "SF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2455": {
+  "player_id": "2455",
+  "full_name": "Chet Holmgren",
+  "first_name": "Chet",
+  "last_name": "Holmgren",
+  "team": "OKC",
+  "position": "C",
+  "fantasy_positions": [
+   "C",
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2456": {
+  "player_id": "2456",
+  "full_name": "Keegan Murray",
+  "first_name": "Keegan",
+  "last_name": "Murray",
+  "team": "SAC",
+  "position": "PF",
+  "fantasy_positions": [
+   "PF",
+   "SF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2457": {
+  "player_id": "2457",
+  "full_name": "Christian Braun",
+  "first_name": "Christian",
+  "last_name": "Braun",
+  "team": "DEN",
+  "position": "SG",
+  "fantasy_positions": [
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2458": {
+  "player_id": "2458",
+  "full_name": "Paolo Banchero",
+  "first_name": "Paolo",
+  "last_name": "Banchero",
+  "team": "ORL",
+  "position": "PF",
+  "fantasy_positions": [
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2461": {
+  "player_id": "2461",
+  "full_name": "Andrew Nembhard",
+  "first_name": "Andrew",
+  "last_name": "Nembhard",
+  "team": "IND",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2463": {
+  "player_id": "2463",
+  "full_name": "Ryan Rollins",
+  "first_name": "Ryan",
+  "last_name": "Rollins",
+  "team": "MIL",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2476": {
+  "player_id": "2476",
+  "full_name": "Shaedon Sharpe",
+  "first_name": "Shaedon",
+  "last_name": "Sharpe",
+  "team": "POR",
+  "position": "SG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2564": {
+  "player_id": "2564",
+  "full_name": "Brandin Podziemski",
+  "first_name": "Brandin",
+  "last_name": "Podziemski",
+  "team": "GSW",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2566": {
+  "player_id": "2566",
+  "full_name": "Ausar Thompson",
+  "first_name": "Ausar",
+  "last_name": "Thompson",
+  "team": "DET",
+  "position": "SG",
+  "fantasy_positions": [
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2568": {
+  "player_id": "2568",
+  "full_name": "Brandon Miller",
+  "first_name": "Brandon",
+  "last_name": "Miller",
+  "team": "CHA",
+  "position": "SF",
+  "fantasy_positions": [
+   "PF",
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2574": {
+  "player_id": "2574",
+  "full_name": "Amen Thompson",
+  "first_name": "Amen",
+  "last_name": "Thompson",
+  "team": "HOU",
+  "position": "SG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2577": {
+  "player_id": "2577",
+  "full_name": "Victor Wembanyama",
+  "first_name": "Victor",
+  "last_name": "Wembanyama",
+  "team": "SAS",
+  "position": "C",
+  "fantasy_positions": [
+   "C"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2580": {
+  "player_id": "2580",
+  "full_name": "Keyonte George",
+  "first_name": "Keyonte",
+  "last_name": "George",
+  "team": "UTA",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2583": {
+  "player_id": "2583",
+  "full_name": "Jaime Jaquez",
+  "first_name": "Jaime",
+  "last_name": "Jaquez",
+  "team": "MIL",
+  "position": "PF",
+  "fantasy_positions": [
+   "PF",
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2586": {
+  "player_id": "2586",
+  "full_name": "Cason Wallace",
+  "first_name": "Cason",
+  "last_name": "Wallace",
+  "team": "OKC",
+  "position": "SG",
+  "fantasy_positions": [
+   "PG",
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2590": {
+  "player_id": "2590",
+  "full_name": "Anthony Black",
+  "first_name": "Anthony",
+  "last_name": "Black",
+  "team": "ORL",
+  "position": "SG",
+  "fantasy_positions": [
+   "PG",
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2613": {
+  "player_id": "2613",
+  "full_name": "Toumani Camara",
+  "first_name": "Toumani",
+  "last_name": "Camara",
+  "team": "POR",
+  "position": "SF",
+  "fantasy_positions": [
+   "PF",
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2620": {
+  "player_id": "2620",
+  "full_name": "Scoot Henderson",
+  "first_name": "Scoot",
+  "last_name": "Henderson",
+  "team": "POR",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2714": {
+  "player_id": "2714",
+  "full_name": "Kyshawn George",
+  "first_name": "Kyshawn",
+  "last_name": "George",
+  "team": "WAS",
+  "position": "SF",
+  "fantasy_positions": [
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2718": {
+  "player_id": "2718",
+  "full_name": "Zach Edey",
+  "first_name": "Zach",
+  "last_name": "Edey",
+  "team": "MEM",
+  "position": "C",
+  "fantasy_positions": [
+   "C"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2719": {
+  "player_id": "2719",
+  "full_name": "Reed Sheppard",
+  "first_name": "Reed",
+  "last_name": "Sheppard",
+  "team": "HOU",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2722": {
+  "player_id": "2722",
+  "full_name": "Stephon Castle",
+  "first_name": "Stephon",
+  "last_name": "Castle",
+  "team": "SAS",
+  "position": "SG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2726": {
+  "player_id": "2726",
+  "full_name": "Kel'el Ware",
+  "first_name": "Kel'el",
+  "last_name": "Ware",
+  "team": "MIL",
+  "position": "C",
+  "fantasy_positions": [
+   "C",
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2728": {
+  "player_id": "2728",
+  "full_name": "Donovan Clingan",
+  "first_name": "Donovan",
+  "last_name": "Clingan",
+  "team": "POR",
+  "position": "C",
+  "fantasy_positions": [
+   "C"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2733": {
+  "player_id": "2733",
+  "full_name": "Alex Sarr",
+  "first_name": "Alex",
+  "last_name": "Sarr",
+  "team": "WAS",
+  "position": "C",
+  "fantasy_positions": [
+   "C"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "2835": {
+  "player_id": "2835",
+  "full_name": "Matas Buzelis",
+  "first_name": "Matas",
+  "last_name": "Buzelis",
+  "team": "CHI",
+  "position": "PF",
+  "fantasy_positions": [
+   "PF",
+   "SF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "4737": {
+  "player_id": "4737",
+  "full_name": "VJ Edgecombe",
+  "first_name": "VJ",
+  "last_name": "Edgecombe",
+  "team": "PHI",
+  "position": "SG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "4740": {
+  "player_id": "4740",
+  "full_name": "Kon Knueppel",
+  "first_name": "Kon",
+  "last_name": "Knueppel",
+  "team": "CHA",
+  "position": "SG",
+  "fantasy_positions": [
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "4748": {
+  "player_id": "4748",
+  "full_name": "Cedric Coward",
+  "first_name": "Cedric",
+  "last_name": "Coward",
+  "team": "MEM",
+  "position": "SG",
+  "fantasy_positions": [
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "4751": {
+  "player_id": "4751",
+  "full_name": "Derik Queen",
+  "first_name": "Derik",
+  "last_name": "Queen",
+  "team": "NOP",
+  "position": "C",
+  "fantasy_positions": [
+   "C",
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "4754": {
+  "player_id": "4754",
+  "full_name": "Dylan Harper",
+  "first_name": "Dylan",
+  "last_name": "Harper",
+  "team": "SAS",
+  "position": "SG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "4755": {
+  "player_id": "4755",
+  "full_name": "Collin Murray-Boyles",
+  "first_name": "Collin",
+  "last_name": "Murray-Boyles",
+  "team": "TOR",
+  "position": "C",
+  "fantasy_positions": [
+   "C",
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "4758": {
+  "player_id": "4758",
+  "full_name": "Ace Bailey",
+  "first_name": "Ace",
+  "last_name": "Bailey",
+  "team": "UTA",
+  "position": "SF",
+  "fantasy_positions": [
+   "PF",
+   "SF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "4760": {
+  "player_id": "4760",
+  "full_name": "Cooper Flagg",
+  "first_name": "Cooper",
+  "last_name": "Flagg",
+  "team": "DAL",
+  "position": "SG",
+  "fantasy_positions": [
+   "PG",
+   "SF",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "4862": {
+  "player_id": "4862",
+  "full_name": "Caleb Wilson",
+  "first_name": "Caleb",
+  "last_name": "Wilson",
+  "team": "CHI",
+  "position": "PF",
+  "fantasy_positions": [
+   "PF",
+   "SF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "4864": {
+  "player_id": "4864",
+  "full_name": "Yaxel Lendeborg",
+  "first_name": "Yaxel",
+  "last_name": "Lendeborg",
+  "team": "GSW",
+  "position": "PF",
+  "fantasy_positions": [
+   "PF",
+   "SF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "4866": {
+  "player_id": "4866",
+  "full_name": "AJ Dybantsa",
+  "first_name": "AJ",
+  "last_name": "Dybantsa",
+  "team": "WAS",
+  "position": "PF",
+  "fantasy_positions": [
+   "PF",
+   "SF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "4871": {
+  "player_id": "4871",
+  "full_name": "Mikel Brown",
+  "first_name": "Mikel",
+  "last_name": "Brown",
+  "team": "BKN",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "4873": {
+  "player_id": "4873",
+  "full_name": "Cameron Boozer",
+  "first_name": "Cameron",
+  "last_name": "Boozer",
+  "team": "MEM",
+  "position": "C",
+  "fantasy_positions": [
+   "C",
+   "PF"
+  ],
+  "active": true,
+  "sport": "nba"
+ },
+ "4882": {
+  "player_id": "4882",
+  "full_name": "Darryn Peterson",
+  "first_name": "Darryn",
+  "last_name": "Peterson",
+  "team": "UTA",
+  "position": "PG",
+  "fantasy_positions": [
+   "PG",
+   "SG"
+  ],
+  "active": true,
+  "sport": "nba"
+ }
+}

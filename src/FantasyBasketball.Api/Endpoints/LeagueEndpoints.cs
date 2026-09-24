@@ -17,6 +17,8 @@ public sealed record TradeLegRequest(Guid FromTeamId, Guid ToTeamId, Guid Player
 
 public sealed record TradeRequest(IReadOnlyList<TradeLegRequest>? Legs);
 
+public sealed record SleeperImportRequest(string? SleeperLeagueId, string? MyTeamId);
+
 public sealed record ScoringRuleRequest(string Stat, decimal PointsPerUnit);
 
 public sealed record CreateLeagueRequest(
@@ -80,6 +82,10 @@ public static class LeagueEndpoints
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
         group.MapPost("/{id:guid}/trades/evaluate", EvaluateTradeAsync)
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
+        group.MapGet("/{id:guid}/providers/sleeper/{sleeperLeagueId}", PreviewSleeperAsync)
+            .WithMetadata(new OwnedRouteMetadata("league", "id"));
+        group.MapPost("/{id:guid}/providers/sleeper/import", ImportSleeperAsync)
+            .WithMetadata(new OwnedRouteMetadata("league", "id"));
         return endpoints;
     }
 
@@ -139,6 +145,40 @@ public static class LeagueEndpoints
         }
 
         return ApiResults.Success(await service.WeekAsync(id, opponent, day, cancellationToken));
+    }
+
+    public static async Task<IResult> PreviewSleeperAsync(
+        Guid id, string sleeperLeagueId, LeagueImportService service,
+        OwnedResourceAuthorizationService authorization, CancellationToken cancellationToken)
+    {
+        await authorization.RequireLeagueAsync(id, cancellationToken);
+        return await ProviderCallAsync(() => service.PreviewAsync(id, sleeperLeagueId, cancellationToken));
+    }
+
+    public static async Task<IResult> ImportSleeperAsync(
+        Guid id, SleeperImportRequest request, LeagueImportService service,
+        OwnedResourceAuthorizationService authorization, CancellationToken cancellationToken)
+    {
+        await authorization.RequireLeagueAsync(id, cancellationToken);
+        return await ProviderCallAsync(() => service.ImportAsync(id, request.SleeperLeagueId ?? string.Empty,
+            request.MyTeamId ?? string.Empty, cancellationToken));
+    }
+
+    // Provider failures are the user's input or the provider's answer, never a 500.
+    private static async Task<IResult> ProviderCallAsync<T>(Func<Task<T>> call)
+    {
+        try
+        {
+            return ApiResults.Success(await call());
+        }
+        catch (Exception exception) when (exception is ArgumentException or KeyNotFoundException or InvalidDataException)
+        {
+            throw new RequestValidationException(new Dictionary<string, string[]> { ["sleeper"] = [exception.Message] });
+        }
+        catch (HttpRequestException)
+        {
+            throw new RequestValidationException(new Dictionary<string, string[]> { ["sleeper"] = ["Sleeper did not answer. Try again in a minute."] });
+        }
     }
 
     public static async Task<IResult> EvaluateTradeAsync(

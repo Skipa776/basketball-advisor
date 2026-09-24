@@ -165,3 +165,21 @@ anything else fails by line) and will be filled by platform imports. **Only the
 draft uses it for now** (`DraftCandidateRepository`); streaming and trades keep the
 primary position. Evidence: `Csv_positions_become_league_eligibility_for_matched_players`,
 the eligibility step in `ProjectionPublicationTests`, `U14_…` with an eligibility row.
+
+## Sleeper — validated 2026-09-24
+
+The four endpoints in the scraping policy were validated against a real 10-team
+NBA league (owner's test league) and committed as anonymized fixtures
+(`Fixtures/Json/sleeper-*-2026-09-24.json`: names and ids replaced, player map cut
+to rostered players). Import flow: preview (`GET
+/api/leagues/{id}/providers/sleeper/{sleeperLeagueId}`) lists the teams and every
+setting difference; import (`POST …/providers/sleeper/import` with the user's
+chosen roster) replaces rosters, resolves players through the identity resolver
+(unresolved → pending matches, reported) and saves each player's Sleeper
+`fantasy_positions` as league eligibility. **Settings are never applied**: team
+count and lineup differences are reported, and Sleeper scoring with stats the app
+does not track (double-doubles, triple-doubles, 40/50-point bonuses, flagrant and
+technical fouls in the test league) is refused by name, per the fail-loud rule.
+Live run: preview 40 s at the policy rate, import 0.8 s, 10 teams, 150 players,
+0 pending, 150 eligibility rows. Evidence: `SleeperLeagueProviderTests`,
+`LeagueImportServiceTests`, the 26-route isolation sweep.
