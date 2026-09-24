@@ -53,6 +53,8 @@ public sealed class FantasyDbContext
 
     public DbSet<LeagueEligibilityRow> LeagueEligibility => Set<LeagueEligibilityRow>();
 
+    public DbSet<PlayerAvailabilityRow> PlayerAvailability => Set<PlayerAvailabilityRow>();
+
     public DbSet<SeasonStatLineRow> SeasonStatLines => Set<SeasonStatLineRow>();
 
     public DbSet<NbaGameRow> NbaGames => Set<NbaGameRow>();

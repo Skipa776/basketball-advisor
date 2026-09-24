@@ -25,7 +25,7 @@ public sealed class LeagueImportServiceTests
         ]);
 
     private LeagueImportService Service(ExternalLeagueSnapshot snapshot) => new(store, store, store, store,
-        new PlayerIdentityResolver(store, TimeProvider.System), new FakeProvider(snapshot), new LeagueRosterService(store, store, store, store));
+        new PlayerIdentityResolver(store, TimeProvider.System), new FakeProvider(snapshot), new LeagueRosterService(store, store, store, store, store));
 
     [Fact]
     public void Settings_that_cannot_be_represented_are_named_and_differences_are_reported_not_applied()
@@ -73,8 +73,15 @@ public sealed class LeagueImportServiceTests
         public Task<ExternalLeagueSnapshot> GetLeagueAsync(string externalLeagueId, CancellationToken cancellationToken) => Task.FromResult(snapshot);
     }
 
-    private sealed class Store : ILeagueRepository, ILeagueTeamRepository, IPlayerRepository, ILeagueEligibilityRepository, ITeamRepository
+    private sealed class Store : ILeagueRepository, ILeagueTeamRepository, IPlayerRepository, ILeagueEligibilityRepository, ITeamRepository, IAvailabilityRepository
     {
+        public IReadOnlyDictionary<PlayerId, PlayerAvailability> Injuries { get; set; } = new Dictionary<PlayerId, PlayerAvailability>();
+
+        public Task ReplaceAsync(string source, IReadOnlyList<PlayerAvailability> reports, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        Task<IReadOnlyDictionary<PlayerId, PlayerAvailability>> IAvailabilityRepository.ListAsync(CancellationToken cancellationToken) => Task.FromResult(Injuries);
+
         private readonly List<Player> players = [];
         private readonly List<ExternalPlayerIdentity> identities = [];
 

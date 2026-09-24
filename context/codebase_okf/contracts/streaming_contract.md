@@ -157,6 +157,9 @@ decision days plus one improvement pass, the acquisition limit, IR and
 rest-of-season drop protection, and deterministic ordering. A move's gain is the
 change in the whole lineup's usable value from its day onward, which is the
 contract's `SV(add) − SV(drop)` with slot competition included. With no stored
-opponent defence and no injury feed, `MatchupAdjustment` is 1.0 and availability
-1.0, each stated as plan evidence. User-marked protection is not built. Rows
+opponent defence, `MatchupAdjustment` is 1.0, stated as plan evidence.
+Availability comes from the imported Sleeper injury report: 0 for Out, IR and
+suspended players when the report was fetched within two days of the plan's
+day (`CurrentAvailability`), otherwise 1.0 with the report named as not applied
+(a replayed past season never uses today's injuries). User-marked protection is not built. Rows
 S-20…S-28 are evidenced in `tests/FantasyBasketball.Domain.Tests/Streaming`.

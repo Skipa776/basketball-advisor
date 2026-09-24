@@ -9,6 +9,7 @@ public enum ImportJobKind
     SeasonStats,
     Adp,
     BoxScores,
+    Availability,
 }
 
 public sealed record ImportJobRequest(

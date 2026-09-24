@@ -1,3 +1,4 @@
+using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Application.Abstractions;
 using FantasyBasketball.Application.Common;
 using FantasyBasketball.Application.Landing;
@@ -10,7 +11,8 @@ namespace FantasyBasketball.Application.Leagues;
 /// rostered player. Without imported rosters it leaves out the featured stars instead
 /// and says so, rather than presenting rostered players as available.
 /// </summary>
-public sealed class LeagueWaiverService(ILeagueRepository leagues, ILeagueTeamRepository teams, LandingService landing)
+public sealed class LeagueWaiverService(ILeagueRepository leagues, ILeagueTeamRepository teams, LandingService landing,
+    IAvailabilityRepository availability)
 {
     public async Task<LandingRisers> RisersAsync(Guid leagueId, DateOnly? throughDate, int limit, CancellationToken token)
     {
@@ -21,8 +23,13 @@ public sealed class LeagueWaiverService(ILeagueRepository leagues, ILeagueTeamRe
         }
 
         var rostered = (await teams.ListAsync(leagueId, token)).SelectMany(team => team.Players).ToHashSet();
-        return rostered.Count > 0
+        var risers = rostered.Count > 0
             ? await landing.RankRisersAsync(throughDate, limit, league, rostered, "rostered", token)
             : await landing.RisersExcludingFeaturedAsync(throughDate, limit, league, token);
+        var injuries = await availability.ListAsync(token);
+        // A "Must add" who is out tonight should say so, when the report is current for this list.
+        return risers.ThroughDate is { } through && CurrentAvailability.Applies(injuries, through.AddDays(1))
+            ? risers with { Players = risers.Players.Select(player => player with { Injury = CurrentAvailability.Label(injuries, new PlayerId(player.PlayerId)) }).ToArray() }
+            : risers;
     }
 }

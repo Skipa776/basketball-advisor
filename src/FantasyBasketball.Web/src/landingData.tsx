@@ -86,7 +86,7 @@ export function RisersTable({ path }: { path?: string }) {
       <caption className="sr-only">Players rising above their own baseline, through {data.throughDate}</caption>
       <thead><tr><th scope="col">Player</th><th scope="col">CAT</th><th scope="col">Pts · last 3</th><th scope="col">Streak</th><th scope="col">vs baseline</th><th scope="col">Status</th></tr></thead>
       <tbody ref={body}>{data.players.map((player, index) => <tr key={player.playerId} style={{ '--i': index } as React.CSSProperties}>
-        <th scope="row">{player.name}</th>
+        <th scope="row">{player.name}{player.injury && <> <span className="injury">{player.injury}</span></>}</th>
         <td data-numeric>{player.categoriesWon}/9</td>
         <td data-numeric>{one(player.recentAverage)} <span className="muted">from {one(player.baselineAverage)}</span></td>
         <td data-numeric>{player.streak}</td>

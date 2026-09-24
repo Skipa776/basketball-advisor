@@ -10,13 +10,14 @@ using FantasyBasketball.Domain.Trends;
 namespace FantasyBasketball.Application.Leagues;
 
 public sealed record MatchupPlayer(Guid PlayerId, string Name, decimal ScoredSoFar, int GamesLeft,
-    decimal? PerGame, decimal ProjectedRest);
+    decimal? PerGame, decimal ProjectedRest, string? Injury = null);
 
 public sealed record MatchupSide(Guid TeamId, string Name, decimal ScoredSoFar, decimal ProjectedRest,
     decimal ProjectedTotal, IReadOnlyList<MatchupPlayer> Players);
 
 public sealed record Matchup(DateOnly WeekStart, DateOnly WeekEnd, DateOnly Today, string Scoring,
-    int RecentGames, MatchupSide You, MatchupSide Opponent, IReadOnlyList<RosterTeamView> Opponents);
+    int RecentGames, MatchupSide You, MatchupSide Opponent, IReadOnlyList<RosterTeamView> Opponents,
+    string AvailabilityNote = "");
 
 /// <summary>
 /// Weekly points matchup: each side's points scored Monday through yesterday, plus the rest of
@@ -25,7 +26,8 @@ public sealed record Matchup(DateOnly WeekStart, DateOnly WeekEnd, DateOnly Toda
 /// </summary>
 public sealed class MatchupService(
     ILeagueRepository leagues, ILeagueTeamRepository teams, IPlayerRepository players,
-    IGameRepository games, IBoxScoreRepository boxScores, LandingOptions options, TimeProvider clock)
+    IGameRepository games, IBoxScoreRepository boxScores, LandingOptions options, TimeProvider clock,
+    IAvailabilityRepository availability)
 {
     public const int RecentGames = 10;
     private static readonly TimeZoneInfo GameDateZone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
@@ -54,6 +56,7 @@ public sealed class MatchupService(
             .Where(sample => sample.DidPlay).ToArray();
         var schedule = await games.ListScheduledAsync(DataSourceName.BallDontLie,
             StartOfDayUtc(today), StartOfDayUtc(weekEnd.AddDays(1)), token);
+        var injuries = await availability.ListAsync(token);
 
         async Task<MatchupSide> Side(LeagueTeam team)
         {
@@ -65,11 +68,12 @@ public sealed class MatchupService(
                 var scored = appearances.Where(sample => sample.PlayedOn >= weekStart).Sum(sample => points.Score(sample.Statistics!, league));
                 var recent = appearances.TakeLast(RecentGames).Select(sample => points.Score(sample.Statistics!, league)).ToArray();
                 decimal? perGame = recent.Length == 0 ? null : Math.Round(recent.Average(), 2);
-                var gamesLeft = player?.CurrentTeamId is { } teamId
+                // An out, IR or suspended player (per a current injury report) has no games left to count.
+                var gamesLeft = player?.CurrentTeamId is { } teamId && !CurrentAvailability.MissesGames(injuries, playerId, today)
                     ? schedule.Count(game => game.HomeTeamId == teamId || game.AwayTeamId == teamId)
                     : 0;
                 rows.Add(new MatchupPlayer(playerId.Value, player?.FullName ?? "Unknown player", scored, gamesLeft, perGame,
-                    Math.Round(gamesLeft * (perGame ?? 0m), 2)));
+                    Math.Round(gamesLeft * (perGame ?? 0m), 2), CurrentAvailability.Applies(injuries, today) ? CurrentAvailability.Label(injuries, playerId) : null));
             }
 
             var soFar = rows.Sum(row => row.ScoredSoFar);
@@ -79,7 +83,8 @@ public sealed class MatchupService(
         }
 
         return new Matchup(weekStart, weekEnd, today, league.Name, RecentGames, await Side(mine), await Side(opponent),
-            others.Select(team => new RosterTeamView(team.Id, team.Name, false, [])).ToArray());
+            others.Select(team => new RosterTeamView(team.Id, team.Name, false, [])).ToArray(),
+            CurrentAvailability.Note(injuries, today));
     }
 
     private static DateTimeOffset StartOfDayUtc(DateOnly day) =>

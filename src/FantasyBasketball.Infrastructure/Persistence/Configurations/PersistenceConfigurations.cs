@@ -187,6 +187,30 @@ public sealed class ScoringRuleConfiguration : IEntityTypeConfiguration<ScoringR
     }
 }
 
+public sealed class PlayerAvailabilityConfiguration : IEntityTypeConfiguration<PlayerAvailabilityRow>
+{
+    public void Configure(EntityTypeBuilder<PlayerAvailabilityRow> builder)
+    {
+        builder.ToTable("player_availability");
+        builder.HasKey(value => value.Id);
+        builder.Property(value => value.Id).HasColumnName("id").ValueGeneratedNever();
+        builder.Property(value => value.PlayerId).HasColumnName("player_id");
+        builder.Property(value => value.Status).HasColumnName("status").IsRequired();
+        builder.Property(value => value.BodyPart).HasColumnName("body_part");
+        builder.Property(value => value.Notes).HasColumnName("notes");
+        builder.Property(value => value.ReportedAt).HasColumnName("reported_at");
+        builder.Property(value => value.Source).HasColumnName("source").IsRequired();
+        builder.Property(value => value.ExternalId).HasColumnName("external_id");
+        builder.Property(value => value.FetchedAt).HasColumnName("fetched_at");
+        builder.Property(value => value.SourceTimestamp).HasColumnName("source_timestamp");
+        builder.Property(value => value.ParserVersion).HasColumnName("parser_version").IsRequired();
+        builder.Property(value => value.Confidence).HasColumnName("confidence").HasPrecision(10, 4);
+        builder.Property(value => value.RawRecordHash).HasColumnName("raw_record_hash").IsRequired();
+        builder.HasOne<PlayerRow>().WithMany().HasForeignKey(value => value.PlayerId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(value => new { value.PlayerId, value.Source }).IsUnique();
+    }
+}
+
 public sealed class LeagueEligibilityConfiguration : IEntityTypeConfiguration<LeagueEligibilityRow>
 {
     public void Configure(EntityTypeBuilder<LeagueEligibilityRow> builder)

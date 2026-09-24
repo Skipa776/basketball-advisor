@@ -1,7 +1,7 @@
 import { useResource } from './useResource';
 import type { League } from './types';
 
-type Move = { day: string; addId: string; add: string; dropId: string; drop: string; gain: number; addUsableDays: string[]; dropUsableDaysLost: string[]; acquisitionsUsed: number };
+type Move = { day: string; addId: string; add: string; dropId: string; drop: string; gain: number; addUsableDays: string[]; dropUsableDaysLost: string[]; acquisitionsUsed: number; dropInjury?: string | null };
 type Plan = { from: string; to: string; scoring: string; acquisitionLimit: number; baselineValue: number; plannedValue: number; freeAgentsConsidered: number; moves: Move[]; evidence: string[] };
 
 const one = (value: number) => (Math.round(value * 10) / 10).toLocaleString('en-US');
@@ -26,7 +26,7 @@ export function StreamingPage({ league, onHome }: { league?: League; onHome: () 
         <span className="stream-day">{weekday(move.day)}</span>
         <div>
           <p><strong>Add {move.add}</strong> +{move.addUsableDays.length} usable {move.addUsableDays.length === 1 ? 'game' : 'games'} {days(move.addUsableDays)}</p>
-          <p>Drop {move.drop} · {move.dropUsableDaysLost.length} usable {move.dropUsableDaysLost.length === 1 ? 'game' : 'games'} lost {days(move.dropUsableDaysLost)}</p>
+          <p>Drop {move.drop}{move.dropInjury && <> <span className="injury">{move.dropInjury}</span></>} · {move.dropUsableDaysLost.length} usable {move.dropUsableDaysLost.length === 1 ? 'game' : 'games'} lost {days(move.dropUsableDaysLost)}</p>
           <p className="muted">net +{one(move.gain)} expected points · {move.acquisitionsUsed} of {data.acquisitionLimit} acquisitions used</p>
         </div>
       </li>)}</ol>

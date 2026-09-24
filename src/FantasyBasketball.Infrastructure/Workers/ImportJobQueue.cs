@@ -143,6 +143,13 @@ public sealed class ImportJobQueue(
                         queued.Run.Id,
                         cancellationToken);
                 break;
+            case ImportJobKind.Availability:
+                await services.GetRequiredService<ImportAvailabilityService>()
+                    .ImportFromAsync(
+                        services.GetRequiredService<IAvailabilitySource>(),
+                        queued.Run.Id,
+                        cancellationToken);
+                break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(queued));
         }
@@ -197,6 +204,7 @@ public sealed class ImportJobQueue(
                 DataSourceName.BallDontLie,
             ImportJobKind.SeasonStats or ImportJobKind.BoxScores =>
                 DataSourceName.BasketballReference,
+            ImportJobKind.Availability => DataSourceName.Sleeper,
             ImportJobKind.Adp when request.Csv is not null => DataSourceName.Csv,
             ImportJobKind.Adp => DataSourceName.FantasyPros,
             _ => throw new ArgumentOutOfRangeException(nameof(request)),

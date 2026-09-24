@@ -11,7 +11,8 @@ using FantasyBasketball.Domain.Trends;
 namespace FantasyBasketball.Application.Leagues;
 
 public sealed record StreamingMoveView(DateOnly Day, Guid AddId, string Add, Guid DropId, string Drop, decimal Gain,
-    IReadOnlyList<DateOnly> AddUsableDays, IReadOnlyList<DateOnly> DropUsableDaysLost, int AcquisitionsUsed);
+    IReadOnlyList<DateOnly> AddUsableDays, IReadOnlyList<DateOnly> DropUsableDaysLost, int AcquisitionsUsed,
+    string? DropInjury = null);
 
 public sealed record StreamingPlanView(DateOnly From, DateOnly To, string Scoring, int AcquisitionLimit,
     decimal BaselineValue, decimal PlannedValue, int FreeAgentsConsidered, IReadOnlyList<StreamingMoveView> Moves,
@@ -24,7 +25,8 @@ public sealed record StreamingPlanView(DateOnly From, DateOnly To, string Scorin
 /// </summary>
 public sealed class StreamingService(
     ILeagueRepository leagues, ILeagueTeamRepository teams, IPlayerRepository players,
-    IGameRepository games, IBoxScoreRepository boxScores, LandingOptions options, TimeProvider clock)
+    IGameRepository games, IBoxScoreRepository boxScores, LandingOptions options, TimeProvider clock,
+    IAvailabilityRepository availability)
 {
     public const int RecentGames = 10;
     public const int FreeAgentsConsidered = 40;
@@ -57,6 +59,8 @@ public sealed class StreamingService(
             .GroupBy(entry => entry.Team)
             .ToDictionary(group => group.Key, group => group.Select(entry => PlayedOn(entry.Game.StartsAt)).ToArray());
 
+        var injuries = await availability.ListAsync(token);
+
         async Task<StreamingPlayer?> Build(PlayerId id)
         {
             var player = await players.GetAsync(id, token);
@@ -66,7 +70,10 @@ public sealed class StreamingService(
             }
 
             var perGame = Math.Round(history.GetValueOrDefault(id), 2);
-            var days = player.CurrentTeamId is { } team ? gameDays.GetValueOrDefault(team, []) : [];
+            // Availability 0 for an out, IR or suspended player under a current report (streaming_contract).
+            var days = player.CurrentTeamId is { } team && !CurrentAvailability.MissesGames(injuries, id, today)
+                ? gameDays.GetValueOrDefault(team, [])
+                : [];
             return new StreamingPlayer(id, player.FullName, player.Positions, perGame, perGame * days.Length,
                 days.Where(date => date <= weekEnd).ToHashSet());
         }
@@ -96,8 +103,10 @@ public sealed class StreamingService(
         return new StreamingPlanView(today, weekEnd, league.Name, plan.AcquisitionLimit, Math.Round(plan.BaselineValue, 1),
             Math.Round(plan.PlannedValue, 1), freeAgents.Count,
             plan.Moves.Select(move => new StreamingMoveView(move.Day, move.Add.Id.Value, move.Add.Name, move.Drop.Id.Value, move.Drop.Name,
-                Math.Round(move.Gain, 1), move.AddUsableDays, move.DropUsableDaysLost, move.AcquisitionsUsed)).ToArray(),
-            [.. plan.Evidence,
+                Math.Round(move.Gain, 1), move.AddUsableDays, move.DropUsableDaysLost, move.AcquisitionsUsed,
+                CurrentAvailability.Applies(injuries, today) ? CurrentAvailability.Label(injuries, move.Drop.Id) : null)).ToArray(),
+            [.. plan.Evidence.Where(line => !line.StartsWith("No injury feed", StringComparison.Ordinal)),
+                CurrentAvailability.Note(injuries, today),
                 $"Per-game value: average of each player's last {RecentGames} games under this league's scoring.",
                 "Acquisitions already used this week are not tracked; the plan assumes the full limit is available."]);
     }

@@ -14,7 +14,7 @@ namespace FantasyBasketball.Infrastructure.Providers.Sleeper;
 /// by the HTTP client; the ~2.5 MB player map is cached for a day, as Sleeper asks.
 /// </summary>
 public sealed class SleeperLeagueProvider(IHttpClientFactory clientFactory, IMemoryCache cache, TimeProvider clock)
-    : IFantasyLeagueProvider
+    : IFantasyLeagueProvider, IAvailabilitySource
 {
     public const string ParserVersion = "sleeper-v1";
     private static readonly HashSet<string> BasePositions = new(StringComparer.Ordinal) { "PG", "SG", "SF", "PF", "C" };
@@ -73,6 +73,34 @@ public sealed class SleeperLeagueProvider(IHttpClientFactory clientFactory, IMem
             root.GetProperty("roster_positions").EnumerateArray().Select(slot => slot.GetString()!).ToArray(),
             root.GetProperty("scoring_settings").EnumerateObject().ToDictionary(entry => entry.Name, entry => entry.Value.GetDecimal()),
             teams);
+    }
+
+    /// <summary>Active players Sleeper currently lists with an injury status (from the daily player map).</summary>
+    public async Task<IReadOnlyList<ExternalAvailability>> GetInjuriesAsync(CancellationToken cancellationToken)
+    {
+        var fetchedAt = clock.GetUtcNow();
+        var injuries = new List<ExternalAvailability>();
+        foreach (var (id, json) in await PlayersAsync(cancellationToken))
+        {
+            using var document = JsonDocument.Parse(json);
+            var player = document.RootElement;
+            string? Text(string name) => player.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
+            if (Text("injury_status") is not { Length: > 0 } status
+                || !(player.TryGetProperty("active", out var active) && active.ValueKind == JsonValueKind.True))
+            {
+                continue;
+            }
+
+            DateTimeOffset? reportedAt = player.TryGetProperty("news_updated", out var updated) && updated.ValueKind == JsonValueKind.Number
+                ? DateTimeOffset.FromUnixTimeMilliseconds(updated.GetInt64())
+                : null;
+            var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(json))).ToLowerInvariant();
+            injuries.Add(new ExternalAvailability(id, Text("full_name") ?? $"{Text("first_name")} {Text("last_name")}".Trim(),
+                Text("team"), status, Text("injury_body_part"), Text("injury_notes"), reportedAt,
+                new DataProvenance(DataSourceName.Sleeper, id, fetchedAt, reportedAt, ParserVersion, DataSourceConfidence.OfficialApi, hash)));
+        }
+
+        return injuries;
     }
 
     private static ExternalRosterPlayer Player(string id, string json, DateTimeOffset fetchedAt)

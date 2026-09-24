@@ -28,7 +28,7 @@ public sealed record LandingDay(
 
 public sealed record LandingRiser(
     Guid PlayerId, string Name, DateOnly LatestAppearance, int CategoriesWon, decimal RecentAverage,
-    decimal BaselineAverage, int Streak, decimal PercentAboveBaseline, string Status);
+    decimal BaselineAverage, int Streak, decimal PercentAboveBaseline, string Status, string? Injury = null);
 
 public sealed record LandingRisers(
     DateOnly? ThroughDate, string Source, string Scoring, PlayerHeatOptions Policy,

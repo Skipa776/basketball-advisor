@@ -1066,3 +1066,16 @@ draft value contract's own definition. See that contract's correction note.
   preselected. Unclaimed rosters are named "Team {roster id}".
 - Sleeper's per-player `injury_status` is available in the player map and is not
   used yet; it is a candidate availability feed.
+
+## Injury report — 2026-09-24
+
+- Owner: "fill in the injury data". Source: Sleeper's daily NBA player map
+  (`injury_status`, body part, notes), imported by `POST /api/imports/availability`
+  and a daily `AvailabilityRefreshWorker`. Reference data, not a context event;
+  it never changes a projection.
+- Out, IR and suspended players' games do not count in matchup and streaming;
+  questionable, doubtful and day-to-day are shown as tags only.
+- A report applies only to a day within two days of when it was fetched, so the
+  2026-03-04 replay shows it as not applied rather than mixing seasons.
+- Players are matched by Sleeper id, then by a unique normalized name; unmatched
+  reports are counted, never create players.

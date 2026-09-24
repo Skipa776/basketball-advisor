@@ -26,6 +26,7 @@ public static class ImportEndpoints
         group.MapPost("/season-stats", ImportSeasonStatsAsync);
         group.MapPost("/adp", ImportAdpAsync);
         group.MapPost("/box-scores", ImportBoxScoresAsync);
+        group.MapPost("/availability", ImportAvailabilityAsync);
         group.MapGet("/runs", ListRunsAsync);
         return endpoints;
     }
@@ -75,6 +76,13 @@ public static class ImportEndpoints
                     From: request.From,
                     To: request.To),
                 cancellationToken),
+            StatusCodes.Status202Accepted);
+
+    public static async Task<IResult> ImportAvailabilityAsync(
+        IImportJobQueue queue,
+        CancellationToken cancellationToken) =>
+        ApiResults.Success(
+            await queue.EnqueueAsync(new ImportJobRequest(ImportJobKind.Availability), cancellationToken),
             StatusCodes.Status202Accepted);
 
     public static async Task<IResult> ImportAdpAsync(

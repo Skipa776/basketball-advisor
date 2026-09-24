@@ -5,7 +5,7 @@ import { useResource } from './useResource';
 import { ErrorNotice } from './Workspace';
 import type { League } from './types';
 
-type RosterTeam = { id: string; name: string; isUsersTeam: boolean; players: { playerId: string; name: string }[] };
+type RosterTeam = { id: string; name: string; isUsersTeam: boolean; players: { playerId: string; name: string; injury?: string | null }[] };
 type RosterImport = { teams: number; players: number; unmatchedPlayers: string[] };
 type Preview = { name: string; teamCount: number; teams: { externalTeamId: string; name: string; ownerName: string | null; players: number }[]; notes: string[] };
 type ProviderImport = { teams: number; players: number; pendingMatches: number; notes: string[] };
@@ -75,7 +75,7 @@ export function TeamsPage({ league, onHome }: { league?: League; onHome: () => v
       <article className={`team-card${team.isUsersTeam ? ' mine' : ''}`} key={team.id} aria-labelledby={`team-${team.id}`}>
         <header><h3 id={`team-${team.id}`}>{team.name}</h3>{team.isUsersTeam && <span className="status status-add">Your team</span>}</header>
         <p className="muted">{team.players.length} {team.players.length === 1 ? "player" : "players"}</p>
-        <ol>{team.players.map(player => <li key={player.playerId}>{player.name}</li>)}</ol>
+        <ol>{team.players.map(player => <li key={player.playerId}>{player.name}{player.injury && <> <span className="injury">{player.injury}</span></>}</li>)}</ol>
       </article>)}</section>}
     {teams.result && !rosters.length && <p className="notice">No rosters yet. Paste them below to make the waiver list show only players nobody owns.</p>}
     <SleeperImport leagueId={league.id} onImported={teams.refresh} />

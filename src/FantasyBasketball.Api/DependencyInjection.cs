@@ -196,7 +196,11 @@ public static class DependencyInjection
         services.AddScoped<FantasyBasketball.Application.Leagues.StreamingService>();
         services.AddScoped<FantasyBasketball.Application.Leagues.TradeService>();
         services.AddScoped<FantasyBasketball.Application.Leagues.LeagueImportService>();
-        services.AddScoped<IFantasyLeagueProvider, FantasyBasketball.Infrastructure.Providers.Sleeper.SleeperLeagueProvider>();
+        services.AddScoped<FantasyBasketball.Infrastructure.Providers.Sleeper.SleeperLeagueProvider>();
+        services.AddScoped<IFantasyLeagueProvider>(provider => provider.GetRequiredService<FantasyBasketball.Infrastructure.Providers.Sleeper.SleeperLeagueProvider>());
+        services.AddScoped<IAvailabilitySource>(provider => provider.GetRequiredService<FantasyBasketball.Infrastructure.Providers.Sleeper.SleeperLeagueProvider>());
+        services.AddScoped<IAvailabilityRepository, AvailabilityRepository>();
+        services.AddScoped<ImportAvailabilityService>();
         services.AddScoped<IProjectionRepository, ProjectionRepository>();
         services.AddScoped<IProjectionQueryRepository, ProjectionRepository>();
         services.AddScoped<IContextEventRepository, ContextEventRepository>();
@@ -273,6 +277,7 @@ public static class DependencyInjection
             services.AddHostedService<AdpRefreshWorker>();
             services.AddHostedService<BoxScoreRefreshWorker>();
             services.AddHostedService<PlayerDirectoryRefreshWorker>();
+            services.AddHostedService<AvailabilityRefreshWorker>();
         }
 
         AddSourceClient(

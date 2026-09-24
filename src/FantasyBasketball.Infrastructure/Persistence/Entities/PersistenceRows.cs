@@ -412,6 +412,45 @@ public sealed class LeagueEligibilityRow : IOwnedResource
     public void SetPositions(string[] positions) => Positions = positions;
 }
 
+/// <summary>Current injury report per player and source; shared reference data, not owned.</summary>
+public sealed class PlayerAvailabilityRow
+{
+    private PlayerAvailabilityRow()
+    {
+    }
+
+    public Guid Id { get; private set; }
+    public Guid PlayerId { get; private set; }
+    public string Status { get; private set; } = string.Empty;
+    public string? BodyPart { get; private set; }
+    public string? Notes { get; private set; }
+    public DateTimeOffset? ReportedAt { get; private set; }
+    public string Source { get; private set; } = string.Empty;
+    public string? ExternalId { get; private set; }
+    public DateTimeOffset FetchedAt { get; private set; }
+    public DateTimeOffset? SourceTimestamp { get; private set; }
+    public string ParserVersion { get; private set; } = string.Empty;
+    public decimal Confidence { get; private set; }
+    public string RawRecordHash { get; private set; } = string.Empty;
+
+    public static PlayerAvailabilityRow Create(FantasyBasketball.Domain.Players.PlayerAvailability report) => new()
+    {
+        Id = Guid.NewGuid(),
+        PlayerId = report.PlayerId.Value,
+        Status = report.Status.ToString(),
+        BodyPart = report.BodyPart,
+        Notes = report.Notes,
+        ReportedAt = report.ReportedAt,
+        Source = report.Provenance.Source,
+        ExternalId = report.Provenance.ExternalId,
+        FetchedAt = report.Provenance.FetchedAt,
+        SourceTimestamp = report.Provenance.SourceTimestamp,
+        ParserVersion = report.Provenance.ParserVersion,
+        Confidence = report.Provenance.Confidence,
+        RawRecordHash = report.Provenance.RawRecordHash,
+    };
+}
+
 public sealed class SeasonStatLineRow
 {
     private SeasonStatLineRow()

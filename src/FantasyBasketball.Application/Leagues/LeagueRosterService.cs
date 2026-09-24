@@ -5,7 +5,7 @@ using FantasyBasketball.Domain.Players;
 
 namespace FantasyBasketball.Application.Leagues;
 
-public sealed record RosterPlayer(Guid PlayerId, string Name);
+public sealed record RosterPlayer(Guid PlayerId, string Name, string? Injury = null);
 
 public sealed record RosterTeamView(Guid Id, string Name, bool IsUsersTeam, IReadOnlyList<RosterPlayer> Players);
 
@@ -15,7 +15,8 @@ public sealed record RosterImportResult(int Teams, int Players, IReadOnlyList<st
 /// <summary>League rosters from the CSV rung of the league import ladder.</summary>
 public sealed class LeagueRosterService(
     ILeagueRepository leagues, ILeagueTeamRepository teams, IPlayerRepository players,
-    ILeagueEligibilityRepository eligibility)
+    ILeagueEligibilityRepository eligibility,
+    IAvailabilityRepository availability)
 {
     public async Task<IReadOnlyList<RosterTeamView>> ListAsync(Guid leagueId, CancellationToken token)
     {
@@ -95,12 +96,15 @@ public sealed class LeagueRosterService(
     private async Task<IReadOnlyList<RosterTeamView>> ViewsAsync(IReadOnlyList<LeagueTeam> source, CancellationToken token)
     {
         var views = new List<RosterTeamView>(source.Count);
+        // Rosters are current, so the current report is shown as is (it changes no numbers here).
+        var injuries = await availability.ListAsync(token);
         foreach (var team in source)
         {
             var names = new List<RosterPlayer>(team.Players.Count);
             foreach (var id in team.Players)
             {
-                names.Add(new RosterPlayer(id.Value, (await players.GetAsync(id, token))?.FullName ?? "Unknown player"));
+                names.Add(new RosterPlayer(id.Value, (await players.GetAsync(id, token))?.FullName ?? "Unknown player",
+                    CurrentAvailability.Label(injuries, id)));
             }
 
             views.Add(new RosterTeamView(team.Id, team.Name, team.IsUsersTeam, names));

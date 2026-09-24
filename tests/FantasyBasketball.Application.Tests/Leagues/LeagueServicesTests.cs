@@ -23,7 +23,7 @@ public sealed class LeagueServicesTests
         var jokic = store.AddPlayer("Nikola Jokić");
         store.AddPlayer("Twin Name");
         store.AddPlayer("Twin Name");
-        var service = new LeagueRosterService(store, store, store, store);
+        var service = new LeagueRosterService(store, store, store, store, store);
 
         var result = await service.ImportCsvAsync(store.League.Id,
             "Team,Player,Mine\nMine,Nikola Jokic,yes\nMine,Twin Name,yes\nOthers,Ghost Player,\n", TestContext.Current.CancellationToken);
@@ -42,7 +42,7 @@ public sealed class LeagueServicesTests
     {
         var jokic = store.AddPlayer("Nikola Jokić");
         var curry = store.AddPlayer("Stephen Curry");
-        await new LeagueRosterService(store, store, store, store).ImportCsvAsync(store.League.Id,
+        await new LeagueRosterService(store, store, store, store, store).ImportCsvAsync(store.League.Id,
             "Team,Player,Positions\nMine,Nikola Jokic,C\nMine,Stephen Curry,\"PG, SG\"\n", TestContext.Current.CancellationToken);
 
         store.Eligibility[jokic.Id].ShouldBe(["C"]);
@@ -56,7 +56,7 @@ public sealed class LeagueServicesTests
     [InlineData("Team,Player,Positions\nA,X,PG/QB", "unknown position 'QB'")]
     public async Task Csv_import_rejects_rules_by_name(string csv, string reason)
     {
-        var service = new LeagueRosterService(store, store, store, store);
+        var service = new LeagueRosterService(store, store, store, store, store);
         (await Should.ThrowAsync<ArgumentException>(() => service.ImportCsvAsync(store.League.Id, csv, TestContext.Current.CancellationToken)))
             .Message.ShouldContain(reason);
         store.Teams.ShouldBeEmpty();
@@ -65,7 +65,7 @@ public sealed class LeagueServicesTests
     [Fact]
     public async Task Unknown_league_is_not_found()
     {
-        var service = new LeagueRosterService(store, store, store, store);
+        var service = new LeagueRosterService(store, store, store, store, store);
         await Should.ThrowAsync<ResourceNotFoundException>(() => service.ListAsync(Guid.NewGuid(), TestContext.Current.CancellationToken));
     }
 
@@ -101,10 +101,17 @@ public sealed class LeagueServicesTests
     }
 
     private LeagueWaiverService Waiver() =>
-        new(store, store, new LandingService(store, store, new PlayerHeatCalculator(new PointsScoringEngine(), Policy), Policy, new LandingOptions()));
+        new(store, store, new LandingService(store, store, new PlayerHeatCalculator(new PointsScoringEngine(), Policy), Policy, new LandingOptions()), store);
 
-    private sealed class Store : ILeagueRepository, ILeagueTeamRepository, IPlayerRepository, IBoxScoreRepository, ILeagueEligibilityRepository
+    private sealed class Store : ILeagueRepository, ILeagueTeamRepository, IPlayerRepository, IBoxScoreRepository, ILeagueEligibilityRepository, IAvailabilityRepository
     {
+        public IReadOnlyDictionary<PlayerId, PlayerAvailability> Injuries { get; set; } = new Dictionary<PlayerId, PlayerAvailability>();
+
+        public Task ReplaceAsync(string source, IReadOnlyList<PlayerAvailability> reports, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        Task<IReadOnlyDictionary<PlayerId, PlayerAvailability>> IAvailabilityRepository.ListAsync(CancellationToken cancellationToken) => Task.FromResult(Injuries);
+
         public Dictionary<PlayerId, IReadOnlyList<string>> Eligibility { get; } = [];
 
 

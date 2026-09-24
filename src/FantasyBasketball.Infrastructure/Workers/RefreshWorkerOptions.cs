@@ -26,12 +26,25 @@ public sealed class RefreshWorkerOptions
 
     public PlayerDirectoryRefreshOptions Players { get; set; } = new();
 
+    public AvailabilityRefreshOptions Availability { get; set; } = new();
+
     public bool IsValid() =>
         Schedule.IsValid()
         && Stats.IsValid()
         && Adp.IsValid()
         && BoxScores.IsValid()
-        && Players.IsValid();
+        && Players.IsValid()
+        && Availability.IsValid();
+}
+
+/// <summary>Daily injury report from Sleeper's player map (which Sleeper asks to be fetched at most daily).</summary>
+public sealed class AvailabilityRefreshOptions
+{
+    public TimeSpan StartupDelay { get; set; } = TimeSpan.FromMinutes(15);
+
+    public TimeSpan Cadence { get; set; } = TimeSpan.FromDays(1);
+
+    public bool IsValid() => StartupDelay >= TimeSpan.Zero && Cadence >= TimeSpan.FromHours(12);
 }
 
 public sealed class PlayerDirectoryRefreshOptions

@@ -48,6 +48,34 @@ public sealed class MatchupServiceTests
     }
 
     [Fact]
+    public async Task A_current_injury_report_zeroes_an_out_player_and_a_stale_one_is_named_not_applied()
+    {
+        var starter = store.AddPlayer("Starter", home);
+        store.Teams = [new LeagueTeam(Guid.NewGuid(), "Mine", true, [starter.Id]), new LeagueTeam(Guid.NewGuid(), "Them", false, [])];
+        store.Game(starter.Id, new DateOnly(2025, 11, 10), 20);
+        store.Scheduled(home, away, new DateOnly(2025, 11, 12));
+        store.Scheduled(home, away, new DateOnly(2025, 11, 14));
+
+        store.Injuries = Out(starter.Id, fetched: Wednesday);
+        var current = await Service().WeekAsync(store.League.Id, null, Wednesday, TestContext.Current.CancellationToken);
+        var player = current.You.Players.ShouldHaveSingleItem();
+        (player.GamesLeft, player.Injury).ShouldBe((0, "Out (Ankle)"));
+        current.AvailabilityNote.ShouldContain("do not count");
+
+        store.Injuries = Out(starter.Id, fetched: Wednesday.AddDays(200));
+        var replay = await Service().WeekAsync(store.League.Id, null, Wednesday, TestContext.Current.CancellationToken);
+        (replay.You.Players.Single().GamesLeft, replay.You.Players.Single().Injury).ShouldBe((2, null));
+        replay.AvailabilityNote.ShouldContain("not applied");
+    }
+
+    private static Dictionary<PlayerId, PlayerAvailability> Out(PlayerId player, DateOnly fetched) => new()
+    {
+        [player] = new PlayerAvailability(player, AvailabilityStatus.Out, "Ankle", null, null,
+            new DataProvenance(DataSourceName.Sleeper, "1", new DateTimeOffset(fetched.ToDateTime(new TimeOnly(15, 0)), TimeSpan.Zero),
+                null, "sleeper-v1", DataSourceConfidence.OfficialApi, new string('a', 64))),
+    };
+
+    [Fact]
     public async Task Streaming_plan_adds_a_free_agent_whose_games_fill_open_nights()
     {
         var otherTeam = new NbaTeamId(Guid.NewGuid());
@@ -66,7 +94,7 @@ public sealed class MatchupServiceTests
         store.Scheduled(home, new NbaTeamId(Guid.NewGuid()), new DateOnly(2025, 11, 14));
         store.Scheduled(away, new NbaTeamId(Guid.NewGuid()), new DateOnly(2025, 11, 15));
 
-        var plan = await new StreamingService(store, store, store, store, store, new LandingOptions(), TimeProvider.System)
+        var plan = await new StreamingService(store, store, store, store, store, new LandingOptions(), TimeProvider.System, store)
             .PlanAsync(store.League.Id, Wednesday, TestContext.Current.CancellationToken);
 
         plan.From.ShouldBe(Wednesday);
@@ -103,10 +131,17 @@ public sealed class MatchupServiceTests
         return await Service().WeekAsync(store.League.Id, null, day, TestContext.Current.CancellationToken);
     }
 
-    private MatchupService Service() => new(store, store, store, store, store, new LandingOptions(), TimeProvider.System);
+    private MatchupService Service() => new(store, store, store, store, store, new LandingOptions(), TimeProvider.System, store);
 
-    private sealed class Store : ILeagueRepository, ILeagueTeamRepository, IPlayerRepository, IGameRepository, IBoxScoreRepository
+    private sealed class Store : ILeagueRepository, ILeagueTeamRepository, IPlayerRepository, IGameRepository, IBoxScoreRepository, IAvailabilityRepository
     {
+        public IReadOnlyDictionary<PlayerId, PlayerAvailability> Injuries { get; set; } = new Dictionary<PlayerId, PlayerAvailability>();
+
+        public Task ReplaceAsync(string source, IReadOnlyList<PlayerAvailability> reports, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        Task<IReadOnlyDictionary<PlayerId, PlayerAvailability>> IAvailabilityRepository.ListAsync(CancellationToken cancellationToken) => Task.FromResult(Injuries);
+
         private static readonly TimeZoneInfo Eastern = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
         private readonly List<Player> players = [];
         private readonly List<PlayerGameSample> samples = [];

@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useResource } from './useResource';
 import type { League } from './types';
 
-type Row = { playerId: string; name: string; scoredSoFar: number; gamesLeft: number; perGame: number | null; projectedRest: number };
+type Row = { playerId: string; name: string; scoredSoFar: number; gamesLeft: number; perGame: number | null; projectedRest: number; injury?: string | null };
 type Side = { teamId: string; name: string; scoredSoFar: number; projectedRest: number; projectedTotal: number; players: Row[] };
-type Week = { weekStart: string; weekEnd: string; today: string; scoring: string; recentGames: number; you: Side; opponent: Side; opponents: { id: string; name: string }[] };
+type Week = { weekStart: string; weekEnd: string; today: string; scoring: string; recentGames: number; you: Side; opponent: Side; opponents: { id: string; name: string }[]; availabilityNote: string };
 
 const one = (value: number) => (Math.round(value * 10) / 10).toLocaleString('en-US');
 const day = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
@@ -16,7 +16,7 @@ function SideTable({ side, recentGames }: { side: Side; recentGames: number }) {
       <caption className="sr-only">{side.name}: points so far and projected rest of week</caption>
       <thead><tr><th scope="col">Player</th><th scope="col">So far</th><th scope="col">Games left</th><th scope="col">Avg · last {recentGames}</th><th scope="col">Projected rest</th></tr></thead>
       <tbody>{side.players.map(player => <tr key={player.playerId}>
-        <th scope="row">{player.name}</th><td data-numeric>{one(player.scoredSoFar)}</td><td data-numeric>{player.gamesLeft}</td>
+        <th scope="row">{player.name}{player.injury && <> <span className="injury">{player.injury}</span></>}</th><td data-numeric>{one(player.scoredSoFar)}</td><td data-numeric>{player.gamesLeft}</td>
         <td data-numeric>{player.perGame === null ? <span className="muted">no games yet</span> : one(player.perGame)}</td><td data-numeric>{one(player.projectedRest)}</td>
       </tr>)}</tbody>
     </table></div>
@@ -50,6 +50,7 @@ export function MatchupPage({ league, onHome }: { league?: League; onHome: () =>
         </div>
         <div className="matchup-bar" role="img" aria-label={`Projected share: ${data.you.name} ${Math.round(share)} percent`}><span style={{ width: `${share}%` }} /></div>
         <p>{lead === 0 ? 'Dead even on projection.' : `${lead > 0 ? data.you.name : data.opponent.name} is projected to win by ${one(Math.abs(lead))}.`} Projections: games left from {day(data.today)} through Sunday × each player’s average over their last {data.recentGames} games.</p>
+        <p className="muted">{data.availabilityNote}</p>
       </section>
       <div className="matchup-sides"><SideTable side={data.you} recentGames={data.recentGames} /><SideTable side={data.opponent} recentGames={data.recentGames} /></div>
     </>}
