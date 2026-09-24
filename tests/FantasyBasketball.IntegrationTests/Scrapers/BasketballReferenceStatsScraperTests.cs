@@ -25,12 +25,33 @@ public sealed class BasketballReferenceStatsScraperTests : IDisposable
     }
 
     [Fact]
+    public async Task Season_import_saves_the_primary_position_on_an_existing_player()
+    {
+        var timeProvider = new FixedTimeProvider(fetchedAt);
+        await players.AddAsync(new Player(new PlayerId(Guid.NewGuid()), "Nikola Jokic", "nikola jokic", null, [], null),
+            TestContext.Current.CancellationToken);
+        using var withPosition = new HttpClient(new FixtureHandler(html => html
+            .Replace("<th>Player</th>", "<th>Player</th><th>Pos</th>", StringComparison.Ordinal)
+            .Replace("Nikola Jokic</a></td>", "Nikola Jokic</a></td><td>C</td>", StringComparison.Ordinal)))
+        {
+            BaseAddress = new Uri("https://www.basketball-reference.com"),
+        };
+        var scraper = new BasketballReferenceStatsScraper(new SingleClientFactory(withPosition),
+            new PlayerIdentityResolver(players, timeProvider), players, timeProvider);
+
+        await scraper.GetSeasonStatsAsync(2026, TestContext.Current.CancellationToken);
+
+        players.SavedPositions.ShouldHaveSingleItem().Positions.ShouldBe(["C"]);
+    }
+
+    [Fact]
     public async Task I04_three_tables_map_to_canonical_season_stat_line()
     {
         var timeProvider = new FixedTimeProvider(fetchedAt);
         var scraper = new BasketballReferenceStatsScraper(
             new SingleClientFactory(client),
             new PlayerIdentityResolver(players, timeProvider),
+            players,
             timeProvider);
 
         var stats = await scraper.GetSeasonStatsAsync(
@@ -48,7 +69,7 @@ public sealed class BasketballReferenceStatsScraperTests : IDisposable
         line.Provenance.Source.ShouldBe(DataSourceName.BasketballReference);
         line.Provenance.ExternalId.ShouldBe("jokicni01");
         line.Provenance.FetchedAt.ShouldBe(fetchedAt);
-        line.Provenance.ParserVersion.ShouldBe("basketball-reference-v2");
+        line.Provenance.ParserVersion.ShouldBe("basketball-reference-v3");
         line.Provenance.Confidence.ShouldBe(DataSourceConfidence.HtmlScraper);
         line.Provenance.RawRecordHash.Length.ShouldBe(64);
         (await players.GetAsync(
@@ -68,7 +89,7 @@ public sealed class BasketballReferenceStatsScraperTests : IDisposable
         }
     }
 
-    private sealed class FixtureHandler : HttpMessageHandler
+    private sealed class FixtureHandler(Func<string, string>? editPerGame = null) : HttpMessageHandler
     {
         protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
@@ -91,6 +112,11 @@ public sealed class BasketballReferenceStatsScraperTests : IDisposable
                 "Html",
                 fixtureName);
             var html = await File.ReadAllTextAsync(fixturePath, cancellationToken);
+            if (editPerGame is not null && fixtureName.Contains("per-game", StringComparison.Ordinal))
+            {
+                html = editPerGame(html);
+            }
+
             return new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent(html),
@@ -103,6 +129,14 @@ public sealed class BasketballReferenceStatsScraperTests : IDisposable
     {
         private readonly List<Player> players = [];
         private readonly List<ExternalPlayerIdentity> identities = [];
+        public List<(PlayerId Id, IReadOnlyList<string> Positions)> SavedPositions { get; } = [];
+
+        public Task SavePositionsAsync(PlayerId id, IReadOnlyList<string> positions, CancellationToken cancellationToken)
+        {
+            SavedPositions.Add((id, positions));
+            return Task.CompletedTask;
+        }
+
         public Task SaveCurrentTeamAsync(PlayerId id, NbaTeamId? teamId, CancellationToken cancellationToken) => throw new NotSupportedException();
 
 

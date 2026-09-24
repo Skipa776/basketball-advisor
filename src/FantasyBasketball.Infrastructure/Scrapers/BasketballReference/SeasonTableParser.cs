@@ -15,7 +15,8 @@ public sealed record ParsedSeasonStatLine(
     StatLine PerGame,
     StatLine Totals,
     decimal? UsageRate,
-    string RawFragment);
+    string RawFragment,
+    string? Position = null);
 
 public sealed partial class SeasonTableParser
 {
@@ -23,6 +24,8 @@ public sealed partial class SeasonTableParser
 
     private const string PlayerColumn = "Player";
     private const string TeamColumn = "Team";
+    private const string PositionColumn = "Pos";
+    private static readonly HashSet<string> KnownPositions = new(StringComparer.Ordinal) { "PG", "SG", "SF", "PF", "C" };
     private const decimal PerGameRounding = 0.1m;
     private const string GamesColumn = "G";
     private const string UsageColumn = "USG%";
@@ -90,7 +93,11 @@ public sealed partial class SeasonTableParser
                 string.Concat(
                     perGameRow.RawFragment,
                     totalsRow.RawFragment,
-                    advancedRow.RawFragment)));
+                    advancedRow.RawFragment),
+                // Primary position (owner's eligibility source); anything else is left out, not guessed.
+                perGameRow.Values.TryGetValue(PositionColumn, out var position) && KnownPositions.Contains(position)
+                    ? position
+                    : null));
         }
 
         return new ReadOnlyCollection<ParsedSeasonStatLine>(results);

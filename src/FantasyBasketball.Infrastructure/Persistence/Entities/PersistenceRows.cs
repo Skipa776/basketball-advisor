@@ -22,6 +22,8 @@ public sealed class PlayerRow
 
     public void MoveToTeam(Guid? teamId) => CurrentTeamId = teamId;
 
+    public void SetPositions(string[] positions) => Positions = positions;
+
     public static PlayerRow Create(
         Guid id,
         string fullName,

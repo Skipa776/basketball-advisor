@@ -103,6 +103,8 @@ public sealed class MatchupServiceTests
 
         private static DataProvenance Provenance(string source) =>
             new(source, null, DateTimeOffset.UnixEpoch, null, $"{source}-v1", 1m, new string('a', 64));
+        public Task SavePositionsAsync(PlayerId id, IReadOnlyList<string> positions, CancellationToken cancellationToken) => throw new NotSupportedException();
+
 
         public Task<FantasyLeague?> GetAsync(Guid id, CancellationToken token) => Task.FromResult(id == League.Id ? League : null);
         public Task<IReadOnlyList<LeagueTeam>> ListAsync(Guid leagueId, CancellationToken token) => Task.FromResult(Teams);

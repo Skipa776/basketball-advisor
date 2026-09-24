@@ -10,9 +10,10 @@ namespace FantasyBasketball.Infrastructure.Scrapers.BasketballReference;
 public sealed class BasketballReferenceStatsScraper(
     IHttpClientFactory clientFactory,
     PlayerIdentityResolver identityResolver,
+    IPlayerRepository players,
     TimeProvider timeProvider) : IPlayerStatsProvider
 {
-    private const string ParserVersion = "basketball-reference-v2";
+    private const string ParserVersion = "basketball-reference-v3";
     private readonly BbrefUrlBuilder urlBuilder = new();
     private readonly SeasonTableParser parser = new();
 
@@ -52,13 +53,18 @@ public sealed class BasketballReferenceStatsScraper(
                     parsed.ExternalPlayerId,
                     parsed.PlayerName,
                     null,
-                    [],
+                    parsed.Position is { } primary ? [primary] : [],
                     null,
                     provenance),
                 cancellationToken);
             if (resolution.Player is null)
             {
                 continue;
+            }
+
+            if (parsed.Position is { } position && !resolution.Player.Positions.SequenceEqual([position]))
+            {
+                await players.SavePositionsAsync(resolution.Player.Id, [position], cancellationToken);
             }
 
             results.Add(new SeasonStatLine(

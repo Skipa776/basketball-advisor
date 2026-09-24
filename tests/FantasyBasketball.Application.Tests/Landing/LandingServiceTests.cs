@@ -149,6 +149,8 @@ public sealed class LandingServiceTests
         : IBoxScoreRepository, IPlayerRepository
     {
         public (int, string, NbaGamePhase, DateOnly)? Requested { get; private set; }
+        public Task SavePositionsAsync(PlayerId id, IReadOnlyList<string> positions, CancellationToken cancellationToken) => throw new NotSupportedException();
+
         public Task SaveCurrentTeamAsync(PlayerId id, NbaTeamId? teamId, CancellationToken cancellationToken) => throw new NotSupportedException();
 
 

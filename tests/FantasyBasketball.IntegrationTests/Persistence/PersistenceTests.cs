@@ -925,6 +925,9 @@ public sealed partial class PersistenceTests : IAsyncLifetime
         Action<int>? afterResolvedWrite = null) : IPlayerRepository
     {
         private int resolvedWriteAttempts;
+        public Task SavePositionsAsync(PlayerId id, IReadOnlyList<string> positions, CancellationToken cancellationToken) =>
+            inner.SavePositionsAsync(id, positions, cancellationToken);
+
         public Task SaveCurrentTeamAsync(PlayerId id, NbaTeamId? teamId, CancellationToken cancellationToken) =>
             inner.SaveCurrentTeamAsync(id, teamId, cancellationToken);
 

@@ -301,6 +301,8 @@ public sealed class PlayerIdentityResolverTests
         public Action? AfterResolvedWrite { get; init; }
 
         private int resolvedWriteAttempts;
+        public Task SavePositionsAsync(PlayerId id, IReadOnlyList<string> positions, CancellationToken cancellationToken) => throw new NotSupportedException();
+
         public Task SaveCurrentTeamAsync(PlayerId id, NbaTeamId? teamId, CancellationToken cancellationToken)
         {
             var index = Players.FindIndex(player => player.Id == id);

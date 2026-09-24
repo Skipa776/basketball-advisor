@@ -118,3 +118,11 @@ after the player link, and leaves rows unclosed. The parser (now `fantasypros-v2
 treats STD DEV as optional (it always was downstream) and reads the name from the
 link, so "Nikola Jokic (DEN - C)" no longer defeats name matching. Verified on the
 saved live page: 223 entries. Evidence: `S13_current_page_layout_without_std_dev_and_with_team_suffix_parses`.
+
+**Positions — 2026-09-23.** Owner decision: lineup eligibility comes from
+Basketball-Reference's primary position. `SeasonTableParser`
+(`basketball-reference-v3`) reads the per-game `Pos` column, accepting only
+PG/SG/SF/PF/C (anything else is left out, never guessed), and the season-stats
+import saves it on the player when it differs. Multi-position eligibility is not
+modelled. Evidence: `S13_primary_position_is_read_and_unknown_values_are_left_out`,
+`Season_import_saves_the_primary_position_on_an_existing_player`.

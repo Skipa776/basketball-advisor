@@ -159,6 +159,19 @@ public sealed class BasketballReferenceScraperTests
             parser.Parse(perGame, totals.Replace("<td>885.6</td>", "<td>885.7</td>", StringComparison.Ordinal), advanced));
     }
 
+    [Fact]
+    public async Task S13_primary_position_is_read_and_unknown_values_are_left_out()
+    {
+        var (perGame, totals, advanced) = await SeasonFixturesAsync();
+        string WithPosition(string value) => perGame
+            .Replace("<th>Player</th>", "<th>Player</th><th>Pos</th>", StringComparison.Ordinal)
+            .Replace("Nikola Jokic</a></td>", $"Nikola Jokic</a></td><td>{value}</td>", StringComparison.Ordinal);
+
+        new SeasonTableParser().Parse(WithPosition("C"), totals, advanced).ShouldHaveSingleItem().Position.ShouldBe("C");
+        new SeasonTableParser().Parse(WithPosition("G-F"), totals, advanced).ShouldHaveSingleItem().Position.ShouldBeNull();
+        new SeasonTableParser().Parse(perGame, totals, advanced).ShouldHaveSingleItem().Position.ShouldBeNull("older pages without Pos still parse");
+    }
+
     private static async Task<(string PerGame, string Totals, string Advanced)> SeasonFixturesAsync() =>
         (await ReadFixtureAsync("basketball-reference-per-game-2026-07-29.html"),
             await ReadFixtureAsync("basketball-reference-totals-2026-07-29.html"),

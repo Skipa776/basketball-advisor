@@ -291,6 +291,8 @@ public sealed class SurfaceQueryServiceTests
 
     private sealed class FakePlayerRepository(Player player) : IPlayerRepository
     {
+        public Task SavePositionsAsync(PlayerId id, IReadOnlyList<string> positions, CancellationToken cancellationToken) => throw new NotSupportedException();
+
         public Task SaveCurrentTeamAsync(PlayerId id, NbaTeamId? teamId, CancellationToken cancellationToken) => throw new NotSupportedException();
 
         public Task<Player?> GetAsync(

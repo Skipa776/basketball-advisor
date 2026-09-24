@@ -29,6 +29,13 @@ public sealed class PlayerRepository(FantasyDbContext database)
         await database.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task SavePositionsAsync(PlayerId id, IReadOnlyList<string> positions, CancellationToken cancellationToken)
+    {
+        var row = await database.Players.SingleAsync(value => value.Id == id.Value, cancellationToken);
+        row.SetPositions(positions.ToArray());
+        await database.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<Player?> GetAsync(PlayerId id, CancellationToken cancellationToken)
     {
         var row = await database.Players
