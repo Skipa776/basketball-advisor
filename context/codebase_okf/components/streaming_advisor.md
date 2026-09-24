@@ -6,8 +6,8 @@ tags: [component, streaming, optimization]
 source_paths: [src/FantasyBasketball.Domain/Streaming, src/FantasyBasketball.Application/Streaming]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Streaming]
 depends_on: [../contracts/streaming_contract.md]
-status: planned
-last_updated: 2026-07-29
+status: partial
+last_updated: 2026-09-23
 owners: [engineering]
 risk_level: high
 done_criteria:
@@ -70,3 +70,9 @@ Changing a factor means the contract first.
 
 [test_matrix_advanced_decisions](../tests/test_matrix_advanced_decisions.md), rows
 S-20 through S-36.
+
+## Status — 2026-09-23
+
+The domain engine is built and tested (see streaming_contract). The application
+service, API and UI that feed it league rosters, schedule and per-game values are
+the next step.

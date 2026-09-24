@@ -6,8 +6,8 @@ tags: [contract, streaming, optimization]
 source_paths: [src/FantasyBasketball.Domain/Streaming, src/FantasyBasketball.Application/Streaming]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Streaming]
 depends_on: [projection_pipeline_contract.md, category_value_contract.md]
-status: planned
-last_updated: 2026-07-29
+status: partial
+last_updated: 2026-09-23
 owners: [engineering]
 risk_level: high
 edit_policy: stable_contract
@@ -148,3 +148,15 @@ still pass.
 
 [test_matrix_advanced_decisions](../tests/test_matrix_advanced_decisions.md),
 rows S-20 through S-28.
+
+## Engine — 2026-09-23
+
+`UsableGameCalculator` and `StreamingPlanner` (Domain/Streaming) implement the
+usable-game rule for both cadences, value summed over usable days, greedy over
+decision days plus one improvement pass, the acquisition limit, IR and
+rest-of-season drop protection, and deterministic ordering. A move's gain is the
+change in the whole lineup's usable value from its day onward, which is the
+contract's `SV(add) − SV(drop)` with slot competition included. With no stored
+opponent defence and no injury feed, `MatchupAdjustment` is 1.0 and availability
+1.0, each stated as plan evidence. User-marked protection is not built. Rows
+S-20…S-28 are evidenced in `tests/FantasyBasketball.Domain.Tests/Streaming`.
