@@ -23,7 +23,7 @@ export const PLAYER_PHOTOS: PlayerPhoto[] = [
   { name: "James Harden", file: "james-harden.jpg", author: "Erik Drost", license: "CC BY 2.0", source: "https://commons.wikimedia.org/wiki/File:Harden_dribbling_midcourt,_Cavaliers_vs_Nets_on_January_17,_2022_(cropped).jpg" },
   { name: "Jayson Tatum", file: "jayson-tatum.jpg", author: "Hameltion", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Celtics_at_Wizards_2024-12-044_(cropped_2).jpg" },
   { name: "Tyrese Haliburton", file: "tyrese-haliburton.jpg", author: "Chensiyuan", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:1_tyrese_haliburton_2025_(cropped_2).jpg" },
-  { name: "Jalen Johnson", file: "jalen-johnson.jpg", author: "Unknown authorUnknown author", license: "CC BY 4.0", source: "https://commons.wikimedia.org/wiki/File:Jalen-Johnson.jpg" },
+  { name: "Jalen Johnson", file: "jalen-johnson.jpg", author: "Unknown author (per Wikimedia Commons)", license: "CC BY 4.0", source: "https://commons.wikimedia.org/wiki/File:Jalen-Johnson.jpg" },
   { name: "Scottie Barnes", file: "scottie-barnes.jpg", author: "All-Pro Reels from District of Columbia, USA", license: "CC BY-SA 2.0", source: "https://commons.wikimedia.org/wiki/File:Scottie_Barnes,_Wizards_vs_Raptors_on_October_12,_2021.jpg" },
   { name: "Amen Thompson", file: "amen-thompson.jpg", author: "Pikraken", license: "CC BY 4.0", source: "https://commons.wikimedia.org/wiki/File:Amen_Thompson_2026.jpg" },
   { name: "Alperen Şengün", file: "alperen-sengun.jpg", author: "Zafer", license: "CC BY 4.0", source: "https://commons.wikimedia.org/wiki/File:Alperen_%C5%9Eeng%C3%BCn_23_T%C3%BCrkiye_20250823_(1).jpg" },

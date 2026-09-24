@@ -229,6 +229,8 @@ try {
   assert.deepEqual(projected.map(row => row.name).sort(), ['Fixture Center', 'Fixture Guard']);
   assert(projected[0].value >= projected[1].value, `Projected players must be sorted by value: ${JSON.stringify(projected)}`);
   await accessibility('Projected players');
+  await page.goto(new URL('/', base).href);
+  await visible(page.getByRole('heading', { name: 'What do you want to see?', exact: true }));
   await page.goto(new URL(`/app/?league=${leagueId}`, base).href);
   await visible(page.getByRole('heading', { name: 'What do you want to see?', exact: true }));
   assert.equal(await page.getByRole('link', { name: /^Projected players/ }).getAttribute('href'), `/app/projections?league=${leagueId}`, 'menu links keep the league');

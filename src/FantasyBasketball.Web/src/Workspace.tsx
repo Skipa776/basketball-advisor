@@ -28,7 +28,8 @@ export function Workspace() {
   }
   const user = session.result?.data.user;
   const pageNames = { '/app/projections': 'Projected players', '/app/data-sources': 'Data sources', '/app/drafts': 'Your drafts', '/app/league-settings': 'League settings', '/app/context-review': 'Context review', '/app/account': 'Account data', '/app/trade-analyzer': 'Trade analyzer', '/app/streaming': 'Streaming advisor', '/app/standings': 'Standings', '/app/waiver': 'Waiver wire analyzer', '/app/matchup': 'Matchup analyzer' } as Record<string, string>;
-  const path = window.location.pathname.replace(/\/+$/, '');
+  // `/` serves the same app as `/app` (Blazor retired), so both open the menu.
+  const path = window.location.pathname.replace(/\/+$/, '') || '/app';
   const params = new URLSearchParams(window.location.search);
   // /app is the menu; the draft lives at /app/draft. Old /app?…&draft= links still open the draft.
   const isDraft = path === '/app/draft' || (path === '/app' && params.has('draft'));
