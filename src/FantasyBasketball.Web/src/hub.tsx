@@ -7,13 +7,14 @@ type HubItem = { label: string; path: string; note: string; soon?: boolean; owne
 // The signed-in front door, after the portfolio's projects list: one oval row per destination.
 const ITEMS: HubItem[] = [
   { label: 'Mock draft', path: '/app/draft', note: 'Snake draft with ranked, explained picks for your league' },
-  { label: 'Teams in the league', path: '/app/league-settings', note: 'Team count, scoring and roster slots' },
+  { label: 'Teams in the league', path: '/app/teams', note: 'Every roster, and which team is yours' },
   { label: 'Waiver wire analyzer', path: '/app/waiver', note: 'Who is rising against their own baseline' },
   { label: 'Projected players', path: '/app/projections', note: 'Season values under your scoring' },
   { label: 'Your drafts', path: '/app/drafts', note: 'Reopen a saved draft' },
   { label: 'Trade analyzer', path: '/app/trade-analyzer', note: 'Waits on the trade engine (R15)', soon: true },
   { label: 'Matchup analyzer', path: '/app/matchup', note: 'Waits on an owner definition', soon: true },
   { label: 'Streaming advisor', path: '/app/streaming', note: 'Waits on the streaming engine (R14)', soon: true },
+  { label: 'League settings', path: '/app/league-settings', note: 'Team count, scoring and roster slots' },
   { label: 'Context review', path: '/app/context-review', note: 'Verify news before it moves a number' },
   { label: 'Account data', path: '/app/account', note: 'Export, import or delete your data' },
   { label: 'Data sources', path: '/app/data-sources', note: 'Imports and freshness', ownerOnly: true },

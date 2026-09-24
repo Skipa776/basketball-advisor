@@ -629,6 +629,65 @@ public sealed partial class ApiHttpTests : IAsyncLifetime
         }
     }
 
+    [Fact]
+    public async Task League_rosters_import_from_csv_replace_on_reimport_and_report_unmatched_names()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var leagueId = await CreateLeagueAsync(token);
+        await AddPlayerAsync("Roster Jokić", token);
+        await AddPlayerAsync("Roster Curry", token);
+        await AddPlayerAsync("Roster Doncic", token);
+
+        using (var imported = await client.PostAsJsonAsync($"/api/leagues/{leagueId}/teams/csv", new
+        {
+            Csv = "Team,Player,Mine\nMy Squad,Roster Jokic,yes\nMy Squad,Roster Curry,yes\nRivals,Roster Doncic,\nRivals,Nobody Real,\n",
+        }, token))
+        {
+            imported.StatusCode.ShouldBe(HttpStatusCode.OK);
+            using var body = await ReadEnvelopeAsync(imported, token);
+            var data = body.RootElement.GetProperty("data");
+            data.GetProperty("teams").GetInt32().ShouldBe(2);
+            data.GetProperty("players").GetInt32().ShouldBe(3);
+            data.GetProperty("unmatchedPlayers")[0].GetString().ShouldBe("Nobody Real (line 5)");
+        }
+
+        using (var listed = await client.GetAsync($"/api/leagues/{leagueId}/teams", token))
+        {
+            using var body = await ReadEnvelopeAsync(listed, token);
+            var teams = body.RootElement.GetProperty("data");
+            teams.GetArrayLength().ShouldBe(2);
+            teams[0].GetProperty("name").GetString().ShouldBe("My Squad");
+            teams[0].GetProperty("isUsersTeam").GetBoolean().ShouldBeTrue();
+            teams[0].GetProperty("players").EnumerateArray().Select(player => player.GetProperty("name").GetString())
+                .ShouldBe(["Roster Jokić", "Roster Curry"]);
+            teams[1].GetProperty("isUsersTeam").GetBoolean().ShouldBeFalse();
+        }
+
+        using (var replaced = await client.PostAsJsonAsync($"/api/leagues/{leagueId}/teams/csv", new { Csv = "Team,Player\nSolo,Roster Curry" }, token))
+        {
+            replaced.StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+
+        using (var listed = await client.GetAsync($"/api/leagues/{leagueId}/teams", token))
+        {
+            using var body = await ReadEnvelopeAsync(listed, token);
+            body.RootElement.GetProperty("data").GetArrayLength().ShouldBe(1, "an import replaces the league's rosters");
+        }
+
+        var tooMany = "Team,Player\n" + string.Join("\n", Enumerable.Range(1, 11).Select(team => $"Team {team},Roster Curry"));
+        foreach (var (csv, reason) in new[]
+        {
+            ("Team,Player\nA,Roster Curry,\"", "unclosed quote"),
+            (tooMany, "the league has 10"),
+            ("Team,Player,Mine\nA,Roster Curry,yes\nB,Roster Doncic,yes", "Mark only one team"),
+        })
+        {
+            using var rejected = await client.PostAsJsonAsync($"/api/leagues/{leagueId}/teams/csv", new { Csv = csv }, token);
+            rejected.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+            (await rejected.Content.ReadAsStringAsync(token)).ShouldContain(reason);
+        }
+    }
+
     private async Task<Guid> CreateLeagueAsync(CancellationToken cancellationToken)
     {
         using var response = await client.PostAsJsonAsync(

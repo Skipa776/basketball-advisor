@@ -9,6 +9,8 @@ using FantasyBasketball.Api.Middleware;
 
 namespace FantasyBasketball.Api.Endpoints;
 
+public sealed record RosterCsvRequest(string? Csv);
+
 public sealed record ScoringRuleRequest(string Stat, decimal PointsPerUnit);
 
 public sealed record CreateLeagueRequest(
@@ -58,6 +60,10 @@ public static class LeagueEndpoints
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
         group.MapGet("/{id:guid}/performance", PerformanceEndpoints.QueryAsync)
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
+        group.MapGet("/{id:guid}/teams", ListTeamsAsync)
+            .WithMetadata(new OwnedRouteMetadata("league", "id"));
+        group.MapPost("/{id:guid}/teams/csv", ImportTeamsCsvAsync)
+            .WithMetadata(new OwnedRouteMetadata("league", "id"));
         return endpoints;
     }
 
@@ -67,6 +73,29 @@ public static class LeagueEndpoints
     {
         await authorization.RequireLeagueAsync(id, cancellationToken);
         return ApiResults.Success(await service.ListPoolsAsync(cancellationToken));
+    }
+
+    public static async Task<IResult> ListTeamsAsync(
+        Guid id, LeagueRosterService service, OwnedResourceAuthorizationService authorization,
+        CancellationToken cancellationToken)
+    {
+        await authorization.RequireLeagueAsync(id, cancellationToken);
+        return ApiResults.Success(await service.ListAsync(id, cancellationToken));
+    }
+
+    public static async Task<IResult> ImportTeamsCsvAsync(
+        Guid id, RosterCsvRequest request, LeagueRosterService service,
+        OwnedResourceAuthorizationService authorization, CancellationToken cancellationToken)
+    {
+        await authorization.RequireLeagueAsync(id, cancellationToken);
+        try
+        {
+            return ApiResults.Success(await service.ImportCsvAsync(id, request.Csv ?? string.Empty, cancellationToken));
+        }
+        catch (ArgumentException exception)
+        {
+            throw new RequestValidationException(new Dictionary<string, string[]> { ["csv"] = [exception.Message] });
+        }
     }
 
     public static async Task<IResult> ProjectedPlayersAsync(

@@ -214,3 +214,9 @@ player's latest appearance on or before the resolved date; each line carries its
 own `playedOn`, and `poolSize` counts the resolved date only. Setting
 `Landing:AsOf` (a simulated "today", owner test setting) makes the default date
 the last stored game day strictly before it, for `daily` and `risers` alike.
+
+**Rosters — 2026-09-23.** `GET /api/leagues/{id}/teams` lists the league's teams
+(name, `isUsersTeam`, players with names). `POST /api/leagues/{id}/teams/csv`
+`{csv}` replaces them from `Team,Player[,Mine]` rows and returns counts plus
+unmatched names; malformed input → 400 naming the line or rule. Both are owned
+league routes (404 for another user's league).

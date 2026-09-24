@@ -186,6 +186,47 @@ public sealed class ScoringRuleConfiguration : IEntityTypeConfiguration<ScoringR
     }
 }
 
+public sealed class LeagueTeamConfiguration : IEntityTypeConfiguration<LeagueTeamRow>
+{
+    public void Configure(EntityTypeBuilder<LeagueTeamRow> builder)
+    {
+        builder.ToTable("league_team");
+        builder.HasKey(value => value.Id);
+        builder.Property(value => value.Id).HasColumnName("id").ValueGeneratedNever();
+        builder.Property(value => value.FantasyLeagueId).HasColumnName("fantasy_league_id");
+        builder.Property(value => value.Name).HasColumnName("name").HasMaxLength(100).IsRequired();
+        builder.Property(value => value.IsUsersTeam).HasColumnName("is_users_team");
+        builder.Property(value => value.Ordinal).HasColumnName("ordinal");
+        builder.HasOne<FantasyLeagueRow>()
+            .WithMany()
+            .HasForeignKey(value => value.FantasyLeagueId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.HasMany(value => value.Entries)
+            .WithOne()
+            .HasForeignKey(value => value.LeagueTeamId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.HasIndex(value => new { value.FantasyLeagueId, value.Ordinal }).IsUnique();
+    }
+}
+
+public sealed class LeagueRosterEntryConfiguration : IEntityTypeConfiguration<LeagueRosterEntryRow>
+{
+    public void Configure(EntityTypeBuilder<LeagueRosterEntryRow> builder)
+    {
+        builder.ToTable("league_roster_entry");
+        builder.HasKey(value => value.Id);
+        builder.Property(value => value.Id).HasColumnName("id").ValueGeneratedNever();
+        builder.Property(value => value.LeagueTeamId).HasColumnName("league_team_id");
+        builder.Property(value => value.PlayerId).HasColumnName("player_id");
+        builder.Property(value => value.Ordinal).HasColumnName("ordinal");
+        builder.HasOne<PlayerRow>()
+            .WithMany()
+            .HasForeignKey(value => value.PlayerId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(value => new { value.LeagueTeamId, value.PlayerId }).IsUnique();
+    }
+}
+
 public sealed class RosterSlotConfiguration : IEntityTypeConfiguration<RosterSlotRow>
 {
     public void Configure(EntityTypeBuilder<RosterSlotRow> builder)

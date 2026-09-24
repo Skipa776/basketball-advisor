@@ -121,7 +121,7 @@ public sealed class RouteIsolationTests : IAsyncLifetime
                 endpoint.Metadata.GetMetadata<OwnedRouteMetadata>() is not null)
             .ToArray();
 
-        routes.Length.ShouldBe(18);
+        routes.Length.ShouldBe(20);
         var failures = await SweepAsync(
             client,
             routes,
@@ -371,6 +371,11 @@ public sealed class RouteIsolationTests : IAsyncLifetime
         string method,
         SweepResources resources)
     {
+        if (path.EndsWith("/teams/csv", StringComparison.Ordinal))
+        {
+            return new { Csv = "Team,Player\nForeign,Nobody" };
+        }
+
         if (path.Contains("/projections", StringComparison.Ordinal) && method == HttpMethods.Post)
         {
             return new { SeasonEndYear = 2026, Source = FantasyBasketball.Domain.Provenance.DataSourceName.Manual };

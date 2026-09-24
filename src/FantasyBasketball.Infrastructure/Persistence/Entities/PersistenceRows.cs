@@ -337,6 +337,50 @@ public sealed class RosterSlotRow : IOwnedResource
         };
 }
 
+public sealed class LeagueTeamRow : IOwnedResource
+{
+    private LeagueTeamRow()
+    {
+    }
+
+    public Guid Id { get; private set; }
+
+    public Guid? OwnerId { get; private set; }
+
+    public Guid FantasyLeagueId { get; private set; }
+
+    public string Name { get; private set; } = string.Empty;
+
+    public bool IsUsersTeam { get; private set; }
+
+    public int Ordinal { get; private set; }
+
+    public List<LeagueRosterEntryRow> Entries { get; private set; } = [];
+
+    public static LeagueTeamRow Create(Guid id, Guid fantasyLeagueId, string name, bool isUsersTeam, int ordinal) =>
+        new() { Id = id, FantasyLeagueId = fantasyLeagueId, Name = name, IsUsersTeam = isUsersTeam, Ordinal = ordinal };
+}
+
+public sealed class LeagueRosterEntryRow : IOwnedResource
+{
+    private LeagueRosterEntryRow()
+    {
+    }
+
+    public Guid Id { get; private set; }
+
+    public Guid? OwnerId { get; private set; }
+
+    public Guid LeagueTeamId { get; private set; }
+
+    public Guid PlayerId { get; private set; }
+
+    public int Ordinal { get; private set; }
+
+    public static LeagueRosterEntryRow Create(Guid leagueTeamId, Guid playerId, int ordinal) =>
+        new() { Id = Guid.NewGuid(), LeagueTeamId = leagueTeamId, PlayerId = playerId, Ordinal = ordinal };
+}
+
 public sealed class SeasonStatLineRow
 {
     private SeasonStatLineRow()

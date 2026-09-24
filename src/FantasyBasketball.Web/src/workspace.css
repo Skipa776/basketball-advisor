@@ -147,3 +147,10 @@ main.landing{overflow-x:clip}
 .hub-soon{font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--ink);border-radius:999px;padding:.15rem .55rem}
 .hub-arrow{font-size:1.4rem;transition:transform .45s var(--ease)}.hub-pill:hover .hub-arrow{transform:rotate(45deg)}
 @media(max-width:700px){.hub{padding:2.5rem 0 1rem}.hub-pill{grid-template-columns:1fr auto;padding:1rem 1.25rem;border-radius:28px;gap:.35rem 1rem}.hub-note{grid-column:1;grid-row:2}.hub-arrow{grid-row:1/3;grid-column:2}.hub-pill:hover{padding-left:1.5rem}}
+
+/* League rosters */
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:1rem;margin:1rem 0 2rem}
+.team-card{border:1px solid var(--rule);border-radius:18px;padding:1.1rem 1.25rem}.team-card.mine{border-color:var(--ink);box-shadow:0 10px 24px rgba(0,0,0,.08)}
+.team-card header{display:flex;justify-content:space-between;align-items:center;gap:.5rem}.team-card h3{margin:0;font-size:1.15rem}
+.team-card ol{margin:.5rem 0 0;padding-left:1.25rem;columns:1}.team-card li{padding:.15rem 0}
+.roster-form{display:grid;gap:1rem;max-width:48rem}.roster-form textarea{font:inherit;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9rem}

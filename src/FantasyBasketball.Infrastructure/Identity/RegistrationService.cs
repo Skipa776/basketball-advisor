@@ -122,6 +122,22 @@ public sealed class RegistrationService(
         foreach (var table in tables)
         {
             var identifier = sql.DelimitIdentifier(table.Table, table.Schema);
+            // An owned table added by a later migration does not exist yet when an
+            // upgraded instance claims its legacy rows; it holds nothing to claim.
+            await using (var exists = database.Database.GetDbConnection().CreateCommand())
+            {
+                exists.Transaction = database.Database.CurrentTransaction?.GetDbTransaction();
+                exists.CommandText = "SELECT to_regclass(@table) IS NOT NULL";
+                var name = exists.CreateParameter();
+                name.ParameterName = "table";
+                name.Value = identifier;
+                exists.Parameters.Add(name);
+                if (await exists.ExecuteScalarAsync(cancellationToken) is not true)
+                {
+                    continue;
+                }
+            }
+
             await using var command = database.Database.GetDbConnection()
                 .CreateCommand();
             command.Transaction = database.Database.CurrentTransaction

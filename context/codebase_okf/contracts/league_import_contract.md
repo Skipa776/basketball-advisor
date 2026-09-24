@@ -3,11 +3,11 @@ type: contract
 title: League Import Contract
 description: The canonical league snapshot, per-provider mapping rules, the fail-loud-on-unmappable rule, and the non-destructive import flow.
 tags: [contract, providers, import]
-source_paths: [src/FantasyBasketball.Infrastructure/Providers, src/FantasyBasketball.Infrastructure/Import]
-test_paths: [tests/FantasyBasketball.IntegrationTests/Providers]
+source_paths: [src/FantasyBasketball.Application/Leagues/RosterCsv.cs, src/FantasyBasketball.Application/Leagues/LeagueRosterService.cs, src/FantasyBasketball.Infrastructure/Persistence/Repositories/LeagueTeamRepository.cs]
+test_paths: [tests/FantasyBasketball.Application.Tests/Leagues, tests/FantasyBasketball.IntegrationTests/Api]
 depends_on: [provider_contracts.md, scoring_rules_catalog.md, player_identity_contract.md]
-status: planned
-last_updated: 2026-07-29
+status: partial
+last_updated: 2026-09-23
 owners: [engineering]
 risk_level: high
 done_criteria:
@@ -136,3 +136,21 @@ add mapping rules here, and add its contract-test rows.
 
 [test_matrix_ingestion_scrapers](../tests/test_matrix_ingestion_scrapers.md),
 rows L-01 through L-08.
+
+## CSV rosters — 2026-09-23
+
+Implemented: the CSV rung for **teams and rosters only** (not settings, which stay
+manual). Format `Team,Player[,Mine]` with a header, quoted fields supported,
+64 KB cap. A malformed line fails with its line number; more teams than the league
+has, or more than one team marked `Mine`, fails by name. A player name must match
+exactly one canonical player after accent-insensitive normalization; others are
+reported back as unmatched (never guessed) and the import completes without them.
+Rosters are current state: an import replaces the league's `league_team` /
+`league_roster_entry` rows in one transaction. Both tables are owned, cascade from
+the league, and travel with account export/import/delete automatically.
+
+The owner has no Sleeper league, so no Sleeper endpoint is validated or used.
+ESPN stays CSV/manual. Evidence: `RosterCsvTests`,
+`League_rosters_import_from_csv_replace_on_reimport_and_report_unmatched_names`,
+the 20-route isolation sweep, `U14_export_import_…` with roster rows, and the
+browser journey's Teams step.
