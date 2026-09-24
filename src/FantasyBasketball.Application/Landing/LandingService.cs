@@ -9,8 +9,18 @@ using FantasyBasketball.Domain.Trends;
 namespace FantasyBasketball.Application.Landing;
 
 public sealed record LandingLine(
-    Guid PlayerId, string Name, decimal Minutes, decimal FantasyPoints, int CategoriesWon,
+    Guid PlayerId, string Name, DateOnly PlayedOn, decimal Minutes, decimal FantasyPoints, int CategoriesWon,
     IReadOnlyDictionary<string, decimal> Line);
+
+/// <summary>
+/// Owner test setting: a simulated "today". Defaults then use only games before it,
+/// so a past season can be replayed as if it were live. Unset means the latest stored day.
+/// </summary>
+public sealed record LandingOptions
+{
+    public const string SectionName = "Landing";
+    public DateOnly? AsOf { get; init; }
+}
 
 public sealed record LandingDay(
     DateOnly? Date, string Source, string Scoring, int PoolSize, IReadOnlyList<LandingLine> Players);
@@ -45,7 +55,8 @@ public sealed class LandingService(
     IBoxScoreRepository boxScores,
     IPlayerRepository players,
     PlayerHeatCalculator calculator,
-    PlayerHeatOptions policy)
+    PlayerHeatOptions policy,
+    LandingOptions options)
 {
     public const string Source = DataSourceName.BasketballReference;
     private static readonly FantasyLeague Scoring = LeagueCatalog.CreateEspnDefaultPointsLeague();
@@ -65,26 +76,27 @@ public sealed class LandingService(
         }
 
         var day = resolved.Value;
-        var played = (await ListThroughAsync(day, token))
-            .Where(sample => sample.PlayedOn == day && sample.DidPlay).ToArray();
-        var pool = played.Select(sample => sample.Statistics!).ToArray();
+        var appearances = (await ListThroughAsync(day, token)).Where(sample => sample.DidPlay).ToArray();
+        var pools = appearances.GroupBy(sample => sample.PlayedOn)
+            .ToDictionary(group => group.Key, group => group.Select(sample => sample.Statistics!).ToArray());
         var lines = new List<LandingLine>();
         foreach (var (id, name) in await FeaturedIdsAsync(token))
         {
-            var sample = played.FirstOrDefault(entry => entry.PlayerId == id);
+            // Every star shows: their game on this day, or else their most recent one before it.
+            var sample = appearances.Where(entry => entry.PlayerId == id).MaxBy(entry => entry.PlayedOn);
             if (sample is null)
             {
                 continue;
             }
 
             var line = sample.Statistics!;
-            lines.Add(new LandingLine(id.Value, name, line[StatKey.MIN], Points.Score(line, Scoring),
-                CategoriesWon.Count(line, pool),
+            lines.Add(new LandingLine(id.Value, name, sample.PlayedOn, line[StatKey.MIN], Points.Score(line, Scoring),
+                CategoriesWon.Count(line, pools[sample.PlayedOn]),
                 ShownStats.ToDictionary(stat => stat.ToString(), stat => line[stat])));
         }
 
-        return new LandingDay(day, Source, Scoring.Name, pool.Length,
-            lines.OrderByDescending(line => line.FantasyPoints).ToArray());
+        return new LandingDay(day, Source, Scoring.Name, pools.GetValueOrDefault(day)?.Length ?? 0,
+            lines.OrderByDescending(line => line.PlayedOn).ThenByDescending(line => line.FantasyPoints).ToArray());
     }
 
     public async Task<LandingRisers> RisersAsync(DateOnly? throughDate, int limit, CancellationToken token)
@@ -138,6 +150,13 @@ public sealed class LandingService(
         if (requested is not null)
         {
             return requested;
+        }
+
+        if (options.AsOf is { } today)
+        {
+            // The last game day strictly before the simulated today.
+            return (await ListThroughAsync(today.AddDays(-1), token))
+                .Select(sample => (DateOnly?)sample.PlayedOn).Max();
         }
 
         var pools = await boxScores.ListPoolsAsync(token);

@@ -167,3 +167,9 @@ draft. The masthead is the wordmark, Menu and Sign out.
 "Teams in the league" opens league settings (team count, scoring, roster slots):
 there is no per-team roster capability to show. Matchup has no specification
 yet; the owner decides what it compares.
+
+**Rotation — 2026-09-23.** The featured strip is one continuously rotating row
+of all featured players: the list is rendered twice (the copy `aria-hidden`) and
+slides by half its width, so the loop is seamless. It pauses on hover or focus and
+has a Pause/Play button (WCAG 2.2.2); reduced motion shows a plain scroller without
+the copy. A card from an earlier day carries a date chip.

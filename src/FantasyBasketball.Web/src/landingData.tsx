@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useResource } from './useResource';
 import type { LandingDay, LandingLine, LandingRisers } from './types';
 import { PLAYER_PHOTOS, photoFor } from './playerPhotos';
@@ -9,10 +9,11 @@ const shortDate = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateStrin
 const one = (value: number) => (Math.round(value * 10) / 10).toLocaleString('en-US');
 const initials = (name: string) => name.split(/\s+/).map(part => part[0]).slice(0, 2).join('');
 
-function PlayerCard({ player }: { player: LandingLine }) {
+function PlayerCard({ player, day, copy }: { player: LandingLine; day: string; copy?: boolean }) {
   const photo = photoFor(player.name);
   const box = `${player.line.PTS}/${player.line.REB}/${player.line.AST}`;
-  return <li className="player-card">
+  return <li className="player-card" aria-hidden={copy || undefined}>
+    {player.playedOn !== day && <span className="pc-date">{shortDate(player.playedOn)}</span>}
     {photo ? <img src={`/img/players/${photo.file}`} alt="" loading="lazy" width="400" height="500" /> : <span className="player-initials" aria-hidden="true">{initials(player.name)}</span>}
     <p className="pc-name">{player.name}</p>
     <p className="pc-score"><span>CAT <b data-numeric>{player.categoriesWon}/9</b></span><span>PTS <b data-numeric>{one(player.fantasyPoints)}</b></span></p>
@@ -20,23 +21,35 @@ function PlayerCard({ player }: { player: LandingLine }) {
   </li>;
 }
 
-/** Previous game day's featured lines in two scroll-drifting rows (drift is set by Landing). */
+/**
+ * Every featured star's latest game as of the previous game day, in one continuously
+ * rotating row. The list is rendered twice (the copy hidden from assistive tech) and
+ * slides by half its width, so the loop is seamless. Hover, focus or Pause stops it;
+ * reduced motion turns it into a plain horizontal scroller.
+ */
 export function DailyStrip() {
   const day = useResource<LandingDay>('/api/public/daily');
+  const [paused, setPaused] = useState(false);
   const data = day.result?.data;
   const players = data?.players ?? [];
-  const half = Math.ceil(players.length / 2);
   return <section className="strips daily" aria-labelledby="daily-title">
     <div className="section-intro">
       <p className="eyebrow">{data?.date ? `PREVIOUS GAME DAY · ${longDate(data.date).toUpperCase()}` : 'PREVIOUS GAME DAY'}</p>
       <h2 id="daily-title">How the stars played.</h2>
-      <p className="muted">CAT: categories won of 9 against everyone who played that day. PTS: {data?.scoring ?? 'ESPN default points'}.</p>
+      <p className="muted">Each star’s latest game (dated if it wasn’t that day). CAT: categories won of 9 against everyone who played that day. PTS: {data?.scoring ?? 'ESPN default points'}.</p>
     </div>
     <ErrorNotice text={day.error} retry={day.refresh} />
     {day.loading && <p role="status">Loading the last game day…</p>}
     {data && !players.length && <p className="notice">No featured player has a recorded game{data.date ? ` on ${longDate(data.date)}` : ' yet'}.</p>}
-    {[players.slice(0, half), players.slice(half)].filter(row => row.length).map((row, index) =>
-      <div className="strip-track" key={index} tabIndex={0} role="region" aria-label={`Featured players, row ${index + 1}`}><ul className={`strip strip-${index + 1}`}>{row.map(player => <PlayerCard key={player.playerId} player={player} />)}</ul></div>)}
+    {data?.date && !!players.length && <>
+      <div className={`marquee${paused ? ' paused' : ''}`} tabIndex={0} role="region" aria-label="Featured players">
+        <ul className="marquee-track" style={{ '--count': players.length } as React.CSSProperties}>
+          {players.map(player => <PlayerCard key={player.playerId} player={player} day={data.date!} />)}
+          {players.map(player => <PlayerCard key={`copy-${player.playerId}`} player={player} day={data.date!} copy />)}
+        </ul>
+      </div>
+      <button type="button" className="marquee-toggle" aria-pressed={paused} onClick={() => setPaused(!paused)}>{paused ? 'Play rotation' : 'Pause rotation'}</button>
+    </>}
     {data?.date && <p className="muted source-note">2025–26 regular-season box scores from Basketball-Reference, {data.poolSize} players that day.</p>}
     <a className="round magnetic" href="#join">Start drafting</a>
   </section>;

@@ -33,6 +33,33 @@ public sealed class LandingServiceTests
         // Wins PTS, REB, AST, STL, BLK, 3PM; loses TOV; ties FG% and FT% (the only shooter).
         line.CategoriesWon.ShouldBe(6);
         line.Line["PTS"].ShouldBe(30m);
+        line.PlayedOn.ShouldBe(LastDay);
+    }
+
+    [Fact]
+    public async Task A_featured_player_who_sat_out_shows_their_most_recent_game()
+    {
+        var service = Service(out var store, lukaSitsLastDay: true);
+        var day = await service.DailyAsync(LastDay, TestContext.Current.CancellationToken);
+
+        day.PoolSize.ShouldBe(2, "only the two who played on the chosen day");
+        var line = day.Players.ShouldHaveSingleItem();
+        line.PlayedOn.ShouldBe(LastDay.AddDays(-1));
+        line.CategoriesWon.ShouldBe(6, "compared with the pool of the day he actually played");
+    }
+
+    [Fact]
+    public async Task A_simulated_today_uses_only_games_before_it()
+    {
+        Service(out var store);
+        var service = new LandingService(store, store, Calculator(), Policy, new LandingOptions { AsOf = new DateOnly(2025, 11, 5) });
+        var token = TestContext.Current.CancellationToken;
+
+        (await service.DailyAsync(null, token)).Date.ShouldBe(new DateOnly(2025, 11, 4));
+        store.Requested!.Value.Item4.ShouldBe(new DateOnly(2025, 11, 4));
+        var risers = await service.RisersAsync(null, 10, token);
+        risers.ThroughDate.ShouldBe(new DateOnly(2025, 11, 4));
+        risers.Players.ShouldHaveSingleItem().RecentAverage.ShouldBe((10m + 10m + 30m) / 3m, 0.0001m, "Nov 2-4: 10, 10, 30");
     }
 
     [Fact]
@@ -67,7 +94,7 @@ public sealed class LandingServiceTests
     public async Task Empty_storage_returns_no_date_and_no_players()
     {
         var store = new Store([], []);
-        var service = new LandingService(store, store, Calculator(), Policy);
+        var service = new LandingService(store, store, Calculator(), Policy, new LandingOptions());
         (await service.DailyAsync(null, TestContext.Current.CancellationToken)).Date.ShouldBeNull();
         (await service.RisersAsync(null, 5, TestContext.Current.CancellationToken)).Players.ShouldBeEmpty();
     }
@@ -76,19 +103,19 @@ public sealed class LandingServiceTests
 
     private static PlayerHeatCalculator Calculator() => new(new PointsScoringEngine(), Policy);
 
-    private LandingService Service(out Store store)
+    private LandingService Service(out Store store, bool lukaSitsLastDay = false)
     {
         var samples = new List<PlayerGameSample>();
         for (var day = 1; day <= 6; day++)
         {
             var date = new DateOnly(2025, 11, day);
-            samples.Add(Sample(luka, date, Stats(pts: 30, reb: 10, ast: 8, stl: 2, blk: 1, fg3m: 5, tov: 3, fgm: 10, fga: 20, ftm: 5, fta: 6)));
+            if (!(lukaSitsLastDay && day == 6)) samples.Add(Sample(luka, date, Stats(pts: 30, reb: 10, ast: 8, stl: 2, blk: 1, fg3m: 5, tov: 3, fgm: 10, fga: 20, ftm: 5, fta: 6)));
             samples.Add(Sample(riser, date, Stats(pts: day <= 3 ? 10 : 30)));
             samples.Add(Sample(flat, date, Stats(pts: 10)));
         }
 
         store = new Store(samples, [luka, riser, flat]);
-        return new LandingService(store, store, Calculator(), Policy);
+        return new LandingService(store, store, Calculator(), Policy, new LandingOptions());
     }
 
     private static Player Player(string name) =>

@@ -87,9 +87,12 @@ main.landing{overflow-x:clip}
 .round-red{background:var(--accent);border-color:var(--accent);color:#fff;margin-top:2rem}.round-red:hover{background:#a40600}
 .section-intro{max-width:1400px;width:100%;margin:0 auto;padding:0 2rem}.section-intro h2{margin-bottom:.5rem}
 .strips{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:1.5rem;padding:4rem 0 5rem;--drift:0px}
-.strip-track{width:100%;overflow-x:auto;scrollbar-width:none;padding:.5rem 0 1rem}.strip-track::-webkit-scrollbar{display:none}
-.strip{display:flex;gap:clamp(.75rem,1.6vw,1.5rem);width:max-content;margin:0 auto;padding:0 2rem;list-style:none}.strip-1{transform:translateX(var(--drift))}.strip-2{transform:translateX(calc(-1 * var(--drift)))}
-.player-card{width:clamp(136px,13vw,176px);flex-shrink:0;background:var(--paper);border:1px solid var(--rule);border-radius:14px;overflow:hidden;box-shadow:0 12px 28px rgba(0,0,0,.08);transition:transform .35s var(--ease),box-shadow .35s}
+.marquee{width:100%;overflow:hidden;padding:.5rem 0 1.25rem}
+.marquee-track{display:flex;width:max-content;margin:0;padding:0;list-style:none;animation:marquee calc(var(--count) * 3.5s) linear infinite}
+@keyframes marquee{to{transform:translateX(-50%)}}
+.marquee:hover .marquee-track,.marquee:focus-within .marquee-track,.marquee:focus .marquee-track,.marquee.paused .marquee-track{animation-play-state:paused}
+.marquee-toggle{font-size:.85rem;padding:.45rem 1rem}
+.player-card{position:relative;margin-right:clamp(.75rem,1.6vw,1.5rem);width:clamp(136px,13vw,176px);flex-shrink:0;background:var(--paper);border:1px solid var(--rule);border-radius:14px;overflow:hidden;box-shadow:0 12px 28px rgba(0,0,0,.08);transition:transform .35s var(--ease),box-shadow .35s}
 .player-card:hover{transform:translateY(-6px);box-shadow:0 18px 36px rgba(0,0,0,.14)}
 .player-card img,.player-initials{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;object-position:50% 20%;background:var(--surface)}
 .player-initials{display:grid;place-items:center;font-size:2.5rem;font-weight:600;color:var(--muted)}
@@ -97,6 +100,7 @@ main.landing{overflow-x:clip}
 .pc-score{display:flex;justify-content:space-between;gap:.5rem;font-size:.72rem;letter-spacing:.06em;color:var(--muted);padding-top:.35rem!important}.pc-score b{display:block;font-size:1.15rem;letter-spacing:0;color:var(--ink);font-variant-numeric:tabular-nums}
 .pc-score span:last-child{text-align:right}.pc-score span:last-child b{color:var(--accent)}
 .pc-box{font-size:.78rem;font-variant-numeric:tabular-nums;padding:.35rem .75rem .75rem!important;border-top:1px solid var(--rule);margin-top:.5rem!important}.pc-box span{color:var(--muted);font-size:.68rem}
+.pc-date{position:absolute;top:.5rem;left:.5rem;padding:.1rem .55rem;border-radius:999px;background:var(--paper);font-size:.7rem;font-weight:600;box-shadow:0 2px 6px rgba(0,0,0,.15)}
 .source-note{text-align:center;padding:0 2rem}
 .strips .round{margin-top:1rem}
 .risers{position:relative;z-index:2;padding:1rem 0 5rem;max-width:1400px;margin:0 auto}.risers .table-scroll{padding:0 2rem}
@@ -125,10 +129,10 @@ main.landing{overflow-x:clip}
   th,td{height:44px;padding:0 .4rem}.pick,.player-name{min-height:44px}.pagination button{padding:.6rem}.player-detail>button{float:none}
   .letters{padding:0 1rem 5rem}.scroll-hint{right:1rem;bottom:1rem;font-size:1.25rem}
   .data-list>li{align-items:flex-start;flex-direction:column}.section-heading{align-items:flex-start;flex-direction:column}
-  .pitch{flex-direction:column;gap:1.5rem;padding:4rem 1rem 2rem}.strip{padding:0 1rem}.section-intro,.risers .table-scroll,.source-note{padding:0 1rem}
+  .pitch{flex-direction:column;gap:1.5rem;padding:4rem 1rem 2rem}.section-intro,.risers .table-scroll,.source-note{padding:0 1rem}
   .join{padding:7rem 1rem 2rem}.join-body{grid-template-columns:1fr;gap:1.5rem}.site-footer{border-radius:28px 28px 0 0;padding:2rem 1rem}
 }
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}.strip{transform:none!important}.risers-table tbody tr{transform:none;opacity:1}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}.marquee{overflow-x:auto;padding-inline:1rem}.marquee-track [aria-hidden=true],.marquee-toggle{display:none}.risers-table tbody tr{transform:none;opacity:1}}
 
 /* Signed-in menu: oval rows after the portfolio projects list */
 .hub{max-width:1100px;margin:0 auto;padding:4rem 0 2rem}

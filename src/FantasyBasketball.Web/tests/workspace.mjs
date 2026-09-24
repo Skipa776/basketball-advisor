@@ -27,8 +27,8 @@ async function accessibility(name) {
 // Landing with mocked public data: the test host stores no Basketball-Reference games.
 const envelope = data => ({ success: true, data, error: null, meta: null });
 const dailyFixture = envelope({ date: '2025-11-16', source: 'basketball-reference', scoring: 'ESPN default points', poolSize: 168, players: [
-  { playerId: 'p1', name: 'Luka Dončić', minutes: 36, fantasyPoints: 65.5, categoriesWon: 7, line: { PTS: 38, REB: 9, AST: 11 } },
-  { playerId: 'p2', name: 'Fixture Newcomer', minutes: 30, fantasyPoints: 30, categoriesWon: 4, line: { PTS: 20, REB: 5, AST: 3 } }] });
+  { playerId: 'p1', name: 'Luka Dončić', playedOn: '2025-11-16', minutes: 36, fantasyPoints: 65.5, categoriesWon: 7, line: { PTS: 38, REB: 9, AST: 11 } },
+  { playerId: 'p2', name: 'Fixture Newcomer', playedOn: '2025-11-14', minutes: 30, fantasyPoints: 30, categoriesWon: 4, line: { PTS: 20, REB: 5, AST: 3 } }] });
 const risersFixture = envelope({ throughDate: '2025-12-15', source: 'basketball-reference', scoring: 'ESPN default points', players: Array.from({ length: 12 }, (_, index) => (
   { playerId: `r${index}`, name: `Riser ${index + 1}`, latestAppearance: '2025-12-15', categoriesWon: 5, recentAverage: 30 - index, baselineAverage: 18, streak: 3, percentAboveBaseline: 66.7, status: index === 0 ? 'Must add' : 'Add' })) });
 async function landingPage(reducedMotion, width = 1280) {
@@ -49,16 +49,25 @@ async function landingPage(reducedMotion, width = 1280) {
 async function landingChecks() {
   const landing = await landingPage('no-preference');
   const strip = landing.getByRole('region', { name: 'How the stars played.' });
-  await visible(strip.getByText('Luka Dončić', { exact: true }));
-  assert.equal(await strip.locator('.player-card').count(), 2);
-  await visible(strip.getByText('7/9', { exact: true }));
-  await visible(strip.getByText('65.5', { exact: true }));
+  const cards = strip.locator('.player-card:not([aria-hidden])');
+  await visible(cards.getByText('Luka Dončić', { exact: true }));
+  assert.equal(await cards.count(), 2);
+  assert.equal(await strip.locator('.player-card[aria-hidden=true]').count(), 2, 'the loop copy exists but is hidden from assistive tech');
+  await visible(cards.getByText('7/9', { exact: true }));
+  await visible(cards.getByText('65.5', { exact: true }));
+  await visible(cards.getByText('Nov 14', { exact: true }));
+  assert.equal(await cards.first().locator('.pc-date').count(), 0, 'a game on the shown day carries no date chip');
+  const track = strip.locator('.marquee-track');
+  assert.equal(await track.evaluate(element => getComputedStyle(element).animationPlayState), 'running');
+  await strip.getByRole('button', { name: 'Pause rotation' }).click();
+  assert.equal(await strip.getByRole('button', { name: 'Play rotation' }).getAttribute('aria-pressed'), 'true');
+  assert.equal(await track.evaluate(element => getComputedStyle(element).animationPlayState), 'paused');
   await visible(landing.getByText('PREVIOUS GAME DAY · SUNDAY, NOV 16, 2025'));
-  const photo = strip.locator('.player-card img');
+  const photo = cards.locator('img');
   assert.equal(await photo.count(), 1, 'only players with a credited photo get an image');
   await photo.scrollIntoViewIfNeeded();
   await landing.waitForFunction(element => element.complete && element.naturalWidth > 0, await photo.elementHandle());
-  await visible(strip.getByText('FN', { exact: true }));
+  await visible(cards.getByText('FN', { exact: true }));
   const rows = landing.locator('.risers-table tbody tr');
   assert.equal(await rows.count(), 12);
   assert.equal(await rows.last().evaluate(row => row.classList.contains('in')), false, 'rows below the fold wait to rise');
@@ -73,11 +82,14 @@ async function landingChecks() {
   await landing.context().close();
   const still = await landingPage('reduce');
   await visible(still.getByRole('row', { name: /Riser 12/ }));
+  assert.equal(await still.locator('.player-card[aria-hidden=true]').first().isVisible(), false, 'no loop copy without motion');
+  assert.equal(await still.getByRole('button', { name: 'Pause rotation' }).isVisible(), false);
+  assert.equal(await still.locator('.marquee-track').evaluate(element => getComputedStyle(element).animationName), 'none');
   assert.equal(await still.locator('.risers-table tbody tr.in').count(), 12, 'reduced motion shows every row in place');
   await still.context().close();
   for (const width of [390, 320]) {
     const narrow = await landingPage('reduce', width);
-    await visible(narrow.getByText('Luka Dončić', { exact: true }));
+    await visible(narrow.locator('.player-card:not([aria-hidden])').getByText('Luka Dončić', { exact: true }));
     await visible(narrow.getByRole('row', { name: /Riser 1 / }));
     const scroll = await narrow.evaluate(() => document.documentElement.scrollWidth);
     assert(scroll <= width, `Landing overflows at ${width}px: ${scroll}px`);
@@ -86,7 +98,7 @@ async function landingChecks() {
     await narrow.screenshot({ path: `${artifacts}/landing-mobile-${width}.png`, fullPage: true });
     await narrow.context().close();
   }
-  checks.push('Landing: featured player cards with credited photo and initials fallback, CAT and ESPN points, rows rise on scroll and reset below the fold, still under reduced motion, axe clean, no overflow at 390/320 px');
+  checks.push('Landing: continuously rotating featured cards (hidden loop copy, pause control, dated earlier games) with credited photo and initials fallback, CAT and ESPN points, rows rise on scroll and reset below the fold, still under reduced motion, axe clean, no overflow at 390/320 px');
 }
 try {
   await landingChecks();

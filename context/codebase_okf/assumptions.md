@@ -1018,3 +1018,14 @@ were created and no numerical usage quota was available.
   rate-limited per IP and never read owned tables.
 - Team codes are omitted from the landing payload: players carry a team id but no
   by-id team lookup exists; add one when the cards need it.
+
+## Full-season replay — 2026-09-23
+
+- The whole 2025-26 regular season (2025-10-21 → 2026-04-12) is imported. Play-in
+  games (Apr 14–17) are flagged `postseason: false` by balldontlie, so they are
+  excluded by date, as is the Dec 16 NBA Cup final.
+- `Landing:AsOf` replays the season: set it to a date such as 2026-03-01 and the
+  landing and waiver views use only games before that day. With a full season the
+  accepted 10-game baseline applies; no heat override is needed.
+- The featured strip shows every featured player's most recent game rather than
+  only those who played the resolved day, so it is full on light schedules.

@@ -208,3 +208,9 @@ name/value mappings so React does not duplicate the C# enums.
 
 The complete shape and historical-data limitations are owned by
 [player_performance_api_contract](player_performance_api_contract.md).
+
+**Landing update — 2026-09-23.** `GET /api/public/daily` returns *every* featured
+player's latest appearance on or before the resolved date; each line carries its
+own `playedOn`, and `poolSize` counts the resolved date only. Setting
+`Landing:AsOf` (a simulated "today", owner test setting) makes the default date
+the last stored game day strictly before it, for `daily` and `risers` alike.
