@@ -234,3 +234,9 @@ else today's US-Eastern date). Each side = points scored this week through
 yesterday + games left from today × average over the last 10 appearances, all
 under the league's points rules. 409 names the missing step (rosters, your team,
 an opponent) or a category league.
+
+**Weekly acquisitions — 2026-09-23.** Leagues carry `weeklyAcquisitionLimit`
+(1–99, default 7, owner decision): optional on `POST /api/leagues` and
+`PUT /api/leagues/{id}/settings` (omitted keeps the current value), returned on
+every league. Existing leagues migrated to 7. The streaming planner will cap
+add/drops at it.

@@ -253,6 +253,8 @@ public sealed class FantasyLeagueRow : IOwnedResource
 
     public string Cadence { get; private set; } = string.Empty;
 
+    public int WeeklyAcquisitionLimit { get; private set; } = 7;
+
     public List<ScoringRuleRow> ScoringRules { get; private set; } = [];
 
     public List<RosterSlotRow> RosterSlots { get; private set; } = [];
@@ -263,7 +265,8 @@ public sealed class FantasyLeagueRow : IOwnedResource
         string type,
         int teamCount,
         string[] categories,
-        string cadence) =>
+        string cadence,
+        int weeklyAcquisitionLimit = 7) =>
         new()
         {
             Id = id,
@@ -272,13 +275,15 @@ public sealed class FantasyLeagueRow : IOwnedResource
             TeamCount = teamCount,
             Categories = categories,
             Cadence = cadence,
+            WeeklyAcquisitionLimit = weeklyAcquisitionLimit,
         };
 
-    public void UpdateSettings(string name, int teamCount, string cadence)
+    public void UpdateSettings(string name, int teamCount, string cadence, int weeklyAcquisitionLimit)
     {
         Name = name;
         TeamCount = teamCount;
         Cadence = cadence;
+        WeeklyAcquisitionLimit = weeklyAcquisitionLimit;
     }
 }
 

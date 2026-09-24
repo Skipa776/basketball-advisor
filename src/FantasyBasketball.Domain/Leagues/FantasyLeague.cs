@@ -13,8 +13,16 @@ public sealed record FantasyLeague
         IReadOnlyList<ScoringRule> scoringRules,
         IReadOnlyList<StatKey> categories,
         IReadOnlyList<RosterSlot> rosterSlots,
-        LineupCadence cadence)
+        LineupCadence cadence,
+        int weeklyAcquisitionLimit = DefaultWeeklyAcquisitionLimit)
     {
+        if (weeklyAcquisitionLimit is < 1 or > MaximumWeeklyAcquisitionLimit)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(weeklyAcquisitionLimit),
+                $"Weekly acquisitions must be between 1 and {MaximumWeeklyAcquisitionLimit}.");
+        }
+
         if (id == Guid.Empty)
         {
             throw new ArgumentException("Id is required.", nameof(id));
@@ -49,7 +57,16 @@ public sealed record FantasyLeague
         Categories = Copy(categories);
         RosterSlots = Copy(rosterSlots);
         Cadence = cadence;
+        WeeklyAcquisitionLimit = weeklyAcquisitionLimit;
     }
+
+    /// <summary>ESPN's common default; owner-approved 2026-09-23.</summary>
+    public const int DefaultWeeklyAcquisitionLimit = 7;
+
+    public const int MaximumWeeklyAcquisitionLimit = 99;
+
+    /// <summary>Add/drops allowed per matchup week; streaming plans never exceed it.</summary>
+    public int WeeklyAcquisitionLimit { get; }
 
     public Guid Id { get; }
 

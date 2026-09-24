@@ -1050,3 +1050,10 @@ were created and no numerical usage quota was available.
 
 Owner-approved: `MarketValue = (currentPick − ADP) × valuePerPick`, matching the
 draft value contract's own definition. See that contract's correction note.
+
+## Streaming prerequisites — 2026-09-23
+
+- Eligibility (owner): Basketball-Reference primary position (PG/SG/SF/PF/C)
+  through the existing `RosterSlot.Accepts` mapping; no multi-position eligibility.
+- Weekly acquisitions (owner): per league, default 7 (ESPN's common default),
+  1–99, editable on create and in League settings.

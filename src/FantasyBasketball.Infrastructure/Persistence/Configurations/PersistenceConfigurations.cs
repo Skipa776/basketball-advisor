@@ -163,6 +163,7 @@ public sealed class FantasyLeagueConfiguration : IEntityTypeConfiguration<Fantas
         builder.Property(value => value.TeamCount).HasColumnName("team_count");
         builder.Property(value => value.Categories).HasColumnName("categories").HasColumnType("text[]");
         builder.Property(value => value.Cadence).HasColumnName("cadence").IsRequired();
+        builder.Property(value => value.WeeklyAcquisitionLimit).HasColumnName("weekly_acquisition_limit").HasDefaultValue(7);
     }
 }
 

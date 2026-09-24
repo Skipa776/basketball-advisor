@@ -72,6 +72,17 @@ public sealed class FantasyLeagueTests
         new RosterSlot(kind).Accepts(position).ShouldBe(expected);
     }
 
+    [Fact]
+    public void Weekly_acquisitions_default_to_seven_and_stay_in_range()
+    {
+        CreateLeague(LeagueType.Points, [new ScoringRule(StatKey.PTS, 1m)], []).WeeklyAcquisitionLimit.ShouldBe(7);
+        foreach (var invalid in new[] { 0, 100 })
+        {
+            Should.Throw<ArgumentOutOfRangeException>(() => new FantasyLeague(Guid.NewGuid(), "L", LeagueType.Points, 10,
+                [new ScoringRule(StatKey.PTS, 1m)], [], [new RosterSlot(RosterSlotKind.UTIL)], LineupCadence.Daily, invalid));
+        }
+    }
+
     private static FantasyLeague CreateLeague(
         LeagueType type,
         IReadOnlyList<ScoringRule> rules,

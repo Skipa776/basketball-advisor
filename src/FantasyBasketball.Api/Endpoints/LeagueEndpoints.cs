@@ -20,7 +20,8 @@ public sealed record CreateLeagueRequest(
     IReadOnlyList<ScoringRuleRequest>? ScoringRules,
     IReadOnlyList<string>? Categories,
     IReadOnlyList<string>? RosterSlots,
-    string Cadence);
+    string Cadence,
+    int? WeeklyAcquisitionLimit = null);
 
 public sealed record ReplaceScoringRequest(
     IReadOnlyList<ScoringRuleRequest>? ScoringRules);
@@ -29,7 +30,8 @@ public sealed record UpdateLeagueSettingsRequest(
     string Name,
     int TeamCount,
     string Cadence,
-    IReadOnlyList<string>? RosterSlots);
+    IReadOnlyList<string>? RosterSlots,
+    int? WeeklyAcquisitionLimit = null);
 
 public sealed record RecalculateProjectionsRequest(int SeasonEndYear, string Source);
 
@@ -261,7 +263,8 @@ public static class LeagueEndpoints
             request.TeamCount,
             cadence,
             slots,
-            cancellationToken));
+            cancellationToken,
+            request.WeeklyAcquisitionLimit));
     }
 
     private static async Task<FantasyLeague> RequireAndGetAsync(
@@ -346,7 +349,8 @@ public static class LeagueEndpoints
             scoringRules,
             categories,
             rosterSlots,
-            cadence);
+            cadence,
+            request.WeeklyAcquisitionLimit ?? FantasyLeague.DefaultWeeklyAcquisitionLimit);
     }
 
     private static IReadOnlyList<ScoringRule> ParseScoringRules(

@@ -47,7 +47,8 @@ public sealed class LeagueService(ILeagueRepository leagues, IDraftRepository dr
             scoringRules,
             existing.Categories,
             existing.RosterSlots,
-            existing.Cadence);
+            existing.Cadence,
+            existing.WeeklyAcquisitionLimit);
         await leagues.SaveScoringAsync(replacement, cancellationToken);
         return replacement;
     }
@@ -58,7 +59,8 @@ public sealed class LeagueService(ILeagueRepository leagues, IDraftRepository dr
         int teamCount,
         LineupCadence cadence,
         IReadOnlyList<RosterSlot> rosterSlots,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        int? weeklyAcquisitionLimit = null)
     {
         var existing = await GetAsync(id, cancellationToken);
         var structuralChange = existing.TeamCount != teamCount
@@ -79,7 +81,8 @@ public sealed class LeagueService(ILeagueRepository leagues, IDraftRepository dr
             existing.ScoringRules,
             existing.Categories,
             rosterSlots,
-            cadence);
+            cadence,
+            weeklyAcquisitionLimit ?? existing.WeeklyAcquisitionLimit);
         await leagues.SaveSettingsAsync(replacement, cancellationToken);
         return replacement;
     }

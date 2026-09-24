@@ -277,7 +277,7 @@ public sealed partial class ApiHttpTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task League_names_over_100_characters_are_rejected_on_create_and_settings()
+    public async Task League_settings_validate_names_and_round_trip_weekly_acquisitions()
     {
         var token = TestContext.Current.CancellationToken;
         object Request(string name) => new
@@ -309,6 +309,23 @@ public sealed partial class ApiHttpTests : IAsyncLifetime
             new { Name = new string('y', 101), TeamCount = 10, Cadence = "Daily", RosterSlots = new[] { "UTIL" } },
             token);
         rename.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
+        created.RootElement.GetProperty("data").GetProperty("weeklyAcquisitionLimit").GetInt32().ShouldBe(7, "ESPN's common default");
+        using (var limit = await client.PutAsJsonAsync($"/api/leagues/{leagueId}/settings",
+            new { Name = "Limited", TeamCount = 10, Cadence = "Daily", RosterSlots = new[] { "UTIL" }, WeeklyAcquisitionLimit = 4 }, token))
+        {
+            limit.StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+
+        using (var reloaded = await client.GetAsync($"/api/leagues/{leagueId}", token))
+        using (var body = await ReadEnvelopeAsync(reloaded, token))
+        {
+            body.RootElement.GetProperty("data").GetProperty("weeklyAcquisitionLimit").GetInt32().ShouldBe(4);
+        }
+
+        using var invalid = await client.PutAsJsonAsync($"/api/leagues/{leagueId}/settings",
+            new { Name = "Limited", TeamCount = 10, Cadence = "Daily", RosterSlots = new[] { "UTIL" }, WeeklyAcquisitionLimit = 0 }, token);
+        invalid.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     private async Task AssertProjectedPlayersAsync(

@@ -18,7 +18,8 @@ public sealed class LeagueRepository(FantasyDbContext database) : ILeagueReposit
             league.Type.ToString(),
             league.TeamCount,
             league.Categories.Select(value => value.ToString()).ToArray(),
-            league.Cadence.ToString());
+            league.Cadence.ToString(),
+            league.WeeklyAcquisitionLimit);
         row.ScoringRules.AddRange(league.ScoringRules.Select((rule, ordinal) =>
             ScoringRuleRow.Create(
                 league.Id,
@@ -76,7 +77,8 @@ public sealed class LeagueRepository(FantasyDbContext database) : ILeagueReposit
                 .OrderBy(slot => slot.Ordinal)
                 .Select(slot => new RosterSlot(Enum.Parse<RosterSlotKind>(slot.Kind)))
                 .ToArray(),
-            Enum.Parse<LineupCadence>(row.Cadence));
+            Enum.Parse<LineupCadence>(row.Cadence),
+            row.WeeklyAcquisitionLimit);
 
     public async Task SaveScoringAsync(
         FantasyLeague league,
@@ -111,7 +113,8 @@ public sealed class LeagueRepository(FantasyDbContext database) : ILeagueReposit
         existing.UpdateSettings(
             league.Name,
             league.TeamCount,
-            league.Cadence.ToString());
+            league.Cadence.ToString(),
+            league.WeeklyAcquisitionLimit);
         database.RosterSlots.RemoveRange(existing.RosterSlots);
         existing.RosterSlots.Clear();
         existing.RosterSlots.AddRange(league.RosterSlots.Select((slot, ordinal) =>
