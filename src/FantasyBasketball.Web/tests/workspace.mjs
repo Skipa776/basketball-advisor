@@ -312,6 +312,11 @@ try {
     await page.screenshot({ path: `${artifacts}/mobile-${width}.png`, fullPage: true });
   }
   await page.setViewportSize({ width: 390, height: 844 });
+  for (const [path, name] of [['/app', 'menu'], [`/app/teams?league=${leagueId}`, 'teams'], [`/app/matchup?league=${leagueId}`, 'matchup']]) {
+    await page.goto(new URL(path, base).href);
+    await page.waitForLoadState('networkidle');
+    await page.screenshot({ path: `${artifacts}/${name}-390.png`, fullPage: true });
+  }
   for (const [path, heading] of [['/app/projections', 'Projected players'], ['/app/drafts', 'Your drafts'], ['/app/league-settings', 'League settings'], ['/app/context-review', 'Context review'], ['/app/data-sources', 'Data sources'], ['/app/account', 'Account data'], ['/app/trade-analyzer', 'Trade analyzer'], ['/app/streaming', 'Streaming advisor'], ['/app/standings', 'Standings'], ['/app/waiver', 'Rising right now.'], ['/app/matchup', 'Matchup analyzer'], ['/app/teams', 'Teams in the league'], ['/app', 'What do you want to see?'], ['/app/unknown', 'Page not found']]) {
     await page.goto(new URL(`${path}?league=${leagueId}`, base).href);
     await visible(page.getByRole('heading', { name: new RegExp(`^${heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.?$`) }).first());
