@@ -57,6 +57,25 @@ public sealed class FantasyProsAdpScraperTests : IDisposable
             .Message.ShouldContain("AVG");
     }
 
+    // The live 2026-27 page (verified 2026-09-23): Rank, Player, Yahoo, ESPN, AVG with no
+    // STD DEV, a "(TEAM - POS)" <small> after the player link, and rows left unclosed.
+    [Fact]
+    public void S13_current_page_layout_without_std_dev_and_with_team_suffix_parses()
+    {
+        const string html = """
+            <table id="data"><thead><tr><th>Rank</th><th>Player</th><th>Yahoo</th><th>ESPN</th><th>AVG</th></tr></thead>
+            <tbody>
+            <tr><td>1</td><td class="player-label"><a href="/nba/adp/nikola-jokic.php">Nikola Jokic</a> <small>(DEN - C)</small></td><td>2</td><td>1</td><td>1.5</td>
+            <tr><td>2</td><td class="player-label"><a href="/nba/adp/luka-doncic.php">Luka Doncic</a> <small>(LAL - PG,SG)</small></td><td>3</td><td>4</td><td>3.5</td>
+            </tbody></table>
+            """;
+
+        var entries = new AdpTableParser().Parse(html);
+
+        entries.Select(entry => (entry.ExternalPlayerId, entry.PlayerName, entry.AverageDraftPosition, entry.StandardDeviation))
+            .ShouldBe([("nikola-jokic", "Nikola Jokic", 1.5m, (decimal?)null), ("luka-doncic", "Luka Doncic", 3.5m, (decimal?)null)]);
+    }
+
     [Fact]
     public async Task Recorded_html_maps_to_provenance_complete_adp_entries()
     {
@@ -71,7 +90,7 @@ public sealed class FantasyProsAdpScraperTests : IDisposable
 
         entries.Count.ShouldBe(2);
         entries[0].Provenance.Source.ShouldBe(DataSourceName.FantasyPros);
-        entries[0].Provenance.ParserVersion.ShouldBe("fantasypros-v1");
+        entries[0].Provenance.ParserVersion.ShouldBe("fantasypros-v2");
         entries[0].Provenance.Confidence.ShouldBe(DataSourceConfidence.HtmlScraper);
         entries[0].Provenance.RawRecordHash.Length.ShouldBe(64);
     }

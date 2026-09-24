@@ -109,3 +109,12 @@ anything else:
 
 Verified by parsing the saved live pages (582 players) and by fixture-edit tests
 `S13_league_average_…`, `S13_traded_player_…`, `S13_per_game_rebounds_…`.
+
+## 2026-27 FantasyPros ADP page — 2026-09-23
+
+Every ADP import since 2026-08-01 had failed. The live page now has columns
+Rank, Player, Yahoo, ESPN, AVG (no STD DEV), appends `<small>(TEAM - POS)</small>`
+after the player link, and leaves rows unclosed. The parser (now `fantasypros-v2`)
+treats STD DEV as optional (it always was downstream) and reads the name from the
+link, so "Nikola Jokic (DEN - C)" no longer defeats name matching. Verified on the
+saved live page: 223 entries. Evidence: `S13_current_page_layout_without_std_dev_and_with_team_suffix_parses`.

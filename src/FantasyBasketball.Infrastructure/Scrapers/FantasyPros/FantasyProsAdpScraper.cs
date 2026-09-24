@@ -9,7 +9,7 @@ public sealed class FantasyProsAdpScraper(
     IHttpClientFactory clientFactory,
     TimeProvider timeProvider) : IAdpProvider
 {
-    private const string ParserVersion = "fantasypros-v1";
+    private const string ParserVersion = "fantasypros-v2";
     private readonly FantasyProsUrlBuilder urlBuilder = new();
     private readonly AdpTableParser parser = new();
 

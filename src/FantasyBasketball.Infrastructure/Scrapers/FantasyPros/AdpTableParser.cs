@@ -38,7 +38,6 @@ public sealed class AdpTableParser
                  {
                      PlayerColumn,
                      AverageColumn,
-                     StandardDeviationColumn,
                  })
         {
             if (!columnIndexes.ContainsKey(required))
@@ -58,8 +57,10 @@ public sealed class AdpTableParser
             }
 
             var playerCell = ReadCell(cells, columnIndexes[PlayerColumn], PlayerColumn);
-            var playerName = playerCell.TextContent.Trim();
-            var href = playerCell.QuerySelector("a")?.GetAttribute("href");
+            // The 2026 page appends "(TEAM - POS)" in a <small> after the link; the link is the name.
+            var link = playerCell.QuerySelector("a");
+            var playerName = (link ?? playerCell).TextContent.Trim();
+            var href = link?.GetAttribute("href");
             var externalId = href is null
                 ? null
                 : Path.GetFileNameWithoutExtension(href);
@@ -74,10 +75,10 @@ public sealed class AdpTableParser
                 externalId,
                 playerName,
                 ParseDecimal(cells, columnIndexes[AverageColumn], AverageColumn),
-                ParseNullableDecimal(
-                    cells,
-                    columnIndexes[StandardDeviationColumn],
-                    StandardDeviationColumn),
+                // The 2026 page dropped STD DEV; it was always optional downstream.
+                columnIndexes.TryGetValue(StandardDeviationColumn, out var deviation)
+                    ? ParseNullableDecimal(cells, deviation, StandardDeviationColumn)
+                    : null,
                 row.OuterHtml));
         }
 
