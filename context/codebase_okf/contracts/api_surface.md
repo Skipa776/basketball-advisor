@@ -240,3 +240,9 @@ an opponent) or a category league.
 `PUT /api/leagues/{id}/settings` (omitted keeps the current value), returned on
 every league. Existing leagues migrated to 7. The streaming planner will cap
 add/drops at it.
+
+**Streaming — 2026-09-23.** `GET /api/leagues/{id}/streaming?date=` (owned,
+no-store): the rest-of-week add/drop plan from the streaming planner, with each
+move's day, add/drop, gain, usable days bought and lost, acquisitions used, the
+baseline and planned usable value, and evidence. 409 when rosters or your team are
+missing, or for category leagues.

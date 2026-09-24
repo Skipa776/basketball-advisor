@@ -13,7 +13,7 @@ const ITEMS: HubItem[] = [
   { label: 'Your drafts', path: '/app/drafts', note: 'Reopen a saved draft' },
   { label: 'Trade analyzer', path: '/app/trade-analyzer', note: 'Waits on the trade engine (R15)', soon: true },
   { label: 'Matchup analyzer', path: '/app/matchup', note: 'This week’s points against one opponent' },
-  { label: 'Streaming advisor', path: '/app/streaming', note: 'Waits on the streaming engine (R14)', soon: true },
+  { label: 'Streaming advisor', path: '/app/streaming', note: 'Add/drops that buy usable games this week' },
   { label: 'League settings', path: '/app/league-settings', note: 'Team count, scoring and roster slots' },
   { label: 'Context review', path: '/app/context-review', note: 'Verify news before it moves a number' },
   { label: 'Account data', path: '/app/account', note: 'Export, import or delete your data' },

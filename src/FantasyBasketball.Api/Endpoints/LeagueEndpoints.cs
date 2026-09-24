@@ -70,6 +70,8 @@ public static class LeagueEndpoints
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
         group.MapGet("/{id:guid}/matchup", MatchupAsync)
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
+        group.MapGet("/{id:guid}/streaming", StreamingAsync)
+            .WithMetadata(new OwnedRouteMetadata("league", "id"));
         return endpoints;
     }
 
@@ -130,6 +132,23 @@ public static class LeagueEndpoints
 
         return ApiResults.Success(await service.WeekAsync(id, opponent, day, cancellationToken));
     }
+
+    public static async Task<IResult> StreamingAsync(
+        Guid id, string? date, StreamingService service,
+        OwnedResourceAuthorizationService authorization, HttpContext context, CancellationToken cancellationToken)
+    {
+        await authorization.RequireLeagueAsync(id, cancellationToken);
+        context.Response.Headers.CacheControl = "no-store";
+        return ApiResults.Success(await service.PlanAsync(id, ParseDay(date), cancellationToken));
+    }
+
+    private static DateOnly? ParseDay(string? date) =>
+        string.IsNullOrEmpty(date)
+            ? null
+            : DateOnly.TryParseExact(date, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out var parsed)
+                ? parsed
+                : throw new RequestValidationException(new Dictionary<string, string[]> { ["date"] = ["Use a date in YYYY-MM-DD format."] });
 
     public static async Task<IResult> ImportTeamsCsvAsync(
         Guid id, RosterCsvRequest request, LeagueRosterService service,

@@ -76,3 +76,19 @@ S-20 through S-36.
 The domain engine is built and tested (see streaming_contract). The application
 service, API and UI that feed it league rosters, schedule and per-game values are
 the next step.
+
+## Wired — 2026-09-23
+
+`StreamingService` builds the week from "today" (`Landing:AsOf` when set) through
+Sunday: the user's marked team, the league's roster slots, cadence and weekly
+acquisition limit, and the top 40 free agents (not on any imported roster) by
+last-10 average under league scoring. Game days come from the stored schedule for
+each player's current team; rest-of-season value is the per-game average over the
+team's remaining scheduled games. `GET /api/leagues/{id}/streaming` returns the
+dated plan with each move's usable games bought and lost and acquisitions used;
+`/app/streaming` renders it (or an explained hold). On the replayed week of
+2026-03-04 it proposed adding Jusuf Nurkić and Reed Sheppard for Kyrie Irving and
+Tyrese Haliburton (no 2025-26 games), +235.5 usable points, in 0.8 s.
+
+Not built: acquisitions already used this week (the plan assumes the full limit),
+user-marked protection, and availability/back-to-back factors (no injury feed).

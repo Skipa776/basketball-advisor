@@ -48,6 +48,38 @@ public sealed class MatchupServiceTests
     }
 
     [Fact]
+    public async Task Streaming_plan_adds_a_free_agent_whose_games_fill_open_nights()
+    {
+        var otherTeam = new NbaTeamId(Guid.NewGuid());
+        var starter = store.AddPlayer("Starter", home);
+        var idle = store.AddPlayer("Idle", new NbaTeamId(Guid.NewGuid()));
+        var streamer = store.AddPlayer("Streamer", away, "SF");
+        var rivalStar = store.AddPlayer("Rival Star", otherTeam, "C");
+        store.League = new FantasyLeague(store.League.Id, "Double points", LeagueType.Points, 4,
+            [new ScoringRule(StatKey.PTS, 2m)], [], [new RosterSlot(RosterSlotKind.UTIL), new RosterSlot(RosterSlotKind.BENCH)], LineupCadence.Daily, 3);
+        store.Teams = [new LeagueTeam(Guid.NewGuid(), "Mine", true, [starter.Id, idle.Id]), new LeagueTeam(Guid.NewGuid(), "Them", false, [rivalStar.Id])];
+        store.Game(starter.Id, new DateOnly(2025, 11, 10), 15);
+        store.Game(streamer.Id, new DateOnly(2025, 11, 10), 10);
+        store.Game(rivalStar.Id, new DateOnly(2025, 11, 10), 40);
+        store.Scheduled(home, otherTeam, new DateOnly(2025, 11, 12));
+        store.Scheduled(away, otherTeam, new DateOnly(2025, 11, 13));
+        store.Scheduled(home, new NbaTeamId(Guid.NewGuid()), new DateOnly(2025, 11, 14));
+        store.Scheduled(away, new NbaTeamId(Guid.NewGuid()), new DateOnly(2025, 11, 15));
+
+        var plan = await new StreamingService(store, store, store, store, store, new LandingOptions(), TimeProvider.System)
+            .PlanAsync(store.League.Id, Wednesday, TestContext.Current.CancellationToken);
+
+        plan.From.ShouldBe(Wednesday);
+        plan.To.ShouldBe(new DateOnly(2025, 11, 16));
+        plan.AcquisitionLimit.ShouldBe(3);
+        plan.FreeAgentsConsidered.ShouldBe(1, "the rival's rostered star is never a free agent");
+        var move = plan.Moves.ShouldHaveSingleItem();
+        (move.Add, move.Drop).ShouldBe(("Streamer", "Idle"));
+        move.Gain.ShouldBe(40m, "Thursday and Saturday at 20 a game while UTIL is open");
+        move.AddUsableDays.ShouldBe([new DateOnly(2025, 11, 13), new DateOnly(2025, 11, 15)]);
+    }
+
+    [Fact]
     public async Task A_sunday_belongs_to_the_week_that_started_monday() =>
         (await WeekFor(new DateOnly(2025, 11, 16))).WeekStart.ShouldBe(new DateOnly(2025, 11, 10));
 
@@ -84,9 +116,9 @@ public sealed class MatchupServiceTests
             [new ScoringRule(StatKey.PTS, 2m)], [], [new RosterSlot(RosterSlotKind.UTIL)], LineupCadence.Weekly);
         public IReadOnlyList<LeagueTeam> Teams { get; set; } = [];
 
-        public Player AddPlayer(string name, NbaTeamId team)
+        public Player AddPlayer(string name, NbaTeamId team, string position = "PG")
         {
-            var player = new Player(new PlayerId(Guid.NewGuid()), name, PlayerName.Normalize(name), team, ["G"], null);
+            var player = new Player(new PlayerId(Guid.NewGuid()), name, PlayerName.Normalize(name), team, [position], null);
             players.Add(player);
             return player;
         }
