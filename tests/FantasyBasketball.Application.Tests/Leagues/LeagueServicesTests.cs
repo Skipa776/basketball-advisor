@@ -120,6 +120,8 @@ public sealed class LeagueServicesTests
 
             return player;
         }
+        public Task SaveCurrentTeamAsync(PlayerId id, NbaTeamId? teamId, CancellationToken cancellationToken) => throw new NotSupportedException();
+
 
         public Task<FantasyLeague?> GetAsync(Guid id, CancellationToken token) => Task.FromResult(id == League.Id ? League : null);
         public Task<IReadOnlyList<LeagueTeam>> ListAsync(Guid leagueId, CancellationToken token) => Task.FromResult(Teams);

@@ -266,6 +266,7 @@ public static class DependencyInjection
             services.AddHostedService<StatRefreshWorker>();
             services.AddHostedService<AdpRefreshWorker>();
             services.AddHostedService<BoxScoreRefreshWorker>();
+            services.AddHostedService<PlayerDirectoryRefreshWorker>();
         }
 
         AddSourceClient(

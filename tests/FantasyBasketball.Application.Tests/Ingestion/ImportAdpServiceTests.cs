@@ -51,6 +51,8 @@ public sealed class ImportAdpServiceTests
     {
         private readonly List<Player> players = [];
         private readonly List<ExternalPlayerIdentity> identities = [];
+        public Task SaveCurrentTeamAsync(PlayerId id, NbaTeamId? teamId, CancellationToken cancellationToken) => throw new NotSupportedException();
+
 
         public Task AddAsync(Player player, CancellationToken cancellationToken)
         {

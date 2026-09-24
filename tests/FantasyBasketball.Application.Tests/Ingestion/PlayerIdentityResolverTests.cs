@@ -80,6 +80,7 @@ public sealed class PlayerIdentityResolverTests
         var runs = new FakeDataImportRunRepository();
         var service = new ImportPlayersService(
             resolver,
+            repository,
             runs,
             new PassThroughImportTransaction(),
             new FixedTimeProvider(
@@ -174,6 +175,7 @@ public sealed class PlayerIdentityResolverTests
         var runs = new FakeDataImportRunRepository();
         var service = new ImportPlayersService(
             CreateResolver(repository),
+            repository,
             runs,
             new SnapshotImportTransaction(repository, runs),
             new FixedTimeProvider(DateTimeOffset.UnixEpoch));
@@ -200,6 +202,7 @@ public sealed class PlayerIdentityResolverTests
         var runs = new FakeDataImportRunRepository();
         var service = new ImportPlayersService(
             CreateResolver(repository),
+            repository,
             runs,
             new SnapshotImportTransaction(repository, runs),
             new FixedTimeProvider(DateTimeOffset.UnixEpoch));
@@ -226,6 +229,7 @@ public sealed class PlayerIdentityResolverTests
         var runs = new FakeDataImportRunRepository();
         var service = new ImportPlayersService(
             CreateResolver(repository),
+            repository,
             runs,
             new SnapshotImportTransaction(repository, runs),
             new FixedTimeProvider(DateTimeOffset.UnixEpoch));
@@ -297,6 +301,14 @@ public sealed class PlayerIdentityResolverTests
         public Action? AfterResolvedWrite { get; init; }
 
         private int resolvedWriteAttempts;
+        public Task SaveCurrentTeamAsync(PlayerId id, NbaTeamId? teamId, CancellationToken cancellationToken)
+        {
+            var index = Players.FindIndex(player => player.Id == id);
+            var current = Players[index];
+            Players[index] = new Player(current.Id, current.FullName, current.NormalizedName, teamId, current.Positions, current.BirthDate);
+            return Task.CompletedTask;
+        }
+
 
         public Task AddAsync(Player player, CancellationToken cancellationToken)
         {

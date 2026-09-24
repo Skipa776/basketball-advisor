@@ -5,6 +5,7 @@ namespace FantasyBasketball.Application.Ingestion;
 
 public sealed class ImportPlayersService(
     PlayerIdentityResolver resolver,
+    IPlayerRepository players,
     IDataImportRunRepository runs,
     IImportTransaction transaction,
     TimeProvider timeProvider)
@@ -91,6 +92,14 @@ public sealed class ImportPlayersService(
                     {
                         token.ThrowIfCancellationRequested();
                         var resolution = await resolver.ResolveAsync(externalPlayer, token);
+                        // The directory is the source of truth for current teams; a player
+                        // first seen before a trade otherwise keeps the old team forever.
+                        if (resolution.Player is { } known && externalPlayer.TeamId is { } team
+                            && known.CurrentTeamId != team)
+                        {
+                            await players.SaveCurrentTeamAsync(known.Id, team, token);
+                        }
+
                         if (resolution.PendingMatch is null)
                         {
                             rowsWritten++;

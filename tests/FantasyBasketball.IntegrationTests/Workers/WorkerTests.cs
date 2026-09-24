@@ -291,6 +291,8 @@ public sealed class WorkerTests
 
     private sealed class EmptyPlayerRepository : IPlayerRepository
     {
+        public Task SaveCurrentTeamAsync(PlayerId id, NbaTeamId? teamId, CancellationToken cancellationToken) => throw new NotSupportedException();
+
         public Task AddAsync(
             Player player,
             CancellationToken cancellationToken) =>

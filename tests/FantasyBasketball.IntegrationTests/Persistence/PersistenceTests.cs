@@ -346,6 +346,7 @@ public sealed partial class PersistenceTests : IAsyncLifetime
         var runRepository = new DataImportRunRepository(database);
         var service = new ImportPlayersService(
             resolver,
+            repository,
             runRepository,
             new EfImportTransaction(database),
             new FixedTimeProvider(provenance.FetchedAt));
@@ -383,6 +384,7 @@ public sealed partial class PersistenceTests : IAsyncLifetime
         var runs = new DataImportRunRepository(database);
         var service = new ImportPlayersService(
             new PlayerIdentityResolver(repository, new FixedTimeProvider(DateTimeOffset.UnixEpoch)),
+            repository,
             runs,
             new EfImportTransaction(database),
             new FixedTimeProvider(DateTimeOffset.UnixEpoch));
@@ -414,6 +416,7 @@ public sealed partial class PersistenceTests : IAsyncLifetime
             afterResolvedWrite: _ => cancellation.Cancel());
         var service = new ImportPlayersService(
             new PlayerIdentityResolver(repository, new FixedTimeProvider(DateTimeOffset.UnixEpoch)),
+            repository,
             new DataImportRunRepository(database),
             new EfImportTransaction(database),
             new FixedTimeProvider(DateTimeOffset.UnixEpoch));
@@ -922,6 +925,9 @@ public sealed partial class PersistenceTests : IAsyncLifetime
         Action<int>? afterResolvedWrite = null) : IPlayerRepository
     {
         private int resolvedWriteAttempts;
+        public Task SaveCurrentTeamAsync(PlayerId id, NbaTeamId? teamId, CancellationToken cancellationToken) =>
+            inner.SaveCurrentTeamAsync(id, teamId, cancellationToken);
+
 
         public Task AddAsync(Player player, CancellationToken cancellationToken) =>
             inner.AddAsync(player, cancellationToken);

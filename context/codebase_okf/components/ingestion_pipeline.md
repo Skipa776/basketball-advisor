@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Infrastructure/Http, src/FantasyBasketball.
 test_paths: [tests/FantasyBasketball.IntegrationTests/Ingestion]
 depends_on: [../safety/scraping_policy.md, ../contracts/provenance_contract.md]
 status: partial
-last_updated: 2026-07-29
+last_updated: 2026-09-23
 owners: [engineering]
 risk_level: high
 done_criteria:
@@ -90,3 +90,14 @@ limiter. Real PostgreSQL tests prove failed and canceled imports roll back every
 partial identity write; non-cancellation failures become immutable failed
 `DataImportRun` rows. Health-driven confidence degradation and provider-level
 I-06 coverage remain, so this component remains `partial`.
+
+## Current teams — 2026-09-23
+
+A player's `CurrentTeamId` was set when first seen and never changed, so traded
+players kept their old team (the live data had James Harden on the Clippers after
+his 2025-26 trade to Cleveland). The balldontlie player directory is now the
+source of truth: `ImportPlayersService` saves the directory's team whenever it
+differs, and `PlayerDirectoryRefreshWorker` re-imports the directory weekly (under
+the `RefreshWorkers` master switch). Box-score and season-stat imports never
+change a team. Evidence: `Directory_import_moves_a_traded_player_to_the_current_team`;
+U11 runs the new worker with a throwing user context.

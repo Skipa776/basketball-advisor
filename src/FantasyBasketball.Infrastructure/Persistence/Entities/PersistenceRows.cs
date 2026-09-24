@@ -20,6 +20,8 @@ public sealed class PlayerRow
 
     public DateOnly? BirthDate { get; private set; }
 
+    public void MoveToTeam(Guid? teamId) => CurrentTeamId = teamId;
+
     public static PlayerRow Create(
         Guid id,
         string fullName,

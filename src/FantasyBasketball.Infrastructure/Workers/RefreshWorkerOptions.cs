@@ -24,11 +24,23 @@ public sealed class RefreshWorkerOptions
 
     public BoxScoreRefreshOptions BoxScores { get; set; } = new();
 
+    public PlayerDirectoryRefreshOptions Players { get; set; } = new();
+
     public bool IsValid() =>
         Schedule.IsValid()
         && Stats.IsValid()
         && Adp.IsValid()
-        && BoxScores.IsValid();
+        && BoxScores.IsValid()
+        && Players.IsValid();
+}
+
+public sealed class PlayerDirectoryRefreshOptions
+{
+    public TimeSpan StartupDelay { get; set; } = TimeSpan.FromMinutes(30);
+
+    public TimeSpan Cadence { get; set; } = TimeSpan.FromDays(7);
+
+    public bool IsValid() => StartupDelay >= TimeSpan.Zero && Cadence >= TimeSpan.FromHours(1);
 }
 
 /// <summary>

@@ -41,6 +41,7 @@ public sealed class WorkerTenancyTests
                 ActiveFromMonth = 1,
                 ActiveThroughMonth = 12,
             },
+            Players = new PlayerDirectoryRefreshOptions { StartupDelay = TimeSpan.Zero },
             BoxScores = new BoxScoreRefreshOptions
             {
                 Enabled = true,
@@ -53,6 +54,7 @@ public sealed class WorkerTenancyTests
         services.AddSingleton<StatRefreshWorker>();
         services.AddSingleton<AdpRefreshWorker>();
         services.AddSingleton<BoxScoreRefreshWorker>();
+        services.AddSingleton<PlayerDirectoryRefreshWorker>();
         await using var provider = services.BuildServiceProvider();
         var workers = new IHostedService[]
         {
@@ -60,6 +62,7 @@ public sealed class WorkerTenancyTests
             provider.GetRequiredService<StatRefreshWorker>(),
             provider.GetRequiredService<AdpRefreshWorker>(),
             provider.GetRequiredService<BoxScoreRefreshWorker>(),
+            provider.GetRequiredService<PlayerDirectoryRefreshWorker>(),
         };
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
@@ -80,6 +83,7 @@ public sealed class WorkerTenancyTests
             ImportJobKind.Schedule,
             ImportJobKind.SeasonStats,
             ImportJobKind.BoxScores,
+            ImportJobKind.Players,
         ], ignoreOrder: true);
         Should.Throw<InvalidOperationException>(() =>
             provider.GetRequiredService<IUserContext>().CurrentUserId);
@@ -99,7 +103,7 @@ public sealed class WorkerTenancyTests
             CancellationToken cancellationToken)
         {
             kinds.TryAdd(request.Kind, 0);
-            if (kinds.Count == 4)
+            if (kinds.Count == 5)
             {
                 AllWorkersRan.TrySetResult();
             }

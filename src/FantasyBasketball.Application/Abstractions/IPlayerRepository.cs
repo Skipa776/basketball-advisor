@@ -8,6 +8,9 @@ public interface IPlayerRepository
 
     Task<Player?> GetAsync(PlayerId id, CancellationToken cancellationToken);
 
+    /// <summary>Records a player's current NBA team from the player directory (trades, signings).</summary>
+    Task SaveCurrentTeamAsync(PlayerId id, NbaTeamId? teamId, CancellationToken cancellationToken);
+
     Task<Player?> FindByExternalIdentityAsync(
         string provider,
         string externalId,
