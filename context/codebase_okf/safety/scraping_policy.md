@@ -153,7 +153,12 @@ these paths, enforced by `SleeperUrlBuilder`:
 | `/v1/league/{id}` | League settings (sport must be `nba`) |
 | `/v1/league/{id}/users` | Owner display names |
 | `/v1/league/{id}/rosters` | Rosters (player ids per roster) |
+| `/v1/league/{id}/drafts` | List the league's drafts |
+| `/v1/draft/{id}` | Draft settings and `draft_order` |
+| `/v1/draft/{id}/picks` | Picks made so far |
 | `/v1/players/nba` | Player map, **at most once a day** (cached 24 h, as Sleeper asks); also the source of the injury report (`injury_status`), so the daily availability import adds no request |
+
+The three draft rows are **owner-authorized 2026-09-26**, go through the same shared per-host limiter as every other source, and are read-only.
 
 Requests go through the same shared per-host limiter as every other source; league
 reads are reused for 5 minutes so a preview and its import cost one fetch. Nothing

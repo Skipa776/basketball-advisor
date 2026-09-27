@@ -15,11 +15,14 @@ public sealed class SleeperLeagueProviderTests
     private const string LeagueId = "1000000000000000001";
 
     [Fact]
-    public void Only_the_four_validated_endpoints_can_be_built()
+    public void Only_the_seven_validated_endpoints_can_be_built()
     {
         SleeperUrlBuilder.League(LeagueId).ShouldBe($"/v1/league/{LeagueId}");
         SleeperUrlBuilder.Rosters(LeagueId).ShouldBe($"/v1/league/{LeagueId}/rosters");
-        foreach (var path in new[] { $"/v1/league/{LeagueId}/drafts", $"/v1/league/{LeagueId}/transactions/1", "/v1/players/nfl", "/v1/user/someone", "/v1/league/abc" })
+        SleeperUrlBuilder.Drafts(LeagueId).ShouldBe($"/v1/league/{LeagueId}/drafts");
+        SleeperUrlBuilder.Draft(LeagueId).ShouldBe($"/v1/draft/{LeagueId}");
+        SleeperUrlBuilder.DraftPicks(LeagueId).ShouldBe($"/v1/draft/{LeagueId}/picks");
+        foreach (var path in new[] { $"/v1/league/{LeagueId}/transactions/1", "/v1/players/nfl", "/v1/user/someone", "/v1/league/abc", "/v1/draft/abc/picks", "/v1/draft/1/traded_picks", "/v1/draft/1/picks/extra", "/v1/user/1/drafts" })
         {
             Should.Throw<InvalidOperationException>(() => SleeperUrlBuilder.Build(path));
         }
