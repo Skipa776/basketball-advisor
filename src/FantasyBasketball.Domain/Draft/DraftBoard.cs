@@ -182,14 +182,22 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
             return null;
         }
 
+        return 1m - Phi(((decimal)nextPick - average) / AdpSigma(average, adpStandardDeviation));
+    }
+
+    /// <summary>
+    /// The pick spread around an ADP, shared by the urgency estimate here and the simulated
+    /// opponents in <c>DraftAssistService</c>.
+    /// </summary>
+    public static decimal AdpSigma(decimal adp, decimal? standardDeviation)
+    {
         // ponytail: heuristic spread — a published ADP standard deviation when the source
         // gives one, otherwise 20% of ADP with a floor of 6 picks (calibrated 2026-09-26 on a
         // real 150-pick Sleeper draft: 54–73% of picks within one sigma per round band). The
         // upgrade is deriving sigma from real Sleeper/platform pick distributions instead.
-        var sigma = adpStandardDeviation is > 0m
-            ? adpStandardDeviation.Value
-            : Math.Max(6m, 0.2m * average);
-        return 1m - Phi(((decimal)nextPick - average) / sigma);
+        return standardDeviation is > 0m
+            ? standardDeviation.Value
+            : Math.Max(6m, 0.2m * adp);
     }
 
     /// <summary>

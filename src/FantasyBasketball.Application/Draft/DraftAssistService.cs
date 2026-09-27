@@ -1,6 +1,7 @@
 using FantasyBasketball.Application.Abstractions;
 using FantasyBasketball.Application.Common;
 using FantasyBasketball.Domain.Draft;
+using FantasyBasketball.Domain.Leagues;
 using FantasyBasketball.Domain.Players;
 
 namespace FantasyBasketball.Application.Draft;
@@ -13,41 +14,154 @@ public sealed record TakenPicksResult(int Recorded, int CurrentPick, string? Sto
 /// </summary>
 public sealed class DraftAssistService(
     IDraftRepository drafts,
+    ILeagueRepository leagues,
     IDraftCandidateRepository candidates,
     IPlayerRepository players,
     IFantasyLeagueProvider leagueProvider)
 {
     /// <summary>
-    /// Other teams pick until it is the user's turn: lowest ADP first, then projected value for
-    /// players with no ADP. Deterministic, so a replayed mock plays out the same way.
+    /// Other teams pick until it is the user's turn: each one takes the lowest ADP among the
+    /// available players after jittering it by the same sigma the recommender uses, skipping
+    /// players whose team's starting slots are already filled; players with no ADP go last by
+    /// projected value. Deterministic for a draft id and state, so a replayed mock plays out
+    /// the same way.
     /// </summary>
     public async Task<int> SimulateToUserTurnAsync(Guid draftSessionId, CancellationToken token)
     {
         var record = await RequireAsync(draftSessionId, token);
         var session = record.Session;
-        // ponytail: pure ADP order, no per-team need or randomness; add jitter if mocks feel too scripted.
-        var queue = new Queue<DraftCandidate>((await candidates.ListAsync(record.LeagueId, token))
+        var ordered = (await candidates.ListAsync(record.LeagueId, token))
             .OrderBy(candidate => candidate.AverageDraftPosition ?? decimal.MaxValue)
             .ThenByDescending(candidate => candidate.ProjectedSeasonValue)
-            .ThenBy(candidate => candidate.PlayerId.Value));
-        if (queue.Count == 0)
+            .ThenBy(candidate => candidate.PlayerId.Value)
+            .ToArray();
+        if (ordered.Length == 0)
         {
             throw new ResourceConflictException("Calculate projections for this league before simulating other teams.");
         }
 
+        var league = await leagues.GetAsync(record.LeagueId, token)
+            ?? throw new ResourceNotFoundException($"League '{record.LeagueId}' was not found.");
+        var starters = league.RosterSlots
+            .Where(slot => slot.Kind is not RosterSlotKind.BENCH and not RosterSlotKind.IR)
+            .ToArray();
+        var positionsByPlayer = ordered.ToDictionary(
+            candidate => candidate.PlayerId,
+            candidate => candidate.Positions);
+
         var drafted = session.Picks.Select(pick => pick.PlayerId).ToHashSet();
         var made = 0;
-        while (!IsComplete(session) && !session.IsUserPick(session.CurrentPick) && queue.Count > 0)
+        while (!IsComplete(session) && !session.IsUserPick(session.CurrentPick))
         {
-            var next = queue.Dequeue();
-            if (drafted.Add(next.PlayerId))
+            var available = ordered
+                .Where(candidate => !drafted.Contains(candidate.PlayerId))
+                .ToArray();
+            if (available.Length == 0)
             {
-                await drafts.AddPickAsync(session.MakePick(next.PlayerId), token);
-                made++;
+                break;
             }
+
+            var next = ChooseSimulatedPick(draftSessionId, session, starters, positionsByPlayer, available);
+            drafted.Add(next.PlayerId);
+            await drafts.AddPickAsync(session.MakePick(next.PlayerId), token);
+            made++;
         }
 
         return made;
+    }
+
+    private static DraftCandidate ChooseSimulatedPick(
+        Guid draftSessionId,
+        DraftSession session,
+        RosterSlot[] starters,
+        Dictionary<PlayerId, IReadOnlyList<string>> positionsByPlayer,
+        DraftCandidate[] available)
+    {
+        // ponytail: ADP jitter plus a greedy starting-slot check, not a learned drafter model;
+        // the upgrade is fitting pick behaviour from real draft logs (E11).
+        // HashCode.Combine is randomized per process; the draft id bytes keep replays stable across restarts.
+        var random = new Random(BitConverter.ToInt32(draftSessionId.ToByteArray()) ^ (session.CurrentPick * 7919));
+        var team = SlotOnClock(session.CurrentPick, session.TeamCount);
+        var filled = FilledStarters(
+            starters,
+            positionsByPlayer,
+            session.Picks.Where(pick => SlotOnClock(pick.PickNumber, session.TeamCount) == team));
+        var startingFull = filled.Count == starters.Length;
+
+        // Only the 12 lowest-ADP available players get jittered; deeper picks are never the
+        // winner anyway and drawing z for the whole pool each pick is wasted work.
+        var jittered = available
+            .Where(candidate => candidate.AverageDraftPosition is not null)
+            .Take(12)
+            .Select(candidate =>
+            {
+                var adp = candidate.AverageDraftPosition!.Value;
+                return (
+                    JitteredAdp: adp + DraftBoard.AdpSigma(adp, candidate.AdpStandardDeviation) * Normal(random),
+                    Candidate: candidate);
+            })
+            .OrderBy(entry => entry.JitteredAdp)
+            .Select(entry => entry.Candidate);
+        var ranked = jittered
+            .Concat(available.Where(candidate => candidate.AverageDraftPosition is not null).Skip(12))
+            .Concat(available.Where(candidate => candidate.AverageDraftPosition is null))
+            .ToArray();
+
+        bool Blocked(DraftCandidate candidate)
+        {
+            if (startingFull)
+            {
+                return false;
+            }
+
+            var accepting = starters
+                .Select((slot, index) => (Slot: slot, Index: index))
+                .Where(pair => candidate.Positions.Any(position => pair.Slot.Accepts(position)))
+                .ToArray();
+            return accepting.Length > 0 && accepting.All(pair => filled.Contains(pair.Index));
+        }
+
+        return ranked.FirstOrDefault(candidate => !Blocked(candidate)) ?? ranked[0];
+    }
+
+    private static int SlotOnClock(int pickNumber, int teamCount)
+    {
+        var index = (pickNumber - 1) % teamCount;
+        var round = ((pickNumber - 1) / teamCount) + 1;
+        return round % 2 == 1 ? index + 1 : teamCount - index;
+    }
+
+    private static HashSet<int> FilledStarters(
+        RosterSlot[] starters,
+        Dictionary<PlayerId, IReadOnlyList<string>> positionsByPlayer,
+        IEnumerable<DraftPick> teamPicks)
+    {
+        var filled = new HashSet<int>();
+        foreach (var pick in teamPicks)
+        {
+            IReadOnlyList<string> positions = positionsByPlayer.TryGetValue(pick.PlayerId, out var found) ? found : [];
+            for (var index = 0; index < starters.Length; index++)
+            {
+                if (!filled.Contains(index) && positions.Any(position => starters[index].Accepts(position)))
+                {
+                    filled.Add(index);
+                    break;
+                }
+            }
+        }
+
+        return filled;
+    }
+
+    /// <summary>
+    /// Standard normal by Box-Muller; <see cref="Random"/> is seeded per pick, so two runs on
+    /// the same draft id and state draw the same values.
+    /// </summary>
+    private static decimal Normal(Random random)
+    {
+        var u1 = 1d - random.NextDouble();
+        var u2 = random.NextDouble();
+        return (decimal)(Math.Sqrt(-2d * Math.Log(u1)) * Math.Cos(2d * Math.PI * u2));
     }
 
     /// <summary>

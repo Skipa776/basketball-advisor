@@ -99,7 +99,7 @@ export function DraftWorkspace({ league, draftId, onDraft }: { league: League; d
     {session && !complete && <section className="panel draft-others" aria-labelledby="others-title">
       <h3 id="others-title">Other teams’ picks</h3>
       <p className="muted">{myTurn ? 'You are on the clock. Draft from the shortlist or the list below.' : `Pick ${session.currentPick} belongs to team ${onClock}. Any player you pick now is recorded for them.`}</p>
-      <div className="form-row"><button onClick={simulate} disabled={busy || myTurn}>Sim other teams to my pick</button><span className="muted">Solo mock: each team takes the best available player by ADP.</span></div>
+      <div className="form-row"><button onClick={simulate} disabled={busy || myTurn}>Sim other teams to my pick</button><span className="muted">Solo mock: each team drafts near ADP, with some variance, and fills its starting slots.</span></div>
       <form className="form-row" onSubmit={syncPicks}><label>Sleeper league link or ID<input value={sleeperInput} onChange={event => setSleeperInput(event.target.value)} placeholder="https://sleeper.com/leagues/…" /></label><button disabled={busy || !sleeperId}>Sync picks from Sleeper</button></form>
       <form onSubmit={recordTaken}><label>Picks made in your draft room, in order<textarea rows={3} value={takenText} onChange={event => setTakenText(event.target.value)} placeholder={'One player per line, e.g.\nNikola Jokić\nShai Gilgeous-Alexander'} /></label><button disabled={busy || !takenText.trim()}>Record these picks</button></form>
     </section>}

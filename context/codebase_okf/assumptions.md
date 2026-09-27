@@ -1085,7 +1085,9 @@ draft value contract's own definition. See that contract's correction note.
 - Owner: the draft must work solo (see how it plays out) and as a companion
   next to Sleeper's draft room. Solo: "Sim other teams to my pick" has every
   other team take the best available player by ADP (projected value when no
-  ADP); deterministic, never picks for the user. Companion: picks pasted in
+  ADP); deterministic, never picks for the user. Superseded in part 2026-09-26:
+  simulated opponents jitter ADP and fill starting slots — see **Simulated
+  opponent behaviour** below. Companion: picks pasted in
   order, one name per line, are recorded at the current pick whoever's turn it
   is; the paste stops at the first unknown, ambiguous or already-drafted name.
   Superseded in part 2026-09-26: the companion can also sync picks straight from
@@ -1131,3 +1133,34 @@ obligation (E11) as every other draft weight.
 - Pick names come from the picks' own `metadata` (`first_name` + `last_name`),
   so a sync costs two allowlisted requests and never touches the 24-hour
   player-map endpoint.
+
+## Simulated opponent behaviour — 2026-09-26
+
+- Owner: solo mocks should look like real drafts, so a pure lowest-ADP
+  simulator was replaced. Each opponent pick jitters every remaining candidate's
+  ADP by `ADP + σ·z` — the same σ the recommender's urgency term uses
+  (`DraftBoard.AdpSigma`: published standard deviation, else `max(6, 0.2 × ADP)`)
+  — and takes the lowest jittered ADP. A real drafter reaches for a player or
+  lets one slide; this reproduces that scatter with a number the spec already
+  owns instead of inventing a second spread.
+- Only the 12 lowest-ADP available players get jittered per pick. The jitter is
+  bounded by σ so a deeper player rarely wins, and drawing a normal for a whole
+  300-player pool per pick is wasted work. Candidates without ADP keep sorting
+  after all ADP players by projected value, as before.
+- Randomness is a Box-Muller normal from one `Random` seeded with
+  `first 4 bytes of draftSessionId XOR (CurrentPick × 7919)` per pick (not
+  `HashCode.Combine`, which .NET randomizes per process), drawn in the
+  fixed ADP-then-value candidate order. The spec required determinism (a
+  replayed mock must play out the same way) and this is the cheapest seed that
+  depends on both the draft and the state without threading a pick-by-pick
+  stream.
+- Roster need: the team on the clock (snake slot for the pick number) greedily
+  assigns its earlier picks to the first open starting slot that accepts the
+  player; a candidate is skipped when every non-BENCH/non-IR slot accepting any
+  of his positions is already filled. Once every starting slot is full (bench
+  phase) the filter lifts. Greedy assignment over an optimal bipartite matching
+  is deliberate: one pass per team per pick, and the rare multi-position
+  mis-assignment only makes a team skip one candidate it could have started.
+  Slots a candidate fits none of are never blocked — there is nothing to stack.
+- This is a jitter plus greedy slot check, not a learned drafter model; the
+  upgrade path is fitting pick behaviour from real draft logs (E11).
