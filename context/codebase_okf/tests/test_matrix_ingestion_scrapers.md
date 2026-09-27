@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Infrastructure]
 test_paths: [tests/FantasyBasketball.IntegrationTests]
 depends_on: [required_gates.md, ../safety/scraping_policy.md, ../contracts/player_identity_contract.md]
 status: partial
-last_updated: 2026-09-21
+last_updated: 2026-09-26
 owners: [engineering]
 ---
 
@@ -81,7 +81,7 @@ the task is the only place the thing a user actually sees is visible.
 The importer shares the global 6/min limiter (row `S-11`) and its URL builder is
 covered by the `/gamelog/` rejection in row `S-10`.
 
-# League import (`L-01`–`L-10`) — R16
+# League import (`L-01`–`L-11`) — R16
 
 | ID | Case | Expected | Required |
 |---|---|---|---|
@@ -95,6 +95,7 @@ covered by the `/gamelog/` rejection in row `S-10`.
 | `L-08` | Any snapshot | Carries provenance; unresolved players become pending matches without failing the run | ✅ |
 | `L-09` | Scan outside the adapter assemblies | No branch on a provider name | ✅ |
 | `L-10` | Generated CSV template through the parser | Round-trips — template and parser share one schema | ✅ |
+| `L-11` | `GetLatestDraftAsync` against the draft fixtures | 150 picks ordered by `pick_no`, 10 teams, 15 rounds, no `/v1/players/nba` request; empty draft list returns null | ✅ |
 
 # Fixtures
 
@@ -105,7 +106,10 @@ surrounding structure. Capture procedure:
 
 Provider payloads live alongside as recorded JSON. A Sleeper endpoint with no
 committed NBA fixture is not implemented — row `L-07` makes that structural rather
-than aspirational.
+than aspirational. The draft-room pair `sleeper-drafts-2026-09-26.json` and
+`sleeper-draft-picks-2026-09-26.json` (a completed 10-team, 15-round snake draft,
+150 picks) gates the `/v1/league/{id}/drafts` and `/v1/draft/{id}/picks` reads of
+`GetLatestDraftAsync`.
 
 # Verification
 
@@ -146,3 +150,6 @@ against a synthetic full-game fixture. The separate
 [test_matrix_box_scores](test_matrix_box_scores.md) covers the parser and atomic
 storage. S-30, S-31, S-33 and S-34 still need the resumable worker; no live-site
 compatibility or completed historical season is claimed.
+Row `L-11` is implemented in `SleeperLeagueProviderTests` against the committed
+2026-09-26 draft fixtures: 150 picks ordered by `pick_no`, 10 teams, 15 rounds,
+`Nikola Jokić` at pick 1, and no `/v1/players/nba` request.

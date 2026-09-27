@@ -1088,6 +1088,8 @@ draft value contract's own definition. See that contract's correction note.
   ADP); deterministic, never picks for the user. Companion: picks pasted in
   order, one name per line, are recorded at the current pick whoever's turn it
   is; the paste stops at the first unknown, ambiguous or already-drafted name.
+  Superseded in part 2026-09-26: the companion can also sync picks straight from
+  the Sleeper draft room — see **Sleeper draft sync** below.
 - The league is chosen on the menu and remembered per browser, so every page
   opens with it.
 
@@ -1109,3 +1111,23 @@ source. The upgrade path is deriving σ from real Sleeper/platform pick
 distributions instead of a fixed rule. The weight `0.5`
 matches `W_MARKET`: same judgment-class starting constant, same back-test
 obligation (E11) as every other draft weight.
+
+## Sleeper draft sync — 2026-09-26
+
+- Draft creation stays manual: the app never opens a Sleeper draft or writes to
+  Sleeper. `GetLatestDraftAsync` is read-only against the two allowlisted draft
+  endpoints, and "latest" means the greatest `start_time` (unknown start time
+  sorts last), matching how a companion user thinks of "the draft".
+- Sync requires the Sleeper draft's team count to equal the draft session's team
+  count, and it conflicts (409) rather than guessing when they differ. Picks
+  before the session's current pick are assumed already recorded — the session
+  owns its own history — and the rest go through the same record path as pasted
+  names, so unknown, ambiguous and already-drafted names stop the sync exactly
+  like they stop the paste. No new matching rules.
+- The Sleeper league id is remembered per browser (`localStorage`, key
+  `fb.sleeperLeague.<leagueId>`), not stored server-side: it is a convenience
+  tied to whoever drafts next to this browser, and keeping it out of the
+  database keeps the sync stateless.
+- Pick names come from the picks' own `metadata` (`first_name` + `last_name`),
+  so a sync costs two allowlisted requests and never touches the 24-hour
+  player-map endpoint.

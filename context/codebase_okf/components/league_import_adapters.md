@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Infrastructure/Providers, src/FantasyBasket
 test_paths: [tests/FantasyBasketball.IntegrationTests/Providers]
 depends_on: [../contracts/league_import_contract.md, ../safety/secrets_policy.md]
 status: planned
-last_updated: 2026-07-29
+last_updated: 2026-09-26
 owners: [engineering]
 risk_level: high
 done_criteria:
@@ -34,6 +34,12 @@ non-destructive flow are owned by
 - **Sleeper**: no auth, read-only. Each endpoint is gated on a committed NBA fixture;
   the adapter's supported-endpoint list is **derived from the fixture set**, so an
   unvalidated endpoint is structurally uncallable rather than merely undocumented.
+  `GetLatestDraftAsync` (owner-authorized 2026-09-26) reads `/v1/league/{id}/drafts`
+  plus `/v1/draft/{id}/picks` — the league's most recent draft (greatest
+  `start_time`) with picks ordered by `pick_no`, names from the picks' own
+  `metadata`, no player-map fetch — and feeds `DraftAssistService.SyncFromSleeperAsync`,
+  which records picks from the session's current pick onward through the same
+  matching and stop rules as pasted names.
 - **CSV**: a documented column format with a downloadable template. The template and
   the parser are generated from one schema definition so they cannot disagree.
 - Import runs through the standard ingestion pipeline
@@ -71,4 +77,4 @@ and must pass row L-04 with itself disabled.
 # Verification
 
 [test_matrix_ingestion_scrapers](../tests/test_matrix_ingestion_scrapers.md), rows
-L-01 through L-10.
+L-01 through L-11.

@@ -21,7 +21,15 @@ public sealed record ExternalLeagueSnapshot(
     IReadOnlyDictionary<string, decimal> Scoring,
     IReadOnlyList<ExternalLeagueTeam> Teams);
 
+public sealed record ExternalDraftPick(int PickNumber, string ExternalPlayerId, string FullName);
+
+/// <summary>The league's most recent draft with its picks so far, as the provider lists them.</summary>
+public sealed record ExternalDraft(
+    string ExternalDraftId, string Status, int TeamCount, int RoundCount, IReadOnlyList<ExternalDraftPick> Picks);
+
 public interface IFantasyLeagueProvider : IDataSource
 {
     Task<ExternalLeagueSnapshot> GetLeagueAsync(string externalLeagueId, CancellationToken cancellationToken);
+
+    Task<ExternalDraft?> GetLatestDraftAsync(string externalLeagueId, CancellationToken cancellationToken);
 }

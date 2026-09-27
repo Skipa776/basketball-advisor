@@ -52,15 +52,89 @@ public sealed class DraftAssistServiceTests
             .Message.ShouldContain("projections");
     }
 
-    private DraftAssistService Service() => new(store, store, store);
+    [Fact]
+    public async Task Syncing_mid_draft_records_only_picks_from_the_current_pick_onward()
+    {
+        var jokic = store.Candidate("Nikola Jokić", 1m, 100m);
+        var luka = store.Candidate("Luka Dončić", 2m, 90m);
+        var shai = store.Candidate("Shai Gilgeous-Alexander", 3m, 80m);
+        var sessionId = Guid.NewGuid();
+        store.Session = new DraftSession(sessionId, 4, 2, 3, [Pick(sessionId, 1, jokic), Pick(sessionId, 2, luka)]);
+        store.LatestDraft = Draft(4, 2, ("Nikola Jokic", 1), ("Luka Doncic", 2), ("Shai Gilgeous-Alexander", 3));
 
-    private sealed class Store : IDraftRepository, IDraftCandidateRepository, IPlayerRepository
+        var result = await Service().SyncFromSleeperAsync(store.Session.Id, "1000000000000000001", TestContext.Current.CancellationToken);
+
+        result.Recorded.ShouldBe(1, "picks 1 and 2 are already in the session; only pick 3 is new");
+        store.Session.Picks.Select(pick => pick.PlayerId).ShouldBe([jokic, luka, shai]);
+    }
+
+    [Fact]
+    public async Task Syncing_stops_at_an_unknown_name_like_the_paste_does()
+    {
+        store.Session = new DraftSession(Guid.NewGuid(), 4, 2, 1);
+        var jokic = store.Candidate("Nikola Jokić", 1m, 100m);
+        store.LatestDraft = Draft(4, 2, ("Nikola Jokic", 1), ("Nobody Real", 2), ("Luka Doncic", 3));
+
+        var result = await Service().SyncFromSleeperAsync(store.Session.Id, "1000000000000000001", TestContext.Current.CancellationToken);
+
+        (result.Recorded, result.StoppedAt, result.Reason).ShouldBe((1, "Nobody Real", "No player has that name."));
+        store.Session.Picks.Select(pick => pick.PlayerId).ShouldBe([jokic]);
+    }
+
+    [Fact]
+    public async Task Syncing_an_already_caught_up_draft_records_nothing()
+    {
+        var jokic = store.Candidate("Nikola Jokić", 1m, 100m);
+        var luka = store.Candidate("Luka Dončić", 2m, 90m);
+        var sessionId = Guid.NewGuid();
+        store.Session = new DraftSession(sessionId, 4, 2, 3, [Pick(sessionId, 1, jokic), Pick(sessionId, 2, luka)]);
+        store.LatestDraft = Draft(4, 2, ("Nikola Jokic", 1), ("Luka Doncic", 2));
+
+        var result = await Service().SyncFromSleeperAsync(store.Session.Id, "1000000000000000001", TestContext.Current.CancellationToken);
+
+        result.Recorded.ShouldBe(0);
+        result.CurrentPick.ShouldBe(3);
+    }
+
+    [Fact]
+    public async Task Syncing_refuses_a_draft_from_a_different_sized_league()
+    {
+        store.Session = new DraftSession(Guid.NewGuid(), 10, 15, 3);
+        store.LatestDraft = Draft(12, 15);
+        var mismatch = await Should.ThrowAsync<ResourceConflictException>(() => Service().SyncFromSleeperAsync(store.Session.Id, "1000000000000000001", TestContext.Current.CancellationToken));
+        mismatch.Message.ShouldContain("12");
+        mismatch.Message.ShouldContain("10");
+        store.LatestDraft = null;
+        (await Should.ThrowAsync<ResourceConflictException>(() => Service().SyncFromSleeperAsync(store.Session.Id, "1000000000000000001", TestContext.Current.CancellationToken)))
+            .Message.ShouldContain("no draft yet");
+    }
+
+    private static DraftPick Pick(Guid sessionId, int number, PlayerId playerId) =>
+        new(Guid.NewGuid(), sessionId, playerId, number);
+
+    private static ExternalDraft Draft(int teams, int rounds, params (string Name, int Pick)[] picks) =>
+        new("2000000000000000001", "in_progress", teams, rounds,
+            picks.Select(pick => new ExternalDraftPick(pick.Pick, pick.Pick.ToString(), pick.Name)).ToArray());
+
+    private DraftAssistService Service() => new(store, store, store, store);
+
+    private sealed class Store : IDraftRepository, IDraftCandidateRepository, IPlayerRepository, IFantasyLeagueProvider
     {
         private readonly Guid leagueId = Guid.NewGuid();
         private readonly List<DraftCandidate> candidates = [];
         private readonly List<Player> players = [];
 
         public DraftSession Session { get; set; } = new(Guid.NewGuid(), 4, 2, 3);
+
+        public ExternalDraft? LatestDraft { get; set; }
+
+        public string Name => FantasyBasketball.Domain.Provenance.DataSourceName.Sleeper;
+
+        public DataSourceKind Kind => DataSourceKind.Api;
+
+        public Task<ExternalLeagueSnapshot> GetLeagueAsync(string externalLeagueId, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<ExternalDraft?> GetLatestDraftAsync(string externalLeagueId, CancellationToken cancellationToken) => Task.FromResult(LatestDraft);
 
         public PlayerId Candidate(string name, decimal? adp, decimal value)
         {

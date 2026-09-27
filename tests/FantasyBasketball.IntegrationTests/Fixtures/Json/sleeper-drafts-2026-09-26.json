@@ -1,0 +1,18 @@
+[
+ {
+  "draft_id": "2000000000000000001",
+  "league_id": "1000000000000000001",
+  "sport": "nba",
+  "season": "2026",
+  "status": "complete",
+  "type": "snake",
+  "start_time": 1790268239154,
+  "settings": {
+   "rounds": 15,
+   "teams": 10
+  },
+  "draft_order": {
+   "3000000000000000001": 1
+  }
+ }
+]

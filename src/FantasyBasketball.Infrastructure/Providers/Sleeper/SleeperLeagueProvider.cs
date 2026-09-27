@@ -75,6 +75,54 @@ public sealed class SleeperLeagueProvider(IHttpClientFactory clientFactory, IMem
             teams);
     }
 
+    /// <summary>
+    /// The league's most recent draft (greatest start_time, unknown start time last) with its picks
+    /// ordered by pick number. Names come from the pick's own metadata, so no player-map fetch.
+    /// </summary>
+    public async Task<ExternalDraft?> GetLatestDraftAsync(string externalLeagueId, CancellationToken cancellationToken)
+    {
+        if (!SleeperUrlBuilder.IsLeagueId(externalLeagueId))
+        {
+            throw new ArgumentException("A Sleeper league id is the number in sleeper.com/leagues/<id>.", nameof(externalLeagueId));
+        }
+
+        using var drafts = await GetAsync(SleeperUrlBuilder.Drafts(externalLeagueId), cancellationToken);
+        if (drafts.RootElement.ValueKind != JsonValueKind.Array)
+        {
+            // Sleeper answers an unknown league id with a literal null.
+            throw new KeyNotFoundException("Sleeper has no league with that id.");
+        }
+
+        var draft = drafts.RootElement.EnumerateArray()
+            .OrderByDescending(entry => entry.TryGetProperty("start_time", out var start) && start.ValueKind == JsonValueKind.Number
+                ? start.GetInt64() : (long?)null)
+            .Cast<JsonElement?>()
+            .FirstOrDefault();
+        if (draft is null)
+        {
+            return null;
+        }
+
+        var draftId = draft.Value.GetProperty("draft_id").GetString()!;
+        using var picks = await GetAsync(SleeperUrlBuilder.DraftPicks(draftId), cancellationToken);
+        var mapped = picks.RootElement.EnumerateArray()
+            .OrderBy(pick => pick.GetProperty("pick_no").GetInt32())
+            .Select(pick =>
+            {
+                var metadata = pick.TryGetProperty("metadata", out var meta) && meta.ValueKind == JsonValueKind.Object ? meta : default;
+                string? Text(string name) => metadata.ValueKind == JsonValueKind.Object
+                    && metadata.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
+                return new ExternalDraftPick(pick.GetProperty("pick_no").GetInt32(), pick.GetProperty("player_id").GetString()!,
+                    $"{Text("first_name")} {Text("last_name")}".Trim());
+            })
+            .ToArray();
+
+        var settings = draft.Value.GetProperty("settings");
+        return new ExternalDraft(draftId,
+            draft.Value.TryGetProperty("status", out var status) && status.ValueKind == JsonValueKind.String ? status.GetString()! : "",
+            settings.GetProperty("teams").GetInt32(), settings.GetProperty("rounds").GetInt32(), mapped);
+    }
+
     /// <summary>Active players Sleeper currently lists with an injury status (from the daily player map).</summary>
     public async Task<IReadOnlyList<ExternalAvailability>> GetInjuriesAsync(CancellationToken cancellationToken)
     {

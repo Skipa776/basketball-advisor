@@ -13,6 +13,11 @@ const number = (value: number) => value.toLocaleString(undefined, { maximumFract
 export const slotOnClock = (pick: number, teams: number) => { const index = (pick - 1) % teams; return Math.ceil(pick / teams) % 2 === 1 ? index + 1 : teams - index; };
 type Taken = { recorded: number; currentPick: number; stoppedAt: string | null; reason: string | null };
 
+// The Sleeper league id is remembered per browser (storage may be blocked), never stored on the server.
+const sleeperKey = (leagueId: string) => `fb.sleeperLeague.${leagueId}`;
+const rememberSleeperLeague = (leagueId: string, value: string) => { try { if (value) localStorage.setItem(sleeperKey(leagueId), value); else localStorage.removeItem(sleeperKey(leagueId)); } catch { /* per-browser convenience only */ } };
+const recalledSleeperLeague = (leagueId: string) => { try { return localStorage.getItem(sleeperKey(leagueId)) ?? ''; } catch { return ''; } };
+
 export function DraftWorkspace({ league, draftId, onDraft }: { league: League; draftId: string; onDraft: (id: string) => void }) {
   const record = useResource<DraftRecord>(draftId ? `/api/drafts/${draftId}` : null, 5000);
   const board = useResource<Board>(draftId ? `/api/drafts/${draftId}/board?leagueId=${league.id}` : null, 5000);
@@ -25,6 +30,20 @@ export function DraftWorkspace({ league, draftId, onDraft }: { league: League; d
   const onClock = session && !complete ? slotOnClock(session.currentPick, session.teamCount) : 0;
   const myTurn = !!session && onClock === session.userSlot;
   const [takenText, setTakenText] = useState('');
+  const [sleeperInput, setSleeperInput] = useState(() => recalledSleeperLeague(league.id));
+  const sleeperId = sleeperInput.match(/\d{10,25}/)?.[0] ?? '';
+  async function syncPicks(event: FormEvent) {
+    event.preventDefault();
+    if (!session || busy || !sleeperId) return;
+    setBusy(true); setError('');
+    try {
+      const result = (await post<Taken>(`/api/drafts/${draftId}/picks/sync`, { sleeperLeagueId: sleeperId })).data;
+      rememberSleeperLeague(league.id, sleeperId);
+      setAnnouncement(`Synced ${result.recorded} ${result.recorded === 1 ? 'pick' : 'picks'} from Sleeper.`);
+      if (result.stoppedAt) setError(`Recorded ${result.recorded}, then stopped at “${result.stoppedAt}”: ${result.reason} Add him to your player data, or enter the rest below.`);
+    } catch (error) { setError(message(error)); }
+    finally { record.refresh(); board.refresh(); setBusy(false); }
+  }
   async function simulate() {
     if (!session || busy || complete || myTurn) return;
     setBusy(true); setError('');
@@ -81,6 +100,7 @@ export function DraftWorkspace({ league, draftId, onDraft }: { league: League; d
       <h3 id="others-title">Other teams’ picks</h3>
       <p className="muted">{myTurn ? 'You are on the clock. Draft from the shortlist or the list below.' : `Pick ${session.currentPick} belongs to team ${onClock}. Any player you pick now is recorded for them.`}</p>
       <div className="form-row"><button onClick={simulate} disabled={busy || myTurn}>Sim other teams to my pick</button><span className="muted">Solo mock: each team takes the best available player by ADP.</span></div>
+      <form className="form-row" onSubmit={syncPicks}><label>Sleeper league link or ID<input value={sleeperInput} onChange={event => setSleeperInput(event.target.value)} placeholder="https://sleeper.com/leagues/…" /></label><button disabled={busy || !sleeperId}>Sync picks from Sleeper</button></form>
       <form onSubmit={recordTaken}><label>Picks made in your draft room, in order<textarea rows={3} value={takenText} onChange={event => setTakenText(event.target.value)} placeholder={'One player per line, e.g.\nNikola Jokić\nShai Gilgeous-Alexander'} /></label><button disabled={busy || !takenText.trim()}>Record these picks</button></form>
     </section>}
     {session && league.type === 0 && <DraftAdvice draft={session} leagueId={league.id} version={projectionRevision} disabled={busy || record.loading || !!record.error || complete} pick={pick} />}

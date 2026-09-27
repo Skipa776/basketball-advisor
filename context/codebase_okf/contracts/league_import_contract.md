@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Application/Leagues/RosterCsv.cs, src/Fanta
 test_paths: [tests/FantasyBasketball.Application.Tests/Leagues, tests/FantasyBasketball.IntegrationTests/Api]
 depends_on: [provider_contracts.md, scoring_rules_catalog.md, player_identity_contract.md]
 status: partial
-last_updated: 2026-09-24
+last_updated: 2026-09-26
 owners: [engineering]
 risk_level: high
 done_criteria:
@@ -183,3 +183,16 @@ technical fouls in the test league) is refused by name, per the fail-loud rule.
 Live run: preview 40 s at the policy rate, import 0.8 s, 10 teams, 150 players,
 0 pending, 150 eligibility rows. Evidence: `SleeperLeagueProviderTests`,
 `LeagueImportServiceTests`, the 26-route isolation sweep.
+
+## Sleeper draft sync — 2026-09-26
+
+Two more read-only endpoints went through the same gate: `/v1/league/{id}/drafts`
+and `/v1/draft/{id}/picks`, validated against the owner's completed 10-team,
+15-round snake draft and committed as `sleeper-drafts-2026-09-26.json` and
+`sleeper-draft-picks-2026-09-26.json`. `DraftAssistService.SyncFromSleeperAsync`
+takes the latest draft (greatest `start_time`), requires its team count to equal
+the session's, and records picks from the session's current pick onward through
+the same name-matching and stop rules as pasted names — via
+`POST /api/drafts/{id}/picks/sync`, bringing the isolation sweep to 29 routes.
+Draft creation stays manual; nothing is ever written to Sleeper. Evidence:
+`SleeperLeagueProviderTests` (row `L-11`), `DraftAssistServiceTests` sync cases.

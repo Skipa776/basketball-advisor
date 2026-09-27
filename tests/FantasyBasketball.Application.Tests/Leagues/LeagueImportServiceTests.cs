@@ -71,6 +71,7 @@ public sealed class LeagueImportServiceTests
         public string Name => DataSourceName.Sleeper;
         public DataSourceKind Kind => DataSourceKind.Api;
         public Task<ExternalLeagueSnapshot> GetLeagueAsync(string externalLeagueId, CancellationToken cancellationToken) => Task.FromResult(snapshot);
+        public Task<ExternalDraft?> GetLatestDraftAsync(string externalLeagueId, CancellationToken cancellationToken) => Task.FromResult<ExternalDraft?>(null);
     }
 
     private sealed class Store : ILeagueRepository, ILeagueTeamRepository, IPlayerRepository, ILeagueEligibilityRepository, ITeamRepository, IAvailabilityRepository

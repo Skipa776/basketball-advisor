@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Application/Abstractions]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Providers]
 depends_on: [provenance_contract.md, player_identity_contract.md]
 status: implemented
-last_updated: 2026-09-24
+last_updated: 2026-09-26
 owners: [engineering]
 risk_level: medium
 done_criteria:
@@ -82,6 +82,7 @@ public interface INewsProvider : IDataSource
 public interface IFantasyLeagueProvider : IDataSource
 {
     Task<FantasyLeagueSnapshot> GetLeagueAsync(string leagueId, CancellationToken ct);
+    Task<ExternalDraft?> GetLatestDraftAsync(string leagueId, CancellationToken ct);
 }
 ```
 
@@ -159,10 +160,19 @@ to the same canonical persisted entity. I-08 proves CSV and manual remain
 usable with the scraper absent. All MVP provider categories now meet this
 contract's done criteria.
 
-## Fantasy league providers — 2026-09-24
+## Fantasy league providers — 2026-09-24, updated 2026-09-26
 
 `IFantasyLeagueProvider.GetLeagueAsync(externalLeagueId)` returns the
 provider-neutral `ExternalLeagueSnapshot` (league name, team count, raw lineup
 slots and scoring, teams with players and their per-league positions). The first
 implementation is `SleeperLeagueProvider` (read-only, owner-authorized). Yahoo is
 not built; ESPN stays CSV/manual.
+
+`IFantasyLeagueProvider.GetLatestDraftAsync(externalLeagueId)` returns the
+provider-neutral `ExternalDraft` (draft id, status, team and round counts, and
+`ExternalDraftPick`s ordered by pick number with the player's name from the
+pick's own metadata) for the league's most recent draft — greatest start time,
+null last — or `null` when the league has no draft yet. `SleeperLeagueProvider`
+maps it from `/v1/league/{id}/drafts` plus `/v1/draft/{id}/picks`; no player-map
+fetch. `DraftAssistService.SyncFromSleeperAsync` feeds those picks through the
+same record path as pasted names.

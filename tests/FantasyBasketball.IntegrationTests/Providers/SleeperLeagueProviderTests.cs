@@ -1,4 +1,5 @@
 using System.Net;
+using FantasyBasketball.Application.Abstractions;
 using FantasyBasketball.Domain.Provenance;
 using FantasyBasketball.Infrastructure.Providers.Sleeper;
 using Microsoft.Extensions.Caching.Memory;
@@ -13,6 +14,7 @@ namespace FantasyBasketball.IntegrationTests.Providers;
 public sealed class SleeperLeagueProviderTests
 {
     private const string LeagueId = "1000000000000000001";
+    private const string DraftId = "2000000000000000001";
 
     [Fact]
     public void Only_the_seven_validated_endpoints_can_be_built()
@@ -70,6 +72,33 @@ public sealed class SleeperLeagueProviderTests
         await Should.ThrowAsync<ArgumentException>(() => provider.GetLeagueAsync("not-a-number", TestContext.Current.CancellationToken));
     }
 
+    [Fact]
+    public async Task The_latest_draft_comes_from_the_draft_room_with_its_picks_and_no_player_map()
+    {
+        var handler = new FixtureHandler();
+        var draft = await Provider(handler).GetLatestDraftAsync(LeagueId, TestContext.Current.CancellationToken);
+
+        draft.ShouldNotBeNull();
+        draft.ExternalDraftId.ShouldBe(DraftId);
+        draft.Status.ShouldBe("complete");
+        draft.TeamCount.ShouldBe(10);
+        draft.RoundCount.ShouldBe(15);
+        draft.Picks.Count.ShouldBe(150);
+        draft.Picks.Select(pick => pick.PickNumber).ShouldBe(Enumerable.Range(1, 150), "ordered by pick number");
+        draft.Picks[0].ShouldBe(new ExternalDraftPick(1, "1658", "Nikola Jokić"));
+        handler.Requests.ShouldBe([$"/v1/league/{LeagueId}/drafts", $"/v1/draft/{DraftId}/picks"]);
+        handler.Requests.ShouldNotContain("/v1/players/nba", "pick names come from the picks metadata");
+        await Should.ThrowAsync<ArgumentException>(() => Provider(handler).GetLatestDraftAsync("not-a-number", TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task A_league_without_drafts_has_no_latest_draft() =>
+        (await Provider(new FixtureHandler { DraftsJson = "[]" }).GetLatestDraftAsync(LeagueId, TestContext.Current.CancellationToken)).ShouldBeNull();
+
+    [Fact]
+    public async Task An_unknown_league_is_named_when_syncing_drafts() =>
+        await Should.ThrowAsync<KeyNotFoundException>(() => Provider(new FixtureHandler()).GetLatestDraftAsync("42", TestContext.Current.CancellationToken));
+
     private static SleeperLeagueProvider Provider(FixtureHandler handler, IMemoryCache? cache = null) =>
         new(new SingleClientFactory(new HttpClient(handler) { BaseAddress = new Uri("https://api.sleeper.app") }),
             cache ?? new MemoryCache(new MemoryCacheOptions()), TimeProvider.System);
@@ -77,6 +106,8 @@ public sealed class SleeperLeagueProviderTests
     private sealed class FixtureHandler : HttpMessageHandler
     {
         public List<string> Requests { get; } = [];
+
+        public string? DraftsJson { get; init; }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
@@ -87,12 +118,16 @@ public sealed class SleeperLeagueProviderTests
                 $"/v1/league/{LeagueId}" => "sleeper-league-2026-09-24.json",
                 $"/v1/league/{LeagueId}/users" => "sleeper-users-2026-09-24.json",
                 $"/v1/league/{LeagueId}/rosters" => "sleeper-rosters-2026-09-24.json",
+                $"/v1/league/{LeagueId}/drafts" => "sleeper-drafts-2026-09-26.json",
+                $"/v1/draft/{DraftId}/picks" => "sleeper-draft-picks-2026-09-26.json",
                 "/v1/players/nba" => "sleeper-players-nba-2026-09-24.json",
                 _ => null,
             };
-            var body = fixture is null
-                ? "null"
-                : await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Json", fixture), cancellationToken);
+            var body = path == $"/v1/league/{LeagueId}/drafts" && DraftsJson is not null
+                ? DraftsJson
+                : fixture is null
+                    ? "null"
+                    : await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Json", fixture), cancellationToken);
             return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(body) };
         }
     }

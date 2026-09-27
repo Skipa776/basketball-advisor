@@ -8,13 +8,14 @@ namespace FantasyBasketball.Application.Draft;
 public sealed record TakenPicksResult(int Recorded, int CurrentPick, string? StoppedAt, string? Reason);
 
 /// <summary>
-/// The two ways other teams' picks get into a draft: simulated opponents for a solo mock, or
-/// names pasted from the real draft room when the app is used as a companion.
+/// The three ways other teams' picks get into a draft: simulated opponents for a solo mock,
+/// names pasted from the real draft room, or the league's Sleeper draft room synced directly.
 /// </summary>
 public sealed class DraftAssistService(
     IDraftRepository drafts,
     IDraftCandidateRepository candidates,
-    IPlayerRepository players)
+    IPlayerRepository players,
+    IFantasyLeagueProvider leagueProvider)
 {
     /// <summary>
     /// Other teams pick until it is the user's turn: lowest ADP first, then projected value for
@@ -81,6 +82,38 @@ public sealed class DraftAssistService(
         }
 
         return new TakenPicksResult(recorded, session.CurrentPick, null, null);
+    }
+
+    /// <summary>
+    /// Pulls the other teams' picks from the league's latest Sleeper draft room instead of pasting
+    /// names. Picks from the current pick onward go through the same record path, so the same
+    /// matching and stop rules apply.
+    /// </summary>
+    public async Task<TakenPicksResult> SyncFromSleeperAsync(Guid draftSessionId, string sleeperLeagueId, CancellationToken token)
+    {
+        var session = (await RequireAsync(draftSessionId, token)).Session;
+        var draft = await leagueProvider.GetLatestDraftAsync(sleeperLeagueId, token);
+        if (draft is null)
+        {
+            throw new ResourceConflictException("This Sleeper league has no draft yet.");
+        }
+
+        if (draft.TeamCount != session.TeamCount)
+        {
+            throw new ResourceConflictException($"That Sleeper draft has {draft.TeamCount} teams; this draft session has {session.TeamCount}.");
+        }
+
+        var names = draft.Picks
+            .Where(pick => pick.PickNumber >= session.CurrentPick)
+            .OrderBy(pick => pick.PickNumber)
+            .Select(pick => pick.FullName)
+            .ToArray();
+        if (names.Length == 0)
+        {
+            return new TakenPicksResult(0, session.CurrentPick, null, null);
+        }
+
+        return await RecordTakenAsync(draftSessionId, names, token);
     }
 
     private static bool IsComplete(DraftSession session) => session.CurrentPick > session.TeamCount * session.RoundCount;

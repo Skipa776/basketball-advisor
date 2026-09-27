@@ -3,6 +3,7 @@ using FantasyBasketball.Application.Draft;
 using FantasyBasketball.Application.Players;
 using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Infrastructure.Identity;
+using FantasyBasketball.Infrastructure.Providers.Sleeper;
 
 namespace FantasyBasketball.Api.Endpoints;
 
@@ -16,6 +17,8 @@ public sealed record RecordDraftPickRequest(
     Guid PlayerId);
 
 public sealed record TakenPicksRequest(IReadOnlyList<string> Names);
+
+public sealed record SleeperSyncRequest(string? SleeperLeagueId);
 
 public static class DraftEndpoints
 {
@@ -40,6 +43,8 @@ public static class DraftEndpoints
         group.MapPost("/{id:guid}/picks/simulate", SimulateAsync)
             .WithMetadata(new OwnedRouteMetadata("draft", "id"));
         group.MapPost("/{id:guid}/picks/taken", RecordTakenAsync)
+            .WithMetadata(new OwnedRouteMetadata("draft", "id"));
+        group.MapPost("/{id:guid}/picks/sync", SyncPicksAsync)
             .WithMetadata(new OwnedRouteMetadata("draft", "id"));
         group.MapGet("/{id:guid}/recommendations", GetRecommendationsAsync)
             .WithMetadata(new OwnedRouteMetadata("draft", "id"));
@@ -186,6 +191,38 @@ public static class DraftEndpoints
         }
 
         return ApiResults.Success(await service.RecordTakenAsync(id, request.Names, cancellationToken));
+    }
+
+    public static async Task<IResult> SyncPicksAsync(
+        Guid id,
+        SleeperSyncRequest request,
+        DraftAssistService service,
+        OwnedResourceAuthorizationService authorization,
+        CancellationToken cancellationToken)
+    {
+        await authorization.RequireDraftAsync(id, cancellationToken);
+        var sleeperLeagueId = request.SleeperLeagueId?.Trim() ?? string.Empty;
+        if (!SleeperUrlBuilder.IsLeagueId(sleeperLeagueId))
+        {
+            throw new RequestValidationException(new Dictionary<string, string[]>
+            {
+                ["sleeperLeagueId"] = ["A Sleeper league id is the number in sleeper.com/leagues/<id>."],
+            });
+        }
+
+        // Provider failures are the user's input or the provider's answer, never a 500.
+        try
+        {
+            return ApiResults.Success(await service.SyncFromSleeperAsync(id, sleeperLeagueId, cancellationToken));
+        }
+        catch (Exception exception) when (exception is ArgumentException or KeyNotFoundException or InvalidDataException)
+        {
+            throw new RequestValidationException(new Dictionary<string, string[]> { ["sleeper"] = [exception.Message] });
+        }
+        catch (HttpRequestException)
+        {
+            throw new RequestValidationException(new Dictionary<string, string[]> { ["sleeper"] = ["Sleeper did not answer. Try again in a minute."] });
+        }
     }
 
     public static async Task<IResult> GetRecommendationsAsync(
