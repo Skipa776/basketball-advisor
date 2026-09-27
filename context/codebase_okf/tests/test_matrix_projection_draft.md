@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Domain/Projections, src/FantasyBasketball.D
 test_paths: [tests/FantasyBasketball.Domain.Tests]
 depends_on: [required_gates.md, ../contracts/projection_pipeline_contract.md, ../contracts/draft_value_contract.md]
 status: implemented
-last_updated: 2026-09-20
+last_updated: 2026-09-26
 owners: [engineering]
 ---
 
@@ -49,13 +49,16 @@ The cases gating build steps 10, 11, and 12 — requirements R7, R8, R9, R10.
 
 | ID | Case | Expected | Required |
 |---|---|---|---|
-| `D-01` | `DraftValue.Total` | Equals exactly the five addends; decomposition fields excluded | ✅ |
+| `D-01` | `DraftValue.Total` | Equals exactly the six addends; decomposition fields excluded | ✅ |
 | `D-02` | Change only `ProjectedSeasonValue`'s display field | `Total` does not move — proves no double counting | ✅ |
 | `D-03` | Player eligible for an open starting slot | `RosterFit == 0` | ✅ |
 | `D-04` | Unrelated player is drafted | An untouched player's `VAR` changes — replacement level is recomputed | ✅ |
 | `D-05` | Player with no ADP | `MarketValue == 0` plus a `Market` evidence item noting the absence | ✅ |
 | `D-06` | Every draft recommendation | Carries ≥1 evidence item | ✅ |
 | `D-07` | Category league draft board | Falls back to category totals with an explicit banner; does not rank by `Total` | ✅ |
+| `D-10` | Equal-value candidates, one ADP near the next pick, one far beyond | Likely-gone ranks first; its `AvailableAtNextPick < 0.5`, the other's `> 0.95` | ✅ |
+| `D-11` | Candidate with no ADP | `AvailableAtNextPick` is null and `Urgency` is 0 | ✅ |
+| `D-12` | `DraftWeightOptions` with negative `Urgency` | `IsValid()` is false | ✅ |
 | `D-08` | Pick then undo | Board equals its pre-pick snapshot exactly | ✅ |
 | `D-09` | Drafted player | Leaves the available pool immediately; cannot be recommended | ✅ |
 | — | Full-pool re-rank latency | Completes inside the R7 target on a realistic pool | ✅ |
@@ -77,7 +80,7 @@ full gate.
 
 # Current evidence
 
-P-01 through P-10, C-01 through C-07, and D-01 through D-09 are implemented.
+P-01 through P-10, C-01 through C-07, and D-01 through D-12 are implemented.
 Projection coverage includes the worked example, four-record PostgreSQL
 persistence, immutable baselines, non-compounding context, bounds, expiry, and
 baseline/event links. Context coverage includes proposed/verified/rejected

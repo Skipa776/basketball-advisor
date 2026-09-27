@@ -36,7 +36,7 @@ public sealed class DraftEngineTests
     }
 
     [Fact]
-    public void D01_D02_total_uses_only_five_addends()
+    public void D01_D02_total_uses_only_six_addends()
     {
         var calculator = new DraftValueCalculator(new DraftWeightOptions());
         var evidence = Supporting("value");
@@ -151,6 +151,45 @@ public sealed class DraftEngineTests
             && item.Statement.Contains("No ADP", StringComparison.Ordinal));
         value.Evidence.ShouldNotBeEmpty();
     }
+
+    [Fact]
+    public void D10_urgency_favours_players_likely_gone_before_the_next_turn()
+    {
+        // Pick 1, user's next turn at pick 20: ADP 5 is almost certainly gone by then, ADP 150 is not.
+        var goneSoon = Candidate(100m, ["PG"], 5m);
+        var likelyThere = Candidate(100m, ["PG"], 150m);
+        var replacement = Candidate(50m, ["SF"], null);
+
+        var board = CreateBoard().Rank(
+            CreateSession(),
+            LeagueCatalog.CreateSeedPointsLeague(Guid.NewGuid()),
+            [goneSoon, likelyThere, replacement],
+            []);
+
+        board.Rankings[0].PlayerId.ShouldBe(goneSoon.PlayerId);
+        ValueFor(board, goneSoon.PlayerId)
+            .AvailableAtNextPick!.Value.ShouldBeLessThan(0.5m);
+        ValueFor(board, likelyThere.PlayerId)
+            .AvailableAtNextPick!.Value.ShouldBeGreaterThan(0.95m);
+    }
+
+    [Fact]
+    public void D11_missing_adp_leaves_availability_null_and_urgency_zero()
+    {
+        var value = CreateBoard().Rank(
+                CreateSession(),
+                LeagueCatalog.CreateSeedPointsLeague(Guid.NewGuid()),
+                [Candidate(100m, ["PG"], null)],
+                [])
+            .Rankings.Single();
+
+        value.AvailableAtNextPick.ShouldBe(null);
+        value.Urgency.ShouldBe(0m);
+    }
+
+    [Fact]
+    public void D12_negative_urgency_weight_is_invalid() =>
+        new DraftWeightOptions { Urgency = -0.5m }.IsValid().ShouldBeFalse();
 
     [Fact]
     public void D07_category_board_uses_category_totals_and_banner()

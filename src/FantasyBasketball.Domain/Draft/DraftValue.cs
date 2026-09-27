@@ -16,8 +16,10 @@ public sealed class DraftWeightOptions
 
     public decimal Risk { get; init; } = 1m;
 
+    public decimal Urgency { get; init; } = 0.5m;
+
     public bool IsValid() =>
-        Scarcity >= 0m && Fit >= 0m && Market >= 0m && Risk >= 0m;
+        Scarcity >= 0m && Fit >= 0m && Market >= 0m && Risk >= 0m && Urgency >= 0m;
 }
 
 public sealed record DraftValue
@@ -33,7 +35,9 @@ public sealed record DraftValue
         decimal contextAdjustment,
         decimal injuryRisk,
         decimal roleRisk,
-        IReadOnlyList<RecommendationEvidence> evidence)
+        IReadOnlyList<RecommendationEvidence> evidence,
+        decimal urgency = 0m,
+        decimal? availableAtNextPick = null)
     {
         ArgumentNullException.ThrowIfNull(evidence);
         if (evidence.Count == 0)
@@ -53,6 +57,8 @@ public sealed record DraftValue
         ContextAdjustment = contextAdjustment;
         InjuryRisk = injuryRisk;
         RoleRisk = roleRisk;
+        Urgency = urgency;
+        AvailableAtNextPick = availableAtNextPick;
         Evidence = new ReadOnlyCollection<RecommendationEvidence>(
             EvidenceOrderer.Order(evidence).ToArray());
     }
@@ -77,6 +83,10 @@ public sealed record DraftValue
 
     public decimal RoleRisk { get; }
 
+    public decimal Urgency { get; }
+
+    public decimal? AvailableAtNextPick { get; }
+
     public IReadOnlyList<RecommendationEvidence> Evidence { get; }
 }
 
@@ -92,7 +102,9 @@ public sealed class DraftValueCalculator(DraftWeightOptions options)
         decimal contextAdjustment,
         decimal injuryRisk,
         decimal roleRisk,
-        IReadOnlyList<RecommendationEvidence> evidence)
+        IReadOnlyList<RecommendationEvidence> evidence,
+        decimal urgency = 0m,
+        decimal? availableAtNextPick = null)
     {
         if (!options.IsValid())
         {
@@ -105,7 +117,8 @@ public sealed class DraftValueCalculator(DraftWeightOptions options)
             + (options.Scarcity * positionalScarcity)
             + (options.Fit * rosterFit)
             + (options.Market * marketValue)
-            - (options.Risk * riskPenalty);
+            - (options.Risk * riskPenalty)
+            + (options.Urgency * urgency);
         return new DraftValue(
             playerId,
             total,
@@ -117,6 +130,8 @@ public sealed class DraftValueCalculator(DraftWeightOptions options)
             contextAdjustment,
             injuryRisk,
             roleRisk,
-            evidence);
+            evidence,
+            urgency,
+            availableAtNextPick);
     }
 }

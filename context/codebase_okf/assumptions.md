@@ -7,7 +7,7 @@ source_paths: []
 test_paths: []
 depends_on: [safety/scraping_policy.md, tasks/post_mvp_roadmap.md]
 status: planned
-last_updated: 2026-09-20
+last_updated: 2026-09-26
 owners: [engineering]
 ---
 
@@ -1090,3 +1090,22 @@ draft value contract's own definition. See that contract's correction note.
   is; the paste stops at the first unknown, ambiguous or already-drafted name.
 - The league is chosen on the menu and remembered per browser, so every page
   opens with it.
+
+## ADP urgency sigma fallback — 2026-09-26
+
+The new urgency term in
+[draft_value_contract](contracts/draft_value_contract.md) needs a spread σ for
+`P(survives to next pick) = 1 − Φ((nextPick − ADP) / σ)`. When the ADP source
+publishes a standard deviation the repository passes it through; otherwise the
+fallback is `σ = max(6, 0.2 × ADP)`. Neither number was specified upstream. The
+20% rate mirrors E07's `SIGMA_RATE` intent — uncertainty grows with ADP. The floor
+of 6 was calibrated on 2026-09-26 against the owner's completed 150-pick Sleeper
+draft (10 teams, 15 rounds): 142 picks matched FantasyPros ADP, and with this σ,
+70% / 54% / 69% / 73% of picks in rounds 1–3 / 4–6 / 7–10 / 11–15 landed within
+one σ of ADP (a normal predicts 68%). A floor of 2 gave only 57% / 50% in the
+early bands, so it was overconfident exactly where urgency matters. When E07 lands,
+its `OpportunityCost` replaces urgency and its constants become the only σ
+source. The upgrade path is deriving σ from real Sleeper/platform pick
+distributions instead of a fixed rule. The weight `0.5`
+matches `W_MARKET`: same judgment-class starting constant, same back-test
+obligation (E11) as every other draft weight.

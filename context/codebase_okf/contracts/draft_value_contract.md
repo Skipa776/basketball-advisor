@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Domain/Draft]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Draft]
 depends_on: [projection_pipeline_contract.md, scoring_rules_catalog.md, recommendation_evidence_contract.md]
 status: implemented
-last_updated: 2026-09-23
+last_updated: 2026-09-26
 owners: [engineering]
 risk_level: high
 edit_policy: stable_contract
@@ -36,12 +36,15 @@ naive behavior the product exists to avoid.
 Resolved here, and this resolution is canonical:
 
 - **Addends** (these sum to `Total`): `ValueAboveReplacement`,
-  `PositionalScarcity`, `RosterFit`, `MarketValue`, and the risk penalty.
+  `PositionalScarcity`, `RosterFit`, `MarketValue`, `Urgency`, and the risk
+  penalty.
 - **Decomposition-only fields** (displayed, never added): `ProjectedSeasonValue`,
   `ContextAdjustment`, `InjuryRisk`, `RoleRisk`.
 
 Survival probability and tier detection are **not in V1** — they are design-doc
-phase 5, listed in [post_mvp_roadmap](../tasks/post_mvp_roadmap.md).
+phase 5, listed in [post_mvp_roadmap](../tasks/post_mvp_roadmap.md). The
+[urgency](#urgency) term uses a survival estimate only as a nudge; the full
+survival model (opportunity cost, runs, tiering) remains E07 work.
 
 # The formula
 
@@ -51,6 +54,7 @@ Total = ValueAboveReplacement
       + W_FIT      × RosterFit
       + W_MARKET   × MarketValue
       − W_RISK     × RiskPenalty
+      + W_URGENCY  × Urgency
 ```
 
 ## Value above replacement
@@ -110,6 +114,30 @@ Positive when a player is available past their ADP (a value), negative when
 taking them is a reach. With no ADP for a player, `MarketValue = 0` and an
 evidence item records the absence — never a guessed ADP.
 
+## Urgency
+
+Prices the risk of losing the player before the user's next turn. A candidate's
+realized draft position is modelled `Normal(ADP, σ)`, so the chance he survives
+to `nextPick = CurrentPick + PicksUntilNextTurn` is:
+
+```text
+σ            = published ADP standard deviation, else max(6, 0.2 × ADP)   # heuristic spread
+P(available) = 1 − Φ( (nextPick − ADP) / σ )
+Urgency      = max(0, ValueAboveReplacement) × (1 − P(available))
+```
+
+No ADP means no survival estimate: `P(available) = null` and `Urgency = 0`,
+never an imputed ADP. When `P(available) < 0.5` a `Market` evidence item states
+`About N% chance he is still there at pick P` with **Supporting** polarity —
+likely-gone is a reason to pick now — otherwise **Neutral** with the same
+statement. Φ is the Abramowitz-Stegun 7.1.26 `erf` approximation, the same
+formulation [category_value_contract](category_value_contract.md) specifies.
+The σ fallback is recorded in [assumptions](../assumptions.md); the upgrade is
+deriving σ from real Sleeper/platform pick distributions.
+[draft_intelligence_contract](draft_intelligence_contract.md)'s `OpportunityCost`
+supersedes this term when E07 lands — it is an availability nudge, not the full
+survival model.
+
 ## Risk penalty
 
 ```text
@@ -134,12 +162,15 @@ see [assumptions](../assumptions.md).
 | `W_FIT` | `1.0` |
 | `W_MARKET` | `0.5` |
 | `W_RISK` | `1.0` |
+| `W_URGENCY` | `0.5` |
+
+`DraftWeightOptions.IsValid` rejects a negative weight, `Urgency` included.
 
 # Invariants
 
 - **No quantity is counted twice.** *Check:
   [test_matrix_projection_draft](../tests/test_matrix_projection_draft.md) row
-  D-01 asserts `Total` equals the sum of exactly the five addends, and D-02
+  D-01 asserts `Total` equals the sum of exactly the six addends, and D-02
   asserts changing only `ProjectedSeasonValue`'s display field cannot change
   `Total`.*
 - **`RosterFit` is zero when an eligible starting slot is open.** *Check: row D-03.*
@@ -148,6 +179,11 @@ see [assumptions](../assumptions.md).
   moves after an unrelated pick.*
 - **Missing ADP yields `MarketValue = 0` plus an evidence item**, never an
   imputed ADP. *Check: row D-05.*
+- **No ADP means no availability estimate**: `Urgency = 0` and
+  `AvailableAtNextPick = null`, never an imputed survival probability.
+  *Check: row D-11.*
+- **A candidate near-certain to be gone before the next turn outranks an
+  equal-value candidate likely to survive.** *Check: row D-10.*
 - **Every `DraftValue` carries at least one evidence item.** *Check: row D-06.*
 - **Weights come from options binding.** *Check: the canonical-value grep finds
   no weight literal in `src/`.*
@@ -162,21 +198,22 @@ without changing any additive term. Consumers must not infer verification from
 a nonzero projected score.
 
 Changing a weight is a config change. Changing a *term* means updating this
-file, the engine, the evidence strings it produces, and rows D-01 … D-07
+file, the engine, the evidence strings it produces, and rows D-01 … D-12
 together.
 
 # Verification
 
-`test_matrix_projection_draft.md`, rows D-01 through D-07, plus the R7 latency
+`test_matrix_projection_draft.md`, rows D-01 through D-12, plus the R7 latency
 assertion.
 
 # Implementation evidence
 
-`DraftValueCalculator` implements exactly the five additive terms with validated,
+`DraftValueCalculator` implements exactly the six additive terms with validated,
 options-bound weights; decomposition-only fields never enter `Total`.
 `DraftBoard` recomputes replacement level, positional scarcity, roster
-redundancy, and market value from the currently available pool on every call.
-Tests cover D-01 through D-07 and rerank 300 players inside the 500 ms target.
+redundancy, market value, and the urgency term from the currently available pool
+on every call.
+Tests cover D-01 through D-12 and rerank 300 players inside the 500 ms target.
 Missing ADP is zero with explicit market evidence, and category leagues carry
 the required fallback banner. This contract's done criteria are implemented.
 

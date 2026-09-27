@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Domain/Draft, src/FantasyBasketball.Applica
 test_paths: [tests/FantasyBasketball.Domain.Tests/Draft]
 depends_on: [draft_value_contract.md, category_value_contract.md]
 status: planned
-last_updated: 2026-07-29
+last_updated: 2026-09-26
 owners: [engineering]
 risk_level: high
 edit_policy: stable_contract
@@ -23,6 +23,16 @@ Owns the design doc's phase-5 draft intelligence: *will he still be there next
 time, and does waiting actually cost me anything?*
 
 # This supersedes the MVP's `MarketValue` term
+
+> **Status note — 2026-09-26.** [draft_value_contract](draft_value_contract.md)
+> now carries an *urgency* addend — `max(0, VAR) × (1 − P(survives to next
+> pick))` with its own heuristic σ floor of 2 and 20%-of-ADP fallback, weighted
+> 0.5 and still added alongside `MarketValue`. That is a display-and-nudge term,
+> not this contract's `OpportunityCost`: it does not subtract the best
+> alternative at the next pick, has no positional runs, and keeps its own σ
+> constants. When this epic lands, urgency is deleted, `OpportunityCost`
+> replaces `MarketValue`, and the sigma floor/rate below become the only σ
+> source.
 
 [draft_value_contract](draft_value_contract.md) uses `(ADP − currentPick) ×
 valuePerPick` as a proxy for "you can wait." That proxy answers the wrong

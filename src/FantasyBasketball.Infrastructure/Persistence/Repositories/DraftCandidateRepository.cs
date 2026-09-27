@@ -34,13 +34,17 @@ public sealed class DraftCandidateRepository(FantasyDbContext database)
                         row => row.Id == adjustedId,
                         cancellationToken)
                 : null;
-            var adp = await database.AdpEntries
+            var adpRow = await database.AdpEntries
                 .AsNoTracking()
                 .Where(row => row.PlayerId == value.PlayerId)
                 .OrderByDescending(row => row.FetchedAt)
                 .ThenByDescending(row => row.Id)
-                .Select(row => (decimal?)row.AverageDraftPosition)
+                .Select(row => new { row.AverageDraftPosition, row.StandardDeviation })
                 .FirstOrDefaultAsync(cancellationToken);
+            var adp = adpRow is null
+                ? null
+                : (decimal?)adpRow.AverageDraftPosition;
+            var adpStandardDeviation = adpRow?.StandardDeviation;
             var categoryTotals = adjusted is null
                 ? new Dictionary<StatKey, decimal>()
                 : Deserialize(adjusted.ProjectedPerGame).Values.ToDictionary(
@@ -56,7 +60,8 @@ public sealed class DraftCandidateRepository(FantasyDbContext database)
                 0m,
                 adjusted?.RoleRisk ?? 0m,
                 categoryTotals,
-                adjusted?.HasUnverifiedContext ?? false));
+                adjusted?.HasUnverifiedContext ?? false,
+                adpStandardDeviation));
         }
 
         return results;

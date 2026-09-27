@@ -15,7 +15,8 @@ public sealed record DraftCandidate(
     decimal InjuryRisk,
     decimal RoleRisk,
     IReadOnlyDictionary<StatKey, decimal> CategoryTotals,
-    bool HasUnverifiedContext = false);
+    bool HasUnverifiedContext = false,
+    decimal? AdpStandardDeviation = null);
 
 public sealed record DraftBoardResult(
     IReadOnlyList<DraftValue> Rankings,
@@ -54,6 +55,7 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
         var bestValue = orderedValues[0].ProjectedSeasonValue;
         var valuePerPick = (bestValue - replacementValue)
             / Math.Max(1, replacementRank);
+        var nextPick = session.CurrentPick + session.PicksUntilNextTurn;
         var values = available.Select(candidate =>
         {
             var varValue = candidate.ProjectedSeasonValue - replacementValue;
@@ -73,6 +75,15 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
             var market = candidate.AverageDraftPosition is { } adp
                 ? (session.CurrentPick - adp) * valuePerPick
                 : 0m;
+            var pAvailable = EstimateAvailability(
+                candidate.AverageDraftPosition,
+                candidate.AdpStandardDeviation,
+                nextPick);
+            // Losing the chance to take him is what urgency prices: value at risk times
+            // the chance he is gone by the next turn. Null availability means zero urgency.
+            var urgency = pAvailable is { } survival
+                ? Math.Max(0m, varValue) * (1m - survival)
+                : 0m;
             var evidence = CreateEvidence(
                 varValue,
                 scarcity,
@@ -81,7 +92,10 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
                 candidate.AverageDraftPosition,
                 candidate.InjuryRisk,
                 candidate.RoleRisk,
-                candidate.HasUnverifiedContext);
+                candidate.HasUnverifiedContext,
+                pAvailable,
+                urgency,
+                nextPick);
             return calculator.Calculate(
                 candidate.PlayerId,
                 candidate.ProjectedSeasonValue,
@@ -92,7 +106,9 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
                 candidate.ContextAdjustment,
                 candidate.InjuryRisk,
                 candidate.RoleRisk,
-                evidence);
+                evidence,
+                urgency,
+                pAvailable);
         });
 
         var categoryLeague = league.Type == LeagueType.Categories;
@@ -156,6 +172,45 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
                 - eligibleRoster.Min(player => player.ProjectedSeasonValue);
     }
 
+    private static decimal? EstimateAvailability(
+        decimal? adp,
+        decimal? adpStandardDeviation,
+        int nextPick)
+    {
+        if (adp is not { } average)
+        {
+            return null;
+        }
+
+        // ponytail: heuristic spread — a published ADP standard deviation when the source
+        // gives one, otherwise 20% of ADP with a floor of 6 picks (calibrated 2026-09-26 on a
+        // real 150-pick Sleeper draft: 54–73% of picks within one sigma per round band). The
+        // upgrade is deriving sigma from real Sleeper/platform pick distributions instead.
+        var sigma = adpStandardDeviation is > 0m
+            ? adpStandardDeviation.Value
+            : Math.Max(6m, 0.2m * average);
+        return 1m - Phi(((decimal)nextPick - average) / sigma);
+    }
+
+    /// <summary>
+    /// Standard normal CDF via the Abramowitz-Stegun 7.1.26 erf approximation
+    /// (absolute error &lt; 1.5e-7), the same formulation category win probability uses.
+    /// </summary>
+    private static decimal Phi(decimal z)
+    {
+        var x = (double)z / Math.Sqrt(2d);
+        var sign = x < 0d ? -1d : 1d;
+        var value = Math.Abs(x);
+        var t = 1d / (1d + (0.3275911d * value));
+        var polynomial = t * (0.254829592d
+            + t * (-0.284496736d
+            + t * (1.421413741d
+            + t * (-1.453152027d
+            + t * 1.061405429d))));
+        var erf = sign * (1d - (polynomial * Math.Exp(-value * value)));
+        return (decimal)((erf / 2d) + 0.5d);
+    }
+
     private static IReadOnlyList<RecommendationEvidence> CreateEvidence(
         decimal varValue,
         decimal scarcity,
@@ -164,7 +219,10 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
         decimal? adp,
         decimal injuryRisk,
         decimal roleRisk,
-        bool hasUnverifiedContext)
+        bool hasUnverifiedContext,
+        decimal? pAvailable,
+        decimal urgency,
+        int nextPick)
     {
         var evidence = new List<RecommendationEvidence>
         {
@@ -203,6 +261,17 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
                     : EvidencePolarity.Risk,
             adp is null ? "No ADP is available" : "Value relative to market ADP",
             adp is null ? null : market));
+        if (pAvailable is { } survival)
+        {
+            evidence.Add(new(
+                EvidenceKind.Market,
+                survival < 0.5m
+                    ? EvidencePolarity.Supporting
+                    : EvidencePolarity.Neutral,
+                $"About {(int)Math.Round(survival * 100m)}% chance he is still there at pick {nextPick}",
+                urgency));
+        }
+
         if (injuryRisk > 0m || roleRisk > 0m)
         {
             evidence.Add(new(
