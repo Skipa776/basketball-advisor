@@ -152,6 +152,14 @@ season_stats          = "basketball-reference"  # HTML scraper, season-level pag
 adp                   = "fantasypros"           # HTML scraper, /nba/adp/ only, CSV fallback
 news                  = "manual"                # MVP: user-entered context events only
 
+[modeling]
+# Owner-approved 2026-10-01, docs/design/adr-001-offline-python-fitting.md.
+# Offline parameter fitting only; never on the request path or in the gate's tests.
+python    = "3.12"
+root      = "tools/modeling"
+packaging = "uv"
+methods   = "bayesian-and-classical-statistics-only"
+
 [frontend]
 # Owner-approved React migration; no CSS framework or component library.
 node = "24"

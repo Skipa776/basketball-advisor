@@ -101,3 +101,11 @@ and no CSS framework/component library. **Blazor was retired 2026-09-23** by the
 owner; the React app is the only UI (see `context/codebase_okf/components/web_ui_blazor.md`).
 Checkpoint evidence and remaining work in
 [`implementation-progress.md`](docs/plans/implementation-progress.md).
+
+## Owner-authorized implementation — 2026-10-01
+
+The owner approved the statistical-engine plan (M1–M3) and offline Python
+fitting under `tools/modeling/` only
+([ADR-001](docs/design/adr-001-offline-python-fitting.md), `[modeling]` in
+`stack_config.toml`). Python fits parameters; C# serves them. Bayesian and
+classical statistics only. Every other boundary above is unchanged.
