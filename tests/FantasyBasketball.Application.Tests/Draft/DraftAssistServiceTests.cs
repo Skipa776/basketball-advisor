@@ -100,6 +100,40 @@ public sealed class DraftAssistServiceTests
     }
 
     [Fact]
+    public async Task A_bench_phase_team_with_three_centers_waits_for_a_guard_instead_of_a_fourth_center()
+    {
+        store.League = new FantasyLeague(store.LeagueId, "Stacked", LeagueType.Categories, 2, [], [StatKey.PTS],
+            [new RosterSlot(RosterSlotKind.C), new RosterSlot(RosterSlotKind.UTIL)],
+            LineupCadence.Daily);
+        var firstCenter = store.Candidate("First Center", 1m, 100m, ["C"]);
+        var secondCenter = store.Candidate("Second Center", 2m, 90m, ["C"]);
+        var thirdCenter = store.Candidate("Third Center", 3m, 80m, ["C"]);
+        var fourthCenter = store.Candidate("Fourth Center", 4m, 70m, ["C"]);
+        var guard = store.Candidate("Guard", 5m, 60m, ["PG"]);
+        var userFirst = store.Candidate("User First", 6m, 50m);
+        var userSecond = store.Candidate("User Second", 7m, 40m);
+        var userThird = store.Candidate("User Third", 8m, 30m);
+
+        // Snake, 2 teams, user in slot 1: team 2 holds picks 2, 3 and 6 — its two starting
+        // slots filled by centers — and is on the clock at pick 7, the bench phase.
+        store.Session = new DraftSession(SimulatedSessionId, 2, 4, 1,
+        [
+            Pick(SimulatedSessionId, 1, userFirst),
+            Pick(SimulatedSessionId, 2, firstCenter),
+            Pick(SimulatedSessionId, 3, secondCenter),
+            Pick(SimulatedSessionId, 4, userSecond),
+            Pick(SimulatedSessionId, 5, userThird),
+            Pick(SimulatedSessionId, 6, thirdCenter),
+        ]);
+
+        var made = await Service().SimulateToUserTurnAsync(store.Session.Id, TestContext.Current.CancellationToken);
+
+        made.ShouldBe(1, "team 2 picks at 7, then the user at 8");
+        store.Session.Picks[^1].PlayerId.ShouldBe(guard, "the bench cap blocks a 4th center while a non-center is available");
+        store.Session.Picks[^1].PlayerId.ShouldNotBe(fourthCenter);
+    }
+
+    [Fact]
     public async Task Pasted_names_are_recorded_in_order_and_stop_at_the_first_unknown()
     {
         store.Session = new DraftSession(Guid.NewGuid(), 4, 2, 3);

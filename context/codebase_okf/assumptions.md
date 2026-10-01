@@ -1164,6 +1164,12 @@ obligation (E11) as every other draft weight.
   Slots a candidate fits none of are never blocked — there is nothing to stack.
 - This is a jitter plus greedy slot check, not a learned drafter model; the
   upgrade path is fitting pick behaviour from real draft logs (E11).
+- Bench cap (2026-09-27, found in a live 15-round mock): once every starting
+  slot is full the filter does not lift entirely — a candidate is blocked when
+  the team already holds 3 players whose positions are all within his positions
+  (a 4th pure C is blocked once the team holds 3 pure C players), which stops
+  simulated teams from ending with 6 centers. The fallback stands: when every
+  candidate is blocked, the top ranked one is taken.
 - Availability on the user's last pick (2026-09-27): `PicksUntilNextTurn`
   returned 1 when no later user turn exists, so the board said "About N% chance
   he is still there" for a pick that never happens. `DraftSession` now exposes

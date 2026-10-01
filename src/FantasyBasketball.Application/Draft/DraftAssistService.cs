@@ -77,15 +77,16 @@ public sealed class DraftAssistService(
         Dictionary<PlayerId, IReadOnlyList<string>> positionsByPlayer,
         DraftCandidate[] available)
     {
-        // ponytail: ADP jitter plus a greedy starting-slot check, not a learned drafter model;
-        // the upgrade is fitting pick behaviour from real draft logs (E11).
+        // ponytail: ADP jitter plus a greedy starting-slot check and a bench cap of 3
+        // same-position players, not a learned drafter model; the upgrade is fitting pick
+        // behaviour from real draft logs (E11).
         // HashCode.Combine is randomized per process; the draft id bytes keep replays stable across restarts.
         var random = new Random(BitConverter.ToInt32(draftSessionId.ToByteArray()) ^ (session.CurrentPick * 7919));
         var team = SlotOnClock(session.CurrentPick, session.TeamCount);
-        var filled = FilledStarters(
-            starters,
-            positionsByPlayer,
-            session.Picks.Where(pick => SlotOnClock(pick.PickNumber, session.TeamCount) == team));
+        var teamPicks = session.Picks
+            .Where(pick => SlotOnClock(pick.PickNumber, session.TeamCount) == team)
+            .ToArray();
+        var filled = FilledStarters(starters, positionsByPlayer, teamPicks);
         var startingFull = filled.Count == starters.Length;
 
         // Only the 12 lowest-ADP available players get jittered; deeper picks are never the
@@ -111,7 +112,13 @@ public sealed class DraftAssistService(
         {
             if (startingFull)
             {
-                return false;
+                // Bench cap: once the slots are full a real drafter stops stacking one
+                // position; block a candidate when 3 held players fit entirely inside
+                // his positions (a 4th pure C, or a 4th PG/SG for a G/SF candidate).
+                return teamPicks.Count(pick =>
+                    positionsByPlayer.TryGetValue(pick.PlayerId, out var held)
+                    && held.Count > 0
+                    && held.All(position => candidate.Positions.Contains(position))) >= 3;
             }
 
             var accepting = starters
