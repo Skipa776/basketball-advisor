@@ -25,3 +25,7 @@ inspiration-resources/
 node_modules/
 src/FantasyBasketball.Api/wwwroot/app/
 playwright-report/
+
+# Local code graph (graphify) and scratch QA scripts
+graphify-out/
+*.tmp.mjs
