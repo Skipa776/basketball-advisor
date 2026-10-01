@@ -1176,3 +1176,8 @@ obligation (E11) as every other draft weight.
   `NextUserPickAfterCurrent` (null when the draft ends first) and the board
   omits the availability estimate and its evidence when it is null; scarcity
   still uses `PicksUntilNextTurn`, unchanged.
+- Backtest "known at" (2026-10-01, M1.3): season stat lines carry no
+  `SourceTimestamp`, so the leakage guard treats a season's aggregates as known
+  only from 30 June of its end year (after the playoffs). A box-score sample with
+  no timestamp is known from the start of the day after it was played. Both err
+  late, so the guard can refuse a usable row but never admits a future one.
