@@ -185,6 +185,7 @@ public static class DependencyInjection
         services.AddScoped<ITeamRepository, TeamRepository>();
         services.AddScoped<IGameRepository, GameRepository>();
         services.AddScoped<IAdpRepository, AdpRepository>();
+        services.AddScoped<IModelVersionRepository, ModelVersionRepository>();
         services.AddScoped<ILeagueRepository, LeagueRepository>();
         services.AddScoped<ISeasonStatLineRepository, SeasonStatLineRepository>();
         services.AddScoped<IBoxScoreRepository, BoxScoreRepository>();

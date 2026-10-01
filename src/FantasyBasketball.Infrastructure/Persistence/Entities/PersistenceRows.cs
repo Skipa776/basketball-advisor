@@ -672,6 +672,57 @@ public sealed class AdpEntryRow
         };
 }
 
+/// <summary>Offline-fitted model parameters; shared reference data, not owned.</summary>
+public sealed class ModelVersionRow
+{
+    private ModelVersionRow()
+    {
+    }
+
+    public Guid Id { get; private set; }
+
+    public string ModelName { get; private set; } = string.Empty;
+
+    public string Version { get; private set; } = string.Empty;
+
+    public DateTimeOffset FittedAt { get; private set; }
+
+    public int[] TrainSeasonEndYears { get; private set; } = [];
+
+    public string Parameters { get; private set; } = "{}";
+
+    public string Metrics { get; private set; } = "{}";
+
+    public string CardMarkdown { get; private set; } = string.Empty;
+
+    public bool IsActive { get; private set; }
+
+    public void SetActive(bool isActive) => IsActive = isActive;
+
+    public static ModelVersionRow Create(
+        Guid id,
+        string modelName,
+        string version,
+        DateTimeOffset fittedAt,
+        int[] trainSeasonEndYears,
+        string parameters,
+        string metrics,
+        string cardMarkdown,
+        bool isActive) =>
+        new()
+        {
+            Id = id,
+            ModelName = modelName,
+            Version = version,
+            FittedAt = fittedAt,
+            TrainSeasonEndYears = trainSeasonEndYears,
+            Parameters = parameters,
+            Metrics = metrics,
+            CardMarkdown = cardMarkdown,
+            IsActive = isActive,
+        };
+}
+
 public sealed class BaselineProjectionRow
 {
     private BaselineProjectionRow()
