@@ -55,7 +55,8 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
         var bestValue = orderedValues[0].ProjectedSeasonValue;
         var valuePerPick = (bestValue - replacementValue)
             / Math.Max(1, replacementRank);
-        var nextPick = session.CurrentPick + session.PicksUntilNextTurn;
+        // Null on the user's last pick of the draft: no later turn means nothing to price.
+        var nextPick = session.NextUserPickAfterCurrent;
         var values = available.Select(candidate =>
         {
             var varValue = candidate.ProjectedSeasonValue - replacementValue;
@@ -75,10 +76,9 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
             var market = candidate.AverageDraftPosition is { } adp
                 ? (session.CurrentPick - adp) * valuePerPick
                 : 0m;
-            var pAvailable = EstimateAvailability(
-                candidate.AverageDraftPosition,
-                candidate.AdpStandardDeviation,
-                nextPick);
+            var pAvailable = nextPick is { } pick
+                ? EstimateAvailability(candidate.AverageDraftPosition, candidate.AdpStandardDeviation, pick)
+                : null;
             // Losing the chance to take him is what urgency prices: value at risk times
             // the chance he is gone by the next turn. Null availability means zero urgency.
             var urgency = pAvailable is { } survival
@@ -230,7 +230,7 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
         bool hasUnverifiedContext,
         decimal? pAvailable,
         decimal urgency,
-        int nextPick)
+        int? nextPick)
     {
         var evidence = new List<RecommendationEvidence>
         {

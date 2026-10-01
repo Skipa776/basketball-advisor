@@ -63,14 +63,18 @@ public sealed class DraftSession
     {
         get
         {
-            var next = Enumerable.Range(1, RoundCount)
-                .Select(round => round % 2 == 1
-                    ? ((round - 1) * TeamCount) + UserSlot
-                    : (round * TeamCount) - UserSlot + 1)
-                .FirstOrDefault(pick => pick > CurrentPick);
-            return next == 0 ? 1 : Math.Max(1, next - CurrentPick);
+            var next = NextUserPickAfterCurrent;
+            return next is { } pick ? Math.Max(1, pick - CurrentPick) : 1;
         }
     }
+
+    public int? NextUserPickAfterCurrent => Enumerable.Range(1, RoundCount)
+        .Select(round => round % 2 == 1
+            ? ((round - 1) * TeamCount) + UserSlot
+            : (round * TeamCount) - UserSlot + 1)
+        .Where(pick => pick > CurrentPick)
+        .Cast<int?>()
+        .FirstOrDefault();
 
     public bool IsUserPick(int pickNumber)
     {

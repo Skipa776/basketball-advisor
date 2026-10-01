@@ -192,6 +192,31 @@ public sealed class DraftEngineTests
         new DraftWeightOptions { Urgency = -0.5m }.IsValid().ShouldBeFalse();
 
     [Fact]
+    public void D13_users_last_pick_has_no_availability_estimate_or_about_percent_evidence()
+    {
+        // 2-team 2-round snake: the user's last turn is pick 4, the last pick of the draft.
+        var session = new DraftSession(Guid.NewGuid(), 2, 2, 1);
+        for (var pick = 0; pick < 3; pick++)
+        {
+            session.MakePick(new PlayerId(Guid.NewGuid()));
+        }
+
+        session.NextUserPickAfterCurrent.ShouldBe(null);
+        session.PicksUntilNextTurn.ShouldBe(1, "left unchanged for scarcity even though there is no later turn");
+
+        var value = CreateBoard().Rank(
+                session,
+                LeagueCatalog.CreateSeedPointsLeague(Guid.NewGuid()),
+                [Candidate(100m, ["PG"], 150m)],
+                [])
+            .Rankings.Single();
+
+        value.AvailableAtNextPick.ShouldBe(null);
+        value.Urgency.ShouldBe(0m);
+        value.Evidence.ShouldNotContain(item => item.Statement.StartsWith("About ", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void D07_category_board_uses_category_totals_and_banner()
     {
         var league = new FantasyLeague(

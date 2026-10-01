@@ -59,6 +59,7 @@ The cases gating build steps 10, 11, and 12 — requirements R7, R8, R9, R10.
 | `D-10` | Equal-value candidates, one ADP near the next pick, one far beyond | Likely-gone ranks first; its `AvailableAtNextPick < 0.5`, the other's `> 0.95` | ✅ |
 | `D-11` | Candidate with no ADP | `AvailableAtNextPick` is null and `Urgency` is 0 | ✅ |
 | `D-12` | `DraftWeightOptions` with negative `Urgency` | `IsValid()` is false | ✅ |
+| `D-13` | User's last pick of the draft (no later user turn) | `NextUserPickAfterCurrent` is null; `AvailableAtNextPick` null, `Urgency` 0, no `About N%` evidence | ✅ |
 | `D-08` | Pick then undo | Board equals its pre-pick snapshot exactly | ✅ |
 | `D-09` | Drafted player | Leaves the available pool immediately; cannot be recommended | ✅ |
 | — | Full-pool re-rank latency | Completes inside the R7 target on a realistic pool | ✅ |
@@ -80,7 +81,7 @@ full gate.
 
 # Current evidence
 
-P-01 through P-10, C-01 through C-07, and D-01 through D-12 are implemented.
+P-01 through P-10, C-01 through C-07, and D-01 through D-13 are implemented.
 Projection coverage includes the worked example, four-record PostgreSQL
 persistence, immutable baselines, non-compounding context, bounds, expiry, and
 baseline/event links. Context coverage includes proposed/verified/rejected

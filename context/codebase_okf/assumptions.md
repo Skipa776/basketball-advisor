@@ -1164,3 +1164,9 @@ obligation (E11) as every other draft weight.
   Slots a candidate fits none of are never blocked — there is nothing to stack.
 - This is a jitter plus greedy slot check, not a learned drafter model; the
   upgrade path is fitting pick behaviour from real draft logs (E11).
+- Availability on the user's last pick (2026-09-27): `PicksUntilNextTurn`
+  returned 1 when no later user turn exists, so the board said "About N% chance
+  he is still there" for a pick that never happens. `DraftSession` now exposes
+  `NextUserPickAfterCurrent` (null when the draft ends first) and the board
+  omits the availability estimate and its evidence when it is null; scarcity
+  still uses `PicksUntilNextTurn`, unchanged.
