@@ -4,6 +4,7 @@ import { useResource } from './useResource';
 import { ErrorNotice } from './Workspace';
 import type { Player } from './types';
 import { HeatBadge, HeatLabels } from './heat';
+import { GameChart } from './gameChart';
 import type { HeatLabel, HeatLabelPage } from './heat';
 
 type Pool = { seasonEndYear: number; source: string; gameCount: number; latestGameDate: string; latestFetchedAt: string };
@@ -72,6 +73,7 @@ function PerformanceRow({ item, label, disclaimer }: { item: Heat; label?: HeatL
     <ErrorNotice text={player.error} retry={player.refresh} />
     <p>{item.seasonAppearances} appearances · Latest {item.latestAppearance ?? 'none'}</p>
     <dl className="performance-values"><div><dt>Current average</dt><dd>{format(item.currentAverage)}</dd></div><div><dt>Recent average</dt><dd>{format(item.recentAverage)}</dd></div><div><dt>Comparison average</dt><dd>{format(item.baselineAverage)}</dd></div><div><dt>Points above baseline</dt><dd>{lift(item.pointsAboveBaseline)}</dd></div></dl>
+    <GameChart games={item.currentWindow} baseline={item.baselineAverage} recentCount={item.recentWindow.length} />
     {!item.hasComparison && <p className="muted">Insufficient history for a heat comparison. {item.baselineWindow.length} preceding and {item.recentWindow.length} recent appearances recorded.</p>}
     {item.hasComparison && <p className="muted">Relative lift: {item.relativeLift === null ? 'undefined at a zero baseline' : `${lift(item.relativeLift * 100)}%`} · {item.recentGamesAboveBaseline} recent appearances above baseline.</p>}
     <details><summary>Games behind this result</summary>{([['Current sample', item.currentWindow], ['Comparison baseline', item.baselineWindow], ['Recent sample', item.recentWindow]] as const).map(([label, games]) => <div key={label} className="table-scroll"><table><caption>{label} · {games.length} appearances</caption><thead><tr><th>Date</th><th>Fantasy points</th><th>Source evidence</th></tr></thead><tbody>{games.map(game => <tr key={game.gameId}><td>{game.playedOn}</td><td>{format(game.fantasyPoints)}</td><td><details><summary>{game.provenance.source}</summary><div className="performance-provenance">Retrieved {new Date(game.provenance.fetchedAt).toLocaleString()}<br />Parser {game.provenance.parserVersion}<br />Game {game.gameId}<br />SHA-256 {game.provenance.rawRecordHash}</div></details></td></tr>)}</tbody></table></div>)}</details>

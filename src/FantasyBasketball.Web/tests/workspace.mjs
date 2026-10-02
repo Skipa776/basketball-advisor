@@ -244,8 +244,9 @@ try {
   await performance.screenshot({ path: `${artifacts}/heat-labels-desktop.png` });
   await performance.getByRole('button', { name: 'Above baseline', exact: true }).click();
   await visible(results.locator('.performance-list .heat-badge.hot'));
+  await visible(results.locator('svg.game-chart'));
   await page.unroute('**/heat-labels?*');
-  checks.push('Hot & cold view shows the chance banner and a disclaimed HOT · Role badge; the badge reaches the performance rows');
+  checks.push('Hot & cold view shows the chance banner and a disclaimed HOT · Role badge; the badge and game chart reach the performance rows');
 
   const leagueId = new URL(savedUrl).searchParams.get('league');
   await page.goto(new URL(`/app/drafts?league=${leagueId}`, base).href);
