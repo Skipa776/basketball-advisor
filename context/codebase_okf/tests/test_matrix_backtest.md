@@ -33,6 +33,14 @@ it is a thrown exception rather than a review item.
 | `B-03` | Tied projected values | Spearman uses average ranks | ✅ |
 | `B-04` | Projection equal to actual for every player | `MAE 0`, `RMSE 0`, `ρ 1`, hit rate `1`, decile deviations all `0` — the identity case | ✅ |
 
+# Runner (`BR-01`–`BR-04`)
+
+| ID | Case | Expected | Required |
+|---|---|---|---|
+| `BR-01` | Season lines for the year before eval, eval box scores with one player under 20 games | Model and "last season repeats" scored against actual points per game; the under-20 player is excluded | ✅ |
+| `BR-02` | An eval-season player with no training line | Skipped, not scored as zero | ✅ |
+| `BR-03` | No training lines for the year before eval | Throws, naming the missing season | ✅ |
+
 # Simulation and fitting (`B-05`–`B-07`, `B-09`)
 
 | ID | Case | Expected | Required |
