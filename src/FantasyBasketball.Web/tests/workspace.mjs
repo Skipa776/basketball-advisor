@@ -230,6 +230,23 @@ try {
   await results.getByText('Games behind this result', { exact: true }).click();
   checks.push('Recorded games → separate best/above-baseline views, disjoint evidence, insufficient history, empty cutoff and failed-read retry');
 
+  const guardId = await results.locator('.performance-list > li').first().getAttribute('data-player-id');
+  const disclaimer = 'Describes the last 5 games against the 10–30 before them. Not a forecast. About 5% of players get a label like this by chance alone.';
+  await page.route('**/heat-labels?*', route => route.fulfill({ json: envelope({ seasonEndYear: 2026, throughDate: '2026-01-14', modelVersion: 'heat-prior-fixture', eligiblePlayers: 40, qualifiedPlayers: 32, nullLabelRate: 0.05, expectedChanceLabels: 0, disclaimer,
+    labels: [{ playerId: guardId, label: 'HOT', cause: 'Role', probability: 0.83, shiftMean: 6.2, shiftLow: 2.9, shiftHigh: 9.5, opportunityShare: 0.71, recentGames: 5, baselineGames: 8, throughDate: '2026-01-14' }] }) }));
+  await performance.getByRole('button', { name: 'View performance', exact: true }).click();
+  await performance.getByRole('button', { name: 'Hot & cold', exact: true }).click();
+  const heatLabels = performance.getByRole('region', { name: 'Hot and cold labels' });
+  await visible(heatLabels.getByText('HOT · Role', { exact: true }));
+  await visible(heatLabels.getByText('That is about 0 of the 1 labels below.', { exact: false }));
+  assert.match(await heatLabels.locator('.heat-badge').first().getAttribute('title'), /Not a forecast/);
+  await accessibility('Hot and cold labels');
+  await performance.screenshot({ path: `${artifacts}/heat-labels-desktop.png` });
+  await performance.getByRole('button', { name: 'Above baseline', exact: true }).click();
+  await visible(results.locator('.performance-list .heat-badge.hot'));
+  await page.unroute('**/heat-labels?*');
+  checks.push('Hot & cold view shows the chance banner and a disclaimed HOT · Role badge; the badge reaches the performance rows');
+
   const leagueId = new URL(savedUrl).searchParams.get('league');
   await page.goto(new URL(`/app/drafts?league=${leagueId}`, base).href);
   await visible(page.getByRole('heading', { name: 'Your drafts', exact: true }));
