@@ -33,3 +33,4 @@ graphify-out/
 # Offline modeling (tools/modeling) virtualenv and bytecode
 .venv/
 __pycache__/
+tools/modeling/out/
