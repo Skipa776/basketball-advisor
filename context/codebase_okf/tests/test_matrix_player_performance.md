@@ -18,3 +18,10 @@ owners: [engineering]
 | `HP-03` | Invalid queries, category league, paging | 400/409 envelopes; bounded deterministic pages | ✅ |
 | `HP-04` | Cross-user and anonymous requests | 404 without identifiers; 401 anonymous | ✅ |
 | `HP-05` | Real-cookie Playwright performance journey | Selection, modes, evidence, empty/error retry, axe and mobile overflow checks | ✅ |
+
+# HOT and COLD labels
+
+| ID | Required case | Expected | Required |
+|---|---|---|---|
+| `HL-01` | A role jump and a steady player under league scoring | One `HOT · Role` label with an 80% shift interval; eligible, qualified, model version, chance rate and disclaimer on the page | ✅ |
+| `HL-02` | No active heat-prior model, or a category league | 409 conflict before any label is computed | ✅ |
