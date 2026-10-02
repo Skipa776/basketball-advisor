@@ -51,6 +51,16 @@ it is a thrown exception rather than a review item.
 | `B-07` | A fit that loses to the judgment defaults on holdout | Cannot be written into the shipped defaults; the honesty rule is code, not prose | ✅ |
 | `B-09` | Reference graph | No duplicate `DraftValue` implementation — the simulation uses production code | ✅ |
 
+# Draft benchmark (`DB-01`–`DB-02`)
+
+The board-versus-ADP benchmark reuses `SimulatedOpponent` and `DraftBoard` (B-09) and
+reports the mean per-draft lineup difference with a 95% interval.
+
+| ID | Case | Expected | Required |
+|---|---|---|---|
+| `DB-01` | Projections equal actual; some ADPs 40 picks late | Board beats the ADP-only bot; the 95% interval's low end is above 0 | ✅ |
+| `DB-02` | Five pure centers in the seed league | Lineup value counts C and both UTIL; bench players score nothing | ✅ |
+
 # Reproducibility and reach (`B-08`, `B-10`)
 
 | ID | Case | Expected | Required |
