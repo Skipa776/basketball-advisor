@@ -20,7 +20,7 @@ fi
 
 # The bind error this avoids names the address but not the process holding it,
 # which is a poor place to leave someone whose last run is still alive.
-if holder="$(lsof -ti:"$PORT" 2>/dev/null)" && [ -n "$holder" ]; then
+if holder="$(lsof -ti:"$PORT" -sTCP:LISTEN 2>/dev/null)" && [ -n "$holder" ]; then
     echo "Port $PORT is already in use by PID $holder:" >&2
     ps -p "$holder" -o pid=,command= >&2
     echo "Stop it with 'kill $holder', or run with PORT=5281 scripts/run.sh" >&2
