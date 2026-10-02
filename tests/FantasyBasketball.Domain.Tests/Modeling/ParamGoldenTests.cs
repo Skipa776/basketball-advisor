@@ -1,0 +1,65 @@
+using System.Text.Json;
+using FantasyBasketball.Domain.Trends;
+using Shouldly;
+
+namespace FantasyBasketball.Domain.Tests.Modeling;
+
+/// <summary>
+/// model_params_contract: C# recomputes every Python golden from the same parameters.
+/// A golden for a model with no evaluator here fails, so a new model cannot skip the check.
+/// </summary>
+public sealed class ParamGoldenTests
+{
+    private const decimal Tolerance = 0.000001m;
+
+    [Fact]
+    public void MG01_csharp_matches_every_python_golden()
+    {
+        var goldens = Directory.GetFiles(Path.Combine(RepoRoot(), "tools", "modeling", "goldens"), "*.json");
+        goldens.ShouldNotBeEmpty();
+        foreach (var path in goldens)
+        {
+            using var golden = JsonDocument.Parse(File.ReadAllText(path));
+            var model = golden.RootElement.GetProperty("model").GetString();
+            switch (model)
+            {
+                case HeatPriorParameters.ModelName:
+                    CheckHeatPrior(golden.RootElement);
+                    break;
+                default:
+                    throw new ShouldAssertException($"No C# evaluator for golden model '{model}' ({path}).");
+            }
+        }
+    }
+
+    private static void CheckHeatPrior(JsonElement golden)
+    {
+        var classifier = new HeatClassifier(HeatPriorParameters.Parse(golden.GetProperty("parameters").GetRawText()));
+        foreach (var testCase in golden.GetProperty("cases").EnumerateArray())
+        {
+            var actual = classifier.Posterior(
+                Values(testCase.GetProperty("baseline")),
+                testCase.GetProperty("baselineMinutes").GetDecimal(),
+                Values(testCase.GetProperty("recent")));
+            var expected = testCase.GetProperty("expected");
+            Math.Abs(actual.ShiftMean - expected.GetProperty("shiftMean").GetDecimal()).ShouldBeLessThan(Tolerance);
+            Math.Abs(actual.ShiftSd - expected.GetProperty("shiftSd").GetDecimal()).ShouldBeLessThan(Tolerance);
+            Math.Abs(actual.EffectFloor - expected.GetProperty("effectFloor").GetDecimal()).ShouldBeLessThan(Tolerance);
+            Math.Abs(actual.PHot - expected.GetProperty("pHot").GetDecimal()).ShouldBeLessThan(Tolerance);
+            Math.Abs(actual.PCold - expected.GetProperty("pCold").GetDecimal()).ShouldBeLessThan(Tolerance);
+        }
+    }
+
+    private static decimal[] Values(JsonElement array) => array.EnumerateArray().Select(value => value.GetDecimal()).ToArray();
+
+    private static string RepoRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "FantasyBasketball.sln")))
+        {
+            directory = directory.Parent;
+        }
+
+        return directory?.FullName ?? throw new DirectoryNotFoundException("Repository root not found.");
+    }
+}

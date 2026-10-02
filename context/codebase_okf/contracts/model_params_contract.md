@@ -36,6 +36,10 @@ activating an older version; nothing is deleted.
 Each model's `parameters` JSON has one documented shape, listed here as its
 model lands. A model whose parameters fail its shape is not activated.
 
+| Model | Fitted by | Parameters |
+|---|---|---|
+| `heat-prior` | `tools/modeling/heat_prior.py` | `recentGames`, `minBaselineGames`, `maxBaselineGames`, `minBaselineMinutes`, `nu`, `tauRelative`, `effectFloorPoints`, `effectFloorSd`, `cvByMinutes[{minutesFrom, minutesTo, cv}]` — read by `HeatPriorParameters.Parse` |
+
 # Goldens
 
 `tools/modeling/goldens/<model>.json` holds fixed inputs, the parameters, and
