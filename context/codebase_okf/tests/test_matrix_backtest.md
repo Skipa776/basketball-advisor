@@ -6,8 +6,8 @@ tags: [tests, backtest, calibration, matrix]
 source_paths: [src/FantasyBasketball.Application/Backtest]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Backtest]
 depends_on: [required_gates.md, ../contracts/backtest_contract.md]
-status: planned
-last_updated: 2026-07-29
+status: partial
+last_updated: 2026-10-01
 owners: [engineering]
 ---
 

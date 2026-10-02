@@ -6,8 +6,8 @@ tags: [component, backtest, calibration]
 source_paths: [src/FantasyBasketball.Application/Backtest]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Backtest]
 depends_on: [../contracts/backtest_contract.md, boxscore_importer.md]
-status: planned
-last_updated: 2026-07-29
+status: partial
+last_updated: 2026-10-01
 owners: [engineering]
 risk_level: high
 done_criteria:

@@ -6,8 +6,8 @@ tags: [contract, backtest, calibration, math]
 source_paths: [src/FantasyBasketball.Application/Backtest]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Backtest]
 depends_on: [projection_pipeline_contract.md, draft_value_contract.md, rolling_window_contract.md]
-status: planned
-last_updated: 2026-07-29
+status: partial
+last_updated: 2026-10-01
 owners: [engineering]
 risk_level: high
 edit_policy: stable_contract
