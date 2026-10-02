@@ -189,6 +189,7 @@ public static class DependencyInjection
         services.AddScoped<ILeagueRepository, LeagueRepository>();
         services.AddScoped<ISeasonStatLineRepository, SeasonStatLineRepository>();
         services.AddScoped<IBoxScoreRepository, BoxScoreRepository>();
+        services.AddScoped<FantasyBasketball.Application.Backtest.ProjectionBacktestRunner>();
         services.AddScoped<ILeagueTeamRepository, LeagueTeamRepository>();
         services.AddScoped<ILeagueEligibilityRepository, LeagueEligibilityRepository>();
         services.AddScoped<FantasyBasketball.Application.Leagues.LeagueRosterService>();
