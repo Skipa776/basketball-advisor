@@ -40,6 +40,7 @@ it is a thrown exception rather than a review item.
 | `BR-01` | Season lines for the year before eval, eval box scores with one player under 20 games | Model and "last season repeats" scored against actual points per game; the under-20 player is excluded | ✅ |
 | `BR-02` | An eval-season player with no training line | Skipped, not scored as zero | ✅ |
 | `BR-03` | No training lines for the year before eval | Throws, naming the missing season | ✅ |
+| `BR-04` | Render a result twice | Identical markdown: metric table with model − baseline deltas, decile calibration, as-of, commit; LF line endings | ✅ |
 
 # Simulation and fitting (`B-05`–`B-07`, `B-09`)
 
