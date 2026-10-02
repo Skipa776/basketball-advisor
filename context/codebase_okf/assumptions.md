@@ -376,11 +376,13 @@ real check.
   recommendation, not a failing test — no check can catch it until there is
   historical validation data. **Scoped for resolution: epic E11**
   ([backtest_contract](contracts/backtest_contract.md)).
-- **Projection accuracy.** Nothing verifies the projections are *good*, only
-  that they are computed as specified and decomposed correctly. **Scoped for
-  resolution: epic E11.** Note the honesty rule there — if the fitted weights do
-  not beat these judgment defaults on holdout, the defaults ship and this entry
-  stays, citing the report that says so.
+- **Projection accuracy — measured 2026-10-02.** On the 2025–26 holdout
+  ([report-2026](../../docs/backtest/report-2026.md), 390 players with 20+ games)
+  `baseline-v1` beats "last season repeats" on MAE (5.22 vs 5.35 points per game)
+  and top-100 hit rate (0.78 vs 0.76) but ranks slightly worse (Spearman 0.752 vs
+  0.771). The bottom decile is under-projected by 4.0 points and decile 7 over by
+  3.7. Good enough to keep; not good enough to call calibrated. The M2 hierarchical
+  model has this report as the bar to beat.
 - **Trend weights** in [rolling_window_contract](contracts/rolling_window_contract.md)
   are judgment values on the same footing, and subject to the same rule.
 - **No fuzzy player matching**, by choice
