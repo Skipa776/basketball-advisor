@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Domain/Trends]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Trends/PlayerHeatTests.cs]
 depends_on: [scoring_rules_catalog.md, provenance_contract.md, rolling_window_contract.md]
 status: implemented
-last_updated: 2026-09-23
+last_updated: 2026-10-01
 owners: [engineering]
 risk_level: high
 ---
@@ -69,6 +69,26 @@ model version. These are retrospective statistics as of a game-date cutoff,
 Data freshness must be checked by the future application/API integration before
 labelling anything as a *live* streak. No stale-data or sustainability guarantee
 is invented by this pure calculator.
+
+# HOT and COLD labels (owner-approved 2026-10-01)
+
+Labels are a separate, descriptive layer over the same disjoint windows. The
+three-appearance averages above stay as they are; a label compares the latest
+**five** appearances against the preceding 10–30, because three games give a
+standard error too wide for a 0.75 bar for most players.
+
+- The shift is an empirical-Bayes posterior: the player's variance is shrunk toward
+  the pool's (CV by minutes, weight `nu`), and the shift toward zero (spread `tau`
+  relative to the baseline mean). Both are fitted offline as model `heat-prior`
+  ([model_params_contract](model_params_contract.md)).
+- `HOT` when P(shift > floor) ≥ 0.75, `COLD` when P(shift < −floor) ≥ 0.75, floor
+  2 fantasy points. A label stays until its probability falls below 0.60.
+- Only players averaging 15+ baseline minutes and a positive baseline are labelled.
+- Each label carries a cause from the minutes × usage × efficiency decomposition
+  ([rolling_window_contract](rolling_window_contract.md)): `Role` at signed
+  opportunity share ≥ 0.60, `Shooting` at ≤ 0.30, otherwise `Mixed`.
+- A label describes the past. It is never a forecast, an injury claim, or an input
+  to any recommendation.
 
 # Verification
 

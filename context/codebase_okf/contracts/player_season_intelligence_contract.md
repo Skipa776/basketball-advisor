@@ -7,7 +7,7 @@ source_paths: [src/FantasyBasketball.Domain/Trends, src/FantasyBasketball.Web/sr
 test_paths: []
 depends_on: [player_heat_contract.md, box_score_storage_contract.md, scoring_rules_catalog.md, draft_value_contract.md, provenance_contract.md]
 status: planned
-last_updated: 2026-09-22
+last_updated: 2026-10-01
 owners: [engineering]
 risk_level: high
 ---
@@ -57,11 +57,10 @@ evidence means no label, with a reason shown in detail views. Historical labels
 are recalculated from the selected season; a current label is never backfilled
 into an earlier draft snapshot.
 
-- `HOT` and `COLD` derive only from the disjoint latest-three versus preceding
-  expanding-ten-to-thirty complete-appearance comparison owned by
-  [player_heat_contract](player_heat_contract.md). Direction and qualifying
-  thresholds for a visible badge require a later decision; a negative lift alone
-  must not be presented as an injury or forecast.
+- `HOT` and `COLD` derive only from the disjoint latest-five versus preceding
+  ten-to-thirty comparison and the thresholds owned by
+  [player_heat_contract](player_heat_contract.md) (decided 2026-10-01); a negative
+  shift alone must not be presented as an injury or forecast.
 - `CONSISTENT` summarizes low dispersion in qualified played-game fantasy
   scores. Its statistic and threshold are not yet selected.
 - `HIGH PEAKS` summarizes unusually high observed game scores relative to the
