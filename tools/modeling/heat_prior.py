@@ -147,6 +147,45 @@ def posterior(params: dict, baseline: list[float], baseline_minutes: float, rece
             "pCold": float(norm.cdf((-floor - mean) / sd))}
 
 
+ENTER, EXIT = 0.75, 0.60
+NULL_SHUFFLES = 200
+REPLAY_WINDOWS = 10
+
+
+def label_at_end(params: dict, series: list[tuple[float, float]]) -> str | None:
+    """Replays the last windows with enter/exit hysteresis, as HeatClassifier.Classify does."""
+    label = None
+    first = max(RECENT_GAMES + MIN_BASELINE_GAMES, len(series) - REPLAY_WINDOWS + 1)
+    for end in range(first, len(series) + 1):
+        recent = series[end - RECENT_GAMES:end]
+        baseline = series[max(0, end - RECENT_GAMES - MAX_BASELINE_GAMES):end - RECENT_GAMES]
+        points = [p for p, _ in baseline]
+        minutes = float(np.mean([m for _, m in baseline]))
+        if minutes < MIN_BASELINE_MINUTES or np.mean(points) <= 0:
+            label = None
+            continue
+        x = posterior(params, points, minutes, [p for p, _ in recent])
+        if label == "hot" and x["pHot"] >= EXIT or label == "cold" and x["pCold"] >= EXIT:
+            continue
+        label = "hot" if x["pHot"] >= ENTER else "cold" if x["pCold"] >= ENTER else None
+    return label
+
+
+def false_label_rate(params: dict, games: dict[str, list[tuple[float, float]]]) -> dict:
+    """Shuffling each season's game order removes every real trend; labels that remain are chance."""
+    rng = np.random.default_rng(7)
+    eligible = [s for s in games.values() if len(s) >= RECENT_GAMES + MIN_BASELINE_GAMES]
+    observed = sum(label_at_end(params, s) is not None for s in eligible)
+    shuffled = 0
+    for _ in range(NULL_SHUFFLES):
+        for series in eligible:
+            order = rng.permutation(len(series))
+            shuffled += label_at_end(params, [series[i] for i in order]) is not None
+    return {"players": len(eligible), "observedLabels": observed,
+            "nullLabelRate": shuffled / (NULL_SHUFFLES * len(eligible)),
+            "observedLabelRate": observed / len(eligible), "nullShuffles": NULL_SHUFFLES}
+
+
 def goldens(params: dict) -> dict:
     rng = np.random.default_rng(20261001)
     cases = []
@@ -163,9 +202,11 @@ def main() -> None:
     parser.add_argument("--season", type=int, required=True)
     parser.add_argument("--out", default="out/heat_prior.json")
     args = parser.parse_args()
-    params, metrics = fit(load_games(args.season))
+    games = load_games(args.season)
+    params, metrics = fit(games)
+    metrics["falseLabels"] = false_label_rate(params, games)
     fitted_at = datetime.now(timezone.utc).replace(microsecond=0)
-    record = {"modelName": "heat-prior", "version": f"heat-prior-{fitted_at:%Y%m%d}",
+    record = {"modelName": "heat-prior", "version": f"heat-prior-{fitted_at:%Y%m%d%H%M}",
               "fittedAt": fitted_at.isoformat(), "trainSeasonEndYears": [args.season],
               "parameters": params, "metrics": metrics,
               "cardMarkdown": "Empirical-Bayes priors for HOT/COLD labels: volatility shrinkage nu, "
@@ -175,6 +216,7 @@ def main() -> None:
     Path("goldens").mkdir(exist_ok=True)
     Path("goldens/heat_prior.json").write_text(json.dumps(goldens(params), indent=2) + "\n")
     print(json.dumps({"nu": params["nu"], "tauRelative": params["tauRelative"], **metrics}, indent=2))
+    # ponytail: the null is rerun at each refit, not nightly; refit after big data changes.
 
 
 if __name__ == "__main__":
