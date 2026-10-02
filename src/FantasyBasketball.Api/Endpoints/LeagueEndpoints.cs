@@ -70,6 +70,8 @@ public static class LeagueEndpoints
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
         group.MapGet("/{id:guid}/performance", PerformanceEndpoints.QueryAsync)
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
+        group.MapGet("/{id:guid}/heat-labels", PerformanceEndpoints.LabelsAsync)
+            .WithMetadata(new OwnedRouteMetadata("league", "id"));
         group.MapGet("/{id:guid}/teams", ListTeamsAsync)
             .WithMetadata(new OwnedRouteMetadata("league", "id"));
         group.MapPost("/{id:guid}/teams/csv", ImportTeamsCsvAsync)

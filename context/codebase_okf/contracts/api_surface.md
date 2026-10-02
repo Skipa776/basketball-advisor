@@ -209,6 +209,13 @@ name/value mappings so React does not duplicate the C# enums.
 The complete shape and historical-data limitations are owned by
 [player_performance_api_contract](player_performance_api_contract.md).
 
+**Heat labels — 2026-10-01.** `GET /api/leagues/{id}/heat-labels?seasonEndYear&source&throughDate`:
+owned, authenticated, points leagues only. Returns HOT/COLD labels (probability,
+cause, 80% shift interval, window sizes) under the league's current scoring, plus
+the active `heat-prior` model version, eligible and qualified counts, the
+permutation-null chance rate and the disclaimer text. No active model is 409.
+Rules are owned by [player_heat_contract](player_heat_contract.md); row HL-03.
+
 **Landing update — 2026-09-23.** `GET /api/public/daily` returns *every* featured
 player's latest appearance on or before the resolved date; each line carries its
 own `playedOn`, and `poolSize` counts the resolved date only. Setting

@@ -25,3 +25,4 @@ owners: [engineering]
 |---|---|---|---|
 | `HL-01` | A role jump and a steady player under league scoring | One `HOT · Role` label with an 80% shift interval; eligible, qualified, model version, chance rate and disclaimer on the page | ✅ |
 | `HL-02` | No active heat-prior model, or a category league | 409 conflict before any label is computed | ✅ |
+| `HL-03` | `GET /heat-labels` before and after a model is active | 409, then 200 with model version, chance rate, disclaimer and `no-store`; bad date is 400 | ✅ |

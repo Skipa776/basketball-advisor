@@ -234,6 +234,7 @@ public static class DependencyInjection
         services.AddSingleton(heat);
         services.AddScoped<FantasyBasketball.Domain.Trends.PlayerHeatCalculator>();
         services.AddScoped<FantasyBasketball.Application.Trends.PlayerPerformanceService>();
+        services.AddScoped<FantasyBasketball.Application.Trends.HeatLabelService>();
         services.AddSingleton(configuration.GetSection(FantasyBasketball.Application.Landing.LandingOptions.SectionName)
             .Get<FantasyBasketball.Application.Landing.LandingOptions>() ?? new FantasyBasketball.Application.Landing.LandingOptions());
         services.AddScoped<FantasyBasketball.Application.Landing.LandingService>();

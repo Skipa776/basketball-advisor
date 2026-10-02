@@ -41,4 +41,24 @@ public static class PerformanceEndpoints
         var result = await service.QueryAsync(id, seasonEndYear.Value, source, date, view, currentPage, pageSize, cancellationToken);
         return ApiResults.Success(result, meta: new ApiMeta(result.Total, currentPage, pageSize));
     }
+
+    public static async Task<IResult> LabelsAsync(Guid id, int? seasonEndYear, string? source, string? throughDate,
+        HeatLabelService service, OwnedResourceAuthorizationService authorization, TimeProvider clock,
+        HttpContext context, CancellationToken cancellationToken)
+    {
+        await authorization.RequireLeagueAsync(id, cancellationToken);
+        context.Response.Headers.CacheControl = "no-store";
+        if (seasonEndYear is null or < 1947 || seasonEndYear > clock.GetUtcNow().Year + 1
+            || string.IsNullOrWhiteSpace(source) || !DataSourceName.IsKnown(source)
+            || !DateOnly.TryParseExact(throughDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+            || date > DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime))
+        {
+            throw new RequestValidationException(new Dictionary<string, string[]>
+            {
+                ["heatLabels"] = ["Select a valid season, known source and game date on or before today (YYYY-MM-DD)."],
+            });
+        }
+
+        return ApiResults.Success(await service.QueryAsync(id, seasonEndYear.Value, source, date, cancellationToken));
+    }
 }
