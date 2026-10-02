@@ -32,6 +32,7 @@ The cases gating build steps 5 through 9 and 14 — requirements R2, R3, R4.
 | `I-11` | User-entered roster or event | Provenance recorded with `Source = manual` | ✅ |
 | `I-12` | Second request inside the freshness window | Served from cache; zero outbound requests | ✅ |
 | `I-13` | Import fails partway | Previously imported data intact; no truncate-then-load | ✅ |
+| `I-14` | balldontlie game with `datetime` null but `date` set (all 11 games on 2022-12-02) | Imported at noon US Eastern on that date, keeping its Eastern date; the run no longer fails | ✅ |
 
 # Identity resolution (`N-`)
 
