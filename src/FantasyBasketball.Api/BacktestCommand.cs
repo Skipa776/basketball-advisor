@@ -24,7 +24,7 @@ public static class BacktestCommand
         var asOf = Option(args, "--as-of") is { } date
             ? DateTimeOffset.Parse(date, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal)
             : new DateTimeOffset(evalSeason - 1, 10, 1, 0, 0, 0, TimeSpan.Zero);
-        var output = Option(args, "--out") ?? $"docs/backtest/report-{evalSeason}.md";
+        var output = RepoPath.Resolve(Option(args, "--out") ?? $"docs/backtest/report-{evalSeason}.md");
 
         await using var scope = app.Services.CreateAsyncScope();
         var runner = scope.ServiceProvider.GetRequiredService<ProjectionBacktestRunner>();
