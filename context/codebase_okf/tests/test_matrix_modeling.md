@@ -34,3 +34,9 @@ Gates [model_params_contract](../contracts/model_params_contract.md).
 | ID | Case | Expected | Required |
 |---|---|---|---|
 | `MG-01` | Every `tools/modeling/goldens/*.json` | C# recomputes each expected output from the stored parameters within 1e-6 | ✅ |
+
+# Shared statistics (`ND-01`)
+
+| ID | Case | Expected | Required |
+|---|---|---|---|
+| `ND-01` | `NormalDistribution.Cdf` at 0, 1, −1.96, 2.5 | Within 2e-7 of published values (Abramowitz–Stegun 7.1.26 bound 1.5e-7) | ✅ |

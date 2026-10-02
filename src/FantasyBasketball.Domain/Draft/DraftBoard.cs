@@ -3,6 +3,7 @@ using FantasyBasketball.Domain.Leagues;
 using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Domain.Recommendations;
 using FantasyBasketball.Domain.Stats;
+using FantasyBasketball.Domain.Statistics;
 
 namespace FantasyBasketball.Domain.Draft;
 
@@ -182,7 +183,7 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
             return null;
         }
 
-        return 1m - Phi(((decimal)nextPick - average) / AdpSigma(average, adpStandardDeviation));
+        return 1m - NormalDistribution.Cdf(((decimal)nextPick - average) / AdpSigma(average, adpStandardDeviation));
     }
 
     /// <summary>
@@ -198,25 +199,6 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
         return standardDeviation is > 0m
             ? standardDeviation.Value
             : Math.Max(6m, 0.2m * adp);
-    }
-
-    /// <summary>
-    /// Standard normal CDF via the Abramowitz-Stegun 7.1.26 erf approximation
-    /// (absolute error &lt; 1.5e-7), the same formulation category win probability uses.
-    /// </summary>
-    private static decimal Phi(decimal z)
-    {
-        var x = (double)z / Math.Sqrt(2d);
-        var sign = x < 0d ? -1d : 1d;
-        var value = Math.Abs(x);
-        var t = 1d / (1d + (0.3275911d * value));
-        var polynomial = t * (0.254829592d
-            + t * (-0.284496736d
-            + t * (1.421413741d
-            + t * (-1.453152027d
-            + t * 1.061405429d))));
-        var erf = sign * (1d - (polynomial * Math.Exp(-value * value)));
-        return (decimal)((erf / 2d) + 0.5d);
     }
 
     private static IReadOnlyList<RecommendationEvidence> CreateEvidence(
