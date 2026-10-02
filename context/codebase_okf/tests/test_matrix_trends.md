@@ -6,8 +6,8 @@ tags: [tests, trends, matrix]
 source_paths: [src/FantasyBasketball.Domain/Trends, src/FantasyBasketball.Application/Trends]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Trends]
 depends_on: [required_gates.md, ../contracts/rolling_window_contract.md]
-status: planned
-last_updated: 2026-07-29
+status: partial
+last_updated: 2026-10-01
 owners: [engineering]
 ---
 
@@ -23,7 +23,7 @@ trend number trustworthy.
 | `T-01` | The contract's worked example | Reproduces to 4 dp: `FromMinutes 8.6000`, `FromUsage 0.4500`, `FromEfficiency 3.7500`, `TrendScore 10.3625` | ✅ |
 | `T-02` | 200 generated baseline/window pairs | `FromMinutes + FromUsage + FromEfficiency == ΔV` within `1e-9` for every pair | ✅ |
 | `T-03` | Two players, identical `ΔV`, opposite decompositions | Opposite sustainability labels — proves the classifier never reads total change | ✅ |
-| `T-04` | Zero minutes, or zero usage, in a window | `Unproven`, no score, no divide-by-zero | ✅ |
+| `T-04` | Zero minutes, or zero usage, in a window | No decomposition (null), so no label and no score; no divide-by-zero | ✅ |
 | `T-05` | Constant production across both periods | `TrendScore == 0` — only holds if baseline excludes the window | ✅ |
 | `T-06` | Any trend | Carries evidence naming the dominant term | ✅ |
 

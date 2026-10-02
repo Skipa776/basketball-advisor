@@ -6,8 +6,8 @@ tags: [contract, trends, math]
 source_paths: [src/FantasyBasketball.Domain/Trends, src/FantasyBasketball.Application/Trends]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Trends]
 depends_on: [stat_vocabulary.md, projection_pipeline_contract.md]
-status: planned
-last_updated: 2026-07-29
+status: partial
+last_updated: 2026-10-01
 owners: [engineering]
 risk_level: high
 edit_policy: stable_contract
