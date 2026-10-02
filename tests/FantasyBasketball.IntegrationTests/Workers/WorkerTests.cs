@@ -210,6 +210,7 @@ public sealed class WorkerTests
         private readonly ConcurrentQueue<DataImportRun> runs = new();
         private readonly ConcurrentQueue<Guid> providerScopes = new();
         private readonly ConcurrentQueue<Guid> transactionScopes = new();
+        private int adpCalls;
 
         public TaskCompletionSource ThreeRuns { get; } =
             new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -222,6 +223,10 @@ public sealed class WorkerTests
             transactionScopes.ToArray();
 
         public void AddProviderScope(Guid id) => providerScopes.Enqueue(id);
+
+        // One count per test: providers are scoped (a new one per run), and a static
+        // counter leaked between tests so the "first run fails" fixture never failed.
+        public int NextAdpCall() => Interlocked.Increment(ref adpCalls);
 
         public void AddTransactionScope(Guid id) =>
             transactionScopes.Enqueue(id);
@@ -247,7 +252,6 @@ public sealed class WorkerTests
 
     private sealed class ProbeAdpProvider : IAdpProvider
     {
-        private static int calls;
         private readonly WorkerProbe probe;
 
         public ProbeAdpProvider(WorkerProbe probe)
@@ -263,7 +267,7 @@ public sealed class WorkerTests
         public Task<IReadOnlyList<ExternalAdpEntry>> GetAdpAsync(
             CancellationToken cancellationToken)
         {
-            if (Interlocked.Increment(ref calls) == 1)
+            if (probe.NextAdpCall() == 1)
             {
                 throw new InvalidOperationException("fixture failure");
             }
