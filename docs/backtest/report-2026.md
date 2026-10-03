@@ -1,6 +1,6 @@
 # Projection backtest — 2025–26 holdout
 
-As of 2025-10-01 · trained on 2024–25 · 390 players with 20+ games · model `baseline-v1` · commit `ecc1ad5`
+As of 2025-10-01 · trained on 2024–25 · 390 players with 20+ games · model `baseline-v1` · commit `34ab58c`
 
 Fantasy points per game under ESPN default points scoring.
 
@@ -53,3 +53,19 @@ Same players as the model above; per-minute rates from the hierarchical model, m
 | 8 | 39 | 28.1605 | 27.7480 | -0.4125 |
 | 9 | 39 | 33.2543 | 33.1429 | -0.1113 |
 | 10 | 39 | 42.4093 | 42.9551 | 0.5458 |
+
+## Draft benchmark
+
+200 seeded 10-team, 9-starter drafts (ESPN points scoring, user slot rotating) over the 569-player 2024–25 pool with projections as of 2025-10-01. Opponents take lowest ADP after Normal(0, max(6, 0.2·ADP)) jitter; with no 2025 ADP stored, ADP is each player's rank by last season's fantasy points. Each roster scores its best starting lineup's **actual** 2025–26 points. The simulator ran 500 rollouts per pick.
+
+| Drafter | Mean starting-lineup points |
+|---|---|
+| ADP bot | 20157.0650 |
+| Heuristic board | 27717.0450 |
+| Simulator | 27464.4600 |
+
+| Comparison (paired, 200 drafts) | Mean difference | 95% CI |
+|---|---|---|
+| Heuristic board − ADP bot | 7559.9800 | 7156.3088 to 7963.6512 |
+| Simulator − ADP bot | 7307.3950 | 6891.7667 to 7723.0233 |
+| Simulator − Heuristic board | -252.5850 | -549.2878 to 44.1178 |
