@@ -61,6 +61,39 @@ public sealed class DraftBenchmarkTests
         DraftBenchmark.LineupValue(centers, League, actual).ShouldBe(100m + 99m + 98m);
     }
 
+    [Fact]
+    public void DB03_drafters_are_paired_on_the_same_seeded_drafts()
+    {
+        var (candidates, actual) = Pool();
+        var benchmark = new DraftBenchmark(Board());
+
+        var result = benchmark.Compare(League, candidates, actual,
+            [("ADP bot", DraftBenchmark.AdpDrafter), ("ADP twin", DraftBenchmark.AdpDrafter), ("Board", benchmark.BoardDrafter)], drafts: 12);
+
+        var twin = result.Comparisons.Single(comparison => comparison.Drafter == "ADP twin");
+        twin.MeanDifference.ShouldBe(0m, "an identical drafter on identical drafts differs by exactly zero");
+        twin.CiLow.ShouldBe(0m);
+        result.Comparisons.Count.ShouldBe(3);
+        result.MeanValue.Keys.ShouldBe(["ADP bot", "ADP twin", "Board"]);
+        result.Comparisons.Single(comparison => comparison.Drafter == "Board" && comparison.Against == "ADP bot").MeanDifference
+            .ShouldBe(new DraftBenchmark(Board()).Run(League, candidates, actual, drafts: 12).MeanDifference);
+    }
+
+    [Fact]
+    public void DB04_opponents_draft_by_adp_whatever_order_the_pool_arrives_in()
+    {
+        // Regression: SimulatedOpponent once jittered the first 12 players of its input, so an
+        // unsorted pool had the room draft arbitrary players and every user roster came out the same.
+        var (candidates, actual) = Pool();
+        var shuffled = candidates.OrderBy(candidate => candidate.PlayerId.Value).ToArray();
+
+        var sorted = new DraftBenchmark(Board()).Run(League, candidates, actual, drafts: 10);
+        var unsorted = new DraftBenchmark(Board()).Run(League, shuffled, actual, drafts: 10);
+
+        unsorted.Differences.ShouldBe(sorted.Differences);
+        unsorted.MeanAdpBot.ShouldBe(sorted.MeanAdpBot);
+    }
+
     private static DraftBoard Board() => new(new DraftValueCalculator(new DraftWeightOptions()));
 
     private static (IReadOnlyList<DraftCandidate> Candidates, Dictionary<PlayerId, decimal> Actual) Pool()

@@ -1,6 +1,7 @@
 using FantasyBasketball.Api.Middleware;
 using FantasyBasketball.Application.Draft;
 using FantasyBasketball.Application.Players;
+using FantasyBasketball.Domain.Draft;
 using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Infrastructure.Identity;
 using FantasyBasketball.Infrastructure.Providers.Sleeper;
@@ -35,6 +36,8 @@ public static class DraftEndpoints
         group.MapPost("/", CreateAsync)
             .WithMetadata(new OwnedRouteMetadata("league", "body:leagueId"));
         group.MapGet("/{id:guid}/board", GetBoardAsync)
+            .WithMetadata(new OwnedRouteMetadata("draft", "id"));
+        group.MapGet("/{id:guid}/board/simulation", SimulateBoardAsync)
             .WithMetadata(new OwnedRouteMetadata("draft", "id"));
         group.MapPost("/{id:guid}/picks", RecordPickAsync)
             .WithMetadata(new OwnedRouteMetadata("draft", "id"));
@@ -133,6 +136,26 @@ public static class DraftEndpoints
         return ApiResults.Success(await boards.GetBoardAsync(
             id,
             cancellationToken));
+    }
+
+    /// <summary>Monte Carlo lookahead for the user's pick; <paramref name="risk"/> is mean (default), cautious or upside.</summary>
+    public static async Task<IResult> SimulateBoardAsync(
+        Guid id,
+        string? risk,
+        DraftBoardService boards,
+        OwnedResourceAuthorizationService authorization,
+        CancellationToken cancellationToken)
+    {
+        await authorization.RequireDraftAsync(id, cancellationToken);
+        if (!Enum.TryParse<RiskMode>(risk ?? nameof(RiskMode.Mean), ignoreCase: true, out var mode) || !Enum.IsDefined(mode))
+        {
+            throw new RequestValidationException(new Dictionary<string, string[]>
+            {
+                ["risk"] = ["Risk is mean, cautious or upside."],
+            });
+        }
+
+        return ApiResults.Success(await boards.SimulateAsync(id, mode, cancellationToken));
     }
 
     public static async Task<IResult> RecordPickAsync(

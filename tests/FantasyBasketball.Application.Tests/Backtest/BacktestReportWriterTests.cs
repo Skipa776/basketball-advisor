@@ -43,4 +43,18 @@ public sealed class BacktestReportWriterTests
         report.ShouldContain("| MAE | 0.3333 | 1.3333 | 1.3333 | -1.0000 |");
         report.ShouldContain("### Calibration by decile (hierarchical)");
     }
+
+    [Fact]
+    public void BR10_benchmark_section_lists_drafters_and_paired_differences()
+    {
+        var result = new DraftComparisonResult(200,
+            new Dictionary<string, decimal> { ["ADP bot"] = 30000m, ["Simulator"] = 30500.5m },
+            [new DrafterComparison("Simulator", "ADP bot", 500.5m, 120m, 881m)]);
+
+        var section = BacktestReportWriter.RenderBenchmark(result, "Setup line.");
+
+        section.ShouldStartWith("\n## Draft benchmark\n");
+        section.ShouldContain("| Simulator | 30500.5000 |");
+        section.ShouldContain("| Simulator − ADP bot | 500.5000 | 120.0000 to 881.0000 |");
+    }
 }

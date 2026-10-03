@@ -51,21 +51,33 @@ The cases gating build steps 10, 11, and 12 — requirements R7, R8, R9, R10.
 
 | ID | Case | Expected | Required |
 |---|---|---|---|
-| `D-01` | `DraftValue.Total` | Equals exactly the six addends; decomposition fields excluded | ✅ |
+| `D-01` | `DraftValue.Total` | Equals exactly the four addends (VAR, scarcity, fit, risk); decomposition fields excluded | ✅ |
 | `D-02` | Change only `ProjectedSeasonValue`'s display field | `Total` does not move — proves no double counting | ✅ |
 | `D-03` | Player eligible for an open starting slot | `RosterFit == 0` | ✅ |
 | `D-04` | Unrelated player is drafted | An untouched player's `VAR` changes — replacement level is recomputed | ✅ |
-| `D-05` | Player with no ADP | `MarketValue == 0` plus a `Market` evidence item noting the absence | ✅ |
-| `D-06` | Every draft recommendation | Carries ≥1 evidence item | ✅ |
+| `D-06` | Every draft recommendation and heuristic board value | Carries ≥1 evidence item; no heuristic value carries a `Market` (ADP or survival) item | ✅ |
+| `D-15` | Simulated board without distributions, without a schedule, and with both | Null board with the reason; with both, 15 candidates ranked by the requested risk mode and the user's next pick | ✅ |
+| `D-16` | Draft recommendations with a simulation | Lead with the simulated top pick ("Best simulated pick" evidence), others carry survival odds; the rest of the pool follows | ✅ |
 | `D-07` | Category league draft board | Falls back to category totals with an explicit banner; does not rank by `Total` | ✅ |
-| `D-10` | Equal-value candidates, one ADP near the next pick, one far beyond | Likely-gone ranks first; its `AvailableAtNextPick < 0.5`, the other's `> 0.95` | ✅ |
-| `D-11` | Candidate with no ADP | `AvailableAtNextPick` is null and `Urgency` is 0 | ✅ |
-| `D-12` | `DraftWeightOptions` with negative `Urgency` | `IsValid()` is false | ✅ |
-| `D-13` | User's last pick of the draft (no later user turn) | `NextUserPickAfterCurrent` is null; `AvailableAtNextPick` null, `Urgency` 0, no `About N%` evidence | ✅ |
 | `D-14` | Bench-phase simulated team already holding 3 pure centers | Takes a non-center instead of a 4th center when one is available | ✅ |
 | `D-08` | Pick then undo | Board equals its pre-pick snapshot exactly | ✅ |
 | `D-09` | Drafted player | Leaves the available pool immediately; cannot be recommended | ✅ |
 | — | Full-pool re-rank latency | Completes inside the R7 target on a realistic pool | ✅ |
+
+# Lineups and simulation (`LO-`)
+
+| ID | Case | Expected | Required |
+|---|---|---|---|
+| `LO-01` | 500 random rosters of 8–13 players with 1–2 positions on PG/SG/SF/PF/C/G/F/3×UTIL | The lineup equals exact matching (bitmask dynamic program) every time | ✅ |
+| `LO-02` | Daily lineup, one UTIL slot, two same-team players and one on another team | Each scheduled day starts the best player with a game | ✅ |
+| `LO-03` | Weekly lineup | Values weighted by that week's games; a team with no games that week scores nothing | ✅ |
+| `DS-01` | The same draft state and seed, simulated twice | Identical boards | ✅ |
+| `DS-02` | Runner-up's edge | Its standard error is below the independent-draws SE: common random numbers pair the rollouts | ✅ |
+| `DS-03` | C + PG slots: C1 (100) vs PG1 (105) with PG2 and PG3 (104, 103) behind and C2 (20) as the only other center | The simulator takes C1; PG1's edge is below −50 | ✅ |
+| `DS-04` | Two players with equal means, SD ≈ 0 vs SD 40 | Cautious ranks the steady one first, Upside the volatile one | ✅ |
+| `DS-05` | Survival to the user's next pick | Read from the top pick's rollouts: under 5% for a player the opponents take first, over 95% for one they pass | ✅ |
+| `DS-06` | First pick of a 12-team, 13-round draft: 300 players, 30 teams × 165 days, K 15, N 500 | p95 of ten boards under 2 s (after one warm-up), in the gate | ✅ |
+| `LO-04` | A 10:30 pm Eastern tip-off; a player with no team | Counted on its Eastern date; the no-team player gets the median team's schedule | ✅ |
 
 # Evidence and confidence (`E-`)
 

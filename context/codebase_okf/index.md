@@ -56,6 +56,7 @@ paste-ready prompts are in `docs/epics/`.
 | [llm_extraction_contract](contracts/llm_extraction_contract.md) | The Claude call, output schema, the verbatim-quote grounding check | E10 |
 | [backtest_contract](contracts/backtest_contract.md) | Holdout protocol, metric definitions, weight fitting, the honesty rule | E11 |
 | [model_params_contract](contracts/model_params_contract.md) | Versioned offline-fitted parameters, activation, C#/Python goldens | M1 |
+| [draft_simulation_contract](contracts/draft_simulation_contract.md) | Monte Carlo lookahead: rollouts, common random numbers, lineup scoring, risk modes, latency | M2 |
 | [auth_tenancy_contract](contracts/auth_tenancy_contract.md) | Identity schema, the owned/shared split, isolation enforcement | E04 |
 | [design_system_contract](contracts/design_system_contract.md) | Tokens, inventory, the interaction budget, the WCAG floor | E05 |
 

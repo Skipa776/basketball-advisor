@@ -17,6 +17,12 @@ done_criteria:
   - A category league gets a category-aware board, not a points board with a banner.
 ---
 
+> **Superseded in part, 2026-10-03.** M2's [draft_simulation_contract](draft_simulation_contract.md)
+> deleted `MarketValue` and urgency and reads opportunity cost and survival from
+> simulated drafts instead of adding an `OpportunityCost` term. Tiers and
+> category-aware draft value below remain planned.
+
+
 # Responsibility
 
 Owns the design doc's phase-5 draft intelligence: *will he still be there next

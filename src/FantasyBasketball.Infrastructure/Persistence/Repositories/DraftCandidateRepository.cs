@@ -73,7 +73,8 @@ public sealed class DraftCandidateRepository(FantasyDbContext database)
                 games is null
                     ? null
                     : new SeasonValueDistribution(value.PerGame, value.PerGameSd!.Value,
-                        new BetaBinomial(games.SeasonGames, games.GamesAlpha, games.GamesBeta))));
+                        new BetaBinomial(games.SeasonGames, games.GamesAlpha, games.GamesBeta)),
+                player.CurrentTeamId is { } team ? new NbaTeamId(team) : null));
         }
 
         return results;
