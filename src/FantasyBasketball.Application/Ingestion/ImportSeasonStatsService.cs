@@ -30,12 +30,19 @@ public sealed class ImportSeasonStatsService(
                     foreach (var statLine in imported)
                     {
                         token.ThrowIfCancellationRequested();
-                        if (await stats.GetAsync(
-                                statLine.PlayerId,
-                                statLine.SeasonEndYear,
-                                provider.Name,
-                                token) is not null)
+                        var existing = await stats.GetAsync(
+                            statLine.PlayerId,
+                            statLine.SeasonEndYear,
+                            provider.Name,
+                            token);
+                        if (existing is not null)
                         {
+                            // Lines stay immutable; only a missing age is filled in.
+                            if (existing.Age is null && statLine.Age is { } age)
+                            {
+                                await stats.SaveAgeAsync(statLine.PlayerId, statLine.SeasonEndYear, provider.Name, age, token);
+                            }
+
                             continue;
                         }
 

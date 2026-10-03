@@ -19,4 +19,12 @@ public interface ISeasonStatLineRepository
         int seasonEndYear,
         string source,
         CancellationToken cancellationToken);
+
+    /// <summary>Backfills the age on a line imported before ages were parsed.</summary>
+    Task SaveAgeAsync(
+        PlayerId playerId,
+        int seasonEndYear,
+        string source,
+        int age,
+        CancellationToken cancellationToken);
 }

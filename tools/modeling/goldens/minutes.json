@@ -1,0 +1,98 @@
+{
+  "model": "projection-minutes",
+  "parameters": {
+    "ageCenter": 27,
+    "maxMinutes": 42.0,
+    "minHistoryGames": 5,
+    "weights": [
+      1.0,
+      0.1420193166963122,
+      0.08478135049839279
+    ],
+    "rotationFrom": 18.0,
+    "starterFrom": 28.0,
+    "mu": 22.47616279069768,
+    "kappa": 4.941848192844924,
+    "delta": {
+      "bench": 1.19141811081583,
+      "rotation": -1.02860865925148,
+      "starter": -0.11241507103322705,
+      "none": -4.548436655666018
+    },
+    "beta": -0.2853995875181047,
+    "sigma": 33.232316347618976,
+    "tau": 1.2689624920900533
+  },
+  "cases": [
+    {
+      "age": 22,
+      "history": [
+        {
+          "lag": 1,
+          "games": 70,
+          "mpg": 24.5
+        },
+        {
+          "lag": 2,
+          "games": 40,
+          "mpg": 15.2
+        }
+      ],
+      "expected": 24.11904619328856
+    },
+    {
+      "age": 34,
+      "history": [
+        {
+          "lag": 1,
+          "games": 55,
+          "mpg": 33.1
+        },
+        {
+          "lag": 2,
+          "games": 71,
+          "mpg": 34.8
+        },
+        {
+          "lag": 3,
+          "games": 76,
+          "mpg": 35.6
+        }
+      ],
+      "expected": 30.738034782927247
+    },
+    {
+      "age": null,
+      "history": [
+        {
+          "lag": 2,
+          "games": 12,
+          "mpg": 9.4
+        }
+      ],
+      "expected": 14.574649964216052
+    },
+    {
+      "age": 25,
+      "history": [
+        {
+          "lag": 1,
+          "games": 8,
+          "mpg": 11.0
+        }
+      ],
+      "expected": 17.144393115990297
+    },
+    {
+      "age": 20,
+      "history": [
+        {
+          "lag": 1,
+          "games": 82,
+          "mpg": 41.9
+        }
+      ],
+      "expected": 42.0
+    }
+  ]
+}

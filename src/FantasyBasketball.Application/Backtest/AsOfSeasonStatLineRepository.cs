@@ -21,6 +21,9 @@ public sealed class AsOfSeasonStatLineRepository(
     public async Task AddAsync(SeasonStatLine statLine, CancellationToken cancellationToken) =>
         throw new NotSupportedException("The backtest runner is read-only.");
 
+    public Task SaveAgeAsync(PlayerId playerId, int seasonEndYear, string source, int age, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("The backtest runner is read-only.");
+
     public async Task<SeasonStatLine?> GetAsync(
         PlayerId playerId,
         int seasonEndYear,

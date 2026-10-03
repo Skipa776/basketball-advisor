@@ -1,0 +1,97 @@
+{
+  "model": "projection-availability",
+  "parameters": {
+    "ageCenter": 27,
+    "mpgCenter": 20,
+    "fullSeason": 82,
+    "weights": [
+      0.017115296665470715,
+      0.004941569089871362,
+      0.0036028901194079324
+    ],
+    "a": 0.14172729401561385,
+    "b": -0.039834906905301525,
+    "c": 0.5242609534233311,
+    "phi": 1.6676067115927466
+  },
+  "cases": [
+    {
+      "age": 24,
+      "history": [
+        {
+          "lag": 1,
+          "games": 74,
+          "seasonGames": 82,
+          "mpg": 33.5
+        },
+        {
+          "lag": 2,
+          "games": 70,
+          "seasonGames": 82,
+          "mpg": 30.1
+        }
+      ],
+      "expected": {
+        "alpha": 2.8213182462852826,
+        "beta": 0.6549514572455142
+      }
+    },
+    {
+      "age": 31,
+      "history": [
+        {
+          "lag": 1,
+          "games": 22,
+          "seasonGames": 82,
+          "mpg": 28.0
+        },
+        {
+          "lag": 2,
+          "games": 61,
+          "seasonGames": 82,
+          "mpg": 31.2
+        },
+        {
+          "lag": 3,
+          "games": 40,
+          "seasonGames": 72,
+          "mpg": 30.4
+        }
+      ],
+      "expected": {
+        "alpha": 1.8211830363493908,
+        "beta": 1.9144947557787773
+      }
+    },
+    {
+      "age": null,
+      "history": [
+        {
+          "lag": 2,
+          "games": 50,
+          "seasonGames": 82,
+          "mpg": 12.3
+        }
+      ],
+      "expected": {
+        "alpha": 0.9722931328268286,
+        "beta": 1.1005222441353697
+      }
+    },
+    {
+      "age": 20,
+      "history": [
+        {
+          "lag": 1,
+          "games": 82,
+          "seasonGames": 82,
+          "mpg": 8.0
+        }
+      ],
+      "expected": {
+        "alpha": 2.150630102644072,
+        "beta": 0.9204309355172735
+      }
+    }
+  ]
+}

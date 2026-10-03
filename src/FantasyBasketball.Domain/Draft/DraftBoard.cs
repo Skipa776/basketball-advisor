@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using FantasyBasketball.Domain.Leagues;
 using FantasyBasketball.Domain.Players;
+using FantasyBasketball.Domain.Projections;
 using FantasyBasketball.Domain.Recommendations;
 using FantasyBasketball.Domain.Stats;
 using FantasyBasketball.Domain.Statistics;
@@ -17,7 +18,8 @@ public sealed record DraftCandidate(
     decimal RoleRisk,
     IReadOnlyDictionary<StatKey, decimal> CategoryTotals,
     bool HasUnverifiedContext = false,
-    decimal? AdpStandardDeviation = null);
+    decimal? AdpStandardDeviation = null,
+    SeasonValueDistribution? Distribution = null);
 
 public sealed record DraftBoardResult(
     IReadOnlyList<DraftValue> Rankings,

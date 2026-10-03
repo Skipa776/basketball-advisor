@@ -32,6 +32,8 @@ The cases gating build steps 10, 11, and 12 — requirements R7, R8, R9, R10.
 | `P-11` | Multiple league publications, manual overrides, changed scoring and a different season pool | Current values follow the selected run, exact observation and profile; old baselines are unchanged; random IDs do not establish recency | ✅ |
 | `P-12` | Publication fails after baseline writes | Transaction rolls back observed, baseline, adjusted and value rows together | ✅ |
 | `P-13` | Real HTTP projection publication, pick and undo | League receives ranked values/evidence; pick removes player; undo restores board; scoring edit hides obsolete values | ✅ |
+| `P-14` | Publication with the rate, minutes, availability and covariance models active | The baseline carries hierarchical minutes, rates and per-game values, games played = the Beta-Binomial mean rounded, a `+`-joined model version, and one distribution stored beside it | ✅ |
+| `P-15` | Real database publication with the fitted golden parameters | `projection_distribution` holds one row per baseline; the league's fantasy value carries a per-game SD; the draft candidate exposes a season-value distribution consistent with the published value | ✅ |
 
 # Context (`C-`)
 

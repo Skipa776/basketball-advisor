@@ -702,6 +702,11 @@ namespace FantasyBasketball.Infrastructure.Persistence.Migrations
                         .HasColumnType("numeric(10,4)")
                         .HasColumnName("per_game");
 
+                    b.Property<decimal?>("PerGameSd")
+                        .HasPrecision(10, 4)
+                        .HasColumnType("numeric(10,4)")
+                        .HasColumnName("per_game_sd");
+
                     b.Property<Guid>("PlayerId")
                         .HasColumnType("uuid")
                         .HasColumnName("player_id");
@@ -1394,6 +1399,46 @@ namespace FantasyBasketball.Infrastructure.Persistence.Migrations
                     b.ToTable("player", (string)null);
                 });
 
+            modelBuilder.Entity("FantasyBasketball.Infrastructure.Persistence.Entities.ProjectionDistributionRow", b =>
+                {
+                    b.Property<Guid>("BaselineProjectionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("baseline_projection_id");
+
+                    b.Property<string>("Covariance")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("covariance");
+
+                    b.Property<decimal>("GamesAlpha")
+                        .HasPrecision(18, 8)
+                        .HasColumnType("numeric(18,8)")
+                        .HasColumnName("games_alpha");
+
+                    b.Property<decimal>("GamesBeta")
+                        .HasPrecision(18, 8)
+                        .HasColumnType("numeric(18,8)")
+                        .HasColumnName("games_beta");
+
+                    b.Property<string>("ModelVersion")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("model_version");
+
+                    b.Property<string>("PerGameMean")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("per_game_mean");
+
+                    b.Property<int>("SeasonGames")
+                        .HasColumnType("integer")
+                        .HasColumnName("season_games");
+
+                    b.HasKey("BaselineProjectionId");
+
+                    b.ToTable("projection_distribution", (string)null);
+                });
+
             modelBuilder.Entity("FantasyBasketball.Infrastructure.Persistence.Entities.RecommendationEvidenceRow", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1555,6 +1600,10 @@ namespace FantasyBasketball.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
                         .HasColumnName("id");
+
+                    b.Property<int?>("Age")
+                        .HasColumnType("integer")
+                        .HasColumnName("age");
 
                     b.Property<decimal>("Confidence")
                         .HasPrecision(10, 4)
@@ -2074,6 +2123,15 @@ namespace FantasyBasketball.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("CurrentTeamId")
                         .OnDelete(DeleteBehavior.SetNull);
+                });
+
+            modelBuilder.Entity("FantasyBasketball.Infrastructure.Persistence.Entities.ProjectionDistributionRow", b =>
+                {
+                    b.HasOne("FantasyBasketball.Infrastructure.Persistence.Entities.BaselineProjectionRow", null)
+                        .WithOne()
+                        .HasForeignKey("FantasyBasketball.Infrastructure.Persistence.Entities.ProjectionDistributionRow", "BaselineProjectionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("FantasyBasketball.Infrastructure.Persistence.Entities.RecommendationEvidenceRow", b =>

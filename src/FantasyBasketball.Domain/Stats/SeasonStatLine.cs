@@ -13,7 +13,8 @@ public sealed record SeasonStatLine
         StatLine perGame,
         StatLine totals,
         decimal? usageRate,
-        DataProvenance provenance)
+        DataProvenance provenance,
+        int? age = null)
     {
         if (seasonEndYear < 1947)
         {
@@ -35,6 +36,11 @@ public sealed record SeasonStatLine
             throw new ArgumentOutOfRangeException(nameof(usageRate));
         }
 
+        if (age is < 15 or > 50)
+        {
+            throw new ArgumentOutOfRangeException(nameof(age));
+        }
+
         PlayerId = playerId;
         SeasonEndYear = seasonEndYear;
         GamesPlayed = gamesPlayed;
@@ -43,6 +49,7 @@ public sealed record SeasonStatLine
         Totals = totals ?? throw new ArgumentNullException(nameof(totals));
         UsageRate = usageRate;
         Provenance = provenance ?? throw new ArgumentNullException(nameof(provenance));
+        Age = age;
     }
 
     public PlayerId PlayerId { get; }
@@ -60,4 +67,7 @@ public sealed record SeasonStatLine
     public decimal? UsageRate { get; }
 
     public DataProvenance Provenance { get; }
+
+    /// <summary>Age on February 1 of the season, as Basketball-Reference defines it.</summary>
+    public int? Age { get; }
 }

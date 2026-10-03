@@ -1,5 +1,6 @@
 using FantasyBasketball.Application.Abstractions;
 using FantasyBasketball.Application.Projections;
+using FantasyBasketball.Application.Tests.Backtest;
 using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Domain.Projections;
 using FantasyBasketball.Domain.Provenance;
@@ -21,7 +22,10 @@ public sealed class ProjectionServiceTests
             new BaselineProjector(new MinutesProjector(), options),
             repository,
             options,
-            new FixedTimeProvider(computedAt));
+            new FixedTimeProvider(computedAt),
+            new FakeModelVersionRepository(),
+            new FakeSeasonStatLineRepository([]),
+            new FakePlayerRepository());
         var first = CreateSource("first", 40, 1200m, 600m);
         var second = CreateSource("second", 40, 1200m, 300m);
 
@@ -34,10 +38,36 @@ public sealed class ProjectionServiceTests
         repository.Items.ShouldAllBe(item => item.Observed.AsOf == computedAt);
         repository.Items.ShouldAllBe(
             item => item.Baseline.ComputedAt == computedAt);
-        projections[0].PerMinuteRates[StatKey.PTS].ShouldBe(
+        projections[0].Baseline.PerMinuteRates[StatKey.PTS].ShouldBe(
             0.4632352941176470588235294118m);
-        projections[1].PerMinuteRates[StatKey.PTS].ShouldBe(
+        projections[1].Baseline.PerMinuteRates[StatKey.PTS].ShouldBe(
             0.2867647058823529411764705882m);
+        projections.ShouldAllBe(item => item.Distribution == null);
+        repository.Distributions.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task P14_active_models_publish_hierarchical_baselines_with_distributions()
+    {
+        var repository = new FakeProjectionRepository();
+        var options = new ProjectionOptions();
+        var first = CreateSource("first", 70, 2100m, 1400m);
+        var service = new ProjectionService(
+            new BaselineProjector(new MinutesProjector(), options),
+            repository,
+            options,
+            new FixedTimeProvider(new DateTimeOffset(2026, 7, 29, 12, 0, 0, TimeSpan.Zero)),
+            new FakeModelVersionRepository([.. ModelFixtures.All()]),
+            new FakeSeasonStatLineRepository([]),
+            new FakePlayerRepository());
+
+        var projections = await service.ProjectPoolAsync([first], TestContext.Current.CancellationToken);
+
+        var projected = projections.ShouldHaveSingleItem();
+        projected.Baseline.ModelVersion.ShouldBe("rates-test+minutes-test+availability-test+covariance-test");
+        var distribution = projected.Distribution.ShouldNotBeNull();
+        projected.Baseline.ProjectedGamesPlayed.ShouldBe(decimal.ToInt32(decimal.Round(distribution.Games.Mean, 0, MidpointRounding.AwayFromZero)));
+        repository.Distributions.ShouldHaveSingleItem().BaselineId.ShouldBe(projected.Baseline.Id);
     }
 
     private static SeasonStatLine CreateSource(
@@ -97,6 +127,14 @@ public sealed class ProjectionServiceTests
                 .Where(item => item.Baseline.Id == id)
                 .Select(item => item.Baseline)
                 .SingleOrDefault());
+
+        public Task AddDistributionAsync(Guid baselineProjectionId, ProjectionDistribution distribution, CancellationToken cancellationToken)
+        {
+            Distributions.Add((baselineProjectionId, distribution));
+            return Task.CompletedTask;
+        }
+
+        public List<(Guid BaselineId, ProjectionDistribution Distribution)> Distributions { get; } = [];
 
         public Task AddAdjustedAsync(
             AdjustedProjection adjusted,

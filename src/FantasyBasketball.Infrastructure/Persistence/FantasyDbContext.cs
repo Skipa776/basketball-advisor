@@ -86,6 +86,8 @@ public sealed class FantasyDbContext
 
     public DbSet<FantasyValueRow> FantasyValues => Set<FantasyValueRow>();
 
+    public DbSet<ProjectionDistributionRow> ProjectionDistributions => Set<ProjectionDistributionRow>();
+
     public DbSet<RecommendationRow> Recommendations => Set<RecommendationRow>();
 
     public DbSet<RecommendationEvidenceRow> RecommendationEvidence =>

@@ -3,8 +3,8 @@ type: test_matrix
 title: Test Matrix — Offline Model Parameters
 description: Required cases for the model-version registry and the C#/Python parameter goldens.
 tags: [tests, modeling, persistence, matrix]
-source_paths: [src/FantasyBasketball.Domain/Modeling, src/FantasyBasketball.Infrastructure/Persistence/Repositories/ModelVersionRepository.cs]
-test_paths: [tests/FantasyBasketball.Domain.Tests/Modeling, tests/FantasyBasketball.IntegrationTests/Persistence/ModelVersionTests.cs]
+source_paths: [src/FantasyBasketball.Domain/Modeling, src/FantasyBasketball.Domain/Projections/HierarchicalProjector.cs, src/FantasyBasketball.Domain/Projections/MinutesModel.cs, src/FantasyBasketball.Domain/Projections/AvailabilityModel.cs, src/FantasyBasketball.Domain/Statistics/BetaBinomial.cs, src/FantasyBasketball.Domain/Projections/StatCovariance.cs, src/FantasyBasketball.Domain/Projections/ProjectionDistribution.cs, src/FantasyBasketball.Infrastructure/Persistence/Repositories/ModelVersionRepository.cs]
+test_paths: [tests/FantasyBasketball.Domain.Tests/Modeling, tests/FantasyBasketball.Domain.Tests/Projections/HierarchicalProjectorTests.cs, tests/FantasyBasketball.Domain.Tests/Projections/MinutesModelTests.cs, tests/FantasyBasketball.Domain.Tests/Projections/AvailabilityModelTests.cs, tests/FantasyBasketball.Domain.Tests/Projections/ProjectionDistributionTests.cs, tests/FantasyBasketball.IntegrationTests/Persistence/ModelVersionTests.cs]
 depends_on: [required_gates.md, ../contracts/model_params_contract.md]
 status: partial
 last_updated: 2026-10-01
@@ -34,6 +34,44 @@ Gates [model_params_contract](../contracts/model_params_contract.md).
 | ID | Case | Expected | Required |
 |---|---|---|---|
 | `MG-01` | Every `tools/modeling/goldens/*.json` | C# recomputes each expected output from the stored parameters within 1e-6 | ✅ |
+
+# Hierarchical projector (`HP-01`–`HP-04`)
+
+| ID | Case | Expected | Required |
+|---|---|---|---|
+| `HP-01` | No history with 100+ minutes in the last three seasons | The position group's prior (group `U` when the position is unknown) times the age term; no age means exp(0) | ✅ |
+| `HP-02` | Any projection | `REB = OREB + DREB` and `PTS = 2·FGM + FG3M + FTM` exactly | ✅ |
+| `HP-03` | Seasons at lags 1, 2, 3 (under 100 min) and 4 | Lags 1 and 2 weighted 1 and w₂ with the κ prior; the short and the lag-4 seasons are ignored; age carried forward by its lag | ✅ |
+| `HP-04` | Parameters missing a modelled stat | `ArgumentException` naming the stat | ✅ |
+
+# Minutes model (`MM-01`–`MM-05`)
+
+| ID | Case | Expected | Required |
+|---|---|---|---|
+| `MM-01` | No season with 5+ games in the last three | League mean μ plus the `none` shift and the age term | ✅ |
+| `MM-02` | Last season at 17.9, 18 and 28 minutes; no last season but an older one | Bench, rotation and starter shifts at those edges; `none` without a last season | ✅ |
+| `MM-03` | A projection above 42 or below 0 | Clamped to `maxMinutes` and 0 | ✅ |
+| `MM-04` | Seasons at lags 1, 2, 3 (under 5 games) and 4 | Games × recency weights with κ shrinkage; the short and lag-4 seasons are ignored; age carried forward by its lag | ✅ |
+| `MM-05` | Parameters missing a role shift | `ArgumentException` naming the roles | ✅ |
+
+# Availability model (`AV-01`–`AV-05`)
+
+| ID | Case | Expected | Required |
+|---|---|---|---|
+| `AV-01` | `BetaBinomial(82, 2.5, 0.8)` | Mean 62.1212 and variance 298.742 (closed form); quantiles 0.1 / 0.5 / 0.9 = 36 / 67 / 81 as scipy; 0 and 1 map to 0 and 82 | ✅ |
+| `AV-02` | `LogGamma` at 0.5, 10 and 0.1 | Within 1e-12 of log √π, log 9!, and `math.lgamma(0.1)` | ✅ |
+| `AV-03` | Two history seasons; no history | Alpha and beta add weighted games played and missed to φm and φ(1 − m); no history is the prior alone | ✅ |
+| `AV-04` | An 84-game line, a lag-5 line and a 0-game line | Games capped at the season's length; the lag-5 and 0-game lines are ignored | ✅ |
+| `AV-05` | Parameters with one weight | `ArgumentException` | ✅ |
+
+# Covariance and distributions (`SC-01`–`SC-04`)
+
+| ID | Case | Expected | Required |
+|---|---|---|---|
+| `SC-01` | No rate noise, minutes variance 4 | Every stat pair covaries by r_s r_t · 4; MIN has variance 4 and covaries with a stat by r_s · 4 | ✅ |
+| `SC-02` | Fantasy points with PTS, FGM and REB rules | PTS folds to 2·FGM + FG3M + FTM and REB to OREB + DREB, so FGM's effective weight is 4; the mean uses the per-game means | ✅ |
+| `SC-03` | Season total | Mean μ·E[G]; variance σ²(E[G]² + Var G) + μ² Var G | ✅ |
+| `SC-04` | Covariance parameters with stats out of order, or a non-square correlation | `ArgumentException` | ✅ |
 
 # Shared statistics (`ND-01`)
 

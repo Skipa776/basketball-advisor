@@ -59,9 +59,22 @@ public sealed class SeasonStatLineRepository(FantasyDbContext database)
             provenance.SourceTimestamp,
             provenance.ParserVersion,
             provenance.Confidence,
-            provenance.RawRecordHash));
+            provenance.RawRecordHash,
+            statLine.Age));
         await database.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task SaveAgeAsync(
+        PlayerId playerId,
+        int seasonEndYear,
+        string source,
+        int age,
+        CancellationToken cancellationToken) =>
+        await database.SeasonStatLines
+            .Where(row => row.PlayerId == playerId.Value
+                && row.SeasonEndYear == seasonEndYear
+                && row.Source == source)
+            .ExecuteUpdateAsync(set => set.SetProperty(row => row.Age, age), cancellationToken);
 
     public async Task<SeasonStatLine?> GetAsync(
         PlayerId playerId,
@@ -95,7 +108,8 @@ public sealed class SeasonStatLineRepository(FantasyDbContext database)
                     row.SourceTimestamp,
                     row.ParserVersion,
                     row.Confidence,
-                    row.RawRecordHash));
+                    row.RawRecordHash),
+                row.Age);
 
     private static string Serialize(StatLine line) =>
         JsonSerializer.Serialize(

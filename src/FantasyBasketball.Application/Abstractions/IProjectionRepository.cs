@@ -19,6 +19,12 @@ public interface IProjectionRepository
         Guid id,
         CancellationToken cancellationToken);
 
+    /// <summary>Stores a baseline's distribution beside it; the baseline row is never changed.</summary>
+    Task AddDistributionAsync(
+        Guid baselineProjectionId,
+        ProjectionDistribution distribution,
+        CancellationToken cancellationToken);
+
     Task AddAdjustedAsync(
         AdjustedProjection adjusted,
         CancellationToken cancellationToken);

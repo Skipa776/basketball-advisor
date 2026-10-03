@@ -1,4 +1,6 @@
+using System.Text.Json;
 using FantasyBasketball.Application.Backtest;
+using FantasyBasketball.Domain.Modeling;
 using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Domain.Projections;
 using FantasyBasketball.Domain.Provenance;
@@ -62,9 +64,85 @@ public sealed class ProjectionBacktestRunnerTests
         exception.Message.ShouldContain("2025");
     }
 
+    [Fact]
+    public async Task BR05_active_rate_model_is_scored_on_the_same_players()
+    {
+        // kappa 0, unit weights and no age term: the rates are last season's, so the
+        // hierarchical projection equals "last season repeats" (MAE 2.5, as in BR-01).
+        // FTM = FTA = PTS keeps ESPN scoring to points (FTM +1, FTA -1).
+        var a = Player();
+        var b = Player();
+        var runner = Runner(
+            [Line(a, 10m), Line(b, 20m)],
+            [.. Games(a, 20, 12m), .. Games(b, 20, 17m)],
+            ModelFixtures.Rates([2025]));
+
+        var result = await runner.RunAsync(2026, DataSourceName.Manual, AsOf, TestContext.Current.CancellationToken);
+
+        result.HierarchicalVersion.ShouldBe("rates-test");
+        result.Hierarchical.ShouldNotBeNull().Count.ShouldBe(2);
+        result.Hierarchical.Mae.ShouldBe(result.Naive.Mae, 0.0000001m);
+    }
+
+    [Fact]
+    public async Task BR06_rate_model_trained_on_the_holdout_is_leakage()
+    {
+        var a = Player();
+        var runner = Runner([Line(a, 10m)], [.. Games(a, 20, 12m)], ModelFixtures.Rates([2025, 2026]));
+
+        var exception = await Should.ThrowAsync<LeakageException>(() =>
+            runner.RunAsync(2026, DataSourceName.Manual, AsOf, TestContext.Current.CancellationToken));
+
+        exception.Message.ShouldContain("rates-test");
+    }
+
+    [Fact]
+    public async Task BR08_active_minutes_model_supplies_the_hierarchical_minutes()
+    {
+        // Both players were starters (30 mpg); a +3 starter shift projects 33 minutes, so
+        // the rates (last season's) give A 11 vs actual 12 and B 22 vs 17: MAE 3.
+        var a = Player();
+        var b = Player();
+        var runner = Runner(
+            [Line(a, 10m), Line(b, 20m)],
+            [.. Games(a, 20, 12m), .. Games(b, 20, 17m)],
+            ModelFixtures.Rates([2025]),
+            ModelFixtures.Minutes([2025]));
+
+        var result = await runner.RunAsync(2026, DataSourceName.Manual, AsOf, TestContext.Current.CancellationToken);
+
+        result.MinutesVersion.ShouldBe("minutes-test");
+        result.Hierarchical.ShouldNotBeNull().Mae.ShouldBe(3m, 0.0000001m);
+    }
+
+    [Fact]
+    public async Task BR09_all_distribution_models_active_give_interval_coverage()
+    {
+        var a = Player();
+        var b = Player();
+        var runner = Runner(
+            [Line(a, 10m), Line(b, 20m)],
+            [.. Games(a, 20, 12m), .. Games(b, 20, 17m)],
+            ModelFixtures.Rates([2025]),
+            ModelFixtures.Minutes([2025]),
+            ModelFixtures.Availability(),
+            ModelFixtures.Covariance());
+
+        var result = await runner.RunAsync(2026, DataSourceName.Manual, AsOf, TestContext.Current.CancellationToken);
+
+        var intervals = result.Intervals.ShouldNotBeNull();
+        intervals.Count.ShouldBe(2);
+        intervals.MeanSd.ShouldBeGreaterThan(0m);
+        result.DistributionVersions.ShouldBe("availability-test, covariance-test");
+    }
+
     private static ProjectionBacktestRunner Runner(
         IReadOnlyList<SeasonStatLine> lines,
-        IReadOnlyList<PlayerGameSample> games)
+        IReadOnlyList<PlayerGameSample> games,
+        ModelVersion? rateModel = null,
+        ModelVersion? minutesModel = null,
+        ModelVersion? availabilityModel = null,
+        ModelVersion? covarianceModel = null)
     {
         var options = new ProjectionOptions();
         return new ProjectionBacktestRunner(
@@ -72,7 +150,9 @@ public sealed class ProjectionBacktestRunnerTests
             new FakeBoxScoreRepository(games),
             new BaselineProjector(new MinutesProjector(), options),
             options,
-            new PointsScoringEngine());
+            new PointsScoringEngine(),
+            new FakeModelVersionRepository(rateModel, minutesModel, availabilityModel, covarianceModel),
+            new FakePlayerRepository());
     }
 
     private static PlayerId Player() => new(Guid.NewGuid());
@@ -87,6 +167,8 @@ public sealed class ProjectionBacktestRunnerTests
             new StatLine(new Dictionary<StatKey, decimal>
             {
                 [StatKey.PTS] = pointsPerGame * 60,
+                [StatKey.FTM] = pointsPerGame * 60,
+                [StatKey.FTA] = pointsPerGame * 60,
                 [StatKey.MIN] = 1800m,
             }),
             null,

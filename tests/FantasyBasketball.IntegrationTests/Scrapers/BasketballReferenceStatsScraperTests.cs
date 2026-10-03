@@ -45,6 +45,24 @@ public sealed class BasketballReferenceStatsScraperTests : IDisposable
     }
 
     [Fact]
+    public async Task I15_season_line_carries_the_basketball_reference_age()
+    {
+        var timeProvider = new FixedTimeProvider(fetchedAt);
+        using var withAge = new HttpClient(new FixtureHandler(html => html
+            .Replace("<th>Player</th>", "<th>Player</th><th>Age</th>", StringComparison.Ordinal)
+            .Replace("Nikola Jokic</a></td>", "Nikola Jokic</a></td><td>30</td>", StringComparison.Ordinal)))
+        {
+            BaseAddress = new Uri("https://www.basketball-reference.com"),
+        };
+        var scraper = new BasketballReferenceStatsScraper(new SingleClientFactory(withAge),
+            new PlayerIdentityResolver(players, timeProvider), players, timeProvider);
+
+        var lines = await scraper.GetSeasonStatsAsync(2026, TestContext.Current.CancellationToken);
+
+        lines.ShouldHaveSingleItem().Age.ShouldBe(30);
+    }
+
+    [Fact]
     public async Task I04_three_tables_map_to_canonical_season_stat_line()
     {
         var timeProvider = new FixedTimeProvider(fetchedAt);

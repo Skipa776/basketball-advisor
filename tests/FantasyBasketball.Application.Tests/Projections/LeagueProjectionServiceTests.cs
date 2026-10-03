@@ -11,6 +11,8 @@ using FantasyBasketball.Domain.Scoring;
 using FantasyBasketball.Domain.Stats;
 using Shouldly;
 
+using FantasyBasketball.Application.Tests.Backtest;
+
 namespace FantasyBasketball.Application.Tests.Projections;
 
 public sealed class LeagueProjectionServiceTests
@@ -69,7 +71,8 @@ public sealed class LeagueProjectionServiceTests
         var options = new ProjectionOptions();
         var clock = new FixedClock();
         return new LeagueProjectionService(store, store,
-            new ProjectionService(new BaselineProjector(new MinutesProjector(), options), store, options, clock),
+            new ProjectionService(new BaselineProjector(new MinutesProjector(), options), store, options, clock,
+                new FakeModelVersionRepository(), store, new FakePlayerRepository()),
             store, store, new ContextApplier(new ConfidenceCalculator()), new PointsScoringEngine(), store, clock);
     }
 
@@ -103,6 +106,7 @@ public sealed class LeagueProjectionServiceTests
         public Task<IReadOnlyList<SeasonStatLine>> ListPoolAsync(int seasonEndYear, string source, CancellationToken cancellationToken) { Tokens.Add(cancellationToken); return Task.FromResult(Pool); }
         public Task<FantasyLeague?> GetAsync(Guid id, CancellationToken cancellationToken) { Tokens.Add(cancellationToken); return Task.FromResult(League); }
         public Task AddAsync(ObservedStats observed, BaselineProjection baseline, CancellationToken cancellationToken) { Tokens.Add(cancellationToken); Observed = observed; Baseline = baseline; return Task.CompletedTask; }
+        public Task AddDistributionAsync(Guid baselineProjectionId, ProjectionDistribution distribution, CancellationToken cancellationToken) => Task.CompletedTask;
         public Task AddAdjustedAsync(AdjustedProjection adjusted, CancellationToken cancellationToken) { Tokens.Add(cancellationToken); Adjusted = adjusted; return Task.CompletedTask; }
         public Task AddFantasyValueAsync(FantasyValue value, FantasyLeague league, DateTimeOffset computedAt, Guid? publicationId, CancellationToken cancellationToken) { Tokens.Add(cancellationToken); Value = value; Profile = league; PublicationId = publicationId; return Task.CompletedTask; }
         public Task<IReadOnlyList<(ContextEvent Event, PlayerContextImpact Impact)>> ListForPlayerAsync(PlayerId playerId, CancellationToken cancellationToken) { Tokens.Add(cancellationToken); return Task.FromResult<IReadOnlyList<(ContextEvent, PlayerContextImpact)>>([]); }
@@ -111,6 +115,7 @@ public sealed class LeagueProjectionServiceTests
         public Task SaveScoringAsync(FantasyLeague league, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task SaveSettingsAsync(FantasyLeague league, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task AddAsync(SeasonStatLine statLine, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task SaveAgeAsync(PlayerId playerId, int seasonEndYear, string source, int age, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<SeasonStatLine?> GetAsync(PlayerId playerId, int seasonEndYear, string source, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<ObservedStats?> GetLatestObservedAsync(PlayerId playerId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<BaselineProjection?> GetBaselineAsync(Guid id, CancellationToken cancellationToken) => throw new NotSupportedException();

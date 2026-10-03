@@ -50,12 +50,17 @@ public sealed class BallDontLieProvider(
         foreach (var element in elements)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var teamElement = element.GetProperty("team");
-            var team = await ResolveTeamAsync(teamElement, cancellationToken);
             var firstName = element.GetProperty("first_name").GetString()
                 ?? throw MissingValue("first_name");
             var lastName = element.GetProperty("last_name").GetString()
                 ?? throw MissingValue("last_name");
+            if (string.IsNullOrWhiteSpace(firstName) && string.IsNullOrWhiteSpace(lastName))
+            {
+                // balldontlie lists ~750 nameless placeholder rows; one used to fail the whole run.
+                continue;
+            }
+
+            var team = await ResolveTeamAsync(element.GetProperty("team"), cancellationToken);
             var position = element.GetProperty("position").GetString();
             var positions = string.IsNullOrWhiteSpace(position)
                 ? []

@@ -305,6 +305,7 @@ public sealed class SeasonStatLineConfiguration : IEntityTypeConfiguration<Seaso
         builder.Property(value => value.PerGame).HasColumnName("per_game").HasColumnType("jsonb");
         builder.Property(value => value.Totals).HasColumnName("totals").HasColumnType("jsonb");
         builder.Property(value => value.UsageRate).HasColumnName("usage_rate").HasPrecision(10, 4);
+        builder.Property(value => value.Age).HasColumnName("age");
         builder.Property(value => value.Source).HasColumnName("source").IsRequired();
         builder.Property(value => value.ExternalId).HasColumnName("external_id");
         builder.Property(value => value.FetchedAt).HasColumnName("fetched_at").HasColumnType("timestamptz");
@@ -441,6 +442,27 @@ public sealed class ModelVersionConfiguration
             .IsUnique()
             .HasFilter("\"is_active\"")
             .HasDatabaseName("ux_model_version_active_per_model");
+    }
+}
+
+public sealed class ProjectionDistributionRowConfiguration
+    : IEntityTypeConfiguration<ProjectionDistributionRow>
+{
+    public void Configure(EntityTypeBuilder<ProjectionDistributionRow> builder)
+    {
+        builder.ToTable("projection_distribution");
+        builder.HasKey(value => value.BaselineProjectionId);
+        builder.Property(value => value.BaselineProjectionId).HasColumnName("baseline_projection_id").ValueGeneratedNever();
+        builder.Property(value => value.PerGameMean).HasColumnName("per_game_mean").HasColumnType("jsonb");
+        builder.Property(value => value.Covariance).HasColumnName("covariance").HasColumnType("jsonb");
+        builder.Property(value => value.GamesAlpha).HasColumnName("games_alpha").HasPrecision(18, 8);
+        builder.Property(value => value.GamesBeta).HasColumnName("games_beta").HasPrecision(18, 8);
+        builder.Property(value => value.SeasonGames).HasColumnName("season_games");
+        builder.Property(value => value.ModelVersion).HasColumnName("model_version").IsRequired();
+        builder.HasOne<BaselineProjectionRow>()
+            .WithOne()
+            .HasForeignKey<ProjectionDistributionRow>(value => value.BaselineProjectionId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
 
@@ -719,6 +741,7 @@ public sealed class FantasyValueConfiguration
     public void Configure(EntityTypeBuilder<FantasyValueRow> builder)
     {
         builder.ToTable("fantasy_value");
+        builder.Property(value => value.PerGameSd).HasColumnName("per_game_sd").HasPrecision(10, 4);
         builder.HasKey(value => value.Id);
         builder.Property(value => value.Id).HasColumnName("id").ValueGeneratedNever();
         builder.Property(value => value.PlayerId).HasColumnName("player_id");

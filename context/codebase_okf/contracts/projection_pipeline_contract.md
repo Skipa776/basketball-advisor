@@ -120,6 +120,22 @@ Application order — fixed, because it is not commutative:
    reduced accordingly per
    [recommendation_evidence_contract](recommendation_evidence_contract.md).
 
+# Hierarchical baselines and distributions (M2)
+
+When a `projection-rates` model is active in the
+[model registry](model_params_contract.md), publication projects the season after
+the pool's: per-minute rates from `HierarchicalProjector` (three seasons of
+history), minutes from `MinutesModel` and games from `AvailabilityModel` when those
+are active, and baseline-v1 for anything a missing model leaves out. The result is
+still a `BaselineProjection` — same record, same immutability — whose model version
+names every model used, joined by `+`. With all four models active a
+`ProjectionDistribution` (per-game means, the per-game covariance over the 13
+modelled stats and minutes, and games played as a Beta-Binomial) is stored beside
+the baseline in `projection_distribution`, never inside it; each league's
+`FantasyValue` adds the per-game SD under that league's scoring. Context events
+shift the mean only; the SD comes from the unadjusted distribution. *Check: rows
+P-14 and P-15.*
+
 # Invariants
 
 - **The baseline is immutable.** Applying, changing, or removing context never

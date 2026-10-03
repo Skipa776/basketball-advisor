@@ -139,7 +139,8 @@ public sealed partial class PersistenceTests
         var clock = new FixedTimeProvider(time);
         var repository = new ProjectionRepository(database);
         return new LeagueProjectionService(new LeagueRepository(database), new SeasonStatLineRepository(database),
-            new ProjectionService(new BaselineProjector(new MinutesProjector(), options), repository, options, clock),
+            new ProjectionService(new BaselineProjector(new MinutesProjector(), options), repository, options, clock,
+                new ModelVersionRepository(database), new SeasonStatLineRepository(database), new PlayerRepository(database)),
             repository, new ContextEventRepository(database), new ContextApplier(new ConfidenceCalculator()),
             new PointsScoringEngine(), new EfImportTransaction(database), clock);
     }

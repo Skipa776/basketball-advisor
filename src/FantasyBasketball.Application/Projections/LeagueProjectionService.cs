@@ -44,8 +44,8 @@ public sealed class LeagueProjectionService(
 
             var computedAt = clock.GetUtcNow();
             var publicationId = Guid.NewGuid();
-            var baselines = await projector.ProjectPoolAsync(pool, token);
-            foreach (var baseline in baselines)
+            var projected = await projector.ProjectPoolAsync(pool, token);
+            foreach (var (baseline, distribution) in projected)
             {
                 token.ThrowIfCancellationRequested();
                 var events = await context.ListForPlayerAsync(baseline.PlayerId, token);
@@ -54,9 +54,11 @@ public sealed class LeagueProjectionService(
                     events.Select(item => item.Impact).ToArray(), computedAt);
                 await projections.AddAdjustedAsync(adjusted, token);
                 var perGame = scoring.Score(adjusted.ProjectedPerGame, league);
+                // ponytail: the SD comes from the unadjusted distribution; context shifts the mean only.
+                var perGameSd = distribution?.FantasyPointsPerGame(league.ScoringRules).Sd;
                 await projections.AddFantasyValueAsync(new FantasyValue(
                     baseline.PlayerId, leagueId, perGame,
-                    perGame * baseline.ProjectedGamesPlayed, adjusted.Id), league, computedAt, publicationId, token);
+                    perGame * baseline.ProjectedGamesPlayed, adjusted.Id, perGameSd), league, computedAt, publicationId, token);
             }
 
             result = new ProjectionPublication(seasonEndYear, source, pool.Count, computedAt);

@@ -93,4 +93,14 @@ public sealed class AccuracyMetricsTests
         Should.Throw<ArgumentException>(() => AccuracyMetrics.Compute([1m, 2m], [1m, 2m], topK: -1));
         AccuracyMetrics.Compute([1m, 2m], [1m, 2m], topK: 1).ShouldNotBeNull();
     }
+
+    [Fact]
+    public void B11_interval_coverage_counts_actuals_inside_mean_plus_minus_z80_sd()
+    {
+        var coverage = IntervalCoverage.Compute([10m, 10m], [1m, 1m], [11m, 12m]);
+
+        coverage.Coverage80.ShouldBe(0.5m);
+        coverage.MeanSd.ShouldBe(1m);
+        Should.Throw<ArgumentException>(() => IntervalCoverage.Compute([10m], [1m], [11m, 12m]));
+    }
 }
