@@ -1,7 +1,17 @@
+import { useState } from 'react';
 import { useResource } from './useResource';
 import { ErrorNotice } from './Workspace';
-import type { Draft, Player, SimulatedBoard, SimulatedCandidate, Simulation } from './types';
+import type { Draft, Player, RiskMode, SimulatedBoard, SimulatedCandidate, Simulation } from './types';
 
+const modes: { value: RiskMode; label: string; hint: string }[] = [
+  { value: 'mean', label: 'Best average', hint: 'highest expected final roster' },
+  { value: 'cautious', label: 'Safer', hint: 'expected roster minus half its spread' },
+  { value: 'upside', label: 'Ceiling', hint: 'best 90th-percentile roster' },
+];
+// The chosen risk mode is a per-browser convenience (storage may be blocked).
+const riskKey = 'fb.draftRisk';
+const recalledRisk = (): RiskMode => { try { const value = localStorage.getItem(riskKey); return modes.some(mode => mode.value === value) ? value as RiskMode : 'mean'; } catch { return 'mean'; } };
+const rememberRisk = (value: RiskMode) => { try { localStorage.setItem(riskKey, value); } catch { /* convenience only */ } };
 const points = (value: number) => Math.round(value).toLocaleString();
 const signed = (value: number) => `${value >= 0 ? '+' : '−'}${points(Math.abs(value))}`;
 const percent = (value: number) => `${Math.round(value * 100)}%`;
@@ -12,12 +22,14 @@ const percent = (value: number) => `${Math.round(value * 100)}%`;
  * last board stays up and the heuristic shortlist below answers instantly.
  */
 export function SimulatedPick({ draft, disabled, pick }: { draft: Draft; disabled: boolean; pick: (player: Player) => Promise<void> }) {
+  const [risk, setRisk] = useState<RiskMode>(recalledRisk);
   const revision = draft.picks.map(item => item.playerId.value).join(',');
-  const simulation = useResource<Simulation>(`/api/drafts/${draft.id}/board/simulation`, 0, revision);
+  const simulation = useResource<Simulation>(`/api/drafts/${draft.id}/board/simulation?risk=${risk}`, 0, revision);
   const board = simulation.result?.data.board ?? null;
   const unavailable = simulation.result?.data.unavailable;
   return <section className="panel simulation" aria-labelledby="simulation-title">
-    <div className="advice-heading"><h3 id="simulation-title">Simulated pick</h3></div>
+    <div className="advice-heading"><h3 id="simulation-title">Simulated pick</h3>
+      <fieldset className="risk-toggle"><legend>Rank by</legend>{modes.map(mode => <label key={mode.value} title={mode.hint}><input type="radio" name="risk" value={mode.value} checked={risk === mode.value} onChange={() => { setRisk(mode.value); rememberRisk(mode.value); }} />{mode.label}</label>)}</fieldset></div>
     <p className="muted">Each option is drafted {board?.rollouts ?? 500} times against simulated opponents; numbers are your final roster’s season points.</p>
     <p className="loading-status" role="status">{simulation.loading ? 'Simulating drafts…' : ' '}</p>
     <ErrorNotice text={simulation.error} retry={simulation.refresh} />
