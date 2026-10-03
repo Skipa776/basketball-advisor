@@ -3,8 +3,8 @@ type: test_matrix
 title: Test Matrix — Offline Model Parameters
 description: Required cases for the model-version registry and the C#/Python parameter goldens.
 tags: [tests, modeling, persistence, matrix]
-source_paths: [src/FantasyBasketball.Domain/Modeling, src/FantasyBasketball.Infrastructure/Persistence/Repositories/ModelVersionRepository.cs]
-test_paths: [tests/FantasyBasketball.Domain.Tests/Modeling, tests/FantasyBasketball.IntegrationTests/Persistence/ModelVersionTests.cs]
+source_paths: [src/FantasyBasketball.Domain/Modeling, src/FantasyBasketball.Domain/Projections/HierarchicalProjector.cs, src/FantasyBasketball.Infrastructure/Persistence/Repositories/ModelVersionRepository.cs]
+test_paths: [tests/FantasyBasketball.Domain.Tests/Modeling, tests/FantasyBasketball.Domain.Tests/Projections/HierarchicalProjectorTests.cs, tests/FantasyBasketball.IntegrationTests/Persistence/ModelVersionTests.cs]
 depends_on: [required_gates.md, ../contracts/model_params_contract.md]
 status: partial
 last_updated: 2026-10-01
@@ -34,6 +34,15 @@ Gates [model_params_contract](../contracts/model_params_contract.md).
 | ID | Case | Expected | Required |
 |---|---|---|---|
 | `MG-01` | Every `tools/modeling/goldens/*.json` | C# recomputes each expected output from the stored parameters within 1e-6 | ✅ |
+
+# Hierarchical projector (`HP-01`–`HP-04`)
+
+| ID | Case | Expected | Required |
+|---|---|---|---|
+| `HP-01` | No history with 100+ minutes in the last three seasons | The position group's prior (group `U` when the position is unknown) times the age term; no age means exp(0) | ✅ |
+| `HP-02` | Any projection | `REB = OREB + DREB` and `PTS = 2·FGM + FG3M + FTM` exactly | ✅ |
+| `HP-03` | Seasons at lags 1, 2, 3 (under 100 min) and 4 | Lags 1 and 2 weighted 1 and w₂ with the κ prior; the short and the lag-4 seasons are ignored; age carried forward by its lag | ✅ |
+| `HP-04` | Parameters missing a modelled stat | `ArgumentException` naming the stat | ✅ |
 
 # Shared statistics (`ND-01`)
 

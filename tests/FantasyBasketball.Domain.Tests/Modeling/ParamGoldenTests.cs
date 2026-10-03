@@ -1,4 +1,6 @@
 using System.Text.Json;
+using FantasyBasketball.Domain.Projections;
+using FantasyBasketball.Domain.Stats;
 using FantasyBasketball.Domain.Trends;
 using Shouldly;
 
@@ -26,6 +28,9 @@ public sealed class ParamGoldenTests
                 case HeatPriorParameters.ModelName:
                     CheckHeatPrior(golden.RootElement);
                     break;
+                case ProjectionRateParameters.ModelName:
+                    CheckProjectionRates(golden.RootElement);
+                    break;
                 default:
                     throw new ShouldAssertException($"No C# evaluator for golden model '{model}' ({path}).");
             }
@@ -47,6 +52,29 @@ public sealed class ParamGoldenTests
             Math.Abs(actual.EffectFloor - expected.GetProperty("effectFloor").GetDecimal()).ShouldBeLessThan(Tolerance);
             Math.Abs(actual.PHot - expected.GetProperty("pHot").GetDecimal()).ShouldBeLessThan(Tolerance);
             Math.Abs(actual.PCold - expected.GetProperty("pCold").GetDecimal()).ShouldBeLessThan(Tolerance);
+        }
+    }
+
+    private static void CheckProjectionRates(JsonElement golden)
+    {
+        var projector = new HierarchicalProjector(ProjectionRateParameters.Parse(golden.GetProperty("parameters").GetRawText()));
+        foreach (var testCase in golden.GetProperty("cases").EnumerateArray())
+        {
+            var history = testCase.GetProperty("history").EnumerateArray()
+                .Select(line => new SeasonHistory(
+                    line.GetProperty("lag").GetInt32(),
+                    new StatLine(line.EnumerateObject()
+                        .Where(field => Enum.TryParse<StatKey>(field.Name, out _))
+                        .ToDictionary(field => Enum.Parse<StatKey>(field.Name), field => field.Value.GetDecimal())),
+                    null))
+                .ToArray();
+            var age = testCase.GetProperty("age") is { ValueKind: JsonValueKind.Number } value ? value.GetInt32() : (int?)null;
+            var group = testCase.GetProperty("group").GetString()!;
+            foreach (var expected in testCase.GetProperty("expected").EnumerateObject())
+            {
+                var actual = projector.Rate(Enum.Parse<StatKey>(expected.Name), group, age, history);
+                Math.Abs(actual - expected.Value.GetDecimal()).ShouldBeLessThan(Tolerance);
+            }
         }
     }
 
