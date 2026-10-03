@@ -67,6 +67,15 @@ The cases gating build steps 10, 11, and 12 — requirements R7, R8, R9, R10.
 | `D-09` | Drafted player | Leaves the available pool immediately; cannot be recommended | ✅ |
 | — | Full-pool re-rank latency | Completes inside the R7 target on a realistic pool | ✅ |
 
+# Lineups and simulation (`LO-`)
+
+| ID | Case | Expected | Required |
+|---|---|---|---|
+| `LO-01` | 500 random rosters of 8–13 players with 1–2 positions on PG/SG/SF/PF/C/G/F/3×UTIL | The lineup equals exact matching (bitmask dynamic program) every time | ✅ |
+| `LO-02` | Daily lineup, one UTIL slot, two same-team players and one on another team | Each scheduled day starts the best player with a game | ✅ |
+| `LO-03` | Weekly lineup | Values weighted by that week's games; a team with no games that week scores nothing | ✅ |
+| `LO-04` | A 10:30 pm Eastern tip-off; a player with no team | Counted on its Eastern date; the no-team player gets the median team's schedule | ✅ |
+
 # Evidence and confidence (`E-`)
 
 | ID | Case | Expected | Required |
