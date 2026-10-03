@@ -3,8 +3,8 @@ type: test_matrix
 title: Test Matrix — Offline Model Parameters
 description: Required cases for the model-version registry and the C#/Python parameter goldens.
 tags: [tests, modeling, persistence, matrix]
-source_paths: [src/FantasyBasketball.Domain/Modeling, src/FantasyBasketball.Domain/Projections/HierarchicalProjector.cs, src/FantasyBasketball.Domain/Projections/MinutesModel.cs, src/FantasyBasketball.Infrastructure/Persistence/Repositories/ModelVersionRepository.cs]
-test_paths: [tests/FantasyBasketball.Domain.Tests/Modeling, tests/FantasyBasketball.Domain.Tests/Projections/HierarchicalProjectorTests.cs, tests/FantasyBasketball.Domain.Tests/Projections/MinutesModelTests.cs, tests/FantasyBasketball.IntegrationTests/Persistence/ModelVersionTests.cs]
+source_paths: [src/FantasyBasketball.Domain/Modeling, src/FantasyBasketball.Domain/Projections/HierarchicalProjector.cs, src/FantasyBasketball.Domain/Projections/MinutesModel.cs, src/FantasyBasketball.Domain/Projections/AvailabilityModel.cs, src/FantasyBasketball.Domain/Statistics/BetaBinomial.cs, src/FantasyBasketball.Infrastructure/Persistence/Repositories/ModelVersionRepository.cs]
+test_paths: [tests/FantasyBasketball.Domain.Tests/Modeling, tests/FantasyBasketball.Domain.Tests/Projections/HierarchicalProjectorTests.cs, tests/FantasyBasketball.Domain.Tests/Projections/MinutesModelTests.cs, tests/FantasyBasketball.Domain.Tests/Projections/AvailabilityModelTests.cs, tests/FantasyBasketball.IntegrationTests/Persistence/ModelVersionTests.cs]
 depends_on: [required_gates.md, ../contracts/model_params_contract.md]
 status: partial
 last_updated: 2026-10-01
@@ -53,6 +53,16 @@ Gates [model_params_contract](../contracts/model_params_contract.md).
 | `MM-03` | A projection above 42 or below 0 | Clamped to `maxMinutes` and 0 | ✅ |
 | `MM-04` | Seasons at lags 1, 2, 3 (under 5 games) and 4 | Games × recency weights with κ shrinkage; the short and lag-4 seasons are ignored; age carried forward by its lag | ✅ |
 | `MM-05` | Parameters missing a role shift | `ArgumentException` naming the roles | ✅ |
+
+# Availability model (`AV-01`–`AV-05`)
+
+| ID | Case | Expected | Required |
+|---|---|---|---|
+| `AV-01` | `BetaBinomial(82, 2.5, 0.8)` | Mean 62.1212 and variance 298.742 (closed form); quantiles 0.1 / 0.5 / 0.9 = 36 / 67 / 81 as scipy; 0 and 1 map to 0 and 82 | ✅ |
+| `AV-02` | `LogGamma` at 0.5, 10 and 0.1 | Within 1e-12 of log √π, log 9!, and `math.lgamma(0.1)` | ✅ |
+| `AV-03` | Two history seasons; no history | Alpha and beta add weighted games played and missed to φm and φ(1 − m); no history is the prior alone | ✅ |
+| `AV-04` | An 84-game line, a lag-5 line and a 0-game line | Games capped at the season's length; the lag-5 and 0-game lines are ignored | ✅ |
+| `AV-05` | Parameters with one weight | `ArgumentException` | ✅ |
 
 # Shared statistics (`ND-01`)
 

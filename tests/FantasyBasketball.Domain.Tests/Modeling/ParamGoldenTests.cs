@@ -34,6 +34,9 @@ public sealed class ParamGoldenTests
                 case MinutesModelParameters.ModelName:
                     CheckMinutes(golden.RootElement);
                     break;
+                case AvailabilityModelParameters.ModelName:
+                    CheckAvailability(golden.RootElement);
+                    break;
                 default:
                     throw new ShouldAssertException($"No C# evaluator for golden model '{model}' ({path}).");
             }
@@ -95,6 +98,27 @@ public sealed class ParamGoldenTests
                 .ToArray();
             var age = testCase.GetProperty("age") is { ValueKind: JsonValueKind.Number } value ? value.GetInt32() : (int?)null;
             Math.Abs(model.FromHistory(age, history) - testCase.GetProperty("expected").GetDecimal()).ShouldBeLessThan(Tolerance);
+        }
+    }
+
+    private static void CheckAvailability(JsonElement golden)
+    {
+        var model = new AvailabilityModel(AvailabilityModelParameters.Parse(golden.GetProperty("parameters").GetRawText()));
+        foreach (var testCase in golden.GetProperty("cases").EnumerateArray())
+        {
+            var history = testCase.GetProperty("history").EnumerateArray()
+                .Select(line => new AvailabilityHistory(
+                    line.GetProperty("lag").GetInt32(),
+                    line.GetProperty("games").GetInt32(),
+                    line.GetProperty("seasonGames").GetInt32(),
+                    line.GetProperty("mpg").GetDecimal(),
+                    null))
+                .ToArray();
+            var age = testCase.GetProperty("age") is { ValueKind: JsonValueKind.Number } value ? value.GetInt32() : (int?)null;
+            var games = model.FromHistory(age, history);
+            var expected = testCase.GetProperty("expected");
+            Math.Abs(games.Alpha - expected.GetProperty("alpha").GetDecimal()).ShouldBeLessThan(Tolerance);
+            Math.Abs(games.Beta - expected.GetProperty("beta").GetDecimal()).ShouldBeLessThan(Tolerance);
         }
     }
 
