@@ -10,6 +10,17 @@
         "full_name": "Atlanta Hawks",
         "abbreviation": "ATL"
       }
+    },
+    {
+      "id": 1093928141,
+      "first_name": "",
+      "last_name": "",
+      "position": "",
+      "team": {
+        "id": 1,
+        "full_name": "Atlanta Hawks",
+        "abbreviation": "ATL"
+      }
     }
   ],
   "meta": {

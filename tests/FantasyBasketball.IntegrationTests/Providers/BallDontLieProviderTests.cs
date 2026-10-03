@@ -58,6 +58,16 @@ public sealed class BallDontLieProviderTests : IDisposable
     }
 
     [Fact]
+    public async Task I17_nameless_placeholder_player_is_skipped()
+    {
+        // Page 2 ends with a blank-name record copied from the live directory.
+        var players = await provider.GetPlayersAsync(TestContext.Current.CancellationToken);
+
+        players.ShouldNotContain(player => player.ExternalId == "1093928141");
+        players.Count.ShouldBe(3);
+    }
+
+    [Fact]
     public async Task I03_games_payload_maps_teams_and_utc_timestamp()
     {
         var games = await provider.GetGamesAsync(
