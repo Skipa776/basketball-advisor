@@ -5,6 +5,7 @@ import { useResource } from './useResource';
 import { ErrorNotice } from './Workspace';
 import { ProjectionControls } from './projections';
 import { DraftAdvice } from './advice';
+import { SimulatedPick } from './simulation';
 import { RecordedPerformance } from './performance';
 import type { Board, Draft, DraftRecord, League, Player, Ranking } from './types';
 
@@ -103,6 +104,7 @@ export function DraftWorkspace({ league, draftId, onDraft }: { league: League; d
       <form className="form-row" onSubmit={syncPicks}><label>Sleeper league link or ID<input value={sleeperInput} onChange={event => setSleeperInput(event.target.value)} placeholder="https://sleeper.com/leagues/…" /></label><button disabled={busy || !sleeperId}>Sync picks from Sleeper</button></form>
       <form onSubmit={recordTaken}><label>Picks made in your draft room, in order<textarea rows={3} value={takenText} onChange={event => setTakenText(event.target.value)} placeholder={'One player per line, e.g.\nNikola Jokić\nShai Gilgeous-Alexander'} /></label><button disabled={busy || !takenText.trim()}>Record these picks</button></form>
     </section>}
+    {session && league.type === 0 && !complete && <SimulatedPick draft={session} disabled={busy || record.loading || !!record.error} pick={pick} />}
     {session && league.type === 0 && <DraftAdvice draft={session} leagueId={league.id} version={projectionRevision} disabled={busy || record.loading || !!record.error || complete} pick={pick} />}
     {!draftId && <form className="draft-start panel" onSubmit={create}><h3>Start a snake draft</h3><p>Choose your slot and rounds. We’ll save it.</p><div className="form-row"><label>Your draft position<input type="number" name="position" required min="1" max={league.teamCount} /></label><label>Rounds<input type="number" name="rounds" required min="1" /></label><button className="primary" disabled={busy}>{busy ? 'Starting…' : 'Start draft'} ↗</button></div></form>}
     {draftId && !record.result && record.loading && <p role="status">Restoring your saved draft…</p>}

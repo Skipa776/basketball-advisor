@@ -151,6 +151,23 @@ try {
   await visible(shortlist.getByRole('button', { name: 'Fixture Guard', exact: true }));
   const originalAdvice = await shortlist.locator('.advice-list > li').evaluateAll(rows => rows.map(row => row.dataset.playerId));
   assert.equal(originalAdvice.length, 2);
+  const simulated = page.getByRole('region', { name: 'Simulated pick' });
+  await visible(simulated.getByText(/fitted models active/));
+  const fixtureIds = Object.fromEntries(await shortlist.locator('.advice-list > li').evaluateAll(rows => rows.map(row => [row.querySelector('.player-name')?.textContent, row.dataset.playerId])));
+  const simulatedBoard = () => envelope({ unavailable: null, board: { mode: 0, rollouts: 500, nextUserPick: 14, candidates: [
+    { playerId: { value: fixtureIds['Fixture Center'] }, mean: 21450, sd: 1830, p10: 19100, p90: 23800, score: 21450, edge: 0, edgeSe: 0, survivalToNextPick: 0.12 },
+    { playerId: { value: fixtureIds['Fixture Guard'] }, mean: 21010, sd: 1610, p10: 18900, p90: 23050, score: 21010, edge: -440, edgeSe: 85, survivalToNextPick: 0.35 }] } });
+  await page.route('**/board/simulation*', route => route.fulfill({ json: simulatedBoard() }));
+  await page.reload();
+  const card = simulated.getByRole('article', { name: 'Top simulated pick' });
+  await visible(card.getByRole('heading', { name: 'Fixture Center', exact: true }));
+  await visible(card.getByText(/Likely gone before your pick 14: about 12% chance he lasts\./));
+  await visible(card.getByText('+440', { exact: true }));
+  await accessibility('Simulated pick');
+  await page.unroute('**/board/simulation*');
+  await page.reload();
+  await visible(simulated.getByText(/fitted models active/));
+  checks.push('Simulated pick: honest unavailable notice, then a pick card with expected roster ± SD, edge ± SE over the next option and a one-line reason; axe clean');
   await shortlist.getByText('Why this pick', { exact: true }).first().click();
   await visible(shortlist.getByText(/Supporting:/).first());
   await shortlist.getByRole('button', { name: 'Fixture Guard', exact: true }).click();
