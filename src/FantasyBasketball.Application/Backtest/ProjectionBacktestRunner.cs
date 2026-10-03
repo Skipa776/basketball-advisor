@@ -20,7 +20,9 @@ public sealed record ProjectionBacktestResult(
     AccuracyReport Naive,
     string? HierarchicalVersion = null,
     AccuracyReport? Hierarchical = null,
-    string? MinutesVersion = null);
+    string? MinutesVersion = null,
+    IntervalCoverage? Intervals = null,
+    string? DistributionVersions = null);
 
 /// <summary>
 /// Scores the production baseline projector, and the "last season repeats" baseline,
@@ -81,11 +83,13 @@ public sealed class ProjectionBacktestRunner(
             AccuracyMetrics.Compute(model, actual),
             AccuracyMetrics.Compute(naive, actual),
             hierarchical?.Version,
-            hierarchical is null ? null : AccuracyMetrics.Compute(hierarchical.Value.Projected, actual),
-            hierarchical?.MinutesVersion);
+            hierarchical is null ? null : AccuracyMetrics.Compute(hierarchical.Projected, actual),
+            hierarchical?.MinutesVersion,
+            hierarchical?.Sds is { } sds ? IntervalCoverage.Compute(hierarchical.Projected, sds, actual) : null,
+            hierarchical?.DistributionVersions);
     }
 
-    private async Task<(string Version, decimal[] Projected, string? MinutesVersion)?> ScoreHierarchicalAsync(
+    private async Task<HierarchicalScore?> ScoreHierarchicalAsync(
         IReadOnlyList<SeasonStatLine> evaluated,
         int evalSeasonEndYear,
         string statSource,
@@ -97,9 +101,15 @@ public sealed class ProjectionBacktestRunner(
             return null;
         }
 
-        var projector = new HierarchicalProjector(ProjectionRateParameters.Parse(model.ParametersJson));
         var minutesModel = await ActiveModelAsync(MinutesModelParameters.ModelName, asOf, cancellationToken);
-        var minutesProjector = minutesModel is null ? null : new MinutesModel(MinutesModelParameters.Parse(minutesModel.ParametersJson));
+        var availabilityModel = await ActiveModelAsync(AvailabilityModelParameters.ModelName, asOf, cancellationToken);
+        var covarianceModel = await ActiveModelAsync(StatCovarianceParameters.ModelName, asOf, cancellationToken);
+        var projector = new SeasonProjector(
+            ProjectionRateParameters.Parse(model.ParametersJson),
+            minutesModel is null ? null : MinutesModelParameters.Parse(minutesModel.ParametersJson),
+            availabilityModel is null ? null : AvailabilityModelParameters.Parse(availabilityModel.ParametersJson),
+            covarianceModel is null ? null : StatCovarianceParameters.Parse(covarianceModel.ParametersJson),
+            model.Version);
         var guarded = new AsOfSeasonStatLineRepository(stats, asOf);
         var history = new List<SeasonStatLine>();
         for (var lag = 1; lag <= 3; lag++)
@@ -107,23 +117,32 @@ public sealed class ProjectionBacktestRunner(
             history.AddRange(await guarded.ListPoolAsync(evalSeasonEndYear - lag, statSource, cancellationToken));
         }
 
+        var seasonGames = SeasonProjector.SeasonLengths(history);
         var byPlayer = history.ToLookup(line => line.PlayerId);
         var projected = new decimal[evaluated.Count];
+        var sds = new List<decimal?>(evaluated.Count);
         for (var index = 0; index < evaluated.Count; index++)
         {
             var line = evaluated[index];
             var player = await players.GetAsync(line.PlayerId, cancellationToken);
-            var lines = byPlayer[line.PlayerId].ToArray();
-            var rates = projector.ProjectRates(evalSeasonEndYear, player?.Positions.FirstOrDefault(), lines);
-            var minutes = minutesProjector?.Project(evalSeasonEndYear, lines)
-                ?? new MinutesProjector().Project(line.GamesPlayed, line.MinutesPerGame, options);
-            var perGame = rates.Values.ToDictionary(pair => pair.Key, pair => pair.Value * minutes);
-            perGame[StatKey.MIN] = minutes;
-            projected[index] = scoring.Score(new StatLine(perGame), League);
+            var projection = projector.Project(
+                line.PlayerId,
+                evalSeasonEndYear,
+                player?.Positions.FirstOrDefault(),
+                byPlayer[line.PlayerId].ToArray(),
+                seasonGames,
+                new MinutesProjector().Project(line.GamesPlayed, line.MinutesPerGame, options));
+            projected[index] = scoring.Score(projection.PerGame, League);
+            sds.Add(projection.Distribution?.FantasyPointsPerGame(League.ScoringRules).Sd);
         }
 
-        return (model.Version, projected, minutesModel?.Version);
+        return new HierarchicalScore(model.Version, projected, minutesModel?.Version,
+            sds.All(sd => sd is not null) ? sds.Select(sd => sd!.Value).ToArray() : null,
+            covarianceModel is null || availabilityModel is null ? null : $"{availabilityModel.Version}, {covarianceModel.Version}");
     }
+
+    private sealed record HierarchicalScore(
+        string Version, decimal[] Projected, string? MinutesVersion, decimal[]? Sds, string? DistributionVersions);
 
     /// <summary>The active version of a model, refusing one trained on seasons not yet complete at the as-of.</summary>
     private async Task<ModelVersion?> ActiveModelAsync(string modelName, DateTimeOffset asOf, CancellationToken cancellationToken)

@@ -43,6 +43,13 @@ public static class BacktestReportWriter
             HierarchicalRow(report, "RMSE", hierarchical.Rmse, result.Model.Rmse, result.Naive.Rmse);
             HierarchicalRow(report, "Spearman ρ", hierarchical.SpearmanRho, result.Model.SpearmanRho, result.Naive.SpearmanRho);
             HierarchicalRow(report, "Top-100 hit rate", hierarchical.TopKHitRate, result.Model.TopKHitRate, result.Naive.TopKHitRate);
+            if (result.Intervals is { } intervals)
+            {
+                Line(report);
+                Line(report, $"80% intervals held the actual points per game for {Number(intervals.Coverage80)} of {intervals.Count} players " +
+                    $"(mean SD {Number(intervals.MeanSd)}; target 0.76–0.84). Distribution models: {result.DistributionVersions}.");
+            }
+
             Line(report);
             Line(report, "### Calibration by decile (hierarchical)");
             Line(report);

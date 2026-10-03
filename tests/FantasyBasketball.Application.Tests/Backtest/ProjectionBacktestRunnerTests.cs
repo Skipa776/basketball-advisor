@@ -115,11 +115,46 @@ public sealed class ProjectionBacktestRunnerTests
         result.Hierarchical.ShouldNotBeNull().Mae.ShouldBe(3m, 0.0000001m);
     }
 
+    [Fact]
+    public async Task BR09_all_distribution_models_active_give_interval_coverage()
+    {
+        var a = Player();
+        var b = Player();
+        var runner = Runner(
+            [Line(a, 10m), Line(b, 20m)],
+            [.. Games(a, 20, 12m), .. Games(b, 20, 17m)],
+            RateModel([2025]),
+            MinutesModel([2025]),
+            Version(AvailabilityModelParameters.ModelName, "availability-test",
+                new { ageCenter = 27, mpgCenter = 20m, fullSeason = 82, weights = new[] { 0.02m, 0.01m, 0m }, a = 0.5m, b = 0m, c = 0m, phi = 2m }),
+            Version(StatCovarianceParameters.ModelName, "covariance-test", new
+            {
+                stats = HierarchicalProjector.ModelledStats.Select(stat => stat.ToString()),
+                scale = 1m,
+                correlation = new Dictionary<string, decimal[][]>
+                {
+                    ["U"] = HierarchicalProjector.ModelledStats.Select((_, i) => HierarchicalProjector.ModelledStats.Select((_, j) => i == j ? 1m : 0m).ToArray()).ToArray(),
+                },
+            }));
+
+        var result = await runner.RunAsync(2026, DataSourceName.Manual, AsOf, TestContext.Current.CancellationToken);
+
+        var intervals = result.Intervals.ShouldNotBeNull();
+        intervals.Count.ShouldBe(2);
+        intervals.MeanSd.ShouldBeGreaterThan(0m);
+        result.DistributionVersions.ShouldBe("availability-test, covariance-test");
+    }
+
+    private static ModelVersion Version(string name, string version, object parameters) =>
+        new(name, version, AsOf, [2025], JsonSerializer.Serialize(parameters), "{}", "test");
+
     private static ProjectionBacktestRunner Runner(
         IReadOnlyList<SeasonStatLine> lines,
         IReadOnlyList<PlayerGameSample> games,
         ModelVersion? rateModel = null,
-        ModelVersion? minutesModel = null)
+        ModelVersion? minutesModel = null,
+        ModelVersion? availabilityModel = null,
+        ModelVersion? covarianceModel = null)
     {
         var options = new ProjectionOptions();
         return new ProjectionBacktestRunner(
@@ -128,7 +163,7 @@ public sealed class ProjectionBacktestRunnerTests
             new BaselineProjector(new MinutesProjector(), options),
             options,
             new PointsScoringEngine(),
-            new FakeModelVersionRepository(rateModel, minutesModel),
+            new FakeModelVersionRepository(rateModel, minutesModel, availabilityModel, covarianceModel),
             new FakePlayerRepository());
     }
 
