@@ -414,6 +414,36 @@ public sealed class AdpEntryConfiguration : IEntityTypeConfiguration<AdpEntryRow
     }
 }
 
+public sealed class ModelVersionConfiguration
+    : IEntityTypeConfiguration<ModelVersionRow>
+{
+    public void Configure(EntityTypeBuilder<ModelVersionRow> builder)
+    {
+        builder.ToTable("model_version");
+        builder.HasKey(value => value.Id);
+        builder.Property(value => value.Id).HasColumnName("id").ValueGeneratedNever();
+        builder.Property(value => value.ModelName).HasColumnName("model_name").IsRequired();
+        builder.Property(value => value.Version).HasColumnName("version").IsRequired();
+        builder.Property(value => value.FittedAt)
+            .HasColumnName("fitted_at")
+            .HasColumnType("timestamptz");
+        builder.Property(value => value.TrainSeasonEndYears)
+            .HasColumnName("train_season_end_years")
+            .HasColumnType("integer[]");
+        builder.Property(value => value.Parameters).HasColumnName("parameters").HasColumnType("jsonb");
+        builder.Property(value => value.Metrics).HasColumnName("metrics").HasColumnType("jsonb");
+        builder.Property(value => value.CardMarkdown).HasColumnName("card_markdown").IsRequired();
+        builder.Property(value => value.IsActive).HasColumnName("is_active");
+        builder.HasIndex(value => new { value.ModelName, value.Version })
+            .IsUnique()
+            .HasDatabaseName("ux_model_version_name_version");
+        builder.HasIndex(value => value.ModelName)
+            .IsUnique()
+            .HasFilter("\"is_active\"")
+            .HasDatabaseName("ux_model_version_active_per_model");
+    }
+}
+
 public sealed class BaselineProjectionConfiguration
     : IEntityTypeConfiguration<BaselineProjectionRow>
 {

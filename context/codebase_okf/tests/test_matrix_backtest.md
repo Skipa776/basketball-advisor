@@ -6,8 +6,8 @@ tags: [tests, backtest, calibration, matrix]
 source_paths: [src/FantasyBasketball.Application/Backtest]
 test_paths: [tests/FantasyBasketball.IntegrationTests/Backtest]
 depends_on: [required_gates.md, ../contracts/backtest_contract.md]
-status: planned
-last_updated: 2026-07-29
+status: partial
+last_updated: 2026-10-01
 owners: [engineering]
 ---
 
@@ -33,6 +33,15 @@ it is a thrown exception rather than a review item.
 | `B-03` | Tied projected values | Spearman uses average ranks | ✅ |
 | `B-04` | Projection equal to actual for every player | `MAE 0`, `RMSE 0`, `ρ 1`, hit rate `1`, decile deviations all `0` — the identity case | ✅ |
 
+# Runner (`BR-01`–`BR-04`)
+
+| ID | Case | Expected | Required |
+|---|---|---|---|
+| `BR-01` | Season lines for the year before eval, eval box scores with one player under 20 games | Model and "last season repeats" scored against actual points per game; the under-20 player is excluded | ✅ |
+| `BR-02` | An eval-season player with no training line | Skipped, not scored as zero | ✅ |
+| `BR-03` | No training lines for the year before eval | Throws, naming the missing season | ✅ |
+| `BR-04` | Render a result twice | Identical markdown: metric table with model − baseline deltas, decile calibration, as-of, commit; LF line endings | ✅ |
+
 # Simulation and fitting (`B-05`–`B-07`, `B-09`)
 
 | ID | Case | Expected | Required |
@@ -41,6 +50,16 @@ it is a thrown exception rather than a review item.
 | `B-06` | Perturb projections, hold the drafted roster fixed | Objective unchanged — it scores **actual** production, never projected | ✅ |
 | `B-07` | A fit that loses to the judgment defaults on holdout | Cannot be written into the shipped defaults; the honesty rule is code, not prose | ✅ |
 | `B-09` | Reference graph | No duplicate `DraftValue` implementation — the simulation uses production code | ✅ |
+
+# Draft benchmark (`DB-01`–`DB-02`)
+
+The board-versus-ADP benchmark reuses `SimulatedOpponent` and `DraftBoard` (B-09) and
+reports the mean per-draft lineup difference with a 95% interval.
+
+| ID | Case | Expected | Required |
+|---|---|---|---|
+| `DB-01` | Projections equal actual; some ADPs 40 picks late | Board beats the ADP-only bot; the 95% interval's low end is above 0 | ✅ |
+| `DB-02` | Five pure centers in the seed league | Lineup value counts C and both UTIL; bench players score nothing | ✅ |
 
 # Reproducibility and reach (`B-08`, `B-10`)
 

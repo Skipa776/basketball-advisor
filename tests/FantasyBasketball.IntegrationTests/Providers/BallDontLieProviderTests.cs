@@ -74,6 +74,23 @@ public sealed class BallDontLieProviderTests : IDisposable
     }
 
     [Fact]
+    public async Task I14_game_without_datetime_keeps_its_eastern_date()
+    {
+        // balldontlie sends datetime null for all 11 games on 2022-12-02; the run used to fail.
+        var games = await provider.GetGamesAsync(
+            new DateOnly(2022, 12, 2),
+            new DateOnly(2022, 12, 2),
+            TestContext.Current.CancellationToken);
+
+        var game = games.ShouldHaveSingleItem();
+        game.StartsAt.ShouldBe(new DateTimeOffset(2022, 12, 2, 17, 0, 0, TimeSpan.Zero)); // noon EST
+        DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(
+                game.StartsAt, TimeZoneInfo.FindSystemTimeZoneById("America/New_York")).DateTime)
+            .ShouldBe(new DateOnly(2022, 12, 2));
+        game.SeasonEndYear.ShouldBe(2023);
+    }
+
+    [Fact]
     public async Task I10_unchanged_payload_produces_stable_hash()
     {
         var first = await provider.GetTeamsAsync(TestContext.Current.CancellationToken);
@@ -108,6 +125,10 @@ public sealed class BallDontLieProviderTests : IDisposable
                     StringComparison.Ordinal) =>
                     "balldontlie-players-page2-2026-07-29.json",
                 "/v1/players" => "balldontlie-players-2026-07-29.json",
+                "/v1/games" when request.RequestUri.Query.Contains(
+                    "start_date=2022-12-02",
+                    StringComparison.Ordinal) =>
+                    "balldontlie-games-missing-datetime-2022-12-02.json",
                 "/v1/games" => "balldontlie-games-2026-07-29.json",
                 _ => throw new InvalidOperationException(
                     $"No fixture exists for {request.RequestUri}."),

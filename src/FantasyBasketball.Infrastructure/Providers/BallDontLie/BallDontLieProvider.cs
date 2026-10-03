@@ -16,6 +16,7 @@ public sealed class BallDontLieProvider(
     : IPlayerDirectoryProvider, IScheduleProvider
 {
     private const string ParserVersion = "balldontlie-v1";
+    private static readonly TimeZoneInfo GameDateZone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
     private readonly BallDontLieClient client = new(clientFactory);
 
     public string Name => DataSourceName.BallDontLie;
@@ -100,12 +101,7 @@ public sealed class BallDontLieProvider(
             var awayTeam = await ResolveTeamAsync(
                 element.GetProperty("visitor_team"),
                 cancellationToken);
-            var startsAt = DateTimeOffset.Parse(
-                    element.GetProperty("datetime").GetString()
-                        ?? throw MissingValue("datetime"),
-                    CultureInfo.InvariantCulture,
-                    DateTimeStyles.RoundtripKind)
-                .ToUniversalTime();
+            var startsAt = ReadStartsAt(element);
             var externalId = ReadId(element);
 
             results.Add(new NbaGame(
@@ -189,6 +185,29 @@ public sealed class BallDontLieProvider(
             Convert.ToHexString(
                     SHA256.HashData(Encoding.UTF8.GetBytes(element.GetRawText())))
                 .ToLowerInvariant());
+
+    /// <summary>
+    /// balldontlie leaves <c>datetime</c> null on some older games (all 11 on 2022-12-02)
+    /// while <c>date</c> is set. Tip-off is then unknown, so use noon US Eastern on that
+    /// date: the box-score importer reads the Eastern date back, and midnight UTC would
+    /// land on the previous day.
+    /// </summary>
+    private static DateTimeOffset ReadStartsAt(JsonElement element)
+    {
+        if (element.TryGetProperty("datetime", out var datetime) && datetime.GetString() is { Length: > 0 } value)
+        {
+            return DateTimeOffset.Parse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind)
+                .ToUniversalTime();
+        }
+
+        var date = DateOnly.ParseExact(
+            element.TryGetProperty("date", out var dateValue) ? dateValue.GetString() ?? throw MissingValue("datetime")
+                : throw MissingValue("datetime"),
+            "yyyy-MM-dd",
+            CultureInfo.InvariantCulture);
+        var noonEastern = date.ToDateTime(new TimeOnly(12, 0));
+        return new DateTimeOffset(noonEastern, GameDateZone.GetUtcOffset(noonEastern)).ToUniversalTime();
+    }
 
     private static string ReadId(JsonElement element) =>
         element.GetProperty("id").GetInt64().ToString(CultureInfo.InvariantCulture);

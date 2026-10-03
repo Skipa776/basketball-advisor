@@ -1,0 +1,48 @@
+using System.Globalization;
+using System.Text;
+using FantasyBasketball.Domain.Backtest;
+
+namespace FantasyBasketball.Application.Backtest;
+
+/// <summary>Renders a projection backtest as the committed markdown report.</summary>
+public static class BacktestReportWriter
+{
+    public static string Render(ProjectionBacktestResult result, string commit)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        var report = new StringBuilder();
+        Line(report, $"# Projection backtest — {result.EvalSeasonEndYear - 1}–{result.EvalSeasonEndYear % 100:00} holdout");
+        Line(report);
+        Line(report, $"As of {result.AsOf:yyyy-MM-dd} · trained on {result.TrainSeasonEndYear - 1}–{result.TrainSeasonEndYear % 100:00} · " +
+            $"{result.PlayerCount} players with {ProjectionBacktestRunner.MinEvalGames}+ games · model `{result.ModelVersion}` · commit `{commit}`");
+        Line(report);
+        Line(report, "Fantasy points per game under ESPN default points scoring.");
+        Line(report);
+        Line(report, "| Metric | Model | Last season repeats | Model − baseline |");
+        Line(report, "|---|---|---|---|");
+        MetricRow(report, "MAE", result.Model.Mae, result.Naive.Mae);
+        MetricRow(report, "RMSE", result.Model.Rmse, result.Naive.Rmse);
+        MetricRow(report, "Spearman ρ", result.Model.SpearmanRho, result.Naive.SpearmanRho);
+        MetricRow(report, "Top-100 hit rate", result.Model.TopKHitRate, result.Naive.TopKHitRate);
+        Line(report);
+        Line(report, "## Calibration by decile (model)");
+        Line(report);
+        Line(report, "| Decile | Players | Mean projected | Mean actual | Actual − projected |");
+        Line(report, "|---|---|---|---|---|");
+        foreach (var decile in result.Model.Deciles)
+        {
+            Line(report, $"| {decile.Decile} | {decile.Count} | {Number(decile.MeanProjected)} | " +
+                $"{Number(decile.MeanActual)} | {Number(decile.Deviation)} |");
+        }
+
+        return report.ToString();
+    }
+
+    private static void MetricRow(StringBuilder report, string name, decimal model, decimal naive) =>
+        Line(report, $"| {name} | {Number(model)} | {Number(naive)} | {Number(model - naive)} |");
+
+    private static string Number(decimal value) =>
+        decimal.Round(value, 4, MidpointRounding.AwayFromZero).ToString("0.0000", CultureInfo.InvariantCulture);
+
+    private static void Line(StringBuilder report, string text = "") => report.Append(text).Append('\n');
+}

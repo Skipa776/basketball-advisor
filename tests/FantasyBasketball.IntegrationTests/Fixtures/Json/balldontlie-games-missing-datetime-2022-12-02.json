@@ -1,0 +1,23 @@
+{
+  "data": [
+    {
+      "id": 857680,
+      "date": "2022-12-02",
+      "season": 2022,
+      "datetime": null,
+      "status": "Final",
+      "home_team_score": 134,
+      "visitor_team_score": 121,
+      "home_team": {
+        "id": 2,
+        "full_name": "Boston Celtics",
+        "abbreviation": "BOS"
+      },
+      "visitor_team": {
+        "id": 1,
+        "full_name": "Atlanta Hawks",
+        "abbreviation": "ATL"
+      }
+    }
+  ]
+}

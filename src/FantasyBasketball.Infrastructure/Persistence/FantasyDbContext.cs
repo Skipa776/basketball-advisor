@@ -65,6 +65,8 @@ public sealed class FantasyDbContext
 
     public DbSet<AdpEntryRow> AdpEntries => Set<AdpEntryRow>();
 
+    public DbSet<ModelVersionRow> ModelVersions => Set<ModelVersionRow>();
+
     public DbSet<BaselineProjectionRow> BaselineProjections =>
         Set<BaselineProjectionRow>();
 

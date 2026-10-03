@@ -29,3 +29,8 @@ playwright-report/
 # Local code graph (graphify) and scratch QA scripts
 graphify-out/
 *.tmp.mjs
+
+# Offline modeling (tools/modeling) virtualenv and bytecode
+.venv/
+__pycache__/
+tools/modeling/out/

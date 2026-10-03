@@ -50,6 +50,7 @@ Index rows route; concepts own. Nothing here restates a concept's content.
 | Write any code that calls a language model | `codebase_okf/safety/llm_trust_boundary.md` **first**, then `codebase_okf/contracts/llm_extraction_contract.md` |
 | Change what the model may receive, be granted, or produce | `codebase_okf/safety/llm_trust_boundary.md` — `stable_contract`, needs approval |
 | Measure projection accuracy or fit a weight | `codebase_okf/contracts/backtest_contract.md`, `codebase_okf/tasks/run_backtest.md` |
+| Fit, store or serve a statistical model's parameters | `codebase_okf/contracts/model_params_contract.md`, `docs/design/adr-001-offline-python-fitting.md` |
 | Add an entity that belongs to a user | `codebase_okf/contracts/auth_tenancy_contract.md`, `codebase_okf/safety/tenancy_policy.md` — **the filter and the sweep row are not optional** |
 | Add or change an endpoint after auth lands | `codebase_okf/contracts/auth_tenancy_contract.md` — every endpoint authorizes |
 | Style anything, or add a component | `codebase_okf/contracts/design_system_contract.md`, `codebase_okf/components/design_system.md` |

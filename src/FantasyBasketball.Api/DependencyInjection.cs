@@ -185,9 +185,11 @@ public static class DependencyInjection
         services.AddScoped<ITeamRepository, TeamRepository>();
         services.AddScoped<IGameRepository, GameRepository>();
         services.AddScoped<IAdpRepository, AdpRepository>();
+        services.AddScoped<IModelVersionRepository, ModelVersionRepository>();
         services.AddScoped<ILeagueRepository, LeagueRepository>();
         services.AddScoped<ISeasonStatLineRepository, SeasonStatLineRepository>();
         services.AddScoped<IBoxScoreRepository, BoxScoreRepository>();
+        services.AddScoped<FantasyBasketball.Application.Backtest.ProjectionBacktestRunner>();
         services.AddScoped<ILeagueTeamRepository, LeagueTeamRepository>();
         services.AddScoped<ILeagueEligibilityRepository, LeagueEligibilityRepository>();
         services.AddScoped<FantasyBasketball.Application.Leagues.LeagueRosterService>();
@@ -232,6 +234,7 @@ public static class DependencyInjection
         services.AddSingleton(heat);
         services.AddScoped<FantasyBasketball.Domain.Trends.PlayerHeatCalculator>();
         services.AddScoped<FantasyBasketball.Application.Trends.PlayerPerformanceService>();
+        services.AddScoped<FantasyBasketball.Application.Trends.HeatLabelService>();
         services.AddSingleton(configuration.GetSection(FantasyBasketball.Application.Landing.LandingOptions.SectionName)
             .Get<FantasyBasketball.Application.Landing.LandingOptions>() ?? new FantasyBasketball.Application.Landing.LandingOptions());
         services.AddScoped<FantasyBasketball.Application.Landing.LandingService>();

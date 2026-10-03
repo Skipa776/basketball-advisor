@@ -841,6 +841,64 @@ namespace FantasyBasketball.Infrastructure.Persistence.Migrations
                     b.ToTable("league_team", (string)null);
                 });
 
+            modelBuilder.Entity("FantasyBasketball.Infrastructure.Persistence.Entities.ModelVersionRow", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CardMarkdown")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("card_markdown");
+
+                    b.Property<DateTimeOffset>("FittedAt")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("fitted_at");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Metrics")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("metrics");
+
+                    b.Property<string>("ModelName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("model_name");
+
+                    b.Property<string>("Parameters")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("parameters");
+
+                    b.PrimitiveCollection<int[]>("TrainSeasonEndYears")
+                        .IsRequired()
+                        .HasColumnType("integer[]")
+                        .HasColumnName("train_season_end_years");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ModelName")
+                        .IsUnique()
+                        .HasDatabaseName("ux_model_version_active_per_model")
+                        .HasFilter("\"is_active\"");
+
+                    b.HasIndex("ModelName", "Version")
+                        .IsUnique()
+                        .HasDatabaseName("ux_model_version_name_version");
+
+                    b.ToTable("model_version", (string)null);
+                });
+
             modelBuilder.Entity("FantasyBasketball.Infrastructure.Persistence.Entities.NbaGameRow", b =>
                 {
                     b.Property<Guid>("Id")

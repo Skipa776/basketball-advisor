@@ -1,0 +1,21 @@
+[project]
+name = "fantasy-modeling"
+version = "0.1.0"
+description = "Offline parameter fitting for the fantasy basketball decision engine"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "numpy==2.5.3",
+    "pandas==3.0.6",
+    "scipy==1.18.1",
+    "pymc==6.3.2",
+    "arviz==1.3.0",
+    "psycopg[binary]==3.3.6",
+]
+
+[dependency-groups]
+dev = [
+    "pytest==9.1.1",
+]
+
+[tool.uv]
+package = false

@@ -3,12 +3,15 @@ import type { FormEvent } from 'react';
 import { useResource } from './useResource';
 import { ErrorNotice } from './Workspace';
 import type { Player } from './types';
+import { HeatBadge, HeatLabels } from './heat';
+import { GameChart } from './gameChart';
+import type { HeatLabel, HeatLabelPage } from './heat';
 
 type Pool = { seasonEndYear: number; source: string; gameCount: number; latestGameDate: string; latestFetchedAt: string };
 type Appearance = { gameId: string; playedOn: string; fantasyPoints: number; provenance: { source: string; fetchedAt: string; parserVersion: string; rawRecordHash: string } };
 type Heat = { playerId: { value: string }; seasonAppearances: number; latestAppearance: string | null; currentAverage: number | null; baselineAverage: number | null; recentAverage: number | null; pointsAboveBaseline: number | null; relativeLift: number | null; recentGamesAboveBaseline: number | null; hasComparison: boolean; currentWindow: Appearance[]; baselineWindow: Appearance[]; recentWindow: Appearance[] };
 type Performance = { scoringRules: { stat: string; pointsPerUnit: number }[]; seasonEndYear: number; source: string; throughDate: string; view: string; modelVersion: string; policy: { recentGames: number; minimumBaselineGames: number; maximumBaselineGames: number }; observedPlayers: number; bestQualifiedPlayers: number; comparisonQualifiedPlayers: number; latestAppearance: string | null; latestFetchedAt: string | null; players: Heat[] };
-type View = 'best' | 'hot' | 'all';
+type View = 'best' | 'hot' | 'all' | 'labels';
 const format = (value: number | null) => value === null ? '—' : value.toLocaleString(undefined, { maximumFractionDigits: 1 });
 const lift = (value: number | null) => value === null ? '—' : `${value > 0 ? '+' : ''}${format(value)}`;
 
@@ -21,14 +24,17 @@ export function RecordedPerformance({ leagueId }: { leagueId: string }) {
   const [view, setView] = useState<View>('best');
   const [page, setPage] = useState(1);
   const query = selection ? new URLSearchParams({ ...selection, seasonEndYear: String(selection.seasonEndYear), view, page: String(page), limit: '10' }) : null;
-  const performance = useResource<Performance>(open && query ? `/api/leagues/${leagueId}/performance?${query}` : null);
-  const data = performance.result?.data;
+  const performance = useResource<Performance>(open && query && view !== 'labels' ? `/api/leagues/${leagueId}/performance?${query}` : null);
+  const data = view === 'labels' ? undefined : performance.result?.data;
+  const labelQuery = selection ? new URLSearchParams({ ...selection, seasonEndYear: String(selection.seasonEndYear) }) : null;
+  const heat = useResource<HeatLabelPage>(open && labelQuery ? `/api/leagues/${leagueId}/heat-labels?${labelQuery}` : null);
+  const labels = new Map((heat.result?.data.labels ?? []).map(label => [label.playerId, label]));
   function submit(event: FormEvent) {
     event.preventDefault();
     const selected = pools.result?.data.find(item => `${item.seasonEndYear}:${item.source}` === pool);
     if (!selected) return;
     setSelection({ seasonEndYear: selected.seasonEndYear, source: selected.source, throughDate: date });
-    setPage(1); performance.refresh();
+    setPage(1); performance.refresh(); heat.refresh();
   }
   return <details className="performance panel" onToggle={event => setOpen(event.currentTarget.open)}>
     <summary>Recorded performance · best & above baseline</summary>
@@ -41,10 +47,11 @@ export function RecordedPerformance({ leagueId }: { leagueId: string }) {
       <label>Games through<input type="date" required value={date} max={new Date().toISOString().slice(0, 10)} onChange={event => setDate(event.target.value)} /></label>
       <button disabled={!pool || !date || pools.loading}>View performance</button>
     </form>}
-    {selection && <><div className="performance-views" role="group" aria-label="Performance view">{([['best', 'Best performing'], ['hot', 'Above baseline'], ['all', 'All observed players']] as const).map(([key, label]) => <button key={key} aria-pressed={view === key} onClick={() => { setView(key); setPage(1); }}>{label}</button>)}<button onClick={performance.refresh} disabled={performance.loading}>Refresh performance</button></div>
+    {selection && <><div className="performance-views" role="group" aria-label="Performance view">{([['best', 'Best performing'], ['hot', 'Above baseline'], ['labels', 'Hot & cold'], ['all', 'All observed players']] as const).map(([key, label]) => <button key={key} aria-pressed={view === key} onClick={() => { setView(key); setPage(1); }}>{label}</button>)}<button onClick={performance.refresh} disabled={performance.loading}>Refresh performance</button></div>
       <ErrorNotice text={performance.error} retry={performance.refresh} />
-      <p className="loading-status" role="status">{performance.loading ? 'Loading recorded performance…' : '\u00a0'}</p>
+      <p className="loading-status" role="status">{performance.loading || heat.loading ? 'Loading recorded performance…' : '\u00a0'}</p>
     </>}
+    {selection && view === 'labels' && <>{heat.error ? <p className="notice">Hot and cold labels are unavailable: {heat.error}</p> : heat.result && <HeatLabels page={heat.result.data} />}</>}
     {data && <section aria-label="Recorded performance results" aria-busy={performance.loading}>
       <h3>{data.view === 'best' ? 'Best performing' : data.view === 'hot' ? 'Above baseline' : 'All observed players'}</h3>
       <p>{data.seasonEndYear - 1}–{data.seasonEndYear} · {data.source} · Games through {data.throughDate}. {data.observedPlayers} players observed; {data.bestQualifiedPlayers} qualify for a current average; {data.comparisonQualifiedPlayers} qualify for a comparison.</p>
@@ -52,20 +59,21 @@ export function RecordedPerformance({ leagueId }: { leagueId: string }) {
       <details className="performance-scoring"><summary>Scoring used for these results</summary><ul>{data.scoringRules.map(rule => <li key={rule.stat}>{rule.stat}: {rule.pointsPerUnit} points per unit</li>)}</ul></details>
       <p className="muted">Current: last ≤{data.policy.maximumBaselineGames} games. Recent: last {data.policy.recentGames}. Baseline: the {data.policy.minimumBaselineGames}–{data.policy.maximumBaselineGames} games before those.</p>
       {!data.players.length && <p className="notice">{!data.observedPlayers ? 'No game observations match this source, season and date.' : data.view === 'hot' ? 'No players have a qualified positive lift for this selection. Check all observed players for sample sizes.' : data.view === 'best' ? 'No players have enough appearances for a current average. Check all observed players for sample sizes.' : 'No players on this page.'}</p>}
-      <ol className="performance-list" start={(page - 1) * 10 + 1}>{data.players.map(item => <PerformanceRow key={`${item.playerId.value}:${data.throughDate}:${data.source}:${data.view}`} item={item} />)}</ol>
+      <ol className="performance-list" start={(page - 1) * 10 + 1}>{data.players.map(item => <PerformanceRow key={`${item.playerId.value}:${data.throughDate}:${data.source}:${data.view}`} item={item} label={labels.get(item.playerId.value)} disclaimer={heat.result?.data.disclaimer ?? ''} />)}</ol>
       {!!performance.result?.meta?.total && <div className="pagination"><button disabled={page === 1 || performance.loading} onClick={() => setPage(value => value - 1)}>Previous results</button><span>Page {page} · {performance.result.meta.total} players</span><button disabled={page * 10 >= performance.result.meta.total || performance.loading} onClick={() => setPage(value => value + 1)}>Next results</button></div>}
       <p className="muted">Model {data.modelVersion}. DNPs skipped; zero and negative games count.</p>
     </section>}
   </details>;
 }
 
-function PerformanceRow({ item }: { item: Heat }) {
+function PerformanceRow({ item, label, disclaimer }: { item: Heat; label?: HeatLabel; disclaimer: string }) {
   const player = useResource<Player>(`/api/players/${item.playerId.value}`);
   return <li data-player-id={item.playerId.value}>
-    <h4>{player.result?.data.fullName ?? (player.loading ? 'Loading player…' : 'Player unavailable')}</h4>
+    <h4>{player.result?.data.fullName ?? (player.loading ? 'Loading player…' : 'Player unavailable')}{label && <HeatBadge label={label} disclaimer={disclaimer} />}</h4>
     <ErrorNotice text={player.error} retry={player.refresh} />
     <p>{item.seasonAppearances} appearances · Latest {item.latestAppearance ?? 'none'}</p>
     <dl className="performance-values"><div><dt>Current average</dt><dd>{format(item.currentAverage)}</dd></div><div><dt>Recent average</dt><dd>{format(item.recentAverage)}</dd></div><div><dt>Comparison average</dt><dd>{format(item.baselineAverage)}</dd></div><div><dt>Points above baseline</dt><dd>{lift(item.pointsAboveBaseline)}</dd></div></dl>
+    <GameChart games={item.currentWindow} baseline={item.baselineAverage} recentCount={item.recentWindow.length} />
     {!item.hasComparison && <p className="muted">Insufficient history for a heat comparison. {item.baselineWindow.length} preceding and {item.recentWindow.length} recent appearances recorded.</p>}
     {item.hasComparison && <p className="muted">Relative lift: {item.relativeLift === null ? 'undefined at a zero baseline' : `${lift(item.relativeLift * 100)}%`} · {item.recentGamesAboveBaseline} recent appearances above baseline.</p>}
     <details><summary>Games behind this result</summary>{([['Current sample', item.currentWindow], ['Comparison baseline', item.baselineWindow], ['Recent sample', item.recentWindow]] as const).map(([label, games]) => <div key={label} className="table-scroll"><table><caption>{label} · {games.length} appearances</caption><thead><tr><th>Date</th><th>Fantasy points</th><th>Source evidence</th></tr></thead><tbody>{games.map(game => <tr key={game.gameId}><td>{game.playedOn}</td><td>{format(game.fantasyPoints)}</td><td><details><summary>{game.provenance.source}</summary><div className="performance-provenance">Retrieved {new Date(game.provenance.fetchedAt).toLocaleString()}<br />Parser {game.provenance.parserVersion}<br />Game {game.gameId}<br />SHA-256 {game.provenance.rawRecordHash}</div></details></td></tr>)}</tbody></table></div>)}</details>
