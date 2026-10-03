@@ -59,6 +59,35 @@ public static class BacktestReportWriter
         return report.ToString();
     }
 
+    /// <summary>The draft benchmark section, appended to the projection report.</summary>
+    public static string RenderBenchmark(DraftComparisonResult result, string setup)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        var report = new StringBuilder();
+        Line(report);
+        Line(report, "## Draft benchmark");
+        Line(report);
+        Line(report, setup);
+        Line(report);
+        Line(report, "| Drafter | Mean starting-lineup points |");
+        Line(report, "|---|---|");
+        foreach (var (name, mean) in result.MeanValue)
+        {
+            Line(report, $"| {name} | {Number(mean)} |");
+        }
+
+        Line(report);
+        Line(report, $"| Comparison (paired, {result.Drafts} drafts) | Mean difference | 95% CI |");
+        Line(report, "|---|---|---|");
+        foreach (var comparison in result.Comparisons)
+        {
+            Line(report, $"| {comparison.Drafter} − {comparison.Against} | {Number(comparison.MeanDifference)} | " +
+                $"{Number(comparison.CiLow)} to {Number(comparison.CiHigh)} |");
+        }
+
+        return report.ToString();
+    }
+
     private static void Deciles(StringBuilder report, AccuracyReport accuracy)
     {
         Line(report, "| Decile | Players | Mean projected | Mean actual | Actual − projected |");

@@ -13,6 +13,15 @@ public sealed record DraftBenchmarkResult(
     decimal CiHigh,
     IReadOnlyList<decimal> Differences);
 
+/// <summary>How a benchmarked user drafter picks, given the draft so far.</summary>
+public delegate DraftCandidate UserPicker(
+    DraftSession session, FantasyLeague league, IReadOnlyList<DraftCandidate> candidates, List<PlayerId> userRoster);
+
+/// <summary>One drafter against another over the same seeded drafts: mean paired difference and 95% CI.</summary>
+public sealed record DrafterComparison(string Drafter, string Against, decimal MeanDifference, decimal CiLow, decimal CiHigh);
+
+public sealed record DraftComparisonResult(int Drafts, IReadOnlyDictionary<string, decimal> MeanValue, IReadOnlyList<DrafterComparison> Comparisons);
+
 /// <summary>
 /// Seeded mock drafts in which the user drafts once by the production board and once by
 /// lowest ADP, against the same simulated opponents. Each roster is scored by its best
@@ -49,6 +58,60 @@ public sealed class DraftBenchmark(DraftBoard board)
             drafts, boardValues.Average(), adpValues.Average(), mean, mean - halfWidth, mean + halfWidth, differences);
     }
 
+    /// <summary>
+    /// Every named drafter drafts the same seeded drafts against the same simulated opponents;
+    /// each drafter is compared with every one listed before it, paired by draft.
+    /// </summary>
+    public DraftComparisonResult Compare(
+        FantasyLeague league,
+        IReadOnlyList<DraftCandidate> candidates,
+        IReadOnlyDictionary<PlayerId, decimal> actualSeasonValue,
+        IReadOnlyList<(string Name, UserPicker Pick)> drafters,
+        int drafts = 200)
+    {
+        ArgumentNullException.ThrowIfNull(drafters);
+        ArgumentOutOfRangeException.ThrowIfLessThan(drafts, 2);
+        var values = drafters.ToDictionary(drafter => drafter.Name, _ => new decimal[drafts]);
+        for (var index = 0; index < drafts; index++)
+        {
+            var userSlot = (index % league.TeamCount) + 1;
+            var seed = (index * 7919) + 17;
+            foreach (var (name, pick) in drafters)
+            {
+                values[name][index] = LineupValue(Draft(league, candidates, userSlot, seed, pick), league, actualSeasonValue);
+            }
+        }
+
+        var comparisons = new List<DrafterComparison>();
+        for (var i = 1; i < drafters.Count; i++)
+        {
+            for (var j = 0; j < i; j++)
+            {
+                var differences = values[drafters[i].Name].Zip(values[drafters[j].Name], (a, b) => a - b).ToArray();
+                var mean = differences.Average();
+                var halfWidth = Z95 * StandardDeviation(differences, mean) / Sqrt(drafts);
+                comparisons.Add(new DrafterComparison(drafters[i].Name, drafters[j].Name, mean, mean - halfWidth, mean + halfWidth));
+            }
+        }
+
+        return new DraftComparisonResult(drafts, values.ToDictionary(pair => pair.Key, pair => pair.Value.Average()), comparisons);
+    }
+
+    /// <summary>The production heuristic board's top-ranked player.</summary>
+    public UserPicker BoardDrafter => BoardPick;
+
+    /// <summary>Lowest ADP left: the room's consensus.</summary>
+    public static UserPicker AdpDrafter => AdpPick;
+
+    /// <summary>The draft simulator's top pick (draft_simulation_contract), seeded by draft and pick.</summary>
+    public static UserPicker SimulatorDrafter(DraftSimulator simulator, LineupOptimizer lineup) =>
+        (session, _, candidates, _) =>
+        {
+            var seed = BitConverter.ToInt32(session.Id.ToByteArray()) ^ (session.CurrentPick * 7919);
+            var top = simulator.Simulate(session, lineup, candidates, seed, RiskMode.Mean).Candidates[0].PlayerId;
+            return candidates.First(candidate => candidate.PlayerId == top);
+        };
+
     /// <summary>Best starting lineup by actual value: highest first into the first open slot it fits.</summary>
     public static decimal LineupValue(
         IEnumerable<DraftCandidate> roster,
@@ -75,10 +138,11 @@ public sealed class DraftBenchmark(DraftBoard board)
         IReadOnlyList<DraftCandidate> candidates,
         int userSlot,
         int seed,
-        Func<DraftSession, FantasyLeague, IReadOnlyList<DraftCandidate>, List<PlayerId>, DraftCandidate> userPick)
+        UserPicker userPick)
     {
         var rounds = league.RosterSlots.Count(slot => slot.Kind is not RosterSlotKind.IR);
-        var session = new DraftSession(Guid.NewGuid(), league.TeamCount, rounds, userSlot);
+        // The session id follows the seed so every drafter, simulator included, replays identically.
+        var session = new DraftSession(new Guid(seed, 0, 0, new byte[8]), league.TeamCount, rounds, userSlot);
         var starters = Starters(league).ToArray();
         var positions = candidates.ToDictionary(candidate => candidate.PlayerId, candidate => candidate.Positions);
         var byId = candidates.ToDictionary(candidate => candidate.PlayerId);
