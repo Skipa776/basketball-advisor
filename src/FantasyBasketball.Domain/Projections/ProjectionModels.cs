@@ -175,7 +175,8 @@ public sealed record FantasyValue
         Guid leagueId,
         decimal perGame,
         decimal seasonTotal,
-        Guid? adjustedProjectionId)
+        Guid? adjustedProjectionId,
+        decimal? perGameSd = null)
     {
         if (leagueId == Guid.Empty)
         {
@@ -187,6 +188,7 @@ public sealed record FantasyValue
         PerGame = perGame;
         SeasonTotal = seasonTotal;
         AdjustedProjectionId = adjustedProjectionId;
+        PerGameSd = perGameSd is < 0m ? throw new ArgumentOutOfRangeException(nameof(perGameSd)) : perGameSd;
     }
 
     public PlayerId PlayerId { get; }
@@ -194,6 +196,9 @@ public sealed record FantasyValue
     public Guid LeagueId { get; }
 
     public decimal PerGame { get; }
+
+    /// <summary>SD of fantasy points per game under the league's scoring, when a distribution was published.</summary>
+    public decimal? PerGameSd { get; }
 
     public decimal SeasonTotal { get; }
 

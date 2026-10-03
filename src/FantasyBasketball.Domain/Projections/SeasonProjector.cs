@@ -4,7 +4,7 @@ using FantasyBasketball.Domain.Stats;
 namespace FantasyBasketball.Domain.Projections;
 
 /// <summary>A player's per-game projection, its minutes, and the full distribution when every model is present.</summary>
-public sealed record SeasonProjection(StatLine PerGame, decimal Minutes, ProjectionDistribution? Distribution);
+public sealed record SeasonProjection(StatLine PerMinute, StatLine PerGame, decimal Minutes, ProjectionDistribution? Distribution);
 
 /// <summary>
 /// Assembles the M2 models into one projection: hierarchical rates × minutes (the minutes
@@ -46,12 +46,12 @@ public sealed class SeasonProjector(
         var mean = new StatLine(perGame);
         if (availabilityModel is null || statCovariance is null)
         {
-            return new SeasonProjection(mean, projectedMinutes, null);
+            return new SeasonProjection(perMinute, mean, projectedMinutes, null);
         }
 
         var games = availabilityModel.Project(targetSeasonEndYear, lines, seasonGames);
         var covarianceMatrix = statCovariance.PerGame(position, perMinute, projectedMinutes, games.Mean);
-        return new SeasonProjection(mean, projectedMinutes,
+        return new SeasonProjection(perMinute, mean, projectedMinutes,
             new ProjectionDistribution(playerId, mean, covarianceMatrix, games, modelVersion));
     }
 

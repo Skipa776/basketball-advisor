@@ -161,7 +161,26 @@ public sealed class ProjectionRepository(FantasyDbContext database)
             value.AdjustedProjectionId,
             computedAt,
             CurrentFantasyValues.Profile(league),
-            publicationId));
+            publicationId,
+            value.PerGameSd is { } sd ? Round(sd) : null));
+        await database.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task AddDistributionAsync(
+        Guid baselineProjectionId,
+        ProjectionDistribution distribution,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(distribution);
+        // Covariance entries can be well under 1e-4, so they keep full precision (jsonb), unlike the stat lines.
+        database.ProjectionDistributions.Add(ProjectionDistributionRow.Create(
+            baselineProjectionId,
+            Serialize(distribution.PerGameMean),
+            JsonSerializer.Serialize(distribution.Covariance),
+            distribution.Games.Alpha,
+            distribution.Games.Beta,
+            distribution.Games.Trials,
+            distribution.ModelVersion));
         await database.SaveChangesAsync(cancellationToken);
     }
 
@@ -179,7 +198,8 @@ public sealed class ProjectionRepository(FantasyDbContext database)
                 row.FantasyLeagueId,
                 row.PerGame,
                 row.SeasonTotal,
-                row.AdjustedProjectionId);
+                row.AdjustedProjectionId,
+                row.PerGameSd);
     }
 
     public async Task<ProjectionDecomposition?> GetLatestDecompositionAsync(

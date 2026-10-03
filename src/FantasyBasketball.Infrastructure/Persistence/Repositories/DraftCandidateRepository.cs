@@ -1,6 +1,8 @@
 using System.Text.Json;
 using FantasyBasketball.Application.Abstractions;
 using FantasyBasketball.Domain.Draft;
+using FantasyBasketball.Domain.Projections;
+using FantasyBasketball.Domain.Statistics;
 using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Domain.Stats;
 using Microsoft.EntityFrameworkCore;
@@ -45,6 +47,12 @@ public sealed class DraftCandidateRepository(FantasyDbContext database)
                 ? null
                 : (decimal?)adpRow.AverageDraftPosition;
             var adpStandardDeviation = adpRow?.StandardDeviation;
+            var games = adjusted is null || value.PerGameSd is null
+                ? null
+                : await database.ProjectionDistributions.AsNoTracking()
+                    .Where(row => row.BaselineProjectionId == adjusted.BaselineProjectionId)
+                    .Select(row => new { row.SeasonGames, row.GamesAlpha, row.GamesBeta })
+                    .SingleOrDefaultAsync(cancellationToken);
             var categoryTotals = adjusted is null
                 ? new Dictionary<StatKey, decimal>()
                 : Deserialize(adjusted.ProjectedPerGame).Values.ToDictionary(
@@ -61,7 +69,11 @@ public sealed class DraftCandidateRepository(FantasyDbContext database)
                 adjusted?.RoleRisk ?? 0m,
                 categoryTotals,
                 adjusted?.HasUnverifiedContext ?? false,
-                adpStandardDeviation));
+                adpStandardDeviation,
+                games is null
+                    ? null
+                    : new SeasonValueDistribution(value.PerGame, value.PerGameSd!.Value,
+                        new BetaBinomial(games.SeasonGames, games.GamesAlpha, games.GamesBeta))));
         }
 
         return results;

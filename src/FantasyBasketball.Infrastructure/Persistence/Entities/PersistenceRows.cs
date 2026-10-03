@@ -727,6 +727,47 @@ public sealed class ModelVersionRow
         };
 }
 
+/// <summary>A baseline projection's distribution: per-game means, covariance and games played.</summary>
+public sealed class ProjectionDistributionRow
+{
+    private ProjectionDistributionRow()
+    {
+    }
+
+    public Guid BaselineProjectionId { get; private set; }
+
+    public string PerGameMean { get; private set; } = "{}";
+
+    public string Covariance { get; private set; } = "[]";
+
+    public decimal GamesAlpha { get; private set; }
+
+    public decimal GamesBeta { get; private set; }
+
+    public int SeasonGames { get; private set; }
+
+    public string ModelVersion { get; private set; } = string.Empty;
+
+    public static ProjectionDistributionRow Create(
+        Guid baselineProjectionId,
+        string perGameMean,
+        string covariance,
+        decimal gamesAlpha,
+        decimal gamesBeta,
+        int seasonGames,
+        string modelVersion) =>
+        new()
+        {
+            BaselineProjectionId = baselineProjectionId,
+            PerGameMean = perGameMean,
+            Covariance = covariance,
+            GamesAlpha = gamesAlpha,
+            GamesBeta = gamesBeta,
+            SeasonGames = seasonGames,
+            ModelVersion = modelVersion,
+        };
+}
+
 public sealed class BaselineProjectionRow
 {
     private BaselineProjectionRow()
@@ -1141,6 +1182,8 @@ public sealed class FantasyValueRow : IOwnedResource
 
     public Guid? PublicationId { get; private set; }
 
+    public decimal? PerGameSd { get; private set; }
+
     public static FantasyValueRow Create(
         Guid id,
         Guid playerId,
@@ -1150,7 +1193,8 @@ public sealed class FantasyValueRow : IOwnedResource
         Guid? adjustedProjectionId,
         DateTimeOffset? computedAt = null,
         string? scoringProfile = null,
-        Guid? publicationId = null) =>
+        Guid? publicationId = null,
+        decimal? perGameSd = null) =>
         new()
         {
             Id = id,
@@ -1162,6 +1206,7 @@ public sealed class FantasyValueRow : IOwnedResource
             ComputedAt = computedAt,
             ScoringProfile = scoringProfile,
             PublicationId = publicationId,
+            PerGameSd = perGameSd,
         };
 }
 

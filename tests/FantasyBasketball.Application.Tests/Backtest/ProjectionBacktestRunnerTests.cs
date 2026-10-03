@@ -75,7 +75,7 @@ public sealed class ProjectionBacktestRunnerTests
         var runner = Runner(
             [Line(a, 10m), Line(b, 20m)],
             [.. Games(a, 20, 12m), .. Games(b, 20, 17m)],
-            RateModel([2025]));
+            ModelFixtures.Rates([2025]));
 
         var result = await runner.RunAsync(2026, DataSourceName.Manual, AsOf, TestContext.Current.CancellationToken);
 
@@ -88,7 +88,7 @@ public sealed class ProjectionBacktestRunnerTests
     public async Task BR06_rate_model_trained_on_the_holdout_is_leakage()
     {
         var a = Player();
-        var runner = Runner([Line(a, 10m)], [.. Games(a, 20, 12m)], RateModel([2025, 2026]));
+        var runner = Runner([Line(a, 10m)], [.. Games(a, 20, 12m)], ModelFixtures.Rates([2025, 2026]));
 
         var exception = await Should.ThrowAsync<LeakageException>(() =>
             runner.RunAsync(2026, DataSourceName.Manual, AsOf, TestContext.Current.CancellationToken));
@@ -106,8 +106,8 @@ public sealed class ProjectionBacktestRunnerTests
         var runner = Runner(
             [Line(a, 10m), Line(b, 20m)],
             [.. Games(a, 20, 12m), .. Games(b, 20, 17m)],
-            RateModel([2025]),
-            MinutesModel([2025]));
+            ModelFixtures.Rates([2025]),
+            ModelFixtures.Minutes([2025]));
 
         var result = await runner.RunAsync(2026, DataSourceName.Manual, AsOf, TestContext.Current.CancellationToken);
 
@@ -123,19 +123,10 @@ public sealed class ProjectionBacktestRunnerTests
         var runner = Runner(
             [Line(a, 10m), Line(b, 20m)],
             [.. Games(a, 20, 12m), .. Games(b, 20, 17m)],
-            RateModel([2025]),
-            MinutesModel([2025]),
-            Version(AvailabilityModelParameters.ModelName, "availability-test",
-                new { ageCenter = 27, mpgCenter = 20m, fullSeason = 82, weights = new[] { 0.02m, 0.01m, 0m }, a = 0.5m, b = 0m, c = 0m, phi = 2m }),
-            Version(StatCovarianceParameters.ModelName, "covariance-test", new
-            {
-                stats = HierarchicalProjector.ModelledStats.Select(stat => stat.ToString()),
-                scale = 1m,
-                correlation = new Dictionary<string, decimal[][]>
-                {
-                    ["U"] = HierarchicalProjector.ModelledStats.Select((_, i) => HierarchicalProjector.ModelledStats.Select((_, j) => i == j ? 1m : 0m).ToArray()).ToArray(),
-                },
-            }));
+            ModelFixtures.Rates([2025]),
+            ModelFixtures.Minutes([2025]),
+            ModelFixtures.Availability(),
+            ModelFixtures.Covariance());
 
         var result = await runner.RunAsync(2026, DataSourceName.Manual, AsOf, TestContext.Current.CancellationToken);
 
@@ -144,9 +135,6 @@ public sealed class ProjectionBacktestRunnerTests
         intervals.MeanSd.ShouldBeGreaterThan(0m);
         result.DistributionVersions.ShouldBe("availability-test, covariance-test");
     }
-
-    private static ModelVersion Version(string name, string version, object parameters) =>
-        new(name, version, AsOf, [2025], JsonSerializer.Serialize(parameters), "{}", "test");
 
     private static ProjectionBacktestRunner Runner(
         IReadOnlyList<SeasonStatLine> lines,
@@ -165,35 +153,6 @@ public sealed class ProjectionBacktestRunnerTests
             new PointsScoringEngine(),
             new FakeModelVersionRepository(rateModel, minutesModel, availabilityModel, covarianceModel),
             new FakePlayerRepository());
-    }
-
-    private static ModelVersion MinutesModel(IReadOnlyList<int> trainSeasons)
-    {
-        var parameters = JsonSerializer.Serialize(new
-        {
-            ageCenter = 27,
-            maxMinutes = 42m,
-            minHistoryGames = 5,
-            rotationFrom = 18m,
-            starterFrom = 28m,
-            weights = new[] { 1m, 1m, 1m },
-            mu = 20m,
-            kappa = 0m,
-            delta = new { bench = 0m, rotation = 0m, starter = 3m, none = 0m },
-            beta = 0m,
-            sigma = 30m,
-            tau = 1m,
-        });
-        return new ModelVersion(MinutesModelParameters.ModelName, "minutes-test", AsOf, trainSeasons, parameters, "{}", "test");
-    }
-
-    private static ModelVersion RateModel(IReadOnlyList<int> trainSeasons)
-    {
-        var stats = HierarchicalProjector.ModelledStats.ToDictionary(
-            stat => stat.ToString(),
-            _ => new { weights = new[] { 1m, 1m, 1m }, kappa = 0m, mu = new { G = 0m, W = 0m, B = 0m, U = 0m }, alpha = 0m, beta = 0m, phi = 1m, tau = 0.1m });
-        var parameters = JsonSerializer.Serialize(new { ageCenter = 27, minHistoryMinutes = 100m, groupOf = new { }, stats });
-        return new ModelVersion(ProjectionRateParameters.ModelName, "rates-test", AsOf, trainSeasons, parameters, "{}", "test");
     }
 
     private static PlayerId Player() => new(Guid.NewGuid());
