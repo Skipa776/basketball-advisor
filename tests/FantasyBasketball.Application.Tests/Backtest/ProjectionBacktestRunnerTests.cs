@@ -96,10 +96,30 @@ public sealed class ProjectionBacktestRunnerTests
         exception.Message.ShouldContain("rates-test");
     }
 
+    [Fact]
+    public async Task BR08_active_minutes_model_supplies_the_hierarchical_minutes()
+    {
+        // Both players were starters (30 mpg); a +3 starter shift projects 33 minutes, so
+        // the rates (last season's) give A 11 vs actual 12 and B 22 vs 17: MAE 3.
+        var a = Player();
+        var b = Player();
+        var runner = Runner(
+            [Line(a, 10m), Line(b, 20m)],
+            [.. Games(a, 20, 12m), .. Games(b, 20, 17m)],
+            RateModel([2025]),
+            MinutesModel([2025]));
+
+        var result = await runner.RunAsync(2026, DataSourceName.Manual, AsOf, TestContext.Current.CancellationToken);
+
+        result.MinutesVersion.ShouldBe("minutes-test");
+        result.Hierarchical.ShouldNotBeNull().Mae.ShouldBe(3m, 0.0000001m);
+    }
+
     private static ProjectionBacktestRunner Runner(
         IReadOnlyList<SeasonStatLine> lines,
         IReadOnlyList<PlayerGameSample> games,
-        ModelVersion? rateModel = null)
+        ModelVersion? rateModel = null,
+        ModelVersion? minutesModel = null)
     {
         var options = new ProjectionOptions();
         return new ProjectionBacktestRunner(
@@ -108,8 +128,28 @@ public sealed class ProjectionBacktestRunnerTests
             new BaselineProjector(new MinutesProjector(), options),
             options,
             new PointsScoringEngine(),
-            new FakeModelVersionRepository(rateModel),
+            new FakeModelVersionRepository(rateModel, minutesModel),
             new FakePlayerRepository());
+    }
+
+    private static ModelVersion MinutesModel(IReadOnlyList<int> trainSeasons)
+    {
+        var parameters = JsonSerializer.Serialize(new
+        {
+            ageCenter = 27,
+            maxMinutes = 42m,
+            minHistoryGames = 5,
+            rotationFrom = 18m,
+            starterFrom = 28m,
+            weights = new[] { 1m, 1m, 1m },
+            mu = 20m,
+            kappa = 0m,
+            delta = new { bench = 0m, rotation = 0m, starter = 3m, none = 0m },
+            beta = 0m,
+            sigma = 30m,
+            tau = 1m,
+        });
+        return new ModelVersion(MinutesModelParameters.ModelName, "minutes-test", AsOf, trainSeasons, parameters, "{}", "test");
     }
 
     private static ModelVersion RateModel(IReadOnlyList<int> trainSeasons)

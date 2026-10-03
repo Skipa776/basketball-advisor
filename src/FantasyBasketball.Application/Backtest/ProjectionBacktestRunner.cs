@@ -1,6 +1,7 @@
 using FantasyBasketball.Application.Abstractions;
 using FantasyBasketball.Domain.Backtest;
 using FantasyBasketball.Domain.Leagues;
+using FantasyBasketball.Domain.Modeling;
 using FantasyBasketball.Domain.Projections;
 using FantasyBasketball.Domain.Provenance;
 using FantasyBasketball.Domain.Scoring;
@@ -18,14 +19,16 @@ public sealed record ProjectionBacktestResult(
     AccuracyReport Model,
     AccuracyReport Naive,
     string? HierarchicalVersion = null,
-    AccuracyReport? Hierarchical = null);
+    AccuracyReport? Hierarchical = null,
+    string? MinutesVersion = null);
 
 /// <summary>
 /// Scores the production baseline projector, and the "last season repeats" baseline,
 /// against a held-out season's actual fantasy points per game (backtest_contract).
 /// Training reads go through the as-of guard; the eval season's box scores are the
 /// target and are read directly. When a projection-rates model is active, the
-/// hierarchical projector is scored on the same players with the same minutes.
+/// hierarchical projector is scored on the same players, with the projection-minutes
+/// model's minutes when one is active and the baseline's minutes otherwise.
 /// </summary>
 public sealed class ProjectionBacktestRunner(
     ISeasonStatLineRepository stats,
@@ -78,29 +81,25 @@ public sealed class ProjectionBacktestRunner(
             AccuracyMetrics.Compute(model, actual),
             AccuracyMetrics.Compute(naive, actual),
             hierarchical?.Version,
-            hierarchical is null ? null : AccuracyMetrics.Compute(hierarchical.Value.Projected, actual));
+            hierarchical is null ? null : AccuracyMetrics.Compute(hierarchical.Value.Projected, actual),
+            hierarchical?.MinutesVersion);
     }
 
-    private async Task<(string Version, decimal[] Projected)?> ScoreHierarchicalAsync(
+    private async Task<(string Version, decimal[] Projected, string? MinutesVersion)?> ScoreHierarchicalAsync(
         IReadOnlyList<SeasonStatLine> evaluated,
         int evalSeasonEndYear,
         string statSource,
         DateTimeOffset asOf,
         CancellationToken cancellationToken)
     {
-        if (await models.GetActiveAsync(ProjectionRateParameters.ModelName, cancellationToken) is not { } model)
+        if (await ActiveModelAsync(ProjectionRateParameters.ModelName, asOf, cancellationToken) is not { } model)
         {
             return null;
         }
 
-        var lastKnown = new DateTimeOffset(model.TrainSeasonEndYears.Max(), 6, 30, 0, 0, 0, TimeSpan.Zero);
-        if (lastKnown > asOf)
-        {
-            throw new LeakageException(
-                $"Backtest leakage: {model.Version} trained on {model.TrainSeasonEndYears.Max()}, known at {lastKnown:O}, after the as-of {asOf:O}.");
-        }
-
         var projector = new HierarchicalProjector(ProjectionRateParameters.Parse(model.ParametersJson));
+        var minutesModel = await ActiveModelAsync(MinutesModelParameters.ModelName, asOf, cancellationToken);
+        var minutesProjector = minutesModel is null ? null : new MinutesModel(MinutesModelParameters.Parse(minutesModel.ParametersJson));
         var guarded = new AsOfSeasonStatLineRepository(stats, asOf);
         var history = new List<SeasonStatLine>();
         for (var lag = 1; lag <= 3; lag++)
@@ -114,14 +113,31 @@ public sealed class ProjectionBacktestRunner(
         {
             var line = evaluated[index];
             var player = await players.GetAsync(line.PlayerId, cancellationToken);
-            var rates = projector.ProjectRates(evalSeasonEndYear, player?.Positions.FirstOrDefault(), [.. byPlayer[line.PlayerId]]);
-            var minutes = new MinutesProjector().Project(line.GamesPlayed, line.MinutesPerGame, options);
+            var lines = byPlayer[line.PlayerId].ToArray();
+            var rates = projector.ProjectRates(evalSeasonEndYear, player?.Positions.FirstOrDefault(), lines);
+            var minutes = minutesProjector?.Project(evalSeasonEndYear, lines)
+                ?? new MinutesProjector().Project(line.GamesPlayed, line.MinutesPerGame, options);
             var perGame = rates.Values.ToDictionary(pair => pair.Key, pair => pair.Value * minutes);
             perGame[StatKey.MIN] = minutes;
             projected[index] = scoring.Score(new StatLine(perGame), League);
         }
 
-        return (model.Version, projected);
+        return (model.Version, projected, minutesModel?.Version);
+    }
+
+    /// <summary>The active version of a model, refusing one trained on seasons not yet complete at the as-of.</summary>
+    private async Task<ModelVersion?> ActiveModelAsync(string modelName, DateTimeOffset asOf, CancellationToken cancellationToken)
+    {
+        if (await models.GetActiveAsync(modelName, cancellationToken) is not { } model)
+        {
+            return null;
+        }
+
+        var lastKnown = new DateTimeOffset(model.TrainSeasonEndYears.Max(), 6, 30, 0, 0, 0, TimeSpan.Zero);
+        return lastKnown <= asOf
+            ? model
+            : throw new LeakageException(
+                $"Backtest leakage: {model.Version} trained on {model.TrainSeasonEndYears.Max()}, known at {lastKnown:O}, after the as-of {asOf:O}.");
     }
 
     private async Task<Dictionary<Guid, decimal>> ActualPointsPerGameAsync(

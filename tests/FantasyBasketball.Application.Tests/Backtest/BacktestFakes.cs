@@ -47,13 +47,13 @@ internal sealed class FakeSeasonStatLineRepository(
         Task.FromResult<SeasonStatLine?>(lines.FirstOrDefault(line => line.PlayerId == playerId));
 }
 
-internal sealed class FakeModelVersionRepository(ModelVersion? active) : IModelVersionRepository
+internal sealed class FakeModelVersionRepository(params ModelVersion?[] active) : IModelVersionRepository
 {
     public Task AddAsync(ModelVersion version, CancellationToken cancellationToken) =>
         throw new NotSupportedException("Fake store is read-only.");
 
     public Task<ModelVersion?> GetActiveAsync(string modelName, CancellationToken cancellationToken) =>
-        Task.FromResult(active?.ModelName == modelName ? active : null);
+        Task.FromResult(active.FirstOrDefault(model => model?.ModelName == modelName));
 
     public Task ActivateAsync(string modelName, string version, CancellationToken cancellationToken) =>
         throw new NotSupportedException("Fake store is read-only.");

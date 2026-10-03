@@ -33,7 +33,9 @@ public static class BacktestReportWriter
             Line(report);
             Line(report, $"## Hierarchical rates (`{result.HierarchicalVersion}`)");
             Line(report);
-            Line(report, "Same players and projected minutes as the model above; only the per-minute rates differ.");
+            Line(report, result.MinutesVersion is { } minutes
+                ? $"Same players as the model above; per-minute rates from the hierarchical model, minutes from `{minutes}`."
+                : "Same players and projected minutes as the model above; only the per-minute rates differ.");
             Line(report);
             Line(report, $"| Metric | Hierarchical | {result.ModelVersion} | Last season repeats | Hierarchical − {result.ModelVersion} |");
             Line(report, "|---|---|---|---|---|");

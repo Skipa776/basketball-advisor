@@ -33,7 +33,7 @@ it is a thrown exception rather than a review item.
 | `B-03` | Tied projected values | Spearman uses average ranks | ✅ |
 | `B-04` | Projection equal to actual for every player | `MAE 0`, `RMSE 0`, `ρ 1`, hit rate `1`, decile deviations all `0` — the identity case | ✅ |
 
-# Runner (`BR-01`–`BR-07`)
+# Runner (`BR-01`–`BR-08`)
 
 | ID | Case | Expected | Required |
 |---|---|---|---|
@@ -44,6 +44,7 @@ it is a thrown exception rather than a review item.
 | `BR-05` | An active `projection-rates` model | Scored on the same players with the same projected minutes as the baseline; with κ = 0 and unit weights it equals "last season repeats" | ✅ |
 | `BR-06` | The active rate model trained on the eval season | `LeakageException` naming the model version | ✅ |
 | `BR-07` | Render a result with a hierarchical report | A hierarchical section: metrics beside the baseline and naive with hierarchical − baseline deltas, and its own decile calibration | ✅ |
+| `BR-08` | An active `projection-minutes` model beside the rate model | The hierarchical projection takes its minutes from the minutes model (a +3 starter shift moves the score accordingly) and the report names that version; the same as-of leakage rule applies | ✅ |
 
 # Simulation and fitting (`B-05`–`B-07`, `B-09`)
 
