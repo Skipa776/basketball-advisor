@@ -1,6 +1,7 @@
 using FantasyBasketball.Application.Abstractions;
 using FantasyBasketball.Application.Common;
 using FantasyBasketball.Application.Draft;
+using FantasyBasketball.Application.Tests.Backtest;
 using FantasyBasketball.Domain.Draft;
 using FantasyBasketball.Domain.Leagues;
 using FantasyBasketball.Domain.Players;
@@ -33,6 +34,20 @@ public sealed class DraftAssistServiceTests
         store.Session.IsUserPick(store.Session.CurrentPick).ShouldBeTrue();
         (await Service().SimulateToUserTurnAsync(store.Session.Id, TestContext.Current.CancellationToken)).ShouldBe(0, "never picks for the user");
         store.Session.Picks.ShouldNotContain(pick => pick.PlayerId == noAdp);
+    }
+
+    [Fact]
+    public async Task OC03_an_active_choice_model_drives_the_simulated_picks()
+    {
+        // lambda 40 makes the market all but certain: opponents take the lowest ADP left, in order.
+        var second = store.Candidate("Second", 2m, 50m);
+        var first = store.Candidate("First", 1m, 10m);
+        var model = new FantasyBasketball.Domain.Modeling.ModelVersion(OpponentChoiceParameters.ModelName, "choice-test",
+            DateTimeOffset.UnixEpoch, [2026], """{"roundGroups":[1],"lambdas":[40],"eta":0,"candidates":60}""", "{}", "test");
+
+        await Service(new FakeModelVersionRepository(model)).SimulateToUserTurnAsync(store.Session.Id, TestContext.Current.CancellationToken);
+
+        store.Session.Picks.Select(pick => pick.PlayerId).ShouldBe([first, second]);
     }
 
     [Fact]
@@ -261,7 +276,8 @@ public sealed class DraftAssistServiceTests
         new("2000000000000000001", "in_progress", teams, rounds,
             picks.Select(pick => new ExternalDraftPick(pick.Pick, pick.Pick.ToString(), pick.Name)).ToArray());
 
-    private DraftAssistService Service() => new(store, store, store, store, store);
+    private DraftAssistService Service(FakeModelVersionRepository? models = null) =>
+        new(store, store, store, store, store, models ?? new FakeModelVersionRepository());
 
     private sealed class Store : IDraftRepository, ILeagueRepository, IDraftCandidateRepository, IPlayerRepository, IFantasyLeagueProvider
     {

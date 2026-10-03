@@ -186,6 +186,9 @@ public static class DependencyInjection
         services.AddScoped<IGameRepository, GameRepository>();
         services.AddScoped<IAdpRepository, AdpRepository>();
         services.AddScoped<IModelVersionRepository, ModelVersionRepository>();
+        services.AddScoped<IDraftLogRepository, DraftLogRepository>();
+        services.AddScoped<IDraftLogSource, FantasyBasketball.Infrastructure.Providers.Sleeper.SleeperDraftLogImporter>();
+        services.AddScoped<FantasyBasketball.Application.Draft.DraftLogImportService>();
         services.AddScoped<ILeagueRepository, LeagueRepository>();
         services.AddScoped<ISeasonStatLineRepository, SeasonStatLineRepository>();
         services.AddScoped<IBoxScoreRepository, BoxScoreRepository>();

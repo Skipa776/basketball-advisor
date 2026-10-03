@@ -836,3 +836,40 @@ public sealed class RecommendationEvidenceConfiguration
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
+
+public sealed class DraftLogRowConfiguration : IEntityTypeConfiguration<DraftLogRow>
+{
+    public void Configure(EntityTypeBuilder<DraftLogRow> builder)
+    {
+        builder.ToTable("draft_log");
+        builder.HasKey(value => value.Id);
+        builder.Property(value => value.Id).HasColumnName("id").ValueGeneratedNever();
+        builder.Property(value => value.Source).HasColumnName("source").IsRequired();
+        builder.Property(value => value.DraftId).HasColumnName("draft_id").IsRequired();
+        builder.Property(value => value.Season).HasColumnName("season");
+        builder.Property(value => value.TeamCount).HasColumnName("team_count");
+        builder.Property(value => value.Rounds).HasColumnName("rounds");
+        builder.Property(value => value.ScoringType).HasColumnName("scoring_type");
+        builder.Property(value => value.Slots).HasColumnName("slots").HasColumnType("jsonb");
+        builder.Property(value => value.StartedAt).HasColumnName("started_at").HasColumnType("timestamptz");
+        builder.HasIndex(value => new { value.Source, value.DraftId }).IsUnique().HasDatabaseName("ux_draft_log_source_draft");
+        builder.HasMany(value => value.Picks).WithOne().HasForeignKey(pick => pick.DraftLogId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+public sealed class DraftLogPickRowConfiguration : IEntityTypeConfiguration<DraftLogPickRow>
+{
+    public void Configure(EntityTypeBuilder<DraftLogPickRow> builder)
+    {
+        builder.ToTable("draft_log_pick");
+        builder.HasKey(value => new { value.DraftLogId, value.PickNumber });
+        builder.Property(value => value.DraftLogId).HasColumnName("draft_log_id");
+        builder.Property(value => value.PickNumber).HasColumnName("pick_number");
+        builder.Property(value => value.Round).HasColumnName("round");
+        builder.Property(value => value.DraftSlot).HasColumnName("draft_slot");
+        builder.Property(value => value.PlayerId).HasColumnName("player_id").IsRequired();
+        builder.Property(value => value.PlayerName).HasColumnName("player_name").IsRequired();
+        builder.Property(value => value.Positions).HasColumnName("positions").HasColumnType("text[]");
+        builder.Property(value => value.PickedBy).HasColumnName("picked_by");
+    }
+}

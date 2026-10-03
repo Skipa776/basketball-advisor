@@ -73,6 +73,14 @@ Gates [model_params_contract](../contracts/model_params_contract.md).
 | `SC-03` | Season total | Mean μ·E[G]; variance σ²(E[G]² + Var G) + μ² Var G | ✅ |
 | `SC-04` | Covariance parameters with stats out of order, or a non-square correlation | `ArgumentException` | ✅ |
 
+# Opponent choice (`OC-01`–`OC-03`)
+
+| ID | Case | Expected | Required |
+|---|---|---|---|
+| `OC-01` | λ 1 in round 1 with ADPs 1 and e, the second filling a need (η 1); λ 2 in round 5 with ADPs 2 and 4 | 0.5 / 0.5; 0.8 / 0.2 (softmax of −λ log ADP + η·need); probabilities sum to 1 | ✅ |
+| `OC-02` | Uniform 0.79 and 0.81 against 0.8 / 0.2; an ADP of 0; round groups not starting at 1 | Candidates 0 and 1 (inverse CDF); both bad inputs throw `ArgumentException` | ✅ |
+| `OC-03` | A mock draft with an active `opponent-choice` model (λ 40) | Simulated opponents draw from the model, taking the lowest ADPs in order; without a model the ADP-jitter heuristic still applies | ✅ |
+
 # Shared statistics (`ND-01`)
 
 | ID | Case | Expected | Required |

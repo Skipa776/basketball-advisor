@@ -36,6 +36,11 @@ The cases gating build steps 5 through 9 and 14 — requirements R2, R3, R4.
 | `I-15` | Basketball-Reference per-game table with an `Age` column | The season line carries the age (on February 1 of the season); a missing or out-of-range age stays null | ✅ |
 | `I-16` | Re-import of a season whose stored lines have no age | The age is filled in; an age already stored is never overwritten, and no other field changes | ✅ |
 | `I-17` | balldontlie player record with blank first and last name (about 750 placeholder rows in the live directory) | Skipped; the rest of the directory imports instead of the run failing with `ArgumentException` | ✅ |
+| `DL-01` | Seed user with a complete snake draft, an auction, a live draft and a 4-team draft; a picker with that draft and another | Breadth-first from pickers; only the two complete 8–14-team snake drafts are stored; rejected or repeated drafts never fetch picks | ✅ |
+| `DL-02` | A stored draft, a board with keeper holes and a cap one above the stored count | Stops at the cap; stored and incomplete drafts are skipped | ✅ |
+| `DL-03` | Seed is a league id; a username; neither | League members; the one user; `KeyNotFoundException` | ✅ |
+| `DL-04` | Sleeper user-drafts and picks payloads | Status, type, `slots_*` and scoring type map to the summary; 150 picks with names, positions, and an empty `picked_by` as null | ✅ |
+| `DL-05` | Store a draft log, then store it again | One row per source and draft id with every pick; the repeat is rejected by the unique index | ✅ |
 
 # Identity resolution (`N-`)
 

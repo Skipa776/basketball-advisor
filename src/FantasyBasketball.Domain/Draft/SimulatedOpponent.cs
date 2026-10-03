@@ -4,8 +4,10 @@ using FantasyBasketball.Domain.Players;
 namespace FantasyBasketball.Domain.Draft;
 
 /// <summary>
-/// How a simulated opponent picks: lowest ADP after a seeded jitter, filling open starting
-/// slots first. Shared by the live mock draft and the backtest, so both measure one drafter.
+/// How a simulated opponent picks. With a fitted <see cref="OpponentChoiceModel"/>, a seeded
+/// draw from its Plackett–Luce probabilities over the best-ADP candidates; otherwise lowest ADP
+/// after a seeded jitter, filling open starting slots first. Shared by the live mock draft and
+/// the backtest, so both measure one drafter.
 /// </summary>
 public static class SimulatedOpponent
 {
@@ -14,7 +16,8 @@ public static class SimulatedOpponent
         DraftSession session,
         RosterSlot[] starters,
         Dictionary<PlayerId, IReadOnlyList<string>> positionsByPlayer,
-        DraftCandidate[] available)
+        DraftCandidate[] available,
+        OpponentChoiceModel? model = null)
     {
         // ponytail: ADP jitter plus a greedy starting-slot check and a bench cap of 3
         // same-position players, not a learned drafter model; the upgrade is fitting pick
@@ -28,6 +31,10 @@ public static class SimulatedOpponent
             .ToArray();
         var filled = FilledStarters(starters, positionsByPlayer, teamPicks);
         var startingFull = filled.Count == starters.Length;
+        if (model is not null && ChooseByModel(model, random, session, starters, filled, available) is { } chosen)
+        {
+            return chosen;
+        }
 
         // Only the 12 lowest-ADP available players get jittered; deeper picks are never the
         // winner anyway and drawing z for the whole pool each pick is wasted work.
@@ -69,6 +76,34 @@ public static class SimulatedOpponent
         }
 
         return ranked.FirstOrDefault(candidate => !Blocked(candidate)) ?? ranked[0];
+    }
+
+    private static DraftCandidate? ChooseByModel(
+        OpponentChoiceModel model,
+        Random random,
+        DraftSession session,
+        RosterSlot[] starters,
+        HashSet<int> filled,
+        DraftCandidate[] available)
+    {
+        var candidates = available
+            .Where(candidate => candidate.AverageDraftPosition is > 0m)
+            .OrderBy(candidate => candidate.AverageDraftPosition)
+            .Take(model.Candidates)
+            .ToArray();
+        if (candidates.Length == 0)
+        {
+            return null;
+        }
+
+        var open = starters.Where((_, index) => !filled.Contains(index)).ToArray();
+        var round = ((session.CurrentPick - 1) / session.TeamCount) + 1;
+        var index = model.Choose(
+            round,
+            candidates.Select(candidate => candidate.AverageDraftPosition!.Value).ToArray(),
+            candidates.Select(candidate => open.Any(slot => candidate.Positions.Any(slot.Accepts))).ToArray(),
+            (decimal)random.NextDouble());
+        return candidates[index];
     }
 
     private static int SlotOnClock(int pickNumber, int teamCount)

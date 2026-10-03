@@ -40,6 +40,9 @@ public sealed class ParamGoldenTests
                 case StatCovarianceParameters.ModelName:
                     CheckCovariance(golden.RootElement);
                     break;
+                case FantasyBasketball.Domain.Draft.OpponentChoiceParameters.ModelName:
+                    CheckChoice(golden.RootElement);
+                    break;
                 default:
                     throw new ShouldAssertException($"No C# evaluator for golden model '{model}' ({path}).");
             }
@@ -155,6 +158,26 @@ public sealed class ParamGoldenTests
             Math.Abs((sd * sd) - expected.GetProperty("espnVariance").GetDecimal()).ShouldBeLessThan(Tolerance * 100m);
             Math.Abs(sigma[fgm][fga] - expected.GetProperty("fgmFga").GetDecimal()).ShouldBeLessThan(Tolerance);
             Math.Abs(sigma[ast][ast] - expected.GetProperty("astVariance").GetDecimal()).ShouldBeLessThan(Tolerance);
+        }
+    }
+
+    private static void CheckChoice(JsonElement golden)
+    {
+        var model = new FantasyBasketball.Domain.Draft.OpponentChoiceModel(
+            FantasyBasketball.Domain.Draft.OpponentChoiceParameters.Parse(golden.GetProperty("parameters").GetRawText()));
+        var groups = golden.GetProperty("parameters").GetProperty("roundGroups").EnumerateArray().Select(start => start.GetInt32()).ToArray();
+        foreach (var testCase in golden.GetProperty("cases").EnumerateArray())
+        {
+            var round = groups[testCase.GetProperty("group").GetInt32()];
+            var actual = model.Probabilities(
+                round,
+                Values(testCase.GetProperty("adp")),
+                testCase.GetProperty("need").EnumerateArray().Select(flag => flag.GetInt32() == 1).ToArray());
+            var expected = Values(testCase.GetProperty("expected"));
+            for (var index = 0; index < expected.Length; index++)
+            {
+                Math.Abs(actual[index] - expected[index]).ShouldBeLessThan(Tolerance);
+            }
         }
     }
 

@@ -88,6 +88,8 @@ public sealed class FantasyDbContext
 
     public DbSet<ProjectionDistributionRow> ProjectionDistributions => Set<ProjectionDistributionRow>();
 
+    public DbSet<DraftLogRow> DraftLogs => Set<DraftLogRow>();
+
     public DbSet<RecommendationRow> Recommendations => Set<RecommendationRow>();
 
     public DbSet<RecommendationEvidenceRow> RecommendationEvidence =>

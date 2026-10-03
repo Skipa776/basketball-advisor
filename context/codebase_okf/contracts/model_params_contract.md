@@ -43,6 +43,7 @@ model lands. A model whose parameters fail its shape is not activated.
 | `projection-minutes` | `tools/modeling/minutes_model.py` | `ageCenter`, `maxMinutes`, `minHistoryGames`, `rotationFrom`, `starterFrom`, `weights[3]`, `mu`, `kappa`, `delta{bench, rotation, starter, none}`, `beta`, `sigma`, `tau` — read by `MinutesModelParameters.Parse` |
 | `projection-availability` | `tools/modeling/availability_model.py` | `ageCenter`, `mpgCenter`, `fullSeason`, `weights[3]`, `a`, `b`, `c`, `phi` — read by `AvailabilityModelParameters.Parse`; the result is a `BetaBinomial(fullSeason, alpha, beta)` |
 | `projection-covariance` | `tools/modeling/projection_covariance.py` | `stats` (the 13 modelled stats, in `HierarchicalProjector.ModelledStats` order), `scale`, `correlation{G,W,B,U: 13×13}` — read by `StatCovarianceParameters.Parse`; also needs the active rate and minutes parameters |
+| `opponent-choice` | `tools/modeling/choice_model.py` | `roundGroups[]` (first round of each group, starting at 1), `lambdas[]` (one per group), `eta`, `candidates` — read by `OpponentChoiceParameters.Parse`; fitted on public draft logs by maximum likelihood |
 
 # Goldens
 

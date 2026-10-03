@@ -17,7 +17,8 @@ public sealed class DraftAssistService(
     ILeagueRepository leagues,
     IDraftCandidateRepository candidates,
     IPlayerRepository players,
-    IFantasyLeagueProvider leagueProvider)
+    IFantasyLeagueProvider leagueProvider,
+    IModelVersionRepository models)
 {
     /// <summary>
     /// Other teams pick until it is the user's turn: each one takes the lowest ADP among the
@@ -49,6 +50,9 @@ public sealed class DraftAssistService(
             candidate => candidate.PlayerId,
             candidate => candidate.Positions);
 
+        var choiceModel = await models.GetActiveAsync(OpponentChoiceParameters.ModelName, token) is { } fitted
+            ? new OpponentChoiceModel(OpponentChoiceParameters.Parse(fitted.ParametersJson))
+            : null;
         var drafted = session.Picks.Select(pick => pick.PlayerId).ToHashSet();
         var made = 0;
         while (!IsComplete(session) && !session.IsUserPick(session.CurrentPick))
@@ -62,7 +66,7 @@ public sealed class DraftAssistService(
             }
 
             var next = SimulatedOpponent.Choose(
-                BitConverter.ToInt32(draftSessionId.ToByteArray()), session, starters, positionsByPlayer, available);
+                BitConverter.ToInt32(draftSessionId.ToByteArray()), session, starters, positionsByPlayer, available, choiceModel);
             drafted.Add(next.PlayerId);
             await drafts.AddPickAsync(session.MakePick(next.PlayerId), token);
             made++;
