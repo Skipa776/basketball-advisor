@@ -37,9 +37,16 @@ public static class SimulatedOpponent
         }
 
         // Only the 12 lowest-ADP available players get jittered; deeper picks are never the
-        // winner anyway and drawing z for the whole pool each pick is wasted work.
-        var jittered = available
+        // winner anyway and drawing z for the whole pool each pick is wasted work. Sorted here,
+        // not trusted from the caller: an unsorted pool once made the benchmark's opponents draft
+        // arbitrary players.
+        var byAdp = available
             .Where(candidate => candidate.AverageDraftPosition is not null)
+            .OrderBy(candidate => candidate.AverageDraftPosition)
+            .ThenByDescending(candidate => candidate.ProjectedSeasonValue)
+            .ThenBy(candidate => candidate.PlayerId.Value)
+            .ToArray();
+        var jittered = byAdp
             .Take(12)
             .Select(candidate =>
             {
@@ -51,8 +58,9 @@ public static class SimulatedOpponent
             .OrderBy(entry => entry.JitteredAdp)
             .Select(entry => entry.Candidate);
         var ranked = jittered
-            .Concat(available.Where(candidate => candidate.AverageDraftPosition is not null).Skip(12))
-            .Concat(available.Where(candidate => candidate.AverageDraftPosition is null))
+            .Concat(byAdp.Skip(12))
+            .Concat(available.Where(candidate => candidate.AverageDraftPosition is null)
+                .OrderByDescending(candidate => candidate.ProjectedSeasonValue).ThenBy(candidate => candidate.PlayerId.Value))
             .ToArray();
 
         bool Blocked(DraftCandidate candidate)
