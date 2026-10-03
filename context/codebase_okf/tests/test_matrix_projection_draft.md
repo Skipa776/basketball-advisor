@@ -76,6 +76,7 @@ The cases gating build steps 10, 11, and 12 — requirements R7, R8, R9, R10.
 | `DS-03` | C + PG slots: C1 (100) vs PG1 (105) with PG2 and PG3 (104, 103) behind and C2 (20) as the only other center | The simulator takes C1; PG1's edge is below −50 | ✅ |
 | `DS-04` | Two players with equal means, SD ≈ 0 vs SD 40 | Cautious ranks the steady one first, Upside the volatile one | ✅ |
 | `DS-05` | Survival to the user's next pick | Read from the top pick's rollouts: under 5% for a player the opponents take first, over 95% for one they pass | ✅ |
+| `DS-06` | First pick of a 12-team, 13-round draft: 300 players, 30 teams × 165 days, K 15, N 500 | p95 of ten boards under 2 s (after one warm-up), in the gate | ✅ |
 | `LO-04` | A 10:30 pm Eastern tip-off; a player with no team | Counted on its Eastern date; the no-team player gets the median team's schedule | ✅ |
 
 # Evidence and confidence (`E-`)

@@ -139,7 +139,10 @@ PY
 
 dotnet format --verify-no-changes
 dotnet build --no-restore -c Release
-dotnet test --no-build -c Release --collect:"XPlat Code Coverage"
+dotnet test --no-build -c Release --collect:"XPlat Code Coverage" --filter "Category!=Performance"
+# Latency budgets run without coverage instrumentation, which slows hot loops several-fold
+# (draft_simulation_contract: p95 under 2 s; row DS-06).
+dotnet test tests/FantasyBasketball.Domain.Tests --no-build -c Release --filter "Category=Performance"
 
 python3 - <<'PY'
 from __future__ import annotations
