@@ -14,3 +14,7 @@ export type LandingLine = { playerId: string; name: string; playedOn: string; mi
 export type LandingDay = { date: string | null; source: string; scoring: string; poolSize: number; players: LandingLine[]; simulatedToday: string | null };
 export type LandingRiser = { playerId: string; name: string; latestAppearance: string; categoriesWon: number; recentAverage: number; baselineAverage: number; streak: number; percentAboveBaseline: number; status: string; injury?: string | null };
 export type LandingRisers = { throughDate: string | null; source: string; scoring: string; players: LandingRiser[]; excludes: 'featured' | 'rostered'; excludedPlayers: number };
+export type RiskMode = 'mean' | 'cautious' | 'upside';
+export type SimulatedCandidate = { playerId: { value: string }; mean: number; sd: number; p10: number; p90: number; score: number; edge: number; edgeSe: number; survivalToNextPick: number | null };
+export type SimulatedBoard = { candidates: SimulatedCandidate[]; mode: number; rollouts: number; nextUserPick: number | null };
+export type Simulation = { board: SimulatedBoard | null; unavailable: string | null };

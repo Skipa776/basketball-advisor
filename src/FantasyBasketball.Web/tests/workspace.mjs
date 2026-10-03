@@ -151,6 +151,37 @@ try {
   await visible(shortlist.getByRole('button', { name: 'Fixture Guard', exact: true }));
   const originalAdvice = await shortlist.locator('.advice-list > li').evaluateAll(rows => rows.map(row => row.dataset.playerId));
   assert.equal(originalAdvice.length, 2);
+  const simulated = page.getByRole('region', { name: 'Simulated pick' });
+  await visible(simulated.getByText(/fitted models active/));
+  const fixtureIds = Object.fromEntries(await shortlist.locator('.advice-list > li').evaluateAll(rows => rows.map(row => [row.querySelector('.player-name')?.textContent, row.dataset.playerId])));
+  const simulationRequests = [];
+  await page.route('**/board/simulation?*', route => {
+    simulationRequests.push(new URL(route.request().url()).searchParams.get('risk'));
+    route.fulfill({ json: envelope({ unavailable: null, board: { mode: 1, rollouts: 500, nextUserPick: 14, candidates: [
+      { playerId: { value: fixtureIds['Fixture Center'] }, mean: 21450, sd: 1830, p10: 19100, p90: 23800, score: 20535, edge: 0, edgeSe: 0, survivalToNextPick: 0.12 },
+      { playerId: { value: fixtureIds['Fixture Guard'] }, mean: 21010, sd: 1610, p10: 18900, p90: 23050, score: 20205, edge: -440, edgeSe: 85, survivalToNextPick: 0.35 }] } }) });
+  });
+  await simulated.getByLabel('Safer', { exact: true }).check();
+  const card = simulated.getByRole('article', { name: 'Top simulated pick' });
+  await visible(card.getByRole('heading', { name: 'Fixture Center', exact: true }));
+  await visible(card.getByText(/Likely gone before your pick 14: about 12% chance he lasts\./));
+  await visible(card.getByText('+440', { exact: true }));
+  assert.equal(await simulated.locator('.sim-board > li .interval-range').count(), 2);
+  await visible(simulated.getByText('35% at pick 14', { exact: true }));
+  assert(simulationRequests.includes('cautious'), `risk toggle did not request cautious: ${simulationRequests}`);
+  assert.equal(await page.evaluate(() => localStorage.getItem('fb.draftRisk')), 'cautious');
+  await accessibility('Simulated pick');
+  await simulated.screenshot({ path: `${artifacts}/simulation-desktop.png` });
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert((await page.evaluate(() => document.documentElement.scrollWidth)) <= 390, 'Simulated pick overflows at 390px');
+  await simulated.screenshot({ path: `${artifacts}/simulation-390.png` });
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await simulated.getByLabel('Best average', { exact: true }).check();
+  await page.unroute('**/board/simulation?*');
+  // Back to the real (unavailable) panel before picking, so the pick does not swap a mocked board out.
+  await page.reload();
+  await visible(simulated.getByText(/fitted models active/));
+  checks.push('Simulated pick: honest unavailable notice, then pick card (edge ± SE, one-line reason), interval bars and survival odds; risk toggle re-simulates and is remembered; axe clean; no overflow at 390px');
   await shortlist.getByText('Why this pick', { exact: true }).first().click();
   await visible(shortlist.getByText(/Supporting:/).first());
   await shortlist.getByRole('button', { name: 'Fixture Guard', exact: true }).click();
