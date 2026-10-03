@@ -121,7 +121,7 @@ public sealed class RouteIsolationTests : IAsyncLifetime
                 endpoint.Metadata.GetMetadata<OwnedRouteMetadata>() is not null)
             .ToArray();
 
-        routes.Length.ShouldBe(30);
+        routes.Length.ShouldBe(31);
         var failures = await SweepAsync(
             client,
             routes,

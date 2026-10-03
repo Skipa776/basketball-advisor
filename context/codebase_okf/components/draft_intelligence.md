@@ -15,7 +15,7 @@ done_criteria:
   - Survival and tiering keep the board inside the R7 latency target.
 ---
 
-> **Superseded in part, 2026-10-03.** M2's draft_simulation_contract
+> **Superseded in part, 2026-10-03.** M2's [draft_simulation_contract](../contracts/draft_simulation_contract.md)
 > deleted `MarketValue` and urgency and reads opportunity cost and survival from
 > simulated drafts instead of adding an `OpportunityCost` term. Tiers and
 > category-aware draft value below remain planned.

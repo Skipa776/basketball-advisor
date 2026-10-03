@@ -1101,7 +1101,7 @@ draft value contract's own definition. See that contract's correction note.
 
 *Update 2026-10-03:* the urgency term was deleted with `MarketValue` when the
 draft simulator began reading opportunity cost from rollouts
-(draft_simulation_contract). The σ
+([draft_simulation_contract](contracts/draft_simulation_contract.md)). The σ
 fallback below now only shapes the simulated opponents' ADP jitter, until a
 fitted `opponent-choice` model is active (no human-drafted Sleeper leagues were
 reachable from the owner's account on 2026-10-03, so none is yet).

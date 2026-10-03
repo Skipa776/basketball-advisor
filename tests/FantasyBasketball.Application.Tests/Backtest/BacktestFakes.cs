@@ -1,6 +1,7 @@
 using FantasyBasketball.Application.Abstractions;
 using FantasyBasketball.Domain.Modeling;
 using FantasyBasketball.Domain.Players;
+using FantasyBasketball.Domain.Schedule;
 using FantasyBasketball.Domain.Stats;
 using FantasyBasketball.Domain.Trends;
 
@@ -82,4 +83,21 @@ internal sealed class FakePlayerRepository : IPlayerRepository
     public Task AddResolvedIdentityAsync(Player player, ExternalPlayerIdentity identity, bool addPlayer, CancellationToken cancellationToken) => throw new NotSupportedException();
 
     public Task AddPendingIdentityMatchAsync(PendingIdentityMatch pendingMatch, CancellationToken cancellationToken) => throw new NotSupportedException();
+}
+
+/// <summary>Serves the given games from any source for any window that contains them.</summary>
+internal sealed class FakeGameRepository(params NbaGame[] games) : IGameRepository
+{
+    public Task<IReadOnlyList<NbaGame>> ListScheduledAsync(string source, DateTimeOffset fromUtc, DateTimeOffset toUtc, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<NbaGame>>(games.Where(game => game.StartsAt >= fromUtc && game.StartsAt < toUtc).ToArray());
+
+    public Task<IReadOnlyList<ScheduledGame>> ListFinalAsync(string source, DateTimeOffset fromUtc, DateTimeOffset toUtc, CancellationToken cancellationToken) =>
+        throw new NotSupportedException();
+
+    public Task AddAsync(NbaGame game, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+    public Task SaveResultAsync(NbaGame latest, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+    public Task<NbaGame?> GetBySourceAsync(string source, string externalId, CancellationToken cancellationToken) =>
+        throw new NotSupportedException();
 }

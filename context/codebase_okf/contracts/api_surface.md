@@ -93,6 +93,10 @@ forces a throw and asserts the body contains none of these.*
 - **`GET /api/health/data-sources`** — per source: last success, last failure,
   staleness, current degradation. Always `200`, even when everything is broken;
   that *is* the information.
+- **`GET /api/drafts/{id}/board/simulation?risk=mean|cautious|upside`** — the
+  Monte Carlo board ([draft_simulation_contract](draft_simulation_contract.md));
+  requires draft ownership. An unknown `risk` is `400`. When it cannot run it is
+  still `200`, with `board: null` and the reason.
 - **`GET /api/drafts?leagueId=&page=&limit=`** — requires ownership of the
   selected league, returns only that league's saved sessions and paging metadata.
   A missing league id is `400`; another user's league is `404`.

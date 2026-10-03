@@ -43,7 +43,7 @@ Resolved here, and this resolution is canonical:
 **Opportunity cost is not a term here.** The MVP's `MarketValue` (picks past
 ADP) and `Urgency` (value at risk × chance of being gone) were proxies for
 opportunity cost; both were deleted on 2026-10-03 when the
-draft_simulation_contract began reading it from
+[draft_simulation_contract](draft_simulation_contract.md) began reading it from
 simulated drafts — each candidate's edge against the top pick and the chance he
 survives to the next turn. This board stays as the fast, always-available ranking.
 
@@ -101,7 +101,7 @@ exactly as much as that center is redundant.
 
 ## ADP spread
 
-The simulated opponents (draft_simulation_contract,
+The simulated opponents ([draft_simulation_contract](draft_simulation_contract.md),
 `SimulatedOpponent`) jitter ADP by `Normal(0, σ)`:
 
 ```text

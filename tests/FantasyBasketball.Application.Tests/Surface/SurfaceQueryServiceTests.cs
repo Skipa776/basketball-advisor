@@ -10,6 +10,8 @@ using FantasyBasketball.Domain.Context;
 using FantasyBasketball.Domain.Draft;
 using FantasyBasketball.Domain.Leagues;
 using FantasyBasketball.Domain.Players;
+using FantasyBasketball.Domain.Schedule;
+using FantasyBasketball.Domain.Projections;
 using FantasyBasketball.Domain.Provenance;
 using FantasyBasketball.Domain.Recommendations;
 using FantasyBasketball.Domain.Stats;
@@ -167,7 +169,11 @@ public sealed class SurfaceQueryServiceTests
                 new FakeImportRunQueryRepository(failed),
                 new FixedTimeProvider(DateTimeOffset.UnixEpoch.AddDays(3)),
                 new DataSourceHealthOptions()),
-            recommendationRepository);
+            recommendationRepository,
+            new FantasyBasketball.Application.Tests.Backtest.FakeGameRepository(),
+            new FantasyBasketball.Application.Tests.Backtest.FakeModelVersionRepository(),
+            new DraftSimulator(new SimulationOptions()),
+            new FixedTimeProvider(DateTimeOffset.UnixEpoch.AddDays(3)));
 
         var board = await service.GetBoardAsync(
             session.Id,
@@ -182,6 +188,81 @@ public sealed class SurfaceQueryServiceTests
                 && evidence.Polarity == EvidencePolarity.Risk);
         recommendationRepository.Saved.ShouldBe(recommendations);
     }
+
+    [Fact]
+    public async Task D15_simulated_board_needs_distributions_and_a_full_schedule()
+    {
+        var team = new NbaTeamId(Guid.NewGuid());
+        var withSpread = Enumerable.Range(1, 40).Select(rank => Simulatable(rank, team)).ToArray();
+        var plain = withSpread.Select(candidate => candidate with { Distribution = null }).ToArray();
+
+        var noSpread = await SimulationService(plain, Season(team)).SimulateAsync(DraftId, RiskMode.Mean, TestContext.Current.CancellationToken);
+        var noSchedule = await SimulationService(withSpread, []).SimulateAsync(DraftId, RiskMode.Mean, TestContext.Current.CancellationToken);
+        var simulated = await SimulationService(withSpread, Season(team)).SimulateAsync(DraftId, RiskMode.Cautious, TestContext.Current.CancellationToken);
+
+        noSpread.Board.ShouldBeNull();
+        noSpread.Unavailable.ShouldNotBeNull().ShouldContain("distributions");
+        noSchedule.Unavailable.ShouldNotBeNull().ShouldContain("schedule");
+        var board = simulated.Board.ShouldNotBeNull();
+        board.Mode.ShouldBe(RiskMode.Cautious);
+        board.Candidates.Count.ShouldBe(15);
+        board.NextUserPick.ShouldBe(20);
+    }
+
+    [Fact]
+    public async Task D16_recommendations_lead_with_the_simulated_pick_and_its_survival_odds()
+    {
+        var team = new NbaTeamId(Guid.NewGuid());
+        var pool = Enumerable.Range(1, 40).Select(rank => Simulatable(rank, team)).ToArray();
+        var service = SimulationService(pool, Season(team));
+
+        var simulated = (await service.SimulateAsync(DraftId, RiskMode.Mean, TestContext.Current.CancellationToken)).Board!;
+        var recommendations = await service.GetRecommendationsAsync(DraftId, TestContext.Current.CancellationToken);
+
+        recommendations[0].SubjectPlayerId.ShouldBe(simulated.Candidates[0].PlayerId);
+        recommendations[0].Evidence.ShouldContain(item => item.Statement.StartsWith("Best simulated pick", StringComparison.Ordinal));
+        recommendations[1].Evidence.ShouldContain(item => item.Statement.StartsWith("About ", StringComparison.Ordinal));
+        recommendations.Count.ShouldBe(40, "the rest of the pool follows in heuristic order");
+    }
+
+    private static readonly Guid DraftId = Guid.NewGuid();
+
+    private static DraftBoardService SimulationService(IReadOnlyList<DraftCandidate> pool, NbaGame[] games)
+    {
+        var league = PointsLeague();
+        var session = new DraftSession(DraftId, 10, 13, 1);
+        var clock = new FixedTimeProvider(new DateTimeOffset(2026, 10, 3, 0, 0, 0, TimeSpan.Zero));
+        return new DraftBoardService(
+            new FakeDraftRepository(new DraftSessionRecord(session, league.Id)),
+            new FakeLeagueRepository(league),
+            new FakeDraftCandidateRepository(pool),
+            new DraftBoard(new DraftValueCalculator(new DraftWeightOptions())),
+            new DraftRecommendationEngine(new ConfidenceCalculator()),
+            new DataSourceHealthService(new FakeImportRunQueryRepository(), clock, new DataSourceHealthOptions()),
+            new FakeRecommendationRepository(),
+            new FantasyBasketball.Application.Tests.Backtest.FakeGameRepository(games),
+            new FantasyBasketball.Application.Tests.Backtest.FakeModelVersionRepository(),
+            new DraftSimulator(new SimulationOptions { Rollouts = 100 }),
+            clock);
+    }
+
+    private static DraftCandidate Simulatable(int rank, NbaTeamId team) => new(
+        new PlayerId(Guid.NewGuid()),
+        (50m - rank) * 70m,
+        [new[] { "PG", "SG", "SF", "PF", "C" }[rank % 5]],
+        rank,
+        0m,
+        0m,
+        0m,
+        new Dictionary<StatKey, decimal>(),
+        Distribution: new SeasonValueDistribution(50m - rank, 5m, new FantasyBasketball.Domain.Statistics.BetaBinomial(82, 6m, 1m)),
+        TeamId: team);
+
+    /// <summary>1,230 games from 2026-10-20: the player's team plays every third day, the rest fill the slate.</summary>
+    private static NbaGame[] Season(NbaTeamId team) => [.. Enumerable.Range(0, 1230).Select(index => new NbaGame(
+        Guid.NewGuid(), 2027, new DateTimeOffset(2026, 10, 20, 23, 0, 0, TimeSpan.Zero).AddDays(index / 8),
+        index % 24 == 0 ? team : new NbaTeamId(Guid.NewGuid()), new NbaTeamId(Guid.NewGuid()), null, null, "scheduled",
+        new DataProvenance(DataSourceName.BallDontLie, null, DateTimeOffset.UnixEpoch, null, "balldontlie-v1", 1m, new string('a', 64))))];
 
     private static FantasyLeague PointsLeague() =>
         new(

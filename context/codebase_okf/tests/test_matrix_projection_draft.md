@@ -56,6 +56,8 @@ The cases gating build steps 10, 11, and 12 — requirements R7, R8, R9, R10.
 | `D-03` | Player eligible for an open starting slot | `RosterFit == 0` | ✅ |
 | `D-04` | Unrelated player is drafted | An untouched player's `VAR` changes — replacement level is recomputed | ✅ |
 | `D-06` | Every draft recommendation and heuristic board value | Carries ≥1 evidence item; no heuristic value carries a `Market` (ADP or survival) item | ✅ |
+| `D-15` | Simulated board without distributions, without a schedule, and with both | Null board with the reason; with both, 15 candidates ranked by the requested risk mode and the user's next pick | ✅ |
+| `D-16` | Draft recommendations with a simulation | Lead with the simulated top pick ("Best simulated pick" evidence), others carry survival odds; the rest of the pool follows | ✅ |
 | `D-07` | Category league draft board | Falls back to category totals with an explicit banner; does not rank by `Total` | ✅ |
 | `D-14` | Bench-phase simulated team already holding 3 pure centers | Takes a non-center instead of a 4th center when one is available | ✅ |
 | `D-08` | Pick then undo | Board equals its pre-pick snapshot exactly | ✅ |

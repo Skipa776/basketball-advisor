@@ -69,6 +69,10 @@ public static class DependencyInjection
             .Bind(configuration.GetSection(DraftWeightOptions.SectionName))
             .Validate(options => options.IsValid(), "Draft weights are invalid.")
             .ValidateOnStart();
+        services.AddOptions<SimulationOptions>()
+            .Bind(configuration.GetSection(SimulationOptions.SectionName))
+            .Validate(options => options.IsValid(), "Draft simulation options are invalid.")
+            .ValidateOnStart();
         services.AddOptions<DataSourceHealthOptions>()
             .Bind(configuration.GetSection(DataSourceHealthOptions.SectionName))
             .Validate(
@@ -177,6 +181,8 @@ public static class DependencyInjection
         services.AddSingleton<BaselineProjector>();
         services.AddSingleton<DraftValueCalculator>();
         services.AddSingleton<DraftBoard>();
+        services.AddSingleton(serviceProvider => new DraftSimulator(
+            serviceProvider.GetRequiredService<IOptions<SimulationOptions>>().Value));
         services.AddSingleton<ConfidenceCalculator>();
         services.AddSingleton<ContextApplier>();
         services.AddSingleton<DraftRecommendationEngine>();
