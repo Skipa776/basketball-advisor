@@ -160,6 +160,29 @@ these paths, enforced by `SleeperUrlBuilder`:
 
 The three draft rows are **owner-authorized 2026-09-26**, go through the same shared per-host limiter as every other source, and are read-only.
 
+### Public draft logs — owner-authorized 2026-10-02
+
+For the opponent pick model, the owner approved collecting completed public Sleeper
+drafts ("You have my approval for Sleeper, if it fails fall back on FantasyPros").
+Sleeper's documentation (docs.sleeper.com, read 2026-10-02) describes the API as
+free for non-commercial use, read-only and token-free, and asks callers to stay
+under 1,000 calls a minute; this crawl stays far under that behind the shared
+limiter. Two more paths, enforced by `SleeperUrlBuilder`:
+
+| Permitted | Purpose |
+|---|---|
+| `/v1/user/{username or id}` | Resolve a seed username to a user id |
+| `/v1/user/{id}/drafts/nba/{season}` | A user's NBA drafts for one season |
+
+`DraftLogImportService` walks users breadth first from a seed league or username:
+each user's drafts, then the users who picked in them. It stores only complete
+8–14-team snake drafts with 10+ rounds and no keepers — draft settings, picks,
+pick slots and the platform's player ids, names and positions. User ids are kept
+only as the crawl frontier (`picked_by`); no names, avatars or league chat are
+read. It runs only from the CLI (`drafts import`), never from a request or a
+worker, and stops at `--max` drafts (default 300) or `--max-users`. If Sleeper
+stops serving these paths, the fallback is FantasyPros ADP spreads.
+
 Requests go through the same shared per-host limiter as every other source; league
 reads are reused for 5 minutes so a preview and its import cost one fetch. Nothing
 is written to Sleeper. ESPN remains CSV/manual only.
