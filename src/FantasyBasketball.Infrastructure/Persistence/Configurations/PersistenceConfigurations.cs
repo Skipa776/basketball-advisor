@@ -305,6 +305,7 @@ public sealed class SeasonStatLineConfiguration : IEntityTypeConfiguration<Seaso
         builder.Property(value => value.PerGame).HasColumnName("per_game").HasColumnType("jsonb");
         builder.Property(value => value.Totals).HasColumnName("totals").HasColumnType("jsonb");
         builder.Property(value => value.UsageRate).HasColumnName("usage_rate").HasPrecision(10, 4);
+        builder.Property(value => value.Age).HasColumnName("age");
         builder.Property(value => value.Source).HasColumnName("source").IsRequired();
         builder.Property(value => value.ExternalId).HasColumnName("external_id");
         builder.Property(value => value.FetchedAt).HasColumnName("fetched_at").HasColumnType("timestamptz");

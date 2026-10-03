@@ -84,6 +84,10 @@ Not stats, deliberately absent from `StatKey`:
   [`stack_config.toml`](../../../stack_config.toml).*
 - **A missing stat reads as `0m`, not null.** `StatLine`'s indexer guarantees
   this so scoring never needs a null check.
+- **Age is season metadata, not a stat.** A season line carries Basketball-Reference's
+  `Age` (whole years on February 1 of the season) beside its stats; a missing or
+  out-of-range value stays null, never `0`. A re-import only fills a null age.
+  *Check: rows I-15 and I-16.*
 
 # Source column maps
 

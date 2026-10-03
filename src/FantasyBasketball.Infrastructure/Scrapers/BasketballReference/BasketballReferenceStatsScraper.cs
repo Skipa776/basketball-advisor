@@ -75,7 +75,8 @@ public sealed class BasketballReferenceStatsScraper(
                 parsed.PerGame,
                 parsed.Totals,
                 parsed.UsageRate,
-                provenance));
+                provenance,
+                parsed.Age));
         }
 
         return results;

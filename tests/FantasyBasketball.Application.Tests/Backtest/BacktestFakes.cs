@@ -35,6 +35,9 @@ internal sealed class FakeSeasonStatLineRepository(
     public Task AddAsync(SeasonStatLine statLine, CancellationToken cancellationToken) =>
         throw new NotSupportedException("Fake store is read-only.");
 
+    public Task SaveAgeAsync(PlayerId playerId, int seasonEndYear, string source, int age, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("Fake store is read-only.");
+
     public Task<SeasonStatLine?> GetAsync(
         PlayerId playerId,
         int seasonEndYear,

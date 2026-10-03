@@ -33,6 +33,8 @@ The cases gating build steps 5 through 9 and 14 — requirements R2, R3, R4.
 | `I-12` | Second request inside the freshness window | Served from cache; zero outbound requests | ✅ |
 | `I-13` | Import fails partway | Previously imported data intact; no truncate-then-load | ✅ |
 | `I-14` | balldontlie game with `datetime` null but `date` set (all 11 games on 2022-12-02) | Imported at noon US Eastern on that date, keeping its Eastern date; the run no longer fails | ✅ |
+| `I-15` | Basketball-Reference per-game table with an `Age` column | The season line carries the age (on February 1 of the season); a missing or out-of-range age stays null | ✅ |
+| `I-16` | Re-import of a season whose stored lines have no age | The age is filled in; an age already stored is never overwritten, and no other field changes | ✅ |
 | `I-17` | balldontlie player record with blank first and last name (about 750 placeholder rows in the live directory) | Skipped; the rest of the directory imports instead of the run failing with `ArgumentException` | ✅ |
 
 # Identity resolution (`N-`)

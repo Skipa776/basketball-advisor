@@ -473,6 +473,8 @@ public sealed class SeasonStatLineRow
 
     public decimal? UsageRate { get; private set; }
 
+    public int? Age { get; private set; }
+
     public string Source { get; private set; } = string.Empty;
 
     public string? ExternalId { get; private set; }
@@ -501,7 +503,8 @@ public sealed class SeasonStatLineRow
         DateTimeOffset? sourceTimestamp,
         string parserVersion,
         decimal confidence,
-        string rawRecordHash) =>
+        string rawRecordHash,
+        int? age) =>
         new()
         {
             Id = Guid.NewGuid(),
@@ -512,6 +515,7 @@ public sealed class SeasonStatLineRow
             PerGame = perGame,
             Totals = totals,
             UsageRate = usageRate,
+            Age = age,
             Source = source,
             ExternalId = externalId,
             FetchedAt = fetchedAt,

@@ -281,7 +281,8 @@ public sealed partial class PersistenceTests : IAsyncLifetime
             null,
             "manual-v1",
             1m,
-            new string('b', 64));
+            new string('b', 64),
+            null);
 
         await using (var database = CreateDatabase())
         {
