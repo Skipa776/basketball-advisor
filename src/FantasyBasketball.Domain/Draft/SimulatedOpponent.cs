@@ -106,7 +106,7 @@ public static class SimulatedOpponent
         return candidates[index];
     }
 
-    private static int SlotOnClock(int pickNumber, int teamCount)
+    internal static int SlotOnClock(int pickNumber, int teamCount)
     {
         var index = (pickNumber - 1) % teamCount;
         var round = ((pickNumber - 1) / teamCount) + 1;

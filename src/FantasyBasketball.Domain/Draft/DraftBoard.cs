@@ -19,7 +19,8 @@ public sealed record DraftCandidate(
     IReadOnlyDictionary<StatKey, decimal> CategoryTotals,
     bool HasUnverifiedContext = false,
     decimal? AdpStandardDeviation = null,
-    SeasonValueDistribution? Distribution = null);
+    SeasonValueDistribution? Distribution = null,
+    NbaTeamId? TeamId = null);
 
 public sealed record DraftBoardResult(
     IReadOnlyList<DraftValue> Rankings,

@@ -74,6 +74,11 @@ The cases gating build steps 10, 11, and 12 — requirements R7, R8, R9, R10.
 | `LO-01` | 500 random rosters of 8–13 players with 1–2 positions on PG/SG/SF/PF/C/G/F/3×UTIL | The lineup equals exact matching (bitmask dynamic program) every time | ✅ |
 | `LO-02` | Daily lineup, one UTIL slot, two same-team players and one on another team | Each scheduled day starts the best player with a game | ✅ |
 | `LO-03` | Weekly lineup | Values weighted by that week's games; a team with no games that week scores nothing | ✅ |
+| `DS-01` | The same draft state and seed, simulated twice | Identical boards | ✅ |
+| `DS-02` | Runner-up's edge | Its standard error is below the independent-draws SE: common random numbers pair the rollouts | ✅ |
+| `DS-03` | C + PG slots: C1 (100) vs PG1 (105) with PG2 and PG3 (104, 103) behind and C2 (20) as the only other center | The simulator takes C1; PG1's edge is below −50 | ✅ |
+| `DS-04` | Two players with equal means, SD ≈ 0 vs SD 40 | Cautious ranks the steady one first, Upside the volatile one | ✅ |
+| `DS-05` | Survival to the user's next pick | Read from the top pick's rollouts: under 5% for a player the opponents take first, over 95% for one they pass | ✅ |
 | `LO-04` | A 10:30 pm Eastern tip-off; a player with no team | Counted on its Eastern date; the no-team player gets the median team's schedule | ✅ |
 
 # Evidence and confidence (`E-`)
