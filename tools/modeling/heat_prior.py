@@ -1,6 +1,6 @@
 """Fit the empirical-Bayes priors behind HOT/COLD labels and write params plus goldens.
 
-Usage: uv run python heat_prior.py --season 2026 [--out out/heat_prior.json]
+Usage: uv run python heat_prior.py --season 2023 2024 2025 2026 [--out out/heat_prior.json]
 
 Everything is scale-free (relative to the player's baseline mean) so one fit serves every
 league's scoring. The C# HeatClassifier applies the same formulas; goldens/heat_prior.json
@@ -47,14 +47,18 @@ order by pgs.player_id, s.played_on
 """
 
 
-def load_games(season: int) -> dict[str, list[tuple[float, float]]]:
-    """(fantasy points, minutes) per appearance, in date order, keyed by player."""
+def load_games(seasons: list[int]) -> dict[str, list[tuple[float, float]]]:
+    """(fantasy points, minutes) per appearance, in date order, keyed by player-season.
+
+    Windows never span seasons, matching the classifier, which reads one season at a time.
+    """
     games: dict[str, list[tuple[float, float]]] = defaultdict(list)
     with connect() as conn, conn.cursor() as cur:
-        cur.execute(GAMES_SQL, (season,))
-        for player_id, _played_on, stats in cur:
-            points = sum(stats.get(key, 0) * weight for key, weight in ESPN_POINTS.items())
-            games[str(player_id)].append((float(points), float(stats.get("MIN", 0))))
+        for season in seasons:
+            cur.execute(GAMES_SQL, (season,))
+            for player_id, _played_on, stats in cur:
+                points = sum(stats.get(key, 0) * weight for key, weight in ESPN_POINTS.items())
+                games[f"{player_id}:{season}"].append((float(points), float(stats.get("MIN", 0))))
     return games
 
 
@@ -199,7 +203,7 @@ def goldens(params: dict) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--season", type=int, required=True)
+    parser.add_argument("--season", type=int, nargs="+", required=True)
     parser.add_argument("--out", default="out/heat_prior.json")
     args = parser.parse_args()
     games = load_games(args.season)
@@ -207,7 +211,7 @@ def main() -> None:
     metrics["falseLabels"] = false_label_rate(params, games)
     fitted_at = datetime.now(timezone.utc).replace(microsecond=0)
     record = {"modelName": "heat-prior", "version": f"heat-prior-{fitted_at:%Y%m%d%H%M}",
-              "fittedAt": fitted_at.isoformat(), "trainSeasonEndYears": [args.season],
+              "fittedAt": fitted_at.isoformat(), "trainSeasonEndYears": args.season,
               "parameters": params, "metrics": metrics,
               "cardMarkdown": "Empirical-Bayes priors for HOT/COLD labels: volatility shrinkage nu, "
                               "relative shift spread tau and pool CV by minutes, fitted by moments."}
