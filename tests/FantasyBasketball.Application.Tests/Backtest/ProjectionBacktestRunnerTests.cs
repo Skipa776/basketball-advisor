@@ -1,4 +1,6 @@
+using System.Text.Json;
 using FantasyBasketball.Application.Backtest;
+using FantasyBasketball.Domain.Modeling;
 using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Domain.Projections;
 using FantasyBasketball.Domain.Provenance;
@@ -62,9 +64,42 @@ public sealed class ProjectionBacktestRunnerTests
         exception.Message.ShouldContain("2025");
     }
 
+    [Fact]
+    public async Task BR05_active_rate_model_is_scored_on_the_same_players()
+    {
+        // kappa 0, unit weights and no age term: the rates are last season's, so the
+        // hierarchical projection equals "last season repeats" (MAE 2.5, as in BR-01).
+        // FTM = FTA = PTS keeps ESPN scoring to points (FTM +1, FTA -1).
+        var a = Player();
+        var b = Player();
+        var runner = Runner(
+            [Line(a, 10m), Line(b, 20m)],
+            [.. Games(a, 20, 12m), .. Games(b, 20, 17m)],
+            RateModel([2025]));
+
+        var result = await runner.RunAsync(2026, DataSourceName.Manual, AsOf, TestContext.Current.CancellationToken);
+
+        result.HierarchicalVersion.ShouldBe("rates-test");
+        result.Hierarchical.ShouldNotBeNull().Count.ShouldBe(2);
+        result.Hierarchical.Mae.ShouldBe(result.Naive.Mae, 0.0000001m);
+    }
+
+    [Fact]
+    public async Task BR06_rate_model_trained_on_the_holdout_is_leakage()
+    {
+        var a = Player();
+        var runner = Runner([Line(a, 10m)], [.. Games(a, 20, 12m)], RateModel([2025, 2026]));
+
+        var exception = await Should.ThrowAsync<LeakageException>(() =>
+            runner.RunAsync(2026, DataSourceName.Manual, AsOf, TestContext.Current.CancellationToken));
+
+        exception.Message.ShouldContain("rates-test");
+    }
+
     private static ProjectionBacktestRunner Runner(
         IReadOnlyList<SeasonStatLine> lines,
-        IReadOnlyList<PlayerGameSample> games)
+        IReadOnlyList<PlayerGameSample> games,
+        ModelVersion? rateModel = null)
     {
         var options = new ProjectionOptions();
         return new ProjectionBacktestRunner(
@@ -72,7 +107,18 @@ public sealed class ProjectionBacktestRunnerTests
             new FakeBoxScoreRepository(games),
             new BaselineProjector(new MinutesProjector(), options),
             options,
-            new PointsScoringEngine());
+            new PointsScoringEngine(),
+            new FakeModelVersionRepository(rateModel),
+            new FakePlayerRepository());
+    }
+
+    private static ModelVersion RateModel(IReadOnlyList<int> trainSeasons)
+    {
+        var stats = HierarchicalProjector.ModelledStats.ToDictionary(
+            stat => stat.ToString(),
+            _ => new { weights = new[] { 1m, 1m, 1m }, kappa = 0m, mu = new { G = 0m, W = 0m, B = 0m, U = 0m }, alpha = 0m, beta = 0m, phi = 1m, tau = 0.1m });
+        var parameters = JsonSerializer.Serialize(new { ageCenter = 27, minHistoryMinutes = 100m, groupOf = new { }, stats });
+        return new ModelVersion(ProjectionRateParameters.ModelName, "rates-test", AsOf, trainSeasons, parameters, "{}", "test");
     }
 
     private static PlayerId Player() => new(Guid.NewGuid());
@@ -87,6 +133,8 @@ public sealed class ProjectionBacktestRunnerTests
             new StatLine(new Dictionary<StatKey, decimal>
             {
                 [StatKey.PTS] = pointsPerGame * 60,
+                [StatKey.FTM] = pointsPerGame * 60,
+                [StatKey.FTA] = pointsPerGame * 60,
                 [StatKey.MIN] = 1800m,
             }),
             null,

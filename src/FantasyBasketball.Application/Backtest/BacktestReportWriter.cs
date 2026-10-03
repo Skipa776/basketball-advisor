@@ -27,16 +27,42 @@ public static class BacktestReportWriter
         Line(report);
         Line(report, "## Calibration by decile (model)");
         Line(report);
-        Line(report, "| Decile | Players | Mean projected | Mean actual | Actual − projected |");
-        Line(report, "|---|---|---|---|---|");
-        foreach (var decile in result.Model.Deciles)
+        Deciles(report, result.Model);
+        if (result.Hierarchical is { } hierarchical)
         {
-            Line(report, $"| {decile.Decile} | {decile.Count} | {Number(decile.MeanProjected)} | " +
-                $"{Number(decile.MeanActual)} | {Number(decile.Deviation)} |");
+            Line(report);
+            Line(report, $"## Hierarchical rates (`{result.HierarchicalVersion}`)");
+            Line(report);
+            Line(report, "Same players and projected minutes as the model above; only the per-minute rates differ.");
+            Line(report);
+            Line(report, $"| Metric | Hierarchical | {result.ModelVersion} | Last season repeats | Hierarchical − {result.ModelVersion} |");
+            Line(report, "|---|---|---|---|---|");
+            HierarchicalRow(report, "MAE", hierarchical.Mae, result.Model.Mae, result.Naive.Mae);
+            HierarchicalRow(report, "RMSE", hierarchical.Rmse, result.Model.Rmse, result.Naive.Rmse);
+            HierarchicalRow(report, "Spearman ρ", hierarchical.SpearmanRho, result.Model.SpearmanRho, result.Naive.SpearmanRho);
+            HierarchicalRow(report, "Top-100 hit rate", hierarchical.TopKHitRate, result.Model.TopKHitRate, result.Naive.TopKHitRate);
+            Line(report);
+            Line(report, "### Calibration by decile (hierarchical)");
+            Line(report);
+            Deciles(report, hierarchical);
         }
 
         return report.ToString();
     }
+
+    private static void Deciles(StringBuilder report, AccuracyReport accuracy)
+    {
+        Line(report, "| Decile | Players | Mean projected | Mean actual | Actual − projected |");
+        Line(report, "|---|---|---|---|---|");
+        foreach (var decile in accuracy.Deciles)
+        {
+            Line(report, $"| {decile.Decile} | {decile.Count} | {Number(decile.MeanProjected)} | " +
+                $"{Number(decile.MeanActual)} | {Number(decile.Deviation)} |");
+        }
+    }
+
+    private static void HierarchicalRow(StringBuilder report, string name, decimal hierarchical, decimal model, decimal naive) =>
+        Line(report, $"| {name} | {Number(hierarchical)} | {Number(model)} | {Number(naive)} | {Number(hierarchical - model)} |");
 
     private static void MetricRow(StringBuilder report, string name, decimal model, decimal naive) =>
         Line(report, $"| {name} | {Number(model)} | {Number(naive)} | {Number(model - naive)} |");
