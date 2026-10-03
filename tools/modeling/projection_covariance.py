@@ -57,8 +57,9 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--target", type=int, nargs="+", required=True)
     parser.add_argument("--out", default="out/covariance.json")
+    parser.add_argument("--models", default="out", help="directory holding the rate, minutes and availability fits")
     args = parser.parse_args()
-    rates_rec, minutes_rec, games_rec = (json.loads(Path(f"out/{name}.json").read_text())
+    rates_rec, minutes_rec, games_rec = (json.loads((Path(args.models) / f"{name}.json").read_text())
                                          for name in ("projection", "minutes", "availability"))
     rates_p, minutes_p, games_p = rates_rec["parameters"], minutes_rec["parameters"], games_rec["parameters"]
     lines, groups = load_lines()
