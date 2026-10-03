@@ -1,6 +1,6 @@
 # Projection backtest — 2025–26 holdout
 
-As of 2025-10-01 · trained on 2024–25 · 390 players with 20+ games · model `baseline-v1` · commit `6bc0fc2`
+As of 2025-10-01 · trained on 2024–25 · 390 players with 20+ games · model `baseline-v1` · commit `ecc1ad5`
 
 Fantasy points per game under ESPN default points scoring.
 
@@ -36,6 +36,8 @@ Same players as the model above; per-minute rates from the hierarchical model, m
 | RMSE | 6.0771 | 6.6112 | 6.7809 | -0.5341 |
 | Spearman ρ | 0.7828 | 0.7521 | 0.7710 | 0.0307 |
 | Top-100 hit rate | 0.7800 | 0.7800 | 0.7600 | 0.0000 |
+
+80% intervals held the actual points per game for 0.7590 of 390 players (mean SD 5.6358; target 0.76–0.84). Distribution models: projection-availability-202610030224, projection-covariance-202610030228.
 
 ### Calibration by decile (hierarchical)
 
