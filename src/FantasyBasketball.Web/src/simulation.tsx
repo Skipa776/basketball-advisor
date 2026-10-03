@@ -7,8 +7,9 @@ const signed = (value: number) => `${value >= 0 ? '+' : '−'}${points(Math.abs(
 const percent = (value: number) => `${Math.round(value * 100)}%`;
 
 /**
- * The Monte Carlo pick (draft_simulation_contract): a pick card for the top candidate, with its
- * expected final roster, its edge over the next option and a one-line reason.
+ * The Monte Carlo pick (draft_simulation_contract): a pick card for the top candidate and the
+ * simulated board with 80% interval bars and survival odds. While a new pick re-simulates, the
+ * last board stays up and the heuristic shortlist below answers instantly.
  */
 export function SimulatedPick({ draft, disabled, pick }: { draft: Draft; disabled: boolean; pick: (player: Player) => Promise<void> }) {
   const revision = draft.picks.map(item => item.playerId.value).join(',');
@@ -21,7 +22,7 @@ export function SimulatedPick({ draft, disabled, pick }: { draft: Draft; disable
     <p className="loading-status" role="status">{simulation.loading ? 'Simulating drafts…' : ' '}</p>
     <ErrorNotice text={simulation.error} retry={simulation.refresh} />
     {unavailable && <p className="notice">{unavailable}</p>}
-    {board && board.candidates.length > 0 && <PickCard board={board} disabled={disabled || simulation.loading} pick={pick} />}
+    {board && board.candidates.length > 0 && <><PickCard board={board} disabled={disabled || simulation.loading} pick={pick} /><SimulatedList board={board} disabled={disabled || simulation.loading} pick={pick} /></>}
   </section>;
 }
 
@@ -49,4 +50,26 @@ function PickCard({ board, disabled, pick }: { board: SimulatedBoard; disabled: 
     <ErrorNotice text={player.error} retry={player.refresh} />
     <button className="primary" disabled={disabled || !value} onClick={() => value && pick(value)}>Draft {value?.fullName ?? 'top pick'}</button>
   </article>;
+}
+
+function SimulatedList({ board, disabled, pick }: { board: SimulatedBoard; disabled: boolean; pick: (player: Player) => Promise<void> }) {
+  const low = Math.min(...board.candidates.map(candidate => candidate.p10));
+  const high = Math.max(...board.candidates.map(candidate => candidate.p90));
+  const span = Math.max(high - low, 1);
+  const at = (value: number) => `${((value - low) / span) * 100}%`;
+  return <ol className="sim-board" aria-label="Simulated options">{board.candidates.map((candidate, index) =>
+    <SimulatedRow key={candidate.playerId.value} candidate={candidate} first={index === 0} nextPick={board.nextUserPick} at={at} disabled={disabled} pick={pick} />)}</ol>;
+}
+
+function SimulatedRow({ candidate, first, nextPick, at, disabled, pick }: { candidate: SimulatedCandidate; first: boolean; nextPick: number | null; at: (value: number) => string; disabled: boolean; pick: (player: Player) => Promise<void> }) {
+  const player = usePlayer(candidate);
+  const value = player.result?.data;
+  return <li data-player-id={candidate.playerId.value}>
+    <span className="sim-name">{value?.fullName ?? (player.loading ? 'Loading…' : 'Unavailable')}</span>
+    <span className="interval" aria-hidden="true"><span className="interval-range" style={{ left: at(candidate.p10), width: `calc(${at(candidate.p90)} - ${at(candidate.p10)})` }} /><span className="interval-mean" style={{ left: at(candidate.mean) }} /></span>
+    <span className="sim-numbers">{points(candidate.mean)} <span className="muted">(80%: {points(candidate.p10)}–{points(candidate.p90)})</span></span>
+    <span className="sim-edge">{first ? 'Top pick' : `${signed(candidate.edge)} ± ${points(candidate.edgeSe)}`}</span>
+    <span className="sim-survival">{candidate.survivalToNextPick === null || nextPick === null ? '—' : `${percent(candidate.survivalToNextPick)} at pick ${nextPick}`}</span>
+    <button disabled={disabled || !value} onClick={() => value && pick(value)}>Draft<span className="sr-only"> {value?.fullName}</span></button>
+  </li>;
 }

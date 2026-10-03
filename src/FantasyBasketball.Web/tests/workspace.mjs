@@ -163,11 +163,13 @@ try {
   await visible(card.getByRole('heading', { name: 'Fixture Center', exact: true }));
   await visible(card.getByText(/Likely gone before your pick 14: about 12% chance he lasts\./));
   await visible(card.getByText('+440', { exact: true }));
+  assert.equal(await simulated.locator('.sim-board > li .interval-range').count(), 2);
+  await visible(simulated.getByText('35% at pick 14', { exact: true }));
   await accessibility('Simulated pick');
   await page.unroute('**/board/simulation*');
   await page.reload();
   await visible(simulated.getByText(/fitted models active/));
-  checks.push('Simulated pick: honest unavailable notice, then a pick card with expected roster ± SD, edge ± SE over the next option and a one-line reason; axe clean');
+  checks.push('Simulated pick: honest unavailable notice, then a pick card (expected roster ± SD, edge ± SE, one-line reason) over a board of 80% interval bars and survival odds; axe clean');
   await shortlist.getByText('Why this pick', { exact: true }).first().click();
   await visible(shortlist.getByText(/Supporting:/).first());
   await shortlist.getByRole('button', { name: 'Fixture Guard', exact: true }).click();
