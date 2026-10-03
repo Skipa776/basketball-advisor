@@ -1286,3 +1286,98 @@ public sealed class RecommendationEvidenceRow : IOwnedResource
             Ordinal = ordinal,
         };
 }
+
+/// <summary>A stored public draft (opponent pick model input); its picks are <see cref="DraftLogPickRow"/>.</summary>
+public sealed class DraftLogRow
+{
+    private DraftLogRow()
+    {
+    }
+
+    public Guid Id { get; private set; }
+
+    public string Source { get; private set; } = string.Empty;
+
+    public string DraftId { get; private set; } = string.Empty;
+
+    public int Season { get; private set; }
+
+    public int TeamCount { get; private set; }
+
+    public int Rounds { get; private set; }
+
+    public string? ScoringType { get; private set; }
+
+    public string Slots { get; private set; } = "{}";
+
+    public DateTimeOffset StartedAt { get; private set; }
+
+    public List<DraftLogPickRow> Picks { get; private set; } = [];
+
+    public static DraftLogRow Create(
+        Guid id,
+        string source,
+        string draftId,
+        int season,
+        int teamCount,
+        int rounds,
+        string? scoringType,
+        string slots,
+        DateTimeOffset startedAt,
+        IEnumerable<DraftLogPickRow> picks) =>
+        new()
+        {
+            Id = id,
+            Source = source,
+            DraftId = draftId,
+            Season = season,
+            TeamCount = teamCount,
+            Rounds = rounds,
+            ScoringType = scoringType,
+            Slots = slots,
+            StartedAt = startedAt,
+            Picks = picks.ToList(),
+        };
+}
+
+public sealed class DraftLogPickRow
+{
+    private DraftLogPickRow()
+    {
+    }
+
+    public Guid DraftLogId { get; private set; }
+
+    public int PickNumber { get; private set; }
+
+    public int Round { get; private set; }
+
+    public int DraftSlot { get; private set; }
+
+    public string PlayerId { get; private set; } = string.Empty;
+
+    public string PlayerName { get; private set; } = string.Empty;
+
+    public string[] Positions { get; private set; } = [];
+
+    public string? PickedBy { get; private set; }
+
+    public static DraftLogPickRow Create(
+        int pickNumber,
+        int round,
+        int draftSlot,
+        string playerId,
+        string playerName,
+        string[] positions,
+        string? pickedBy) =>
+        new()
+        {
+            PickNumber = pickNumber,
+            Round = round,
+            DraftSlot = draftSlot,
+            PlayerId = playerId,
+            PlayerName = playerName,
+            Positions = positions,
+            PickedBy = pickedBy,
+        };
+}

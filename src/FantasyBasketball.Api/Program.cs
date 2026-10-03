@@ -3,7 +3,8 @@ using FantasyBasketball.Api;
 var builder = WebApplication.CreateBuilder(args);
 ApiHost.ConfigureServices(builder);
 var app = builder.Build();
-if (await BacktestCommand.TryRunAsync(app, args) || await ModelImportCommand.TryRunAsync(app, args))
+if (await BacktestCommand.TryRunAsync(app, args) || await ModelImportCommand.TryRunAsync(app, args)
+    || await DraftLogCommand.TryRunAsync(app, args))
 {
     return;
 }

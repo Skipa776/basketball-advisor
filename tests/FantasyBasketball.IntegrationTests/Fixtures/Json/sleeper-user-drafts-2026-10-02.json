@@ -1,0 +1,57 @@
+[
+ {
+  "draft_id": "2000000000000000001",
+  "league_id": "1000000000000000001",
+  "sport": "nba",
+  "season": "2025",
+  "status": "complete",
+  "type": "snake",
+  "start_time": 1758000000000,
+  "settings": {
+   "rounds": 15,
+   "teams": 10,
+   "slots_pg": 1,
+   "slots_sg": 1,
+   "slots_g": 1,
+   "slots_sf": 1,
+   "slots_pf": 1,
+   "slots_f": 1,
+   "slots_c": 2,
+   "slots_util": 2,
+   "slots_bn": 5
+  },
+  "metadata": {
+   "scoring_type": "points"
+  }
+ },
+ {
+  "draft_id": "2000000000000000002",
+  "league_id": "1000000000000000002",
+  "sport": "nba",
+  "season": "2025",
+  "status": "complete",
+  "type": "auction",
+  "start_time": 1758000000000,
+  "settings": {
+   "rounds": 13,
+   "teams": 12
+  },
+  "metadata": {
+   "scoring_type": "points"
+  }
+ },
+ {
+  "draft_id": "2000000000000000003",
+  "league_id": "1000000000000000003",
+  "sport": "nba",
+  "season": "2025",
+  "status": "drafting",
+  "type": "snake",
+  "start_time": 1758000000000,
+  "settings": {
+   "rounds": 13,
+   "teams": 12
+  },
+  "metadata": {}
+ }
+]
