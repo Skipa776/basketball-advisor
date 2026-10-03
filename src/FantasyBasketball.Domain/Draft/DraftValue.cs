@@ -12,14 +12,10 @@ public sealed class DraftWeightOptions
 
     public decimal Fit { get; init; } = 1m;
 
-    public decimal Market { get; init; } = 0.5m;
-
     public decimal Risk { get; init; } = 1m;
 
-    public decimal Urgency { get; init; } = 0.5m;
-
     public bool IsValid() =>
-        Scarcity >= 0m && Fit >= 0m && Market >= 0m && Risk >= 0m && Urgency >= 0m;
+        Scarcity >= 0m && Fit >= 0m && Risk >= 0m;
 }
 
 public sealed record DraftValue
@@ -31,13 +27,10 @@ public sealed record DraftValue
         decimal valueAboveReplacement,
         decimal positionalScarcity,
         decimal rosterFit,
-        decimal marketValue,
         decimal contextAdjustment,
         decimal injuryRisk,
         decimal roleRisk,
-        IReadOnlyList<RecommendationEvidence> evidence,
-        decimal urgency = 0m,
-        decimal? availableAtNextPick = null)
+        IReadOnlyList<RecommendationEvidence> evidence)
     {
         ArgumentNullException.ThrowIfNull(evidence);
         if (evidence.Count == 0)
@@ -53,12 +46,9 @@ public sealed record DraftValue
         ValueAboveReplacement = valueAboveReplacement;
         PositionalScarcity = positionalScarcity;
         RosterFit = rosterFit;
-        MarketValue = marketValue;
         ContextAdjustment = contextAdjustment;
         InjuryRisk = injuryRisk;
         RoleRisk = roleRisk;
-        Urgency = urgency;
-        AvailableAtNextPick = availableAtNextPick;
         Evidence = new ReadOnlyCollection<RecommendationEvidence>(
             EvidenceOrderer.Order(evidence).ToArray());
     }
@@ -75,17 +65,11 @@ public sealed record DraftValue
 
     public decimal RosterFit { get; }
 
-    public decimal MarketValue { get; }
-
     public decimal ContextAdjustment { get; }
 
     public decimal InjuryRisk { get; }
 
     public decimal RoleRisk { get; }
-
-    public decimal Urgency { get; }
-
-    public decimal? AvailableAtNextPick { get; }
 
     public IReadOnlyList<RecommendationEvidence> Evidence { get; }
 }
@@ -98,13 +82,10 @@ public sealed class DraftValueCalculator(DraftWeightOptions options)
         decimal valueAboveReplacement,
         decimal positionalScarcity,
         decimal rosterFit,
-        decimal marketValue,
         decimal contextAdjustment,
         decimal injuryRisk,
         decimal roleRisk,
-        IReadOnlyList<RecommendationEvidence> evidence,
-        decimal urgency = 0m,
-        decimal? availableAtNextPick = null)
+        IReadOnlyList<RecommendationEvidence> evidence)
     {
         if (!options.IsValid())
         {
@@ -116,9 +97,7 @@ public sealed class DraftValueCalculator(DraftWeightOptions options)
         var total = valueAboveReplacement
             + (options.Scarcity * positionalScarcity)
             + (options.Fit * rosterFit)
-            + (options.Market * marketValue)
-            - (options.Risk * riskPenalty)
-            + (options.Urgency * urgency);
+            - (options.Risk * riskPenalty);
         return new DraftValue(
             playerId,
             total,
@@ -126,12 +105,9 @@ public sealed class DraftValueCalculator(DraftWeightOptions options)
             valueAboveReplacement,
             positionalScarcity,
             rosterFit,
-            marketValue,
             contextAdjustment,
             injuryRisk,
             roleRisk,
-            evidence,
-            urgency,
-            availableAtNextPick);
+            evidence);
     }
 }

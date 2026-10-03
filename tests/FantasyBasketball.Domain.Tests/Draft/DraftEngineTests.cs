@@ -36,7 +36,7 @@ public sealed class DraftEngineTests
     }
 
     [Fact]
-    public void D01_D02_total_uses_only_six_addends()
+    public void D01_D02_total_uses_only_its_four_addends()
     {
         var calculator = new DraftValueCalculator(new DraftWeightOptions());
         var evidence = Supporting("value");
@@ -47,7 +47,6 @@ public sealed class DraftEngineTests
             valueAboveReplacement: 10m,
             positionalScarcity: 2m,
             rosterFit: -1m,
-            marketValue: 4m,
             contextAdjustment: 20m,
             injuryRisk: 0m,
             roleRisk: 0m,
@@ -58,13 +57,12 @@ public sealed class DraftEngineTests
             valueAboveReplacement: 10m,
             positionalScarcity: 2m,
             rosterFit: -1m,
-            marketValue: 4m,
             contextAdjustment: 20m,
             injuryRisk: 0m,
             roleRisk: 0m,
             evidence);
 
-        first.Total.ShouldBe(13m);
+        first.Total.ShouldBe(11m, "VAR 10 + scarcity 2 + fit -1, no risk");
         second.Total.ShouldBe(first.Total);
     }
 
@@ -111,109 +109,18 @@ public sealed class DraftEngineTests
     }
 
     [Fact]
-    public void Market_value_rewards_players_past_their_adp_and_penalises_reaches()
+    public void D06_board_values_carry_evidence_without_market_or_urgency_terms()
     {
-        // Pick 5 of a 10-team draft: the star (ADP 1.5) is still here, the depth piece goes ~150th.
-        var session = new DraftSession(Guid.NewGuid(), 10, 13, 5);
-        for (var pick = 0; pick < 4; pick++)
-        {
-            session.MakePick(new PlayerId(Guid.NewGuid()));
-        }
+        // Opportunity cost now comes from simulated rollouts (DS-03, DS-05); the heuristic board
+        // no longer prices ADP or survival, so a player with or without an ADP gets no Market item.
+        var withAdp = Candidate(100m, ["PG"], 3m);
+        var withoutAdp = Candidate(90m, ["SF"], null);
 
-        var star = Candidate(4000m, ["C"], 1.5m);
-        var depth = Candidate(3000m, ["PG"], 150m);
-        var filler = Enumerable.Range(1, 130).Select(rank => Candidate(2500m - rank * 10m, ["SF"], null)).ToArray();
+        var board = CreateBoard().Rank(CreateSession(), LeagueCatalog.CreateSeedPointsLeague(Guid.NewGuid()), [withAdp, withoutAdp], []);
 
-        var board = CreateBoard().Rank(session, LeagueCatalog.CreateSeedPointsLeague(Guid.NewGuid()), [star, depth, .. filler], []);
-
-        ValueFor(board, star.PlayerId).MarketValue.ShouldBeGreaterThan(0m, "still available past his ADP");
-        ValueFor(board, depth.PlayerId).MarketValue.ShouldBeLessThan(0m, "taking him now is a reach");
-        board.Rankings[0].PlayerId.ShouldBe(star.PlayerId);
-        ValueFor(board, depth.PlayerId).Evidence.ShouldContain(item =>
-            item.Kind == EvidenceKind.Market && item.Polarity == EvidencePolarity.Risk);
-    }
-
-    [Fact]
-    public void D05_D06_missing_adp_is_zero_with_evidence()
-    {
-        var candidate = Candidate(100m, ["PG"], null);
-
-        var value = CreateBoard().Rank(
-                CreateSession(),
-                LeagueCatalog.CreateSeedPointsLeague(Guid.NewGuid()),
-                [candidate],
-                [])
-            .Rankings.Single();
-
-        value.MarketValue.ShouldBe(0m);
-        value.Evidence.ShouldContain(item =>
-            item.Kind == EvidenceKind.Market
-            && item.Statement.Contains("No ADP", StringComparison.Ordinal));
-        value.Evidence.ShouldNotBeEmpty();
-    }
-
-    [Fact]
-    public void D10_urgency_favours_players_likely_gone_before_the_next_turn()
-    {
-        // Pick 1, user's next turn at pick 20: ADP 5 is almost certainly gone by then, ADP 150 is not.
-        var goneSoon = Candidate(100m, ["PG"], 5m);
-        var likelyThere = Candidate(100m, ["PG"], 150m);
-        var replacement = Candidate(50m, ["SF"], null);
-
-        var board = CreateBoard().Rank(
-            CreateSession(),
-            LeagueCatalog.CreateSeedPointsLeague(Guid.NewGuid()),
-            [goneSoon, likelyThere, replacement],
-            []);
-
-        board.Rankings[0].PlayerId.ShouldBe(goneSoon.PlayerId);
-        ValueFor(board, goneSoon.PlayerId)
-            .AvailableAtNextPick!.Value.ShouldBeLessThan(0.5m);
-        ValueFor(board, likelyThere.PlayerId)
-            .AvailableAtNextPick!.Value.ShouldBeGreaterThan(0.95m);
-    }
-
-    [Fact]
-    public void D11_missing_adp_leaves_availability_null_and_urgency_zero()
-    {
-        var value = CreateBoard().Rank(
-                CreateSession(),
-                LeagueCatalog.CreateSeedPointsLeague(Guid.NewGuid()),
-                [Candidate(100m, ["PG"], null)],
-                [])
-            .Rankings.Single();
-
-        value.AvailableAtNextPick.ShouldBe(null);
-        value.Urgency.ShouldBe(0m);
-    }
-
-    [Fact]
-    public void D12_negative_urgency_weight_is_invalid() =>
-        new DraftWeightOptions { Urgency = -0.5m }.IsValid().ShouldBeFalse();
-
-    [Fact]
-    public void D13_users_last_pick_has_no_availability_estimate_or_about_percent_evidence()
-    {
-        // 2-team 2-round snake: the user's last turn is pick 4, the last pick of the draft.
-        var session = new DraftSession(Guid.NewGuid(), 2, 2, 1);
-        for (var pick = 0; pick < 3; pick++)
-        {
-            session.MakePick(new PlayerId(Guid.NewGuid()));
-        }
-
-        session.NextUserPickAfterCurrent.ShouldBe(null);
-        session.PicksUntilNextTurn.ShouldBe(1, "left unchanged for scarcity even though there is no later turn");
-
-        var value = CreateBoard().Rank(
-                session,
-                LeagueCatalog.CreateSeedPointsLeague(Guid.NewGuid()),
-                [Candidate(100m, ["PG"], 150m)],
-                [])
-            .Rankings.Single();
-
-        value.AvailableAtNextPick.ShouldBe(null);
-        value.Urgency.ShouldBe(0m);
-        value.Evidence.ShouldNotContain(item => item.Statement.StartsWith("About ", StringComparison.Ordinal));
+        board.Rankings.ShouldAllBe(value => value.Evidence.Count > 0);
+        board.Rankings.ShouldAllBe(value => value.Evidence.All(item => item.Kind != EvidenceKind.Market));
+        board.Rankings[0].PlayerId.ShouldBe(withAdp.PlayerId);
     }
 
     [Fact]

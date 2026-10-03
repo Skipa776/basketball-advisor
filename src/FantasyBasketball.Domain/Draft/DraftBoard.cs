@@ -4,7 +4,6 @@ using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Domain.Projections;
 using FantasyBasketball.Domain.Recommendations;
 using FantasyBasketball.Domain.Stats;
-using FantasyBasketball.Domain.Statistics;
 
 namespace FantasyBasketball.Domain.Draft;
 
@@ -56,11 +55,6 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
         var replacementValue = orderedValues[
             Math.Min(replacementRank, orderedValues.Length) - 1]
             .ProjectedSeasonValue;
-        var bestValue = orderedValues[0].ProjectedSeasonValue;
-        var valuePerPick = (bestValue - replacementValue)
-            / Math.Max(1, replacementRank);
-        // Null on the user's last pick of the draft: no later turn means nothing to price.
-        var nextPick = session.NextUserPickAfterCurrent;
         var values = available.Select(candidate =>
         {
             var varValue = candidate.ProjectedSeasonValue - replacementValue;
@@ -75,44 +69,23 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
                 userRoster,
                 league,
                 replacementValue);
-            // Positive when the player is still here past his ADP (a value), negative when
-            // taking him now is a reach. Owner-approved sign correction 2026-09-23.
-            var market = candidate.AverageDraftPosition is { } adp
-                ? (session.CurrentPick - adp) * valuePerPick
-                : 0m;
-            var pAvailable = nextPick is { } pick
-                ? EstimateAvailability(candidate.AverageDraftPosition, candidate.AdpStandardDeviation, pick)
-                : null;
-            // Losing the chance to take him is what urgency prices: value at risk times
-            // the chance he is gone by the next turn. Null availability means zero urgency.
-            var urgency = pAvailable is { } survival
-                ? Math.Max(0m, varValue) * (1m - survival)
-                : 0m;
             var evidence = CreateEvidence(
                 varValue,
                 scarcity,
                 fit,
-                market,
-                candidate.AverageDraftPosition,
                 candidate.InjuryRisk,
                 candidate.RoleRisk,
-                candidate.HasUnverifiedContext,
-                pAvailable,
-                urgency,
-                nextPick);
+                candidate.HasUnverifiedContext);
             return calculator.Calculate(
                 candidate.PlayerId,
                 candidate.ProjectedSeasonValue,
                 varValue,
                 scarcity,
                 fit,
-                market,
                 candidate.ContextAdjustment,
                 candidate.InjuryRisk,
                 candidate.RoleRisk,
-                evidence,
-                urgency,
-                pAvailable);
+                evidence);
         });
 
         var categoryLeague = league.Type == LeagueType.Categories;
@@ -176,22 +149,9 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
                 - eligibleRoster.Min(player => player.ProjectedSeasonValue);
     }
 
-    private static decimal? EstimateAvailability(
-        decimal? adp,
-        decimal? adpStandardDeviation,
-        int nextPick)
-    {
-        if (adp is not { } average)
-        {
-            return null;
-        }
-
-        return 1m - NormalDistribution.Cdf(((decimal)nextPick - average) / AdpSigma(average, adpStandardDeviation));
-    }
-
     /// <summary>
-    /// The pick spread around an ADP, shared by the urgency estimate here and the simulated
-    /// opponents in <c>DraftAssistService</c>.
+    /// The pick spread around an ADP, shared by the simulated opponents (<see cref="SimulatedOpponent"/>
+    /// and <see cref="DraftSimulator"/>).
     /// </summary>
     public static decimal AdpSigma(decimal adp, decimal? standardDeviation)
     {
@@ -208,14 +168,9 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
         decimal varValue,
         decimal scarcity,
         decimal fit,
-        decimal market,
-        decimal? adp,
         decimal injuryRisk,
         decimal roleRisk,
-        bool hasUnverifiedContext,
-        decimal? pAvailable,
-        decimal urgency,
-        int? nextPick)
+        bool hasUnverifiedContext)
     {
         var evidence = new List<RecommendationEvidence>
         {
@@ -243,26 +198,6 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
                 EvidencePolarity.Risk,
                 "Eligible starting slots are already occupied",
                 fit));
-        }
-
-        evidence.Add(new(
-            EvidenceKind.Market,
-            adp is null
-                ? EvidencePolarity.Neutral
-                : market >= 0m
-                    ? EvidencePolarity.Supporting
-                    : EvidencePolarity.Risk,
-            adp is null ? "No ADP is available" : "Value relative to market ADP",
-            adp is null ? null : market));
-        if (pAvailable is { } survival)
-        {
-            evidence.Add(new(
-                EvidenceKind.Market,
-                survival < 0.5m
-                    ? EvidencePolarity.Supporting
-                    : EvidencePolarity.Neutral,
-                $"About {(int)Math.Round(survival * 100m)}% chance he is still there at pick {nextPick}",
-                urgency));
         }
 
         if (injuryRisk > 0m || roleRisk > 0m)

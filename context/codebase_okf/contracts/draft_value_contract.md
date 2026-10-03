@@ -1,13 +1,13 @@
 ---
 type: contract
 title: Draft Value Contract
-description: The V1 DraftValue formula, replacement level, scarcity, roster fit, market value, the weight constants, and the double-counting rules that make the terms additive.
+description: The heuristic DraftValue formula, replacement level, scarcity, roster fit, the weight constants, and the double-counting rules that make the terms additive.
 tags: [contract, draft, scoring]
 source_paths: [src/FantasyBasketball.Domain/Draft]
 test_paths: [tests/FantasyBasketball.Domain.Tests/Draft]
 depends_on: [projection_pipeline_contract.md, scoring_rules_catalog.md, recommendation_evidence_contract.md]
 status: implemented
-last_updated: 2026-09-26
+last_updated: 2026-10-03
 owners: [engineering]
 risk_level: high
 edit_policy: stable_contract
@@ -36,15 +36,16 @@ naive behavior the product exists to avoid.
 Resolved here, and this resolution is canonical:
 
 - **Addends** (these sum to `Total`): `ValueAboveReplacement`,
-  `PositionalScarcity`, `RosterFit`, `MarketValue`, `Urgency`, and the risk
-  penalty.
+  `PositionalScarcity`, `RosterFit`, and the risk penalty.
 - **Decomposition-only fields** (displayed, never added): `ProjectedSeasonValue`,
   `ContextAdjustment`, `InjuryRisk`, `RoleRisk`.
 
-Survival probability and tier detection are **not in V1** — they are design-doc
-phase 5, listed in [post_mvp_roadmap](../tasks/post_mvp_roadmap.md). The
-[urgency](#urgency) term uses a survival estimate only as a nudge; the full
-survival model (opportunity cost, runs, tiering) remains E07 work.
+**Opportunity cost is not a term here.** The MVP's `MarketValue` (picks past
+ADP) and `Urgency` (value at risk × chance of being gone) were proxies for
+opportunity cost; both were deleted on 2026-10-03 when the
+draft_simulation_contract began reading it from
+simulated drafts — each candidate's edge against the top pick and the chance he
+survives to the next turn. This board stays as the fast, always-available ranking.
 
 # The formula
 
@@ -52,9 +53,7 @@ survival model (opportunity cost, runs, tiering) remains E07 work.
 Total = ValueAboveReplacement
       + W_SCARCITY × PositionalScarcity
       + W_FIT      × RosterFit
-      + W_MARKET   × MarketValue
       − W_RISK     × RiskPenalty
-      + W_URGENCY  × Urgency
 ```
 
 ## Value above replacement
@@ -100,43 +99,17 @@ Open slot → `0` (VAR already counted it). Position already full → negative,
 scaled by how good the incumbent is. A third starting center is penalized
 exactly as much as that center is redundant.
 
-## Market value
+## ADP spread
 
-Converts "picks earlier or later than the market" into points, so it can be
-added to point-denominated terms:
-
-```text
-valuePerPick = (bestAvailableValue − ReplacementValue) / max(1, replacementRank)
-MarketValue  = (currentPick − ADP) × valuePerPick
-```
-
-Positive when a player is available past their ADP (a value), negative when
-taking them is a reach. With no ADP for a player, `MarketValue = 0` and an
-evidence item records the absence — never a guessed ADP.
-
-## Urgency
-
-Prices the risk of losing the player before the user's next turn. A candidate's
-realized draft position is modelled `Normal(ADP, σ)`, so the chance he survives
-to `nextPick = CurrentPick + PicksUntilNextTurn` is:
+The simulated opponents (draft_simulation_contract,
+`SimulatedOpponent`) jitter ADP by `Normal(0, σ)`:
 
 ```text
-σ            = published ADP standard deviation, else max(6, 0.2 × ADP)   # heuristic spread
-P(available) = 1 − Φ( (nextPick − ADP) / σ )
-Urgency      = max(0, ValueAboveReplacement) × (1 − P(available))
+σ = published ADP standard deviation, else max(6, 0.2 × ADP)   # heuristic spread
 ```
 
-No ADP means no survival estimate: `P(available) = null` and `Urgency = 0`,
-never an imputed ADP. When `P(available) < 0.5` a `Market` evidence item states
-`About N% chance he is still there at pick P` with **Supporting** polarity —
-likely-gone is a reason to pick now — otherwise **Neutral** with the same
-statement. Φ is the Abramowitz-Stegun 7.1.26 `erf` approximation, the same
-formulation [category_value_contract](category_value_contract.md) specifies.
-The σ fallback is recorded in [assumptions](../assumptions.md); the upgrade is
-deriving σ from real Sleeper/platform pick distributions.
-[draft_intelligence_contract](draft_intelligence_contract.md)'s `OpportunityCost`
-supersedes this term when E07 lands — it is an availability nudge, not the full
-survival model.
+The σ fallback is recorded in [assumptions](../assumptions.md); a fitted
+`opponent-choice` model replaces the jitter when one is active.
 
 ## Risk penalty
 
@@ -160,30 +133,23 @@ see [assumptions](../assumptions.md).
 |---|---|
 | `W_SCARCITY` | `1.0` |
 | `W_FIT` | `1.0` |
-| `W_MARKET` | `0.5` |
 | `W_RISK` | `1.0` |
-| `W_URGENCY` | `0.5` |
 
-`DraftWeightOptions.IsValid` rejects a negative weight, `Urgency` included.
+`DraftWeightOptions.IsValid` rejects a negative weight.
 
 # Invariants
 
 - **No quantity is counted twice.** *Check:
   [test_matrix_projection_draft](../tests/test_matrix_projection_draft.md) row
-  D-01 asserts `Total` equals the sum of exactly the six addends, and D-02
+  D-01 asserts `Total` equals the sum of exactly the four addends, and D-02
   asserts changing only `ProjectedSeasonValue`'s display field cannot change
   `Total`.*
 - **`RosterFit` is zero when an eligible starting slot is open.** *Check: row D-03.*
 - **Replacement level is recomputed from the available pool after every pick**,
   never cached across picks. *Check: row D-04 asserts VAR for an unchanged player
   moves after an unrelated pick.*
-- **Missing ADP yields `MarketValue = 0` plus an evidence item**, never an
-  imputed ADP. *Check: row D-05.*
-- **No ADP means no availability estimate**: `Urgency = 0` and
-  `AvailableAtNextPick = null`, never an imputed survival probability.
-  *Check: row D-11.*
-- **A candidate near-certain to be gone before the next turn outranks an
-  equal-value candidate likely to survive.** *Check: row D-10.*
+- **No ADP or survival term exists on this board.** *Check: row D-06 asserts no
+  `Market` evidence item on any heuristic value.*
 - **Every `DraftValue` carries at least one evidence item.** *Check: row D-06.*
 - **Weights come from options binding.** *Check: the canonical-value grep finds
   no weight literal in `src/`.*

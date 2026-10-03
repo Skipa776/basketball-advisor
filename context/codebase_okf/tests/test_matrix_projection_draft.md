@@ -51,17 +51,12 @@ The cases gating build steps 10, 11, and 12 — requirements R7, R8, R9, R10.
 
 | ID | Case | Expected | Required |
 |---|---|---|---|
-| `D-01` | `DraftValue.Total` | Equals exactly the six addends; decomposition fields excluded | ✅ |
+| `D-01` | `DraftValue.Total` | Equals exactly the four addends (VAR, scarcity, fit, risk); decomposition fields excluded | ✅ |
 | `D-02` | Change only `ProjectedSeasonValue`'s display field | `Total` does not move — proves no double counting | ✅ |
 | `D-03` | Player eligible for an open starting slot | `RosterFit == 0` | ✅ |
 | `D-04` | Unrelated player is drafted | An untouched player's `VAR` changes — replacement level is recomputed | ✅ |
-| `D-05` | Player with no ADP | `MarketValue == 0` plus a `Market` evidence item noting the absence | ✅ |
-| `D-06` | Every draft recommendation | Carries ≥1 evidence item | ✅ |
+| `D-06` | Every draft recommendation and heuristic board value | Carries ≥1 evidence item; no heuristic value carries a `Market` (ADP or survival) item | ✅ |
 | `D-07` | Category league draft board | Falls back to category totals with an explicit banner; does not rank by `Total` | ✅ |
-| `D-10` | Equal-value candidates, one ADP near the next pick, one far beyond | Likely-gone ranks first; its `AvailableAtNextPick < 0.5`, the other's `> 0.95` | ✅ |
-| `D-11` | Candidate with no ADP | `AvailableAtNextPick` is null and `Urgency` is 0 | ✅ |
-| `D-12` | `DraftWeightOptions` with negative `Urgency` | `IsValid()` is false | ✅ |
-| `D-13` | User's last pick of the draft (no later user turn) | `NextUserPickAfterCurrent` is null; `AvailableAtNextPick` null, `Urgency` 0, no `About N%` evidence | ✅ |
 | `D-14` | Bench-phase simulated team already holding 3 pure centers | Takes a non-center instead of a 4th center when one is available | ✅ |
 | `D-08` | Pick then undo | Board equals its pre-pick snapshot exactly | ✅ |
 | `D-09` | Drafted player | Leaves the available pool immediately; cannot be recommended | ✅ |
