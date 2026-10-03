@@ -40,6 +40,7 @@ model lands. A model whose parameters fail its shape is not activated.
 |---|---|---|
 | `heat-prior` | `tools/modeling/heat_prior.py` | `recentGames`, `minBaselineGames`, `maxBaselineGames`, `minBaselineMinutes`, `nu`, `tauRelative`, `effectFloorPoints`, `effectFloorSd`, `cvByMinutes[{minutesFrom, minutesTo, cv}]` — read by `HeatPriorParameters.Parse` |
 | `projection-rates` | `tools/modeling/projection_model.py` | `ageCenter`, `minHistoryMinutes`, `groupOf{position: group}`, `stats{STAT: {weights[3], kappa, mu{G,W,B,U}, alpha, beta, phi, tau}}` for the 13 modelled stats — read by `ProjectionRateParameters.Parse`; REB and PTS are derived |
+| `projection-minutes` | `tools/modeling/minutes_model.py` | `ageCenter`, `maxMinutes`, `minHistoryGames`, `rotationFrom`, `starterFrom`, `weights[3]`, `mu`, `kappa`, `delta{bench, rotation, starter, none}`, `beta`, `sigma`, `tau` — read by `MinutesModelParameters.Parse` |
 
 # Goldens
 

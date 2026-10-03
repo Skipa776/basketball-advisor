@@ -3,8 +3,8 @@ type: test_matrix
 title: Test Matrix — Offline Model Parameters
 description: Required cases for the model-version registry and the C#/Python parameter goldens.
 tags: [tests, modeling, persistence, matrix]
-source_paths: [src/FantasyBasketball.Domain/Modeling, src/FantasyBasketball.Domain/Projections/HierarchicalProjector.cs, src/FantasyBasketball.Infrastructure/Persistence/Repositories/ModelVersionRepository.cs]
-test_paths: [tests/FantasyBasketball.Domain.Tests/Modeling, tests/FantasyBasketball.Domain.Tests/Projections/HierarchicalProjectorTests.cs, tests/FantasyBasketball.IntegrationTests/Persistence/ModelVersionTests.cs]
+source_paths: [src/FantasyBasketball.Domain/Modeling, src/FantasyBasketball.Domain/Projections/HierarchicalProjector.cs, src/FantasyBasketball.Domain/Projections/MinutesModel.cs, src/FantasyBasketball.Infrastructure/Persistence/Repositories/ModelVersionRepository.cs]
+test_paths: [tests/FantasyBasketball.Domain.Tests/Modeling, tests/FantasyBasketball.Domain.Tests/Projections/HierarchicalProjectorTests.cs, tests/FantasyBasketball.Domain.Tests/Projections/MinutesModelTests.cs, tests/FantasyBasketball.IntegrationTests/Persistence/ModelVersionTests.cs]
 depends_on: [required_gates.md, ../contracts/model_params_contract.md]
 status: partial
 last_updated: 2026-10-01
@@ -43,6 +43,16 @@ Gates [model_params_contract](../contracts/model_params_contract.md).
 | `HP-02` | Any projection | `REB = OREB + DREB` and `PTS = 2·FGM + FG3M + FTM` exactly | ✅ |
 | `HP-03` | Seasons at lags 1, 2, 3 (under 100 min) and 4 | Lags 1 and 2 weighted 1 and w₂ with the κ prior; the short and the lag-4 seasons are ignored; age carried forward by its lag | ✅ |
 | `HP-04` | Parameters missing a modelled stat | `ArgumentException` naming the stat | ✅ |
+
+# Minutes model (`MM-01`–`MM-05`)
+
+| ID | Case | Expected | Required |
+|---|---|---|---|
+| `MM-01` | No season with 5+ games in the last three | League mean μ plus the `none` shift and the age term | ✅ |
+| `MM-02` | Last season at 17.9, 18 and 28 minutes; no last season but an older one | Bench, rotation and starter shifts at those edges; `none` without a last season | ✅ |
+| `MM-03` | A projection above 42 or below 0 | Clamped to `maxMinutes` and 0 | ✅ |
+| `MM-04` | Seasons at lags 1, 2, 3 (under 5 games) and 4 | Games × recency weights with κ shrinkage; the short and lag-4 seasons are ignored; age carried forward by its lag | ✅ |
+| `MM-05` | Parameters missing a role shift | `ArgumentException` naming the roles | ✅ |
 
 # Shared statistics (`ND-01`)
 

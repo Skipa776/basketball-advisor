@@ -31,6 +31,9 @@ public sealed class ParamGoldenTests
                 case ProjectionRateParameters.ModelName:
                     CheckProjectionRates(golden.RootElement);
                     break;
+                case MinutesModelParameters.ModelName:
+                    CheckMinutes(golden.RootElement);
+                    break;
                 default:
                     throw new ShouldAssertException($"No C# evaluator for golden model '{model}' ({path}).");
             }
@@ -75,6 +78,23 @@ public sealed class ParamGoldenTests
                 var actual = projector.Rate(Enum.Parse<StatKey>(expected.Name), group, age, history);
                 Math.Abs(actual - expected.Value.GetDecimal()).ShouldBeLessThan(Tolerance);
             }
+        }
+    }
+
+    private static void CheckMinutes(JsonElement golden)
+    {
+        var model = new MinutesModel(MinutesModelParameters.Parse(golden.GetProperty("parameters").GetRawText()));
+        foreach (var testCase in golden.GetProperty("cases").EnumerateArray())
+        {
+            var history = testCase.GetProperty("history").EnumerateArray()
+                .Select(line => new MinutesHistory(
+                    line.GetProperty("lag").GetInt32(),
+                    line.GetProperty("games").GetInt32(),
+                    line.GetProperty("mpg").GetDecimal(),
+                    null))
+                .ToArray();
+            var age = testCase.GetProperty("age") is { ValueKind: JsonValueKind.Number } value ? value.GetInt32() : (int?)null;
+            Math.Abs(model.FromHistory(age, history) - testCase.GetProperty("expected").GetDecimal()).ShouldBeLessThan(Tolerance);
         }
     }
 
