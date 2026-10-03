@@ -42,6 +42,7 @@ model lands. A model whose parameters fail its shape is not activated.
 | `projection-rates` | `tools/modeling/projection_model.py` | `ageCenter`, `minHistoryMinutes`, `groupOf{position: group}`, `stats{STAT: {weights[3], kappa, mu{G,W,B,U}, alpha, beta, phi, tau}}` for the 13 modelled stats — read by `ProjectionRateParameters.Parse`; REB and PTS are derived |
 | `projection-minutes` | `tools/modeling/minutes_model.py` | `ageCenter`, `maxMinutes`, `minHistoryGames`, `rotationFrom`, `starterFrom`, `weights[3]`, `mu`, `kappa`, `delta{bench, rotation, starter, none}`, `beta`, `sigma`, `tau` — read by `MinutesModelParameters.Parse` |
 | `projection-availability` | `tools/modeling/availability_model.py` | `ageCenter`, `mpgCenter`, `fullSeason`, `weights[3]`, `a`, `b`, `c`, `phi` — read by `AvailabilityModelParameters.Parse`; the result is a `BetaBinomial(fullSeason, alpha, beta)` |
+| `projection-covariance` | `tools/modeling/projection_covariance.py` | `stats` (the 13 modelled stats, in `HierarchicalProjector.ModelledStats` order), `scale`, `correlation{G,W,B,U: 13×13}` — read by `StatCovarianceParameters.Parse`; also needs the active rate and minutes parameters |
 
 # Goldens
 

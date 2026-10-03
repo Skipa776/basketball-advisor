@@ -3,8 +3,8 @@ type: test_matrix
 title: Test Matrix — Offline Model Parameters
 description: Required cases for the model-version registry and the C#/Python parameter goldens.
 tags: [tests, modeling, persistence, matrix]
-source_paths: [src/FantasyBasketball.Domain/Modeling, src/FantasyBasketball.Domain/Projections/HierarchicalProjector.cs, src/FantasyBasketball.Domain/Projections/MinutesModel.cs, src/FantasyBasketball.Domain/Projections/AvailabilityModel.cs, src/FantasyBasketball.Domain/Statistics/BetaBinomial.cs, src/FantasyBasketball.Infrastructure/Persistence/Repositories/ModelVersionRepository.cs]
-test_paths: [tests/FantasyBasketball.Domain.Tests/Modeling, tests/FantasyBasketball.Domain.Tests/Projections/HierarchicalProjectorTests.cs, tests/FantasyBasketball.Domain.Tests/Projections/MinutesModelTests.cs, tests/FantasyBasketball.Domain.Tests/Projections/AvailabilityModelTests.cs, tests/FantasyBasketball.IntegrationTests/Persistence/ModelVersionTests.cs]
+source_paths: [src/FantasyBasketball.Domain/Modeling, src/FantasyBasketball.Domain/Projections/HierarchicalProjector.cs, src/FantasyBasketball.Domain/Projections/MinutesModel.cs, src/FantasyBasketball.Domain/Projections/AvailabilityModel.cs, src/FantasyBasketball.Domain/Statistics/BetaBinomial.cs, src/FantasyBasketball.Domain/Projections/StatCovariance.cs, src/FantasyBasketball.Domain/Projections/ProjectionDistribution.cs, src/FantasyBasketball.Infrastructure/Persistence/Repositories/ModelVersionRepository.cs]
+test_paths: [tests/FantasyBasketball.Domain.Tests/Modeling, tests/FantasyBasketball.Domain.Tests/Projections/HierarchicalProjectorTests.cs, tests/FantasyBasketball.Domain.Tests/Projections/MinutesModelTests.cs, tests/FantasyBasketball.Domain.Tests/Projections/AvailabilityModelTests.cs, tests/FantasyBasketball.Domain.Tests/Projections/ProjectionDistributionTests.cs, tests/FantasyBasketball.IntegrationTests/Persistence/ModelVersionTests.cs]
 depends_on: [required_gates.md, ../contracts/model_params_contract.md]
 status: partial
 last_updated: 2026-10-01
@@ -63,6 +63,15 @@ Gates [model_params_contract](../contracts/model_params_contract.md).
 | `AV-03` | Two history seasons; no history | Alpha and beta add weighted games played and missed to φm and φ(1 − m); no history is the prior alone | ✅ |
 | `AV-04` | An 84-game line, a lag-5 line and a 0-game line | Games capped at the season's length; the lag-5 and 0-game lines are ignored | ✅ |
 | `AV-05` | Parameters with one weight | `ArgumentException` | ✅ |
+
+# Covariance and distributions (`SC-01`–`SC-04`)
+
+| ID | Case | Expected | Required |
+|---|---|---|---|
+| `SC-01` | No rate noise, minutes variance 4 | Every stat pair covaries by r_s r_t · 4; MIN has variance 4 and covaries with a stat by r_s · 4 | ✅ |
+| `SC-02` | Fantasy points with PTS, FGM and REB rules | PTS folds to 2·FGM + FG3M + FTM and REB to OREB + DREB, so FGM's effective weight is 4; the mean uses the per-game means | ✅ |
+| `SC-03` | Season total | Mean μ·E[G]; variance σ²(E[G]² + Var G) + μ² Var G | ✅ |
+| `SC-04` | Covariance parameters with stats out of order, or a non-square correlation | `ArgumentException` | ✅ |
 
 # Shared statistics (`ND-01`)
 

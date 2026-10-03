@@ -37,6 +37,9 @@ public sealed class ParamGoldenTests
                 case AvailabilityModelParameters.ModelName:
                     CheckAvailability(golden.RootElement);
                     break;
+                case StatCovarianceParameters.ModelName:
+                    CheckCovariance(golden.RootElement);
+                    break;
                 default:
                     throw new ShouldAssertException($"No C# evaluator for golden model '{model}' ({path}).");
             }
@@ -119,6 +122,39 @@ public sealed class ParamGoldenTests
             var expected = testCase.GetProperty("expected");
             Math.Abs(games.Alpha - expected.GetProperty("alpha").GetDecimal()).ShouldBeLessThan(Tolerance);
             Math.Abs(games.Beta - expected.GetProperty("beta").GetDecimal()).ShouldBeLessThan(Tolerance);
+        }
+    }
+
+    private static void CheckCovariance(JsonElement golden)
+    {
+        var rates = ProjectionRateParameters.Parse(golden.GetProperty("rateParameters").GetRawText());
+        var covariance = new StatCovariance(
+            StatCovarianceParameters.Parse(golden.GetProperty("parameters").GetRawText()),
+            rates,
+            MinutesModelParameters.Parse(golden.GetProperty("minutesParameters").GetRawText()));
+        var espn = FantasyBasketball.Domain.Leagues.LeagueCatalog.CreateEspnDefaultPointsLeague().ScoringRules;
+        var fgm = HierarchicalProjector.ModelledStats.ToList().IndexOf(StatKey.FGM);
+        var fga = HierarchicalProjector.ModelledStats.ToList().IndexOf(StatKey.FGA);
+        var ast = HierarchicalProjector.ModelledStats.ToList().IndexOf(StatKey.AST);
+        foreach (var testCase in golden.GetProperty("cases").EnumerateArray())
+        {
+            var group = testCase.GetProperty("group").GetString()!;
+            var position = rates.GroupOf.FirstOrDefault(pair => pair.Value == group).Key;
+            var perMinute = new StatLine(testCase.GetProperty("rates").EnumerateObject()
+                .ToDictionary(field => Enum.Parse<StatKey>(field.Name), field => field.Value.GetDecimal()));
+            var minutes = testCase.GetProperty("minutes").GetDecimal();
+            var sigma = covariance.PerGame(position, perMinute, minutes, testCase.GetProperty("games").GetDecimal());
+            var distribution = new ProjectionDistribution(
+                new FantasyBasketball.Domain.Players.PlayerId(Guid.NewGuid()),
+                new StatLine(perMinute.Values.ToDictionary(pair => pair.Key, pair => pair.Value * minutes)),
+                sigma,
+                new FantasyBasketball.Domain.Statistics.BetaBinomial(82, 1m, 1m),
+                "golden");
+            var expected = testCase.GetProperty("expected");
+            var (_, sd) = distribution.FantasyPointsPerGame(espn);
+            Math.Abs((sd * sd) - expected.GetProperty("espnVariance").GetDecimal()).ShouldBeLessThan(Tolerance * 100m);
+            Math.Abs(sigma[fgm][fga] - expected.GetProperty("fgmFga").GetDecimal()).ShouldBeLessThan(Tolerance);
+            Math.Abs(sigma[ast][ast] - expected.GetProperty("astVariance").GetDecimal()).ShouldBeLessThan(Tolerance);
         }
     }
 
