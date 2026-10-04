@@ -21,7 +21,8 @@ const percent = (value: number) => `${Math.round(value * 100)}%`;
  * simulated board with 80% interval bars and survival odds. While a new pick re-simulates, the
  * last board stays up and the heuristic shortlist below answers instantly.
  */
-export function SimulatedPick({ draft, disabled, pick }: { draft: Draft; disabled: boolean; pick: (player: Player) => Promise<void> }) {
+/** Off the clock the board plans the user's upcoming pick, and its Draft buttons wait for it. */
+export function SimulatedPick({ draft, disabled, pick, onClock }: { draft: Draft; disabled: boolean; pick: (player: Player) => Promise<void>; onClock: boolean }) {
   const [risk, setRisk] = useState<RiskMode>(recalledRisk);
   const revision = draft.picks.map(item => item.playerId.value).join(',');
   const simulation = useResource<Simulation>(`/api/drafts/${draft.id}/board/simulation?risk=${risk}`, 0, revision);
@@ -34,7 +35,7 @@ export function SimulatedPick({ draft, disabled, pick }: { draft: Draft; disable
     <p className="loading-status" role="status">{simulation.loading ? 'Simulating drafts…' : ' '}</p>
     <ErrorNotice text={simulation.error} retry={simulation.refresh} />
     {unavailable && <p className="notice">{unavailable}</p>}
-    {board && board.candidates.length > 0 && <><PickCard board={board} disabled={disabled || simulation.loading} pick={pick} /><SimulatedList board={board} disabled={disabled || simulation.loading} pick={pick} /></>}
+    {board && board.candidates.length > 0 && <><PickCard board={board} disabled={disabled || simulation.loading || !onClock} pick={pick} onClock={onClock} /><SimulatedList board={board} disabled={disabled || simulation.loading || !onClock} pick={pick} /></>}
   </section>;
 }
 
@@ -49,18 +50,18 @@ function reason(top: SimulatedCandidate, nextPick: number | null) {
     : `Best expected roster, and about ${percent(top.survivalToNextPick)} chance he would last to pick ${nextPick}.`;
 }
 
-function PickCard({ board, disabled, pick }: { board: SimulatedBoard; disabled: boolean; pick: (player: Player) => Promise<void> }) {
+function PickCard({ board, disabled, pick, onClock }: { board: SimulatedBoard; disabled: boolean; pick: (player: Player) => Promise<void>; onClock: boolean }) {
   const [top, runnerUp] = board.candidates;
   const player = usePlayer(top);
   const next = usePlayer(runnerUp);
   const value = player.result?.data;
   return <article className="pick-card" aria-label="Top simulated pick">
-    <p className="eyebrow">TOP PICK</p>
+    <p className="eyebrow">{onClock || board.nextUserPick === null ? 'TOP PICK' : `PLAN FOR YOUR PICK ${board.nextUserPick}`}</p>
     <h4>{value?.fullName ?? (player.loading ? 'Loading player…' : 'Player unavailable')}</h4>
     <p className="pick-card-numbers"><strong>{points(top.mean)}</strong> ± {points(top.sd)} roster points{runnerUp && <> · <strong>{signed(-runnerUp.edge)}</strong> ± {points(runnerUp.edgeSe)} over {next.result?.data.fullName ?? 'the next option'}</>}</p>
-    <p>{reason(top, board.nextUserPick)}</p>
+    <p>{onClock ? reason(top, board.nextUserPick) : top.survivalToNextPick === null ? 'Best expected final roster.' : `About ${percent(top.survivalToNextPick)} chance he is still there when you pick.`}</p>
     <ErrorNotice text={player.error} retry={player.refresh} />
-    <button className="primary" disabled={disabled || !value} onClick={() => value && pick(value)}>Draft {value?.fullName ?? 'top pick'}</button>
+    <button className="primary" disabled={disabled || !value} onClick={() => value && pick(value)}>{onClock ? `Draft ${value?.fullName ?? 'top pick'}` : 'Waiting for your pick'}</button>
   </article>;
 }
 

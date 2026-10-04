@@ -134,13 +134,9 @@ try {
   await page.getByRole('checkbox', { name: 'Use these reviewed scoring rules for my league.' }).check();
   await page.getByRole('button', { name: 'Save league' }).click();
   await visible(page.getByRole('heading', { name: 'Browser points league', exact: true }));
-  await page.getByText('Prepare league projections', { exact: true }).click();
-  const pool = page.getByLabel('Projection season and source', { exact: true });
-  await visible(pool);
-  await pool.selectOption({ index: 1 });
-  await page.getByRole('button', { name: 'Calculate projections', exact: true }).click();
-  await visible(page.getByText(/Saved estimates for 2 players/));
-  await page.getByText('Prepare league projections', { exact: true }).click();
+  // Saving the league published its projections: the pool is ranked with no manual step.
+  await visible(page.getByRole('columnheader', { name: 'Season value', exact: true }));
+  assert.equal(await page.getByText('Projection data', { exact: true }).count(), 1);
   await page.getByLabel('Your draft position', { exact: true }).fill('1');
   await page.getByLabel('Rounds', { exact: true }).fill('2');
   await page.getByRole('button', { name: 'Start draft' }).click();
@@ -208,6 +204,8 @@ try {
   const savedUrl = page.url();
   assert(new URL(savedUrl).searchParams.get('draft'));
   await page.reload();
+  // The ranked pool lists available players; search finds the drafted one.
+  await search.fill('Fixture Guard');
   await visible(page.getByRole('button', { name: 'Drafted Fixture Guard', exact: true }));
   assert.equal(await page.locator('.on-clock strong').textContent(), '2');
   await accessibility('Saved draft');
@@ -343,7 +341,7 @@ try {
   checks.push('Trade: two-team trade evaluated for your side with verdict, lineup before/after and evidence');
   await page.goto(new URL(`/app/league-settings?league=${leagueId}`, base).href);
   await visible(page.getByRole('heading', { name: 'League settings', exact: true }));
-  assert.equal(await page.getByLabel('PG', { exact: true }).inputValue(), '2');
+  assert.equal(await page.getByLabel('PG', { exact: true }).inputValue(), '1');
   await accessibility('League settings');
   await page.goto(new URL('/app/context-review', base).href);
   await visible(page.getByRole('heading', { name: 'Context review', exact: true }));

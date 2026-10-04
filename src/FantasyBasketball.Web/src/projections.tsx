@@ -24,8 +24,8 @@ export function ProjectionControls({ leagueId, onPublished }: { leagueId: string
     } catch (error) { setError(message(error)); }
     finally { setBusy(false); }
   }
-  return <details className="projection-controls panel"><summary>Prepare league projections</summary>
-    <p>Pick a season, then calculate. Recalculate after scoring changes. Manual corrections win.</p>
+  return <details className="projection-controls panel"><summary>Projection data</summary>
+    <p>Projections are published from the newest imported season when you create the league or change its scoring. Recalculate here after new stats are imported, or to use another season. Manual corrections win.</p>
     <ErrorNotice text={error || pools.error} retry={pools.error ? pools.refresh : undefined} />
     {pools.loading && <p>Loading imported seasons…</p>}
     {pools.result?.data.length === 0 && <p>No seasons imported. <a href="/app/data-sources">View data sources ↗</a> then <button onClick={pools.refresh}>Reload seasons</button></p>}
