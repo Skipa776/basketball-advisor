@@ -96,16 +96,19 @@ export function DraftWorkspace({ league, draftId, onDraft }: { league: League; d
     } catch (error) { setError(message(error)); }
     finally { record.refresh(); board.refresh(); setBusy(false); }
   }
-  return <section className="draft" aria-labelledby="draft-title"><div className="section-heading"><div><p className="eyebrow">02 / PREPARE & PICK</p><h2 id="draft-title">{league.name}</h2><p>{league.teamCount} teams · {league.type === 0 ? 'Points' : 'Category'} league</p></div>{session && <div className="on-clock"><span>{complete ? 'DRAFT COMPLETE' : myTurn ? 'YOUR PICK' : `TEAM ${onClock} PICKING`}</span><strong>{complete ? session.picks.length : session.currentPick}</strong><button disabled={busy || record.loading || !session.picks.length} onClick={undo}>Undo last pick</button></div>}</div>
-    <ErrorNotice text={error || record.error || board.error} retry={record.error || board.error ? () => { record.refresh(); board.refresh(); } : undefined} /><p className="sr-only" role="status">{announcement}</p>
-    {session && league.type === 0 && !complete && <SimulatedPick draft={session} disabled={busy || record.loading || !!record.error} pick={pick} onClock={myTurn} />}
-    {session && !complete && <section className="panel draft-others" aria-labelledby="others-title">
+  const simulated = session && league.type === 0 && !complete && <SimulatedPick key="simulated" draft={session} disabled={busy || record.loading || !!record.error} pick={pick} onClock={myTurn} />;
+  const others = session && !complete && <section key="others" className="panel draft-others" aria-labelledby="others-title">
       <h3 id="others-title">Other teams’ picks</h3>
       <p className="muted">{myTurn ? 'You are on the clock. Draft from the shortlist or the list below.' : `Pick ${session.currentPick} belongs to team ${onClock}. Any player you pick now is recorded for them.`}</p>
       <div className="form-row"><button onClick={simulate} disabled={busy || myTurn}>Sim other teams to my pick</button><span className="muted">Solo mock: each team drafts near ADP, with some variance, and fills its starting slots.</span></div>
       <form className="form-row" onSubmit={syncPicks}><label>Sleeper league link or ID<input value={sleeperInput} onChange={event => setSleeperInput(event.target.value)} placeholder="https://sleeper.com/leagues/…" /></label><button disabled={busy || !sleeperId}>Sync picks from Sleeper</button></form>
       <form onSubmit={recordTaken}><label>Picks made in your draft room, in order<textarea rows={3} value={takenText} onChange={event => setTakenText(event.target.value)} placeholder={'One player per line, e.g.\nNikola Jokić\nShai Gilgeous-Alexander'} /></label><button disabled={busy || !takenText.trim()}>Record these picks</button></form>
-    </section>}
+    </section>;
+  return <section className="draft" aria-labelledby="draft-title"><div className="section-heading"><div><p className="eyebrow">02 / PREPARE & PICK</p><h2 id="draft-title">{league.name}</h2><p>{league.teamCount} teams · {league.type === 0 ? 'Points' : 'Category'} league</p></div>{session && <div className="on-clock"><span>{complete ? 'DRAFT COMPLETE' : myTurn ? 'YOUR PICK' : `TEAM ${onClock} PICKING`}</span><strong>{complete ? session.picks.length : session.currentPick}</strong><button disabled={busy || record.loading || !session.picks.length} onClick={undo}>Undo last pick</button></div>}</div>
+    <ErrorNotice text={error || record.error || board.error} retry={record.error || board.error ? () => { record.refresh(); board.refresh(); } : undefined} /><p className="sr-only" role="status">{announcement}</p>
+    {/* Your pick leads when you are on the clock; otherwise recording the other teams' picks does.
+        A keyed array moves the panels rather than remounting them, so the board below stays put. */}
+    {(myTurn ? [simulated, others] : [others, simulated])}
     {session && league.type === 0 && <DraftAdvice draft={session} leagueId={league.id} version={projectionRevision} disabled={busy || record.loading || !!record.error || complete} pick={pick} />}
     {!draftId && <form className="draft-start panel" onSubmit={create}><h3>Start a snake draft</h3><p>Choose your slot and rounds. We’ll save it.</p><div className="form-row"><label>Your draft position<input type="number" name="position" required min="1" max={league.teamCount} /></label><label>Rounds<input type="number" name="rounds" required min="1" defaultValue={league.rosterSlots.filter(slot => slot.kind !== IR_SLOT).length} /></label><button className="primary" disabled={busy}>{busy ? 'Starting…' : 'Start draft'} ↗</button></div></form>}
     {draftId && !record.result && record.loading && <p role="status">Restoring your saved draft…</p>}
