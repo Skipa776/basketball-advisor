@@ -292,12 +292,13 @@ public static class LeagueEndpoints
     public static async Task<IResult> CreateAsync(
         CreateLeagueRequest request,
         LeagueService service,
+        LeagueProjectionService projections,
         CancellationToken cancellationToken)
     {
         var league = BuildLeague(Guid.NewGuid(), request);
-        return ApiResults.Success(
-            await service.CreateAsync(league, cancellationToken),
-            StatusCodes.Status201Created);
+        var created = await service.CreateAsync(league, cancellationToken);
+        await projections.PublishLatestAsync(created.Id, cancellationToken);
+        return ApiResults.Success(created, StatusCodes.Status201Created);
     }
 
     public static async Task<IResult> GetAsync(
@@ -315,13 +316,16 @@ public static class LeagueEndpoints
         Guid id,
         ReplaceScoringRequest request,
         LeagueService service,
+        LeagueProjectionService projections,
         OwnedResourceAuthorizationService authorization,
         CancellationToken cancellationToken)
     {
         await authorization.RequireLeagueAsync(id, cancellationToken);
         var rules = ParseScoringRules(request.ScoringRules);
-        return ApiResults.Success(
-            await service.ReplaceScoringAsync(id, rules, cancellationToken));
+        var league = await service.ReplaceScoringAsync(id, rules, cancellationToken);
+        // Values published under the old rules no longer match the league, so republish.
+        await projections.PublishLatestAsync(id, cancellationToken);
+        return ApiResults.Success(league);
     }
 
     public static async Task<IResult> UpdateSettingsAsync(

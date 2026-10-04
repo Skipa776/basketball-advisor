@@ -430,10 +430,11 @@ public sealed partial class ApiHttpTests : IAsyncLifetime
                 $"/api/players/{firstPlayer.Value}",
                 cancellationToken),
             cancellationToken);
-        using (var outdated = await client.GetAsync(
+        using (var republished = await client.GetAsync(
             $"/api/players/{firstPlayer.Value}/projection?leagueId={leagueId}", cancellationToken))
         {
-            outdated.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+            // The scoring change republished values under the new rules.
+            republished.StatusCode.ShouldBe(HttpStatusCode.OK);
         }
 
         await AssertSuccessAsync(

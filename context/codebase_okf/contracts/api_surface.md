@@ -58,7 +58,11 @@ forces a throw and asserts the body contains none of these.*
 - **`POST /api/leagues`** — validates per
   [scoring_rules_catalog](scoring_rules_catalog.md); a league with no scoring
   rules or a duplicated stat is `validation_failed` with the offending field
-  named. No provider default is ever substituted.
+  named. No provider default is ever substituted. A points league is then
+  published from the newest imported season (Basketball-Reference first), so
+  its draft board is ranked with no manual step; with nothing imported the
+  league is still created, unpublished. `PUT /api/leagues/{id}/scoring`
+  republishes the same way (2026-10-04).
 - **`GET /api/players/{id}/projection?leagueId=`** — returns the full
   decomposition (observed, baseline, adjusted, value) as four sibling objects,
   never a single collapsed number. This is requirement R8, and the response
