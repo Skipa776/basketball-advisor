@@ -3,7 +3,7 @@ import type { FormEvent, KeyboardEvent } from 'react';
 import { api, post, message } from './api';
 import { useResource } from './useResource';
 import { ErrorNotice } from './Workspace';
-import { ProjectionControls } from './projections';
+import { ProjectionControls, PublishProjections } from './projections';
 import { DraftAdvice } from './advice';
 import { SimulatedPick } from './simulation';
 import { RecordedPerformance } from './performance';
@@ -110,7 +110,7 @@ export function DraftWorkspace({ league, draftId, onDraft }: { league: League; d
     {!draftId && <form className="draft-start panel" onSubmit={create}><h3>Start a snake draft</h3><p>Choose your slot and rounds. We’ll save it.</p><div className="form-row"><label>Your draft position<input type="number" name="position" required min="1" max={league.teamCount} /></label><label>Rounds<input type="number" name="rounds" required min="1" defaultValue={league.rosterSlots.filter(slot => slot.kind !== IR_SLOT).length} /></label><button className="primary" disabled={busy}>{busy ? 'Starting…' : 'Start draft'} ↗</button></div></form>}
     {draftId && !record.result && record.loading && <p role="status">Restoring your saved draft…</p>}
     {record.result && !session && <p className="notice">This draft is from another league. Switch leagues or start fresh.</p>}
-    {session && <><p className="muted">Snake · Slot {session.userSlot} · {session.roundCount} rounds. Bookmark to come back.</p>{board.result?.data.banner && <p className="notice">{board.result.data.banner}</p>}<PlayerPool leagueId={league.id} session={session} rankings={board.result?.data.rankings ?? []} pick={pick} disabled={busy || record.loading || !!record.error || complete} actionLabel={myTurn ? 'Pick' : `Taken by ${onClock}`} version={projectionRevision} /><PickHistory session={session} /></>}
+    {session && <><p className="muted">Snake · Slot {session.userSlot} · {session.roundCount} rounds. Bookmark to come back.</p>{board.result?.data.banner && <p className="notice">{board.result.data.banner}</p>}<PlayerPool leagueId={league.id} session={session} rankings={board.result?.data.rankings ?? []} pick={pick} disabled={busy || record.loading || !!record.error || complete} actionLabel={myTurn ? 'Pick' : `Taken by ${onClock}`} version={projectionRevision} onPublished={() => { setProjectionRevision(value => value + 1); board.refresh(); }} /><PickHistory session={session} /></>}
     {!draftId && <PlayerPool leagueId={league.id} session={null} rankings={[]} pick={pick} disabled version={projectionRevision} />}
     {league.type === 0 && <ProjectionControls key={`projection:${league.id}`} leagueId={league.id} onPublished={() => { setProjectionRevision(value => value + 1); board.refresh(); }} />}
     {league.type === 0 && <RecordedPerformance key={league.id} leagueId={league.id} />}
@@ -141,7 +141,7 @@ function useLeagueDirectory(leagueId: string, version: number) {
   return players;
 }
 
-function PlayerPool({ leagueId, session, rankings, pick, disabled, actionLabel = 'Pick', version = 0 }: { leagueId: string; session: Draft | null; rankings: Ranking[]; pick: (player: Player) => Promise<void>; disabled: boolean; actionLabel?: string; version?: number }) {
+function PlayerPool({ leagueId, session, rankings, pick, disabled, actionLabel = 'Pick', version = 0, onPublished }: { leagueId: string; session: Draft | null; rankings: Ranking[]; pick: (player: Player) => Promise<void>; disabled: boolean; actionLabel?: string; version?: number; onPublished?: () => void }) {
   const [search, setSearch] = useState('');
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
@@ -180,7 +180,7 @@ function PlayerPool({ leagueId, session, rankings, pick, disabled, actionLabel =
       const value = values.get(player.id.value); const taken = drafted.has(player.id.value);
       return <tr key={player.id.value}>{ranked && <td data-numeric>{player.rank}</td>}<th scope="row"><button className="player-name" onClick={() => setDetail(player)}>{player.fullName}</button></th><td>{player.positions.join(' / ') || '—'}</td><td>{value ? <details><summary>{number(value.total)}</summary><div className="evidence"><p>Projected season: {number(value.projectedSeasonValue)}</p>{value.evidence.map((item, i) => <p key={i}>{item.statement}</p>)}</div></details> : <span className="muted">{taken ? 'Drafted' : session ? 'No projection' : player.projectedSeasonValue !== undefined ? number(player.projectedSeasonValue) : 'Ranked once a draft starts'}</span>}</td><td><button className="pick" disabled={disabled || taken || (!ranked && players.loading)} onClick={() => recordPick(player)} onKeyDown={event => { const buttons = [...(rows.current?.querySelectorAll('button.pick:not(:disabled)') ?? [])]; move(event, buttons.indexOf(event.currentTarget)); }}>{taken ? 'Drafted' : actionLabel}<span className="sr-only"> {player.fullName}</span></button></td></tr>;
     })}</tbody></table></div><div className="pagination"><button disabled={page === 1 || (!ranked && players.loading)} onClick={() => setPage(page - 1)}>Previous</button><span>Page {page} · {total} {ranked ? (session ? 'available' : 'projected') : ''} players</span><button disabled={(!ranked && players.loading) || page * (ranked ? POOL_PAGE : players.result?.meta?.limit ?? 50) >= total} onClick={() => setPage(page + 1)}>Next</button></div></>}
-    {session && !rankings.length && <p className="notice">No projections yet. Keep picking, or calculate projections above.</p>}
+    {session && !rankings.length && <div className="notice"><p>No projections for this league yet, so picks are not ranked.</p><PublishProjections leagueId={leagueId} onPublished={onPublished ?? (() => undefined)} /></div>}
     {!session && <p className="muted">Ranked by projected season points under your scoring. Draft value, which depends on the pick you are on, appears once a draft starts.</p>}
     {detail && <PlayerDetail key={detail.id.value} player={detail} leagueId={leagueId} close={() => setDetail(null)} />}
   </div>;

@@ -1,5 +1,6 @@
 using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Domain.Trades;
+using FantasyBasketball.Application.Common;
 using FantasyBasketball.Application.Leagues;
 using FantasyBasketball.Application.Projections;
 using FantasyBasketball.Domain.Provenance;
@@ -41,7 +42,8 @@ public sealed record UpdateLeagueSettingsRequest(
     IReadOnlyList<string>? RosterSlots,
     int? WeeklyAcquisitionLimit = null);
 
-public sealed record RecalculateProjectionsRequest(int SeasonEndYear, string Source);
+/// <summary>Both null publishes from the newest imported season.</summary>
+public sealed record RecalculateProjectionsRequest(int? SeasonEndYear, string? Source);
 
 public static class LeagueEndpoints
 {
@@ -255,7 +257,13 @@ public static class LeagueEndpoints
         CancellationToken cancellationToken)
     {
         await authorization.RequireLeagueAsync(id, cancellationToken);
-        if (request.SeasonEndYear < 1947 || request.SeasonEndYear > clock.GetUtcNow().Year + 1
+        if (request.SeasonEndYear is null && request.Source is null)
+        {
+            return ApiResults.Success(await service.PublishLatestAsync(id, cancellationToken)
+                ?? throw new ResourceConflictException("Import season statistics before calculating projections."));
+        }
+
+        if (request.SeasonEndYear is not { } season || season < 1947 || season > clock.GetUtcNow().Year + 1
             || string.IsNullOrWhiteSpace(request.Source) || !DataSourceName.IsKnown(request.Source))
         {
             throw new RequestValidationException(new Dictionary<string, string[]>
@@ -265,7 +273,7 @@ public static class LeagueEndpoints
         }
 
         return ApiResults.Success(await service.RecalculateAsync(
-            id, request.SeasonEndYear, request.Source, cancellationToken));
+            id, season, request.Source, cancellationToken));
     }
 
     public static async Task<IResult> ListAsync(

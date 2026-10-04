@@ -189,7 +189,8 @@ name/value mappings so React does not duplicate the C# enums.
 - `GET /api/leagues/{id}/projection-pools` requires explicit ownership. Returns
   up to 200 imported season/source groups, newest first, with source player counts.
 - `POST /api/leagues/{id}/projections` requires ownership and cookie anti-forgery.
-  Body: `{seasonEndYear, source}`. Only points leagues are currently supported.
+  Body: `{seasonEndYear, source}`, or `{}` for the newest imported season
+  (`409` when none is imported). Only points leagues are currently supported.
   Invalid season/source is `400`; no matching imported pool or a category league
   is `409`. No request to an external provider occurs. Success returns
   `{seasonEndYear, source, playerCount, computedAt}` after one atomic publication.

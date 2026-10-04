@@ -75,5 +75,7 @@ public sealed partial class ApiHttpTests
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var board = (await ReadEnvelopeAsync(response, token)).RootElement.GetProperty("data").GetRawText();
         board.ShouldContain(player.Value.ToString());
+        using var latest = await client.PostAsJsonAsync($"/api/leagues/{league}/projections", new { }, token);
+        latest.StatusCode.ShouldBe(HttpStatusCode.OK, "an empty request republishes from the newest imported season");
     }
 }

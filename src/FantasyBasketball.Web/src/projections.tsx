@@ -34,3 +34,16 @@ export function ProjectionControls({ leagueId, onPublished }: { leagueId: string
     <p className="muted">Estimates, not results. Game logs live below.</p>
   </details>;
 }
+
+/** One click to publish from the newest imported season, for a league that has no values yet. */
+export function PublishProjections({ leagueId, onPublished }: { leagueId: string; onPublished: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  async function publish() {
+    setBusy(true); setError('');
+    try { await post(`/api/leagues/${leagueId}/projections`, {}); onPublished(); }
+    catch (reason) { setError(message(reason)); }
+    finally { setBusy(false); }
+  }
+  return <><button className="primary" onClick={publish} disabled={busy}>{busy ? 'Projecting players…' : 'Publish projections'}</button><ErrorNotice text={error} /></>;
+}

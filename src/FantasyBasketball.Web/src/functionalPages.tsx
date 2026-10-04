@@ -4,6 +4,7 @@ import { api, message, post } from './api';
 import { useResource } from './useResource';
 import type { League, Player, Session, Setup } from './types';
 import { PlayerDetail } from './draft';
+import { PublishProjections } from './projections';
 import { WaiverPage } from './hub';
 import { MatchupPage } from './matchup';
 import { TeamsPage } from './teams';
@@ -97,7 +98,7 @@ function ProjectedPlayersPage({ league, loading, onHome }: { league?: League; lo
     <p>Ranked by projected season points under this league’s scoring. Estimates, not results. Tap a name to see how it was built.</p>
     <ErrorNotice text={resource.error} retry={resource.refresh} />
     <p className="loading-status" role="status">{resource.loading ? 'Loading projections…' : '\u00a0'}</p>
-    {resource.result && !total && <p className="notice">No projections for this league yet. Import players and season stats, then open the workspace and use “Prepare league projections”. <a href={`/app/draft?league=${encodeURIComponent(league.id)}`}>Go to workspace ↗</a></p>}
+    {resource.result && !total && <div className="notice"><p>No projections for this league yet. They publish from the newest imported season.</p><PublishProjections leagueId={league.id} onPublished={resource.refresh} /></div>}
     {!!resource.result?.data.length && <><div className="table-scroll"><table><caption className="sr-only">Players ranked by projected season points</caption><thead><tr><th>Rank</th><th>Player</th><th>Position</th><th>Projected season points</th><th>ADP</th></tr></thead><tbody>{resource.result.data.map(row => <tr key={row.playerId.value}><td>{row.rank}</td><th scope="row"><button className="player-name" onClick={() => setDetail({ id: row.playerId, fullName: row.fullName, positions: row.positions })}>{row.fullName}</button>{row.hasUnverifiedContext && <span className="muted"> · unverified context</span>}</th><td>{row.positions.join(' / ') || '—'}</td><td>{points(row.projectedSeasonValue)}</td><td>{row.averageDraftPosition === null ? '—' : points(row.averageDraftPosition)}</td></tr>)}</tbody></table></div>
       <div className="pagination"><button disabled={page === 1 || resource.loading} onClick={() => setPage(page - 1)}>Previous</button><span>Page {page} of {Math.max(1, Math.ceil(total / PAGE_SIZE))} · {total} players</span><button disabled={resource.loading || page * PAGE_SIZE >= total} onClick={() => setPage(page + 1)}>Next</button></div></>}
     {detail && <PlayerDetail key={detail.id.value} player={detail} leagueId={league.id} close={() => setDetail(null)} />}
