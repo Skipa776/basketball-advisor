@@ -12,6 +12,8 @@ const modes: { value: RiskMode; label: string; hint: string }[] = [
 const riskKey = 'fb.draftRisk';
 const recalledRisk = (): RiskMode => { try { const value = localStorage.getItem(riskKey); return modes.some(mode => mode.value === value) ? value as RiskMode : 'mean'; } catch { return 'mean'; } };
 const rememberRisk = (value: RiskMode) => { try { localStorage.setItem(riskKey, value); } catch { /* convenience only */ } };
+/** The board opens on the top five; the rest are one click away (the page was ~7,000px on a phone). */
+const SHOWN_OPTIONS = 5;
 const points = (value: number) => Math.round(value).toLocaleString();
 const signed = (value: number) => `${value >= 0 ? '+' : '−'}${points(Math.abs(value))}`;
 const percent = (value: number) => `${Math.round(value * 100)}%`;
@@ -70,8 +72,11 @@ function SimulatedList({ board, disabled, pick }: { board: SimulatedBoard; disab
   const high = Math.max(...board.candidates.map(candidate => candidate.p90));
   const span = Math.max(high - low, 1);
   const at = (value: number) => `${((value - low) / span) * 100}%`;
-  return <ol className="sim-board" aria-label="Simulated options">{board.candidates.map((candidate, index) =>
-    <SimulatedRow key={candidate.playerId.value} candidate={candidate} first={index === 0} nextPick={board.nextUserPick} at={at} disabled={disabled} pick={pick} />)}</ol>;
+  const [all, setAll] = useState(false);
+  const shown = all ? board.candidates : board.candidates.slice(0, SHOWN_OPTIONS);
+  return <><ol className="sim-board" aria-label="Simulated options">{shown.map((candidate, index) =>
+    <SimulatedRow key={candidate.playerId.value} candidate={candidate} first={index === 0} nextPick={board.nextUserPick} at={at} disabled={disabled} pick={pick} />)}</ol>
+    {board.candidates.length > SHOWN_OPTIONS && <button type="button" className="text-button" aria-expanded={all} onClick={() => setAll(!all)}>{all ? 'Show the top 5' : `Show all ${board.candidates.length} options`}</button>}</>;
 }
 
 function SimulatedRow({ candidate, first, nextPick, at, disabled, pick }: { candidate: SimulatedCandidate; first: boolean; nextPick: number | null; at: (value: number) => string; disabled: boolean; pick: (player: Player) => Promise<void> }) {
