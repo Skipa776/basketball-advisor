@@ -22,12 +22,15 @@ function ErrorNotice({ text, retry }: { text: string; retry?: () => void }) {
   return text ? <div className="notice error" role="alert">{text} {retry && <button type="button" onClick={retry}>Try again</button>}</div> : null;
 }
 
+/** Pages whose panel already shows the page name as its large heading; the intro h1 stays for screen readers only. */
+const OWN_HEADING = new Set(['Data sources', 'Projected players', 'Your drafts', 'League settings', 'Context review', 'Account data']);
+
 export function FunctionalPage({ name, session, onHome, onLeagueUpdated, leagueId }: PageProps & { name: string; session: Session; leagueId?: string }) {
   const leagues = useResource<League[]>('/api/leagues?limit=200');
   // No league chosen yet (a new browser, a shared link): use the first rather than bounce to the menu.
   const selectedLeague = leagueId ? leagues.result?.data.find(item => item.id === leagueId) : leagues.result?.data[0];
   return <>
-    <div className="intro intro-compact"><p className="eyebrow">THE WORKSPACE / {name.toUpperCase()}</p><h1>{name}.</h1></div>
+    <div className="intro intro-compact"><p className="eyebrow">THE WORKSPACE / {name.toUpperCase()}</p><h1 className={OWN_HEADING.has(name) ? 'sr-only' : undefined}>{name}.</h1></div>
     {name === 'Data sources' && <DataSourcesPage session={session} onHome={onHome} />}
     {name === 'Projected players' && <ProjectedPlayersPage league={selectedLeague} loading={leagues.loading} onHome={onHome} />}
     {name === 'Your drafts' && <DraftListPage league={selectedLeague} onHome={onHome} />}
