@@ -34,8 +34,7 @@ public sealed class ProjectionRepository(FantasyDbContext database)
             observed.Source.SeasonEndYear,
             observed.Source.Provenance.Source,
             observed.AsOf);
-        database.ObservedStats.Add(observedRow);
-        database.BaselineProjections.Add(BaselineProjectionRow.Create(
+        var baselineRow = BaselineProjectionRow.Create(
             baseline.Id,
             baseline.PlayerId.Value,
             Round(baseline.ProjectedMinutesPerGame),
@@ -44,8 +43,8 @@ public sealed class ProjectionRepository(FantasyDbContext database)
             baseline.ProjectedGamesPlayed,
             baseline.ComputedAt,
             baseline.ModelVersion,
-            observedRow.Id));
-        await database.SaveChangesAsync(cancellationToken);
+            observedRow.Id);
+        await SaveAndForgetAsync(cancellationToken, observedRow, baselineRow);
     }
 
     public async Task<ObservedStats?> GetLatestObservedAsync(
@@ -101,7 +100,7 @@ public sealed class ProjectionRepository(FantasyDbContext database)
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(adjusted);
-        database.AdjustedProjections.Add(AdjustedProjectionRow.Create(
+        await SaveAndForgetAsync(cancellationToken, AdjustedProjectionRow.Create(
             adjusted.Id,
             database.CurrentUserId,
             adjusted.PlayerId.Value,
@@ -113,7 +112,6 @@ public sealed class ProjectionRepository(FantasyDbContext database)
             Round(adjusted.ContextCertainty),
             adjusted.HasUnverifiedContext,
             adjusted.ComputedAt));
-        await database.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<AdjustedProjection?> GetAdjustedAsync(
@@ -152,7 +150,7 @@ public sealed class ProjectionRepository(FantasyDbContext database)
             throw new ArgumentException("Value must name its scoring league and a UTC timestamp.");
         }
 
-        database.FantasyValues.Add(FantasyValueRow.Create(
+        await SaveAndForgetAsync(cancellationToken, FantasyValueRow.Create(
             Guid.NewGuid(),
             value.PlayerId.Value,
             value.LeagueId,
@@ -163,7 +161,6 @@ public sealed class ProjectionRepository(FantasyDbContext database)
             CurrentFantasyValues.Profile(league),
             publicationId,
             value.PerGameSd is { } sd ? Round(sd) : null));
-        await database.SaveChangesAsync(cancellationToken);
     }
 
     public async Task AddDistributionAsync(
@@ -173,7 +170,7 @@ public sealed class ProjectionRepository(FantasyDbContext database)
     {
         ArgumentNullException.ThrowIfNull(distribution);
         // Covariance entries can be well under 1e-4, so they keep full precision (jsonb), unlike the stat lines.
-        database.ProjectionDistributions.Add(ProjectionDistributionRow.Create(
+        await SaveAndForgetAsync(cancellationToken, ProjectionDistributionRow.Create(
             baselineProjectionId,
             Serialize(distribution.PerGameMean),
             JsonSerializer.Serialize(distribution.Covariance),
@@ -181,7 +178,20 @@ public sealed class ProjectionRepository(FantasyDbContext database)
             distribution.Games.Beta,
             distribution.Games.Trials,
             distribution.ModelVersion));
+    }
+
+    /// <summary>
+    /// Inserts and stops tracking: a publication writes thousands of rows in one context, and
+    /// every save scans everything still tracked, so keeping them made it quadratic.
+    /// </summary>
+    private async Task SaveAndForgetAsync(CancellationToken cancellationToken, params object[] rows)
+    {
+        database.AddRange(rows);
         await database.SaveChangesAsync(cancellationToken);
+        foreach (var row in rows)
+        {
+            database.Entry(row).State = EntityState.Detached;
+        }
     }
 
     public async Task<FantasyValue?> GetFantasyValueAsync(
