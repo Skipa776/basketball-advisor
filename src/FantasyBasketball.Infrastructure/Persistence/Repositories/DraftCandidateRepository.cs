@@ -21,38 +21,44 @@ public sealed class DraftCandidateRepository(FantasyDbContext database)
         var eligibility = await database.LeagueEligibility.AsNoTracking()
             .Where(row => row.FantasyLeagueId == leagueId)
             .ToDictionaryAsync(row => row.PlayerId, row => row.Positions, cancellationToken);
+        // Set queries, not per-player lookups: the board is read on every pick and poll.
+        var playerIds = values.Select(value => value.PlayerId).ToArray();
+        var players = await database.Players.AsNoTracking()
+            .Where(row => playerIds.Contains(row.Id))
+            .ToDictionaryAsync(row => row.Id, cancellationToken);
+        var adjustedIds = values.Where(value => value.AdjustedProjectionId != null)
+            .Select(value => value.AdjustedProjectionId!.Value).ToArray();
+        var adjustedRows = await database.AdjustedProjections.AsNoTracking()
+            .Where(row => adjustedIds.Contains(row.Id))
+            .ToDictionaryAsync(row => row.Id, cancellationToken);
+        var adpRows = (await database.AdpEntries.AsNoTracking()
+                .Where(row => playerIds.Contains(row.PlayerId))
+                .Select(row => new { row.PlayerId, row.FetchedAt, row.Id, row.AverageDraftPosition, row.StandardDeviation })
+                .ToArrayAsync(cancellationToken))
+            .GroupBy(row => row.PlayerId)
+            .ToDictionary(group => group.Key, group => group.OrderByDescending(row => row.FetchedAt).ThenByDescending(row => row.Id).First());
+        var baselineIds = adjustedRows.Values.Select(row => row.BaselineProjectionId).ToArray();
+        var distributions = await database.ProjectionDistributions.AsNoTracking()
+            .Where(row => baselineIds.Contains(row.BaselineProjectionId))
+            .Select(row => new { row.BaselineProjectionId, row.SeasonGames, row.GamesAlpha, row.GamesBeta })
+            .ToDictionaryAsync(row => row.BaselineProjectionId, cancellationToken);
         var results = new List<DraftCandidate>(values.Count);
 
         foreach (var value in values)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var player = await database.Players
-                .AsNoTracking()
-                .SingleAsync(row => row.Id == value.PlayerId, cancellationToken);
+            var player = players[value.PlayerId];
             var adjusted = value.AdjustedProjectionId is { } adjustedId
-                ? await database.AdjustedProjections
-                    .AsNoTracking()
-                    .SingleOrDefaultAsync(
-                        row => row.Id == adjustedId,
-                        cancellationToken)
+                ? adjustedRows.GetValueOrDefault(adjustedId)
                 : null;
-            var adpRow = await database.AdpEntries
-                .AsNoTracking()
-                .Where(row => row.PlayerId == value.PlayerId)
-                .OrderByDescending(row => row.FetchedAt)
-                .ThenByDescending(row => row.Id)
-                .Select(row => new { row.AverageDraftPosition, row.StandardDeviation })
-                .FirstOrDefaultAsync(cancellationToken);
+            var adpRow = adpRows.GetValueOrDefault(value.PlayerId);
             var adp = adpRow is null
                 ? null
                 : (decimal?)adpRow.AverageDraftPosition;
             var adpStandardDeviation = adpRow?.StandardDeviation;
             var games = adjusted is null || value.PerGameSd is null
                 ? null
-                : await database.ProjectionDistributions.AsNoTracking()
-                    .Where(row => row.BaselineProjectionId == adjusted.BaselineProjectionId)
-                    .Select(row => new { row.SeasonGames, row.GamesAlpha, row.GamesBeta })
-                    .SingleOrDefaultAsync(cancellationToken);
+                : distributions.GetValueOrDefault(adjusted.BaselineProjectionId);
             var categoryTotals = adjusted is null
                 ? new Dictionary<StatKey, decimal>()
                 : Deserialize(adjusted.ProjectedPerGame).Values.ToDictionary(
