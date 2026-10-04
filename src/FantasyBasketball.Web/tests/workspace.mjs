@@ -124,14 +124,13 @@ try {
   await page.waitForURL(url => url.pathname === '/app/draft');
   await visible(page.getByRole('heading', { name: 'Your rules. Your court.' }));
   checks.push('Sign-in lands on the oval-button menu; Mock draft opens the draft workspace at /app/draft');
-  assert.equal(await page.getByLabel('Teams', { exact: true }).inputValue(), '7');
+  assert.equal(await page.getByLabel('Teams', { exact: true }).inputValue(), '10');
+  assert.equal(await page.getByLabel('UTIL', { exact: true }).inputValue(), '3', 'the standard roster is prefilled');
   assert.equal(await page.getByLabel('Weekly acquisitions', { exact: true }).inputValue(), '7');
   await accessibility('League setup');
   const denied = await page.evaluate(async () => (await fetch('/api/leagues', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).status);
   assert.equal(denied, 400, 'Cookie mutation without CSRF must fail');
   await page.getByLabel('League name').fill('Browser points league');
-  await page.getByRole('button', { name: 'Add slot', exact: true }).click();
-  await page.getByRole('button', { name: 'Add slot', exact: true }).click();
   await page.getByRole('checkbox', { name: 'Use these reviewed scoring rules for my league.' }).check();
   await page.getByRole('button', { name: 'Save league' }).click();
   await visible(page.getByRole('heading', { name: 'Browser points league', exact: true }));

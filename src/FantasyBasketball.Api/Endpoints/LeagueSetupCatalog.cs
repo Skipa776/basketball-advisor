@@ -9,7 +9,9 @@ public static class LeagueSetupCatalog
 {
     public static object Create() => new
     {
-        SuggestedTeamCount = 7,
+        SuggestedTeamCount = 10,
+        // ESPN's standard roster: a starting point the owner reviews, never applied unseen.
+        SuggestedRosterSlots = new[] { "PG", "SG", "SF", "PF", "C", "G", "F", "UTIL", "UTIL", "UTIL", "BENCH", "BENCH", "BENCH", "IR" },
         ConfidenceLevels = Enum.GetValues<Confidence>().Select(value => new { Name = value.ToString(), Value = (int)value }),
         EvidencePolarities = Enum.GetValues<EvidencePolarity>().Select(value => new { Name = value.ToString(), Value = (int)value }),
         Stats = Enum.GetValues<StatKey>().Select(value => new { Name = value.ToString(), Value = (int)value }),

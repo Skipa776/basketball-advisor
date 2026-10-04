@@ -122,16 +122,15 @@ function LeagueForm({ setup, onCreated }: { setup: Setup; onCreated: (league: Le
   const [rules, setRules] = useState(setup.pointsProfile.rules.map(rule => ({ ...rule, pointsPerUnit: String(rule.pointsPerUnit) })));
   const [leagueType, setLeagueType] = useState<'Points' | 'Categories'>('Points');
   const [categories, setCategories] = useState<string[]>([]);
-  const [slots, setSlots] = useState<string[]>([]);
-  const [slot, setSlot] = useState(setup.rosterSlots[0]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setError('');
-    if (!slots.length) { setError('Add your league’s roster slots before saving.'); return; }
+    const form = new FormData(event.currentTarget);
+    const slots = setup.rosterSlots.flatMap(name => Array<string>(Number(form.get(`slot:${name}`) ?? 0)).fill(name));
+    if (!slots.some(name => name !== 'BENCH' && name !== 'IR')) { setError('Add at least one starting slot before saving.'); return; }
     if (leagueType === 'Categories' && !categories.length) { setError('Choose at least one category before saving.'); return; }
     setBusy(true);
-    const form = new FormData(event.currentTarget);
     try {
       const created = await post<League>('/api/leagues', { name: form.get('name'), type: leagueType, teamCount: Number(form.get('teams')), cadence: form.get('cadence'), weeklyAcquisitionLimit: Number(form.get('weeklyAcquisitionLimit')), scoringRules: leagueType === 'Points' ? rules.map(rule => ({ ...rule, pointsPerUnit: Number(rule.pointsPerUnit) })) : [], categories: leagueType === 'Categories' ? categories : [], rosterSlots: slots });
       onCreated(created.data);
@@ -141,8 +140,8 @@ function LeagueForm({ setup, onCreated }: { setup: Setup; onCreated: (league: Le
   return <section className="panel" aria-labelledby="setup-title"><p className="eyebrow">01 / START WITH YOUR RULES</p><h2 id="setup-title">Your rules. Your court.</h2><p>Set the rules your league uses, then save.</p>
     <form onSubmit={submit} className="setup-form"><div className="form-row"><label>League name<input name="name" required maxLength={100} /></label><label>Teams<input name="teams" type="number" min="1" step="1" defaultValue={setup.suggestedTeamCount} required /></label><label>Lineup changes<select name="cadence"><option value="Daily">Daily</option><option value="Weekly">Weekly</option></select></label><label>Weekly acquisitions<input name="weeklyAcquisitionLimit" type="number" min="1" max="99" step="1" defaultValue={7} required /></label></div>
       <fieldset><legend>League scoring</legend><div className="form-row"><label className="check"><input type="radio" name="leagueType" checked={leagueType === 'Points'} onChange={() => setLeagueType('Points')} />Points</label><label className="check"><input type="radio" name="leagueType" checked={leagueType === 'Categories'} onChange={() => setLeagueType('Categories')} />Categories</label></div>{leagueType === 'Points' ? <><p>{setup.pointsProfile.name} starter. Review or edit every value.</p><div className="scoring-grid">{rules.map((rule, index) => <label key={rule.stat}>{rule.stat}<input aria-label={`${rule.stat} points`} type="number" step="any" required value={rule.pointsPerUnit} onChange={event => setRules(previous => previous.map((value, i) => i === index ? { ...value, pointsPerUnit: event.target.value } : value))} /></label>)}</div></> : <div className="scoring-grid">{setup.stats.map(stat => <label className="check" key={stat.name}><input type="checkbox" checked={categories.includes(stat.name)} onChange={event => setCategories(previous => event.target.checked ? [...previous, stat.name] : previous.filter(value => value !== stat.name))} />{stat.name}</label>)}</div>}</fieldset>
-      <fieldset><legend>Your roster slots</legend><p>Add every slot, bench included.</p><div className="slot-controls"><label>Slot<select value={slot} onChange={event => setSlot(event.target.value)}>{setup.rosterSlots.map(value => <option key={value}>{value}</option>)}</select></label><button type="button" onClick={() => setSlots([...slots, slot])}>Add slot</button></div><ul className="slots">{slots.map((value, index) => <li key={index}>{value} <button type="button" aria-label={`Remove ${value} slot ${index + 1}`} onClick={() => setSlots(slots.filter((_, i) => i !== index))}>×</button></li>)}</ul></fieldset>
-      <label className="check"><input type="checkbox" required /> Use these reviewed {leagueType === 'Points' ? 'scoring rules' : 'categories'} for my league.</label><ErrorNotice text={error} /><button className="primary" disabled={busy}>{busy ? 'Saving…' : 'Save league'} ↗</button>
+      <fieldset><legend>Your roster slots</legend><p>ESPN’s standard roster. Change any count to match your league.</p><div className="scoring-grid">{setup.rosterSlots.map(name => <label key={name}>{name}<input type="number" name={`slot:${name}`} min="0" max="20" step="1" defaultValue={setup.suggestedRosterSlots.filter(value => value === name).length} required /></label>)}</div></fieldset>
+      <label className="check"><input type="checkbox" required /> Use these reviewed {leagueType === 'Points' ? 'scoring rules' : 'categories'} for my league.</label><ErrorNotice text={error} /><button className="primary" disabled={busy}>{busy ? 'Saving and projecting players…' : 'Save league'} ↗</button>
     </form>
   </section>;
 }

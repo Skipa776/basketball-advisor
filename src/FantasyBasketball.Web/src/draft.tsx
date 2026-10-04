@@ -9,6 +9,8 @@ import { SimulatedPick } from './simulation';
 import { RecordedPerformance } from './performance';
 import type { Board, Draft, DraftRecord, League, Player, Ranking } from './types';
 
+/** RosterSlotKind.IR: injured-reserve slots are not drafted into. */
+const IR_SLOT = 9;
 const number = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 1 });
 /** Snake order: odd rounds run 1→N, even rounds N→1. */
 export const slotOnClock = (pick: number, teams: number) => { const index = (pick - 1) % teams; return Math.ceil(pick / teams) % 2 === 1 ? index + 1 : teams - index; };
@@ -106,7 +108,7 @@ export function DraftWorkspace({ league, draftId, onDraft }: { league: League; d
     </section>}
     {session && league.type === 0 && !complete && <SimulatedPick draft={session} disabled={busy || record.loading || !!record.error} pick={pick} />}
     {session && league.type === 0 && <DraftAdvice draft={session} leagueId={league.id} version={projectionRevision} disabled={busy || record.loading || !!record.error || complete} pick={pick} />}
-    {!draftId && <form className="draft-start panel" onSubmit={create}><h3>Start a snake draft</h3><p>Choose your slot and rounds. We’ll save it.</p><div className="form-row"><label>Your draft position<input type="number" name="position" required min="1" max={league.teamCount} /></label><label>Rounds<input type="number" name="rounds" required min="1" /></label><button className="primary" disabled={busy}>{busy ? 'Starting…' : 'Start draft'} ↗</button></div></form>}
+    {!draftId && <form className="draft-start panel" onSubmit={create}><h3>Start a snake draft</h3><p>Choose your slot and rounds. We’ll save it.</p><div className="form-row"><label>Your draft position<input type="number" name="position" required min="1" max={league.teamCount} /></label><label>Rounds<input type="number" name="rounds" required min="1" defaultValue={league.rosterSlots.filter(slot => slot.kind !== IR_SLOT).length} /></label><button className="primary" disabled={busy}>{busy ? 'Starting…' : 'Start draft'} ↗</button></div></form>}
     {draftId && !record.result && record.loading && <p role="status">Restoring your saved draft…</p>}
     {record.result && !session && <p className="notice">This draft is from another league. Switch leagues or start fresh.</p>}
     {session && <><p className="muted">Snake · Slot {session.userSlot} · {session.roundCount} rounds. Bookmark to come back.</p>{board.result?.data.banner && <p className="notice">{board.result.data.banner}</p>}<PlayerPool leagueId={league.id} session={session} rankings={board.result?.data.rankings ?? []} pick={pick} disabled={busy || record.loading || !!record.error || complete} actionLabel={myTurn ? 'Pick' : `Taken by ${onClock}`} /><PickHistory session={session} /></>}
