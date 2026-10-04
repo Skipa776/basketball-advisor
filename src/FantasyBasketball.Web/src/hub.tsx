@@ -26,15 +26,20 @@ export function Hub({ session, pageHref, leagueId, onLeague }: { session: Sessio
   const items = ITEMS.filter(item => !item.ownerOnly || user.isInstanceOwner);
   const leagues = useResource<League[]>('/api/leagues?limit=200');
   const known = leagues.result?.data.some(league => league.id === leagueId);
+  const firstVisit = leagues.result?.data.length === 0;
   return <section className="hub" aria-labelledby="hub-title">
-    <p className="eyebrow">WELCOME BACK, {user.displayName.toUpperCase()}</p>
+    <p className="eyebrow">{firstVisit ? 'WELCOME' : 'WELCOME BACK'}, {user.displayName.toUpperCase()}</p>
     <h1 id="hub-title">What do you want to see?</h1>
+    {firstVisit && <ol className="hub-start" aria-label="Get started">
+      <li><a href="/app/draft"><strong>Set up your league</strong><span>Your scoring and roster. ESPN defaults are filled in, so it takes a minute.</span></a></li>
+      <li><strong>Run a mock draft</strong><span>Every pick is ranked and explained under your scoring.</span></li>
+      <li><strong>Add your rosters</strong><span>Optional. Unlocks trades, matchups and streaming in Teams in the league.</span></li>
+    </ol>}
     <div className="hub-league">
       <label>Your league<select value={known ? leagueId : ''} onChange={event => onLeague(event.target.value)}>
         <option value="">{leagues.loading ? 'Loading leagues…' : 'Choose your league'}</option>
         {leagues.result?.data.map(league => <option key={league.id} value={league.id}>{league.name} · {league.teamCount} teams</option>)}
       </select></label>
-      {leagues.result && !leagues.result.data.length && <a href="/app/draft">Create your first league ↗</a>}
       {leagues.result && !known && !!leagues.result.data.length && <span className="muted">Every page below uses this league.</span>}
     </div>
     <ul className="hub-list">{items.map(item => <li key={item.path}>
