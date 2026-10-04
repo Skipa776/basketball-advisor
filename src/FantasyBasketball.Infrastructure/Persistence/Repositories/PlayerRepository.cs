@@ -42,16 +42,26 @@ public sealed class PlayerRepository(FantasyDbContext database)
             .AsNoTracking()
             .SingleOrDefaultAsync(value => value.Id == id.Value, cancellationToken);
 
-        return row is null
-            ? null
-            : new Player(
-                new PlayerId(row.Id),
-                row.FullName,
-                row.NormalizedName,
-                row.CurrentTeamId is { } teamId ? new NbaTeamId(teamId) : null,
-                row.Positions,
-                row.BirthDate);
+        return row is null ? null : Map(row);
     }
+
+    public async Task<IReadOnlyList<Player>> ListAsync(IReadOnlyCollection<PlayerId> ids, CancellationToken cancellationToken)
+    {
+        var values = ids.Select(id => id.Value).ToArray();
+        return (await database.Players.AsNoTracking()
+                .Where(value => values.Contains(value.Id))
+                .ToArrayAsync(cancellationToken))
+            .Select(Map).ToArray();
+    }
+
+    private static Player Map(PlayerRow row) =>
+        new(
+            new PlayerId(row.Id),
+            row.FullName,
+            row.NormalizedName,
+            row.CurrentTeamId is { } teamId ? new NbaTeamId(teamId) : null,
+            row.Positions,
+            row.BirthDate);
 
     public async Task<Player?> FindByExternalIdentityAsync(
         string provider,

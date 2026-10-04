@@ -1,4 +1,5 @@
 using FantasyBasketball.Application.Abstractions;
+using FantasyBasketball.Domain.Players;
 using FantasyBasketball.Domain.Projections;
 using FantasyBasketball.Domain.Stats;
 
@@ -33,6 +34,10 @@ public sealed class ProjectionService(
         var history = seasonProjector is null || pool.Count == 0 ? [] : await HistoryAsync(pool, cancellationToken);
         var byPlayer = history.ToLookup(line => line.PlayerId);
         var seasonGames = SeasonProjector.SeasonLengths(history);
+        var positions = seasonProjector is null
+            ? new Dictionary<PlayerId, string?>()
+            : (await players.ListAsync(pool.Select(line => line.PlayerId).ToArray(), cancellationToken))
+                .ToDictionary(player => player.Id, player => player.Positions.FirstOrDefault());
         var results = new List<ProjectedBaseline>(pool.Count);
 
         foreach (var source in pool)
@@ -43,11 +48,10 @@ public sealed class ProjectionService(
             ProjectionDistribution? distribution = null;
             if (seasonProjector is not null)
             {
-                var player = await players.GetAsync(source.PlayerId, cancellationToken);
                 var projection = seasonProjector.Project(
                     source.PlayerId,
                     source.SeasonEndYear + 1,
-                    player?.Positions.FirstOrDefault(),
+                    positions.GetValueOrDefault(source.PlayerId),
                     byPlayer[source.PlayerId].ToArray(),
                     seasonGames,
                     baseline.ProjectedMinutesPerGame);

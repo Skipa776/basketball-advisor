@@ -63,10 +63,11 @@ public sealed class LeagueProjectionService(
             var computedAt = clock.GetUtcNow();
             var publicationId = Guid.NewGuid();
             var projected = await projector.ProjectPoolAsync(pool, token);
+            var contextByPlayer = await context.ListForPlayersAsync(projected.Select(item => item.Baseline.PlayerId).ToArray(), token);
             foreach (var (baseline, distribution) in projected)
             {
                 token.ThrowIfCancellationRequested();
-                var events = await context.ListForPlayerAsync(baseline.PlayerId, token);
+                var events = contextByPlayer.GetValueOrDefault(baseline.PlayerId) ?? [];
                 var adjusted = applier.Apply(Guid.NewGuid(), baseline,
                     events.Select(item => item.Event).ToArray(),
                     events.Select(item => item.Impact).ToArray(), computedAt);

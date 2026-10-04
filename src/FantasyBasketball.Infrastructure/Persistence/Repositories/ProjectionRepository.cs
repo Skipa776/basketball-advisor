@@ -182,11 +182,17 @@ public sealed class ProjectionRepository(FantasyDbContext database)
 
     /// <summary>
     /// Inserts and stops tracking: a publication writes thousands of rows in one context, and
-    /// every save scans everything still tracked, so keeping them made it quadratic.
+    /// every save scans everything still tracked, so keeping them made it quadratic. Inside an
+    /// import transaction the rows wait for its single save instead.
     /// </summary>
     private async Task SaveAndForgetAsync(CancellationToken cancellationToken, params object[] rows)
     {
         database.AddRange(rows);
+        if (database.DeferAppends)
+        {
+            return;
+        }
+
         await database.SaveChangesAsync(cancellationToken);
         foreach (var row in rows)
         {
