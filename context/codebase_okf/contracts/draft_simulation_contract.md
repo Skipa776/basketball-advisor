@@ -57,7 +57,7 @@ are paired. *Check: row DS-02.*
 | `Mean`, `Sd`, `P10`, `P90` | The user's final-roster season points across rollouts |
 | `Score` | What the risk mode ranks by: `Mean`, `Mean − κ·Sd` (Cautious, κ = 0.5), or `P90` (Upside) |
 | `Edge ± EdgeSe` | Mean paired difference to the top candidate and its standard error |
-| `SurvivalToNextPick` | Share of the top candidate's rollouts (the runner-up's, for the top one) in which the player is still available at the user's next pick; null on the user's last pick |
+| `SurvivalToNextPick` | Share of the top candidate's rollouts (the runner-up's, for the top one) in which the player is still available at the user's next pick: the one after this when the user is on the clock, else the upcoming one, where the candidate would be taken (DS-07); null on the user's last pick |
 
 # Seeding and latency
 

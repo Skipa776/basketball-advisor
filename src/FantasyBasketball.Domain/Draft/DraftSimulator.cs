@@ -83,6 +83,9 @@ public sealed class DraftSimulator(SimulationOptions options)
         }
 
         var draws = Draws(state, seed);
+        // Survival is read at the user's next pick: the one after this when on the clock, else
+        // the upcoming one, where the candidate would be taken if he lasts.
+        var surviveAt = session.IsUserPick(session.CurrentPick) ? 1 : 0;
         var values = new decimal[candidates.Length][];
         var survival = new int[candidates.Length][];
         for (var k = 0; k < candidates.Length; k++)
@@ -95,7 +98,7 @@ public sealed class DraftSimulator(SimulationOptions options)
         {
             for (var k = 0; k < candidates.Length; k++)
             {
-                (values[k][n], survival[k][n]) = Rollout(state, lineup, candidates, k, draws[n], unchecked((seed * 397) ^ (n * 7919)), opponents);
+                (values[k][n], survival[k][n]) = Rollout(state, lineup, candidates, k, draws[n], unchecked((seed * 397) ^ (n * 7919)), opponents, surviveAt);
             }
         });
 
@@ -169,7 +172,7 @@ public sealed class DraftSimulator(SimulationOptions options)
     }
 
     private static (decimal Value, int Survivors) Rollout(
-        Setup state, LineupOptimizer lineup, int[] candidates, int k, double[] draw, int streamSeed, OpponentChoiceModel? opponents)
+        Setup state, LineupOptimizer lineup, int[] candidates, int k, double[] draw, int streamSeed, OpponentChoiceModel? opponents, int surviveAt)
     {
         var random = new Random(streamSeed);
         var taken = (bool[])state.InitiallyTaken.Clone();
@@ -184,7 +187,7 @@ public sealed class DraftSimulator(SimulationOptions options)
             int chosen;
             if (team == user)
             {
-                if (userPicksMade == 1)
+                if (userPicksMade == surviveAt)
                 {
                     for (var j = 0; j < candidates.Length; j++)
                     {
