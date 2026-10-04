@@ -97,6 +97,8 @@ function LeagueWorkspace() {
   const [leagueId, setLeagueId] = useState(initial.get('league') ?? rememberedLeague() ?? '');
   const [creating, setCreating] = useState(false);
   const [draftId, setDraftId] = useState(initial.get('draft') ?? '');
+  // No league chosen yet: the first one, so a returning user lands in their draft room.
+  useEffect(() => { if (!leagueId && leagues.result?.data.length) setLeagueId(leagues.result.data[0].id); }, [leagueId, leagues.result]);
   const selected = leagues.result?.data.find(league => league.id === leagueId);
   function chooseLeague(id: string) {
     setLeagueId(id); setDraftId(''); setCreating(false); rememberLeague(id);

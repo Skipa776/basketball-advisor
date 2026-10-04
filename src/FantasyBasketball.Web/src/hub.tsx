@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import type { League, Session } from './types';
 import { useResource } from './useResource';
 import { RisersTable } from './landingData';
@@ -26,6 +27,8 @@ export function Hub({ session, pageHref, leagueId, onLeague }: { session: Sessio
   const items = ITEMS.filter(item => !item.ownerOnly || user.isInstanceOwner);
   const leagues = useResource<League[]>('/api/leagues?limit=200');
   const known = leagues.result?.data.some(league => league.id === leagueId);
+  // Nothing chosen on this browser yet: start from the first league, as every page does.
+  useEffect(() => { if (!known && leagues.result?.data.length) onLeague(leagues.result.data[0].id); }, [known, leagues.result, onLeague]);
   const firstVisit = leagues.result?.data.length === 0;
   return <section className="hub" aria-labelledby="hub-title">
     <p className="eyebrow">{firstVisit ? 'WELCOME' : 'WELCOME BACK'}, {user.displayName.toUpperCase()}</p>
@@ -40,7 +43,7 @@ export function Hub({ session, pageHref, leagueId, onLeague }: { session: Sessio
         <option value="">{leagues.loading ? 'Loading leagues…' : 'Choose your league'}</option>
         {leagues.result?.data.map(league => <option key={league.id} value={league.id}>{league.name} · {league.teamCount} teams</option>)}
       </select></label>
-      {leagues.result && !known && !!leagues.result.data.length && <span className="muted">Every page below uses this league.</span>}
+      {!!leagues.result?.data.length && <span className="muted">Every page below uses this league.</span>}
     </div>
     <ul className="hub-list">{items.map(item => <li key={item.path}>
       <a className="hub-pill" href={pageHref(item.path)}>

@@ -22,8 +22,9 @@ function ErrorNotice({ text, retry }: { text: string; retry?: () => void }) {
 }
 
 export function FunctionalPage({ name, session, onHome, onLeagueUpdated, leagueId }: PageProps & { name: string; session: Session; leagueId?: string }) {
-  const leagues = useResource<League[]>(leagueId ? '/api/leagues?limit=200' : null);
-  const selectedLeague = leagues.result?.data.find(item => item.id === leagueId);
+  const leagues = useResource<League[]>('/api/leagues?limit=200');
+  // No league chosen yet (a new browser, a shared link): use the first rather than bounce to the menu.
+  const selectedLeague = leagueId ? leagues.result?.data.find(item => item.id === leagueId) : leagues.result?.data[0];
   return <>
     <div className="intro intro-compact"><p className="eyebrow">THE WORKSPACE / {name.toUpperCase()}</p><h1>{name}.</h1></div>
     {name === 'Data sources' && <DataSourcesPage session={session} onHome={onHome} />}
