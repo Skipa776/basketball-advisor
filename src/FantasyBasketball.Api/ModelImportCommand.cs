@@ -8,13 +8,37 @@ namespace FantasyBasketball.Api;
 /// <summary>
 /// Loads a parameter record written by tools/modeling into the model registry
 /// (model_params_contract). CLI-only, like the backtest:
-/// <c>dotnet run --project src/FantasyBasketball.Api -- models import tools/modeling/out/heat_prior.json [--activate]</c>
+/// <c>dotnet run --project src/FantasyBasketball.Api -- models import tools/modeling/out/heat_prior.json [--activate]</c>.
+/// <c>models list &lt;name&gt;</c> shows a model's versions; <c>models activate &lt;name&gt; &lt;version&gt;</c>
+/// switches the active one, so a bad fit rolls back without a deploy.
 /// </summary>
 public static class ModelImportCommand
 {
     public static async Task<bool> TryRunAsync(WebApplication app, string[] args)
     {
         ArgumentNullException.ThrowIfNull(app);
+        if (args is ["models", "list", var listed])
+        {
+            await using var listScope = app.Services.CreateAsyncScope();
+            var models = listScope.ServiceProvider.GetRequiredService<IModelVersionRepository>();
+            var active = (await models.GetActiveAsync(listed, CancellationToken.None))?.Version;
+            foreach (var model in await models.ListAsync(listed, CancellationToken.None))
+            {
+                Console.WriteLine($"{(model.Version == active ? "*" : " ")} {model.Version}  fitted {model.FittedAt:yyyy-MM-dd}  trained on {string.Join(", ", model.TrainSeasonEndYears)}");
+            }
+
+            return true;
+        }
+
+        if (args is ["models", "activate", var name, var chosen])
+        {
+            await using var activateScope = app.Services.CreateAsyncScope();
+            await activateScope.ServiceProvider.GetRequiredService<IModelVersionRepository>()
+                .ActivateAsync(name, chosen, CancellationToken.None);
+            Console.WriteLine($"Active {name}: {chosen}. Recalculate league projections to publish with it.");
+            return true;
+        }
+
         if (args is not ["models", "import", var path, ..])
         {
             return false;
