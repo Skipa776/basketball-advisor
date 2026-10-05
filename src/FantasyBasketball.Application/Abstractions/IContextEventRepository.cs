@@ -24,6 +24,26 @@ public interface IContextEventRepository
             PlayerId playerId,
             CancellationToken cancellationToken);
 
+    /// <summary>
+    /// <see cref="ListForPlayerAsync"/> for many players in one read, keyed by player (players
+    /// with no events are absent); the default loops it.
+    /// </summary>
+    async Task<IReadOnlyDictionary<PlayerId, IReadOnlyList<(ContextEvent Event, PlayerContextImpact Impact)>>>
+        ListForPlayersAsync(IReadOnlyCollection<PlayerId> playerIds, CancellationToken cancellationToken)
+    {
+        var events = new Dictionary<PlayerId, IReadOnlyList<(ContextEvent Event, PlayerContextImpact Impact)>>();
+        foreach (var playerId in playerIds)
+        {
+            var list = await ListForPlayerAsync(playerId, cancellationToken);
+            if (list.Count > 0)
+            {
+                events[playerId] = list;
+            }
+        }
+
+        return events;
+    }
+
     Task SaveAsync(
         ContextEvent contextEvent,
         CancellationToken cancellationToken);

@@ -26,7 +26,8 @@ public sealed class MinutesModelTests
         Model.FromHistory(27, [new MinutesHistory(1, 50, 17.9m, null)]).ShouldBe(((50m * 17.9m) + 200m) / 60m + 2m);
         Model.FromHistory(27, [new MinutesHistory(1, 50, 18m, null)]).ShouldBe(((50m * 18m) + 200m) / 60m - 1m);
         Model.FromHistory(27, [new MinutesHistory(1, 50, 28m, null)]).ShouldBe(((50m * 28m) + 200m) / 60m);
-        Model.FromHistory(27, [new MinutesHistory(2, 100, 30m, null)]).ShouldBe(((50m * 30m) + 200m) / 60m - 4m);
+        // No last season: the lag-2 season is the newest played, so it takes weight 1.
+        Model.FromHistory(27, [new MinutesHistory(2, 100, 30m, null)]).ShouldBe(((100m * 30m) + 200m) / 110m - 4m);
     }
 
     [Fact]
@@ -50,6 +51,17 @@ public sealed class MinutesModelTests
         // (60*30 + 20*20 + 10*20) / (60 + 20 + 10) = 26.6667, starter? no: 30 >= 28 -> starter (0);
         // age 26 -> -1 * -0.3 = +0.3.
         Model.Project(2026, lines).ShouldBe((2400m / 90m) + 0.3m);
+    }
+
+    [Fact]
+    public void MM06_recency_counts_from_the_newest_season_played()
+    {
+        // Sat out last season: lags 2 and 3 take weights 1 and 0.5, as lags 1 and 2 would.
+        var absent = Model.FromHistory(27, [new MinutesHistory(2, 70, 34m, null), new MinutesHistory(3, 60, 32m, null)]);
+        var present = Model.FromHistory(27, [new MinutesHistory(1, 70, 34m, null), new MinutesHistory(2, 60, 32m, null)]);
+
+        absent.ShouldBe(((70m * 34m) + (30m * 32m) + 200m) / 110m - 4m);
+        (present - absent).ShouldBe(4m, "only the role shift differs: none (-4) against starter (0)");
     }
 
     [Fact]

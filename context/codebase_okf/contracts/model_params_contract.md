@@ -29,7 +29,10 @@ Table `model_version`: `model_name`, `version`, `fitted_at`,
 `train_season_end_years`, `parameters` (jsonb), `metrics` (jsonb),
 `card_markdown`, `is_active`. Rows are inserted inactive and never edited,
 except `is_active`, which `ActivateAsync` swaps in one transaction. Rollback is
-activating an older version; nothing is deleted.
+activating an older version; nothing is deleted. From the CLI:
+`models list <name>` marks the active version with `*`, and
+`models activate <name> <version>` switches it; league projections pick it up on
+their next publication.
 
 # Parameters
 

@@ -1,6 +1,6 @@
 export type Session = { authenticated: boolean; registrationOpen: boolean; user: { id: string; displayName: string; isInstanceOwner: boolean } | null };
 export type Rule = { stat: string; pointsPerUnit: number };
-export type Setup = { suggestedTeamCount: number; stats: { name: string; value: number }[]; rosterSlots: string[]; pointsProfile: { id: string; name: string; rules: Rule[] } };
+export type Setup = { suggestedTeamCount: number; suggestedRosterSlots: string[]; stats: { name: string; value: number }[]; rosterSlots: string[]; pointsProfile: { id: string; name: string; rules: Rule[] } };
 export type League = { id: string; name: string; teamCount: number; type: number; cadence: number; weeklyAcquisitionLimit: number; categories: number[]; scoringRules: { stat: number; pointsPerUnit: number }[]; rosterSlots: { kind: number }[] };
 export type Player = { id: { value: string }; fullName: string; positions: string[] };
 export type Pick = { pickNumber: number; playerId: { value: string } };
@@ -8,7 +8,7 @@ export type Draft = { id: string; teamCount: number; roundCount: number; userSlo
 export type DraftRecord = { leagueId: string; session: Draft };
 export type Ranking = { playerId: { value: string }; total: number; projectedSeasonValue: number; evidence: { statement: string; magnitude: number | null }[] };
 export type Board = { rankings: Ranking[]; banner: string | null };
-export type Advice = { subjectPlayerId: { value: string }; score: number; confidence: number; evidence: { statement: string; polarity: number; magnitude: number | null }[] };
+export type Advice = { subjectPlayerId: { value: string }; score: number; confidence: number; evidence: { kind: number; statement: string; polarity: number; magnitude: number | null }[] };
 export type EvidenceCatalog = { confidenceLevels: { name: string; value: number }[]; evidencePolarities: { name: string; value: number }[] };
 export type LandingLine = { playerId: string; name: string; playedOn: string; minutes: number; fantasyPoints: number; categoriesWon: number; line: Record<string, number> };
 export type LandingDay = { date: string | null; source: string; scoring: string; poolSize: number; players: LandingLine[]; simulatedToday: string | null };

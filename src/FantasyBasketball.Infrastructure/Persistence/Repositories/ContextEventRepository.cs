@@ -64,11 +64,18 @@ public sealed class ContextEventRepository(FantasyDbContext database)
     public async Task<IReadOnlyList<(ContextEvent Event, PlayerContextImpact Impact)>>
         ListForPlayerAsync(
             PlayerId playerId,
+            CancellationToken cancellationToken) =>
+        (await ListForPlayersAsync([playerId], cancellationToken)).GetValueOrDefault(playerId) ?? [];
+
+    public async Task<IReadOnlyDictionary<PlayerId, IReadOnlyList<(ContextEvent Event, PlayerContextImpact Impact)>>>
+        ListForPlayersAsync(
+            IReadOnlyCollection<PlayerId> playerIds,
             CancellationToken cancellationToken)
     {
+        var ids = playerIds.Select(id => id.Value).ToArray();
         var rows = await database.PlayerContextImpacts
             .AsNoTracking()
-            .Where(value => value.PlayerId == playerId.Value)
+            .Where(value => ids.Contains(value.PlayerId))
             .Join(
                 database.ContextEvents.AsNoTracking(),
                 impact => impact.ContextEventId,
@@ -78,12 +85,16 @@ public sealed class ContextEventRepository(FantasyDbContext database)
             .ThenBy(value => value.Event.Id)
             .ToArrayAsync(cancellationToken);
         return rows
-            .Select(value =>
-            {
-                var contextEvent = Map(value.Event);
-                return (contextEvent, Map(value.Impact, contextEvent));
-            })
-            .ToArray();
+            .GroupBy(value => new PlayerId(value.Impact.PlayerId))
+            .ToDictionary(
+                group => group.Key,
+                group => (IReadOnlyList<(ContextEvent Event, PlayerContextImpact Impact)>)group
+                    .Select(value =>
+                    {
+                        var contextEvent = Map(value.Event);
+                        return (contextEvent, Map(value.Impact, contextEvent));
+                    })
+                    .ToArray());
     }
 
     public async Task SaveAsync(

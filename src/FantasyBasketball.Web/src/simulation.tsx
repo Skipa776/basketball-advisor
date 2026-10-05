@@ -12,6 +12,8 @@ const modes: { value: RiskMode; label: string; hint: string }[] = [
 const riskKey = 'fb.draftRisk';
 const recalledRisk = (): RiskMode => { try { const value = localStorage.getItem(riskKey); return modes.some(mode => mode.value === value) ? value as RiskMode : 'mean'; } catch { return 'mean'; } };
 const rememberRisk = (value: RiskMode) => { try { localStorage.setItem(riskKey, value); } catch { /* convenience only */ } };
+/** The board opens on the top five; the rest are one click away (the page was ~7,000px on a phone). */
+const SHOWN_OPTIONS = 5;
 const points = (value: number) => Math.round(value).toLocaleString();
 const signed = (value: number) => `${value >= 0 ? '+' : '−'}${points(Math.abs(value))}`;
 const percent = (value: number) => `${Math.round(value * 100)}%`;
@@ -21,7 +23,8 @@ const percent = (value: number) => `${Math.round(value * 100)}%`;
  * simulated board with 80% interval bars and survival odds. While a new pick re-simulates, the
  * last board stays up and the heuristic shortlist below answers instantly.
  */
-export function SimulatedPick({ draft, disabled, pick }: { draft: Draft; disabled: boolean; pick: (player: Player) => Promise<void> }) {
+/** Off the clock the board plans the user's upcoming pick, and its Draft buttons wait for it. */
+export function SimulatedPick({ draft, disabled, pick, onClock }: { draft: Draft; disabled: boolean; pick: (player: Player) => Promise<void>; onClock: boolean }) {
   const [risk, setRisk] = useState<RiskMode>(recalledRisk);
   const revision = draft.picks.map(item => item.playerId.value).join(',');
   const simulation = useResource<Simulation>(`/api/drafts/${draft.id}/board/simulation?risk=${risk}`, 0, revision);
@@ -34,7 +37,7 @@ export function SimulatedPick({ draft, disabled, pick }: { draft: Draft; disable
     <p className="loading-status" role="status">{simulation.loading ? 'Simulating drafts…' : ' '}</p>
     <ErrorNotice text={simulation.error} retry={simulation.refresh} />
     {unavailable && <p className="notice">{unavailable}</p>}
-    {board && board.candidates.length > 0 && <><PickCard board={board} disabled={disabled || simulation.loading} pick={pick} /><SimulatedList board={board} disabled={disabled || simulation.loading} pick={pick} /></>}
+    {board && board.candidates.length > 0 && <><PickCard board={board} disabled={disabled || simulation.loading || !onClock} pick={pick} onClock={onClock} /><SimulatedList board={board} disabled={disabled || simulation.loading || !onClock} pick={pick} /></>}
   </section>;
 }
 
@@ -49,18 +52,18 @@ function reason(top: SimulatedCandidate, nextPick: number | null) {
     : `Best expected roster, and about ${percent(top.survivalToNextPick)} chance he would last to pick ${nextPick}.`;
 }
 
-function PickCard({ board, disabled, pick }: { board: SimulatedBoard; disabled: boolean; pick: (player: Player) => Promise<void> }) {
+function PickCard({ board, disabled, pick, onClock }: { board: SimulatedBoard; disabled: boolean; pick: (player: Player) => Promise<void>; onClock: boolean }) {
   const [top, runnerUp] = board.candidates;
   const player = usePlayer(top);
   const next = usePlayer(runnerUp);
   const value = player.result?.data;
   return <article className="pick-card" aria-label="Top simulated pick">
-    <p className="eyebrow">TOP PICK</p>
+    <p className="eyebrow">{onClock || board.nextUserPick === null ? 'TOP PICK' : `PLAN FOR YOUR PICK ${board.nextUserPick}`}</p>
     <h4>{value?.fullName ?? (player.loading ? 'Loading player…' : 'Player unavailable')}</h4>
     <p className="pick-card-numbers"><strong>{points(top.mean)}</strong> ± {points(top.sd)} roster points{runnerUp && <> · <strong>{signed(-runnerUp.edge)}</strong> ± {points(runnerUp.edgeSe)} over {next.result?.data.fullName ?? 'the next option'}</>}</p>
-    <p>{reason(top, board.nextUserPick)}</p>
+    <p>{onClock ? reason(top, board.nextUserPick) : top.survivalToNextPick === null ? 'Best expected final roster.' : `About ${percent(top.survivalToNextPick)} chance he is still there when you pick.`}</p>
     <ErrorNotice text={player.error} retry={player.refresh} />
-    <button className="primary" disabled={disabled || !value} onClick={() => value && pick(value)}>Draft {value?.fullName ?? 'top pick'}</button>
+    <button className="primary" disabled={disabled || !value} onClick={() => value && pick(value)}>{onClock ? `Draft ${value?.fullName ?? 'top pick'}` : 'Waiting for your pick'}</button>
   </article>;
 }
 
@@ -69,8 +72,11 @@ function SimulatedList({ board, disabled, pick }: { board: SimulatedBoard; disab
   const high = Math.max(...board.candidates.map(candidate => candidate.p90));
   const span = Math.max(high - low, 1);
   const at = (value: number) => `${((value - low) / span) * 100}%`;
-  return <ol className="sim-board" aria-label="Simulated options">{board.candidates.map((candidate, index) =>
-    <SimulatedRow key={candidate.playerId.value} candidate={candidate} first={index === 0} nextPick={board.nextUserPick} at={at} disabled={disabled} pick={pick} />)}</ol>;
+  const [all, setAll] = useState(false);
+  const shown = all ? board.candidates : board.candidates.slice(0, SHOWN_OPTIONS);
+  return <><ol className="sim-board" aria-label="Simulated options">{shown.map((candidate, index) =>
+    <SimulatedRow key={candidate.playerId.value} candidate={candidate} first={index === 0} nextPick={board.nextUserPick} at={at} disabled={disabled} pick={pick} />)}</ol>
+    {board.candidates.length > SHOWN_OPTIONS && <button type="button" className="text-button" aria-expanded={all} onClick={() => setAll(!all)}>{all ? 'Show the top 5' : `Show all ${board.candidates.length} options`}</button>}</>;
 }
 
 function SimulatedRow({ candidate, first, nextPick, at, disabled, pick }: { candidate: SimulatedCandidate; first: boolean; nextPick: number | null; at: (value: number) => string; disabled: boolean; pick: (player: Player) => Promise<void> }) {

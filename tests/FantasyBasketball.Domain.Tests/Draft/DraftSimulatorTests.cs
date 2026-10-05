@@ -81,6 +81,21 @@ public sealed class DraftSimulatorTests
         byId[pool[4].PlayerId].SurvivalToNextPick.ShouldNotBeNull().ShouldBeGreaterThan(0.95m, "PG3 (ADP 5) is still there after PG1 and PG2 go");
     }
 
+    [Fact]
+    public void DS07_off_the_clock_survival_is_read_at_the_users_upcoming_pick()
+    {
+        // The user took C1 at pick 1; the opponent picks 2 and 3, the user 4.
+        var (session, lineup, pool) = ScarceCenter();
+        session.MakePick(pool[0].PlayerId);
+
+        var board = Simulator.Simulate(session, lineup, pool, 9, RiskMode.Mean);
+
+        board.NextUserPick.ShouldBe(4);
+        var byId = board.Candidates.ToDictionary(candidate => candidate.PlayerId);
+        byId[pool[1].PlayerId].SurvivalToNextPick.ShouldNotBeNull().ShouldBeLessThan(0.05m, "PG1 (ADP 3) goes at pick 2 or 3");
+        byId[pool[4].PlayerId].SurvivalToNextPick.ShouldNotBeNull().ShouldBeGreaterThan(0.95m, "PG3 (ADP 5) lasts to pick 4");
+    }
+
     private static (DraftSession Session, LineupOptimizer Lineup, DraftCandidate[] Pool) ScarceCenter()
     {
         var session = new DraftSession(Guid.NewGuid(), 2, 2, 1);

@@ -20,6 +20,12 @@ public sealed class FantasyDbContext
         this.userContext = userContext;
     }
 
+    /// <summary>
+    /// Set inside an import transaction: append-only repositories stage their rows and the
+    /// transaction saves them once before committing, not one round trip per row.
+    /// </summary>
+    internal bool DeferAppends { get; set; }
+
     public FantasyDbContext(DbContextOptions<FantasyDbContext> options)
         : this(options, MissingUserContext.Instance)
     {

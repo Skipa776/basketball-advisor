@@ -49,12 +49,33 @@ public sealed partial class ApiHttpTests
         using var scoring = await client.PutAsJsonAsync($"/api/leagues/{league}/scoring",
             new { ScoringRules = new[] { new { Stat = nameof(StatKey.PTS), PointsPerUnit = 2m } } }, token);
         scoring.StatusCode.ShouldBe(HttpStatusCode.OK);
-        JsonNode.Parse(await Board())!["rankings"]!.AsArray().ShouldBeEmpty();
+        var rescored = await Board();
+        rescored.ShouldNotBe(before, "a scoring change republishes under the new rules");
+        JsonNode.Parse(rescored)!["rankings"]!.AsArray().ShouldNotBeEmpty();
         using var missing = await client.PostAsJsonAsync($"/api/leagues/{league}/projections",
             new { SeasonEndYear = 2024, Source = DataSourceName.Manual }, token);
         missing.StatusCode.ShouldBe(HttpStatusCode.Conflict);
         using var invalid = await client.PostAsJsonAsync($"/api/leagues/{league}/projections",
             new { SeasonEndYear = 1900, Source = "unknown-source" }, token);
         invalid.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task P16_a_new_points_league_is_ranked_without_a_manual_publication()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var seeded = await CreateLeagueAsync(token);
+        var player = await AddPlayerAsync("Auto publication fixture", token);
+        await SeedProjectionAsync(player, seeded, token);
+
+        var league = await CreateLeagueAsync(token);
+        var draft = await CreateDraftAsync(league, token);
+
+        using var response = await client.GetAsync($"/api/drafts/{draft}/board?leagueId={league}", token);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var board = (await ReadEnvelopeAsync(response, token)).RootElement.GetProperty("data").GetRawText();
+        board.ShouldContain(player.Value.ToString());
+        using var latest = await client.PostAsJsonAsync($"/api/leagues/{league}/projections", new { }, token);
+        latest.StatusCode.ShouldBe(HttpStatusCode.OK, "an empty request republishes from the newest imported season");
     }
 }

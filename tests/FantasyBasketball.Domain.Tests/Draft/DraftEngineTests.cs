@@ -124,6 +124,19 @@ public sealed class DraftEngineTests
     }
 
     [Fact]
+    public void D35_a_player_who_sat_out_last_season_carries_a_risk_item()
+    {
+        var returning = Candidate(100m, ["PG"], 30m) with { SatOutLastSeason = true };
+        var regular = Candidate(90m, ["SF"], 40m);
+
+        var board = CreateBoard().Rank(CreateSession(), LeagueCatalog.CreateSeedPointsLeague(Guid.NewGuid()), [returning, regular], []);
+
+        ValueFor(board, returning.PlayerId).Evidence.ShouldContain(item =>
+            item.Kind == EvidenceKind.Injury && item.Polarity == EvidencePolarity.Risk && item.Statement.StartsWith("Sat out last season"));
+        ValueFor(board, regular.PlayerId).Evidence.ShouldNotContain(item => item.Statement.StartsWith("Sat out"));
+    }
+
+    [Fact]
     public void D07_category_board_uses_category_totals_and_banner()
     {
         var league = new FantasyLeague(

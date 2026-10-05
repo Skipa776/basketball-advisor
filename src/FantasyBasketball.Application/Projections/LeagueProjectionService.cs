@@ -2,6 +2,7 @@ using FantasyBasketball.Application.Abstractions;
 using FantasyBasketball.Application.Common;
 using FantasyBasketball.Domain.Leagues;
 using FantasyBasketball.Domain.Projections;
+using FantasyBasketball.Domain.Provenance;
 using FantasyBasketball.Domain.Scoring;
 
 namespace FantasyBasketball.Application.Projections;
@@ -22,6 +23,23 @@ public sealed class LeagueProjectionService(
 {
     public Task<IReadOnlyList<SeasonProjectionPool>> ListPoolsAsync(CancellationToken cancellationToken) =>
         statistics.ListPoolsAsync(cancellationToken);
+
+    /// <summary>
+    /// Publishes from the newest imported season (Basketball-Reference first), so a new or
+    /// rescored points league is ready to draft without a manual step. Null when there is nothing
+    /// to publish from: no imported season, or a category league.
+    /// </summary>
+    public async Task<ProjectionPublication?> PublishLatestAsync(Guid leagueId, CancellationToken cancellationToken)
+    {
+        var league = await leagues.GetAsync(leagueId, cancellationToken);
+        var pool = (await statistics.ListPoolsAsync(cancellationToken))
+            .OrderByDescending(pool => pool.SeasonEndYear)
+            .ThenByDescending(pool => pool.Source == DataSourceName.BasketballReference)
+            .FirstOrDefault();
+        return league?.Type != LeagueType.Points || pool is null
+            ? null
+            : await RecalculateAsync(leagueId, pool.SeasonEndYear, pool.Source, cancellationToken);
+    }
 
     public async Task<ProjectionPublication> RecalculateAsync(
         Guid leagueId, int seasonEndYear, string source, CancellationToken cancellationToken)
@@ -45,10 +63,11 @@ public sealed class LeagueProjectionService(
             var computedAt = clock.GetUtcNow();
             var publicationId = Guid.NewGuid();
             var projected = await projector.ProjectPoolAsync(pool, token);
+            var contextByPlayer = await context.ListForPlayersAsync(projected.Select(item => item.Baseline.PlayerId).ToArray(), token);
             foreach (var (baseline, distribution) in projected)
             {
                 token.ThrowIfCancellationRequested();
-                var events = await context.ListForPlayerAsync(baseline.PlayerId, token);
+                var events = contextByPlayer.GetValueOrDefault(baseline.PlayerId) ?? [];
                 var adjusted = applier.Apply(Guid.NewGuid(), baseline,
                     events.Select(item => item.Event).ToArray(),
                     events.Select(item => item.Impact).ToArray(), computedAt);

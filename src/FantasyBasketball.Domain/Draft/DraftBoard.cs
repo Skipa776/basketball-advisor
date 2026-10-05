@@ -19,7 +19,8 @@ public sealed record DraftCandidate(
     bool HasUnverifiedContext = false,
     decimal? AdpStandardDeviation = null,
     SeasonValueDistribution? Distribution = null,
-    NbaTeamId? TeamId = null);
+    NbaTeamId? TeamId = null,
+    bool SatOutLastSeason = false);
 
 public sealed record DraftBoardResult(
     IReadOnlyList<DraftValue> Rankings,
@@ -75,7 +76,8 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
                 fit,
                 candidate.InjuryRisk,
                 candidate.RoleRisk,
-                candidate.HasUnverifiedContext);
+                candidate.HasUnverifiedContext,
+                candidate.SatOutLastSeason);
             return calculator.Calculate(
                 candidate.PlayerId,
                 candidate.ProjectedSeasonValue,
@@ -170,7 +172,8 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
         decimal fit,
         decimal injuryRisk,
         decimal roleRisk,
-        bool hasUnverifiedContext)
+        bool hasUnverifiedContext,
+        bool satOutLastSeason)
     {
         var evidence = new List<RecommendationEvidence>
         {
@@ -207,6 +210,12 @@ public sealed class DraftBoard(DraftValueCalculator calculator)
                 EvidencePolarity.Risk,
                 "Role or injury uncertainty reduces draft value",
                 Math.Max(injuryRisk, roleRisk)));
+        }
+
+        if (satOutLastSeason)
+        {
+            evidence.Add(new RecommendationEvidence(EvidenceKind.Injury, EvidencePolarity.Risk,
+                "Sat out last season; projected from the seasons before it", null));
         }
 
         if (hasUnverifiedContext)

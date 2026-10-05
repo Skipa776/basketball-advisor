@@ -31,9 +31,11 @@ The cases gating build steps 10, 11, and 12 — requirements R7, R8, R9, R10.
 | `P-10` | Player with zero prior minutes | Projects to the shrinkage target; no `NaN`, no divide-by-zero | ✅ |
 | `P-11` | Multiple league publications, manual overrides, changed scoring and a different season pool | Current values follow the selected run, exact observation and profile; old baselines are unchanged; random IDs do not establish recency | ✅ |
 | `P-12` | Publication fails after baseline writes | Transaction rolls back observed, baseline, adjusted and value rows together | ✅ |
-| `P-13` | Real HTTP projection publication, pick and undo | League receives ranked values/evidence; pick removes player; undo restores board; scoring edit hides obsolete values | ✅ |
+| `P-13` | Real HTTP projection publication, pick and undo | League receives ranked values/evidence; pick removes player; undo restores board; a scoring edit republishes under the new rules | ✅ |
 | `P-14` | Publication with the rate, minutes, availability and covariance models active | The baseline carries hierarchical minutes, rates and per-game values, games played = the Beta-Binomial mean rounded, a `+`-joined model version, and one distribution stored beside it | ✅ |
 | `P-15` | Real database publication with the fitted golden parameters | `projection_distribution` holds one row per baseline; the league's fantasy value carries a per-game SD; the draft candidate exposes a season-value distribution consistent with the published value | ✅ |
+| `P-16` | New points league created after season stats are imported | Its draft board is ranked with no manual publication step: create and scoring edits publish from the newest imported season, as does `POST …/projections` with an empty body | ✅ |
+| `P-17` | A player who sat out the pool's whole season | Projected for the next season from the two seasons before, but only with ADP fetched after the pool's season ended; no such ADP (retired, released, or last year's list), no projection | ✅ |
 
 # Context (`C-`)
 
@@ -58,6 +60,7 @@ The cases gating build steps 10, 11, and 12 — requirements R7, R8, R9, R10.
 | `D-06` | Every draft recommendation and heuristic board value | Carries ≥1 evidence item; no heuristic value carries a `Market` (ADP or survival) item | ✅ |
 | `D-15` | Simulated board without distributions, without a schedule, and with both | Null board with the reason; with both, 15 candidates ranked by the requested risk mode and the user's next pick | ✅ |
 | `D-16` | Draft recommendations with a simulation | Lead with the simulated top pick ("Best simulated pick" evidence), others carry survival odds; the rest of the pool follows | ✅ |
+| `D-35` | A candidate whose projection is built from a season older than everyone else's (he sat out last season) | Its draft value carries an Injury risk item, "Sat out last season; projected from the seasons before it"; nobody else does | ✅ |
 | `D-07` | Category league draft board | Falls back to category totals with an explicit banner; does not rank by `Total` | ✅ |
 | `D-14` | Bench-phase simulated team already holding 3 pure centers | Takes a non-center instead of a 4th center when one is available | ✅ |
 | `D-08` | Pick then undo | Board equals its pre-pick snapshot exactly | ✅ |
@@ -77,6 +80,7 @@ The cases gating build steps 10, 11, and 12 — requirements R7, R8, R9, R10.
 | `DS-04` | Two players with equal means, SD ≈ 0 vs SD 40 | Cautious ranks the steady one first, Upside the volatile one | ✅ |
 | `DS-05` | Survival to the user's next pick | Read from the top pick's rollouts: under 5% for a player the opponents take first, over 95% for one they pass | ✅ |
 | `DS-06` | First pick of a 12-team, 13-round draft: 300 players, 30 teams × 165 days, K 15, N 500 | p95 of ten boards under 2 s (after one warm-up), in the gate | ✅ |
+| `DS-07` | Simulating while another team is on the clock | Survival is read at the user's upcoming pick, where the candidate would be taken: under 5% for a player the opponents take first, over 95% for one they pass | ✅ |
 | `LO-04` | A 10:30 pm Eastern tip-off; a player with no team | Counted on its Eastern date; the no-team player gets the median team's schedule | ✅ |
 
 # Evidence and confidence (`E-`)

@@ -4,6 +4,7 @@ import { api, message, post } from './api';
 import { useResource } from './useResource';
 import type { League, Player, Session, Setup } from './types';
 import { PlayerDetail } from './draft';
+import { PublishProjections } from './projections';
 import { WaiverPage } from './hub';
 import { MatchupPage } from './matchup';
 import { TeamsPage } from './teams';
@@ -14,18 +15,22 @@ type PageProps = { onHome: () => void; onLeagueUpdated: () => void };
 type Health = { source: string; lastSuccess: string | null; lastFailure: string | null; isStale: boolean; isDegraded: boolean };
 type ImportRun = { id: string; source: string; status: number | string; startedAt: string; finishedAt: string | null; rowsWritten: number; pendingIdentityMatches: number; failureDetail: string | null };
 type ContextEvent = { id: string; type: number; typeName: string; summary: string; verification: number; verificationName: string; effectiveFrom: string; expectedExpiration: string | null; affectedPlayerIds: { value: string }[] };
-type ProjectedPlayer = { rank: number; playerId: { value: string }; fullName: string; positions: string[]; projectedSeasonValue: number; averageDraftPosition: number | null; hasUnverifiedContext: boolean };
+type ProjectedPlayer = { rank: number; playerId: { value: string }; fullName: string; positions: string[]; projectedSeasonValue: number; averageDraftPosition: number | null; hasUnverifiedContext: boolean; satOutLastSeason: boolean };
 type DraftRecord = { leagueId: string; session: { id: string; teamCount: number; roundCount: number; userSlot: number; currentPick: number; picks: { pickNumber: number }[] } };
 
 function ErrorNotice({ text, retry }: { text: string; retry?: () => void }) {
   return text ? <div className="notice error" role="alert">{text} {retry && <button type="button" onClick={retry}>Try again</button>}</div> : null;
 }
 
+/** Pages whose panel already shows the page name as its large heading; the intro h1 stays for screen readers only. */
+const OWN_HEADING = new Set(['Data sources', 'Projected players', 'Your drafts', 'League settings', 'Context review', 'Account data']);
+
 export function FunctionalPage({ name, session, onHome, onLeagueUpdated, leagueId }: PageProps & { name: string; session: Session; leagueId?: string }) {
-  const leagues = useResource<League[]>(leagueId ? '/api/leagues?limit=200' : null);
-  const selectedLeague = leagues.result?.data.find(item => item.id === leagueId);
+  const leagues = useResource<League[]>('/api/leagues?limit=200');
+  // No league chosen yet (a new browser, a shared link): use the first rather than bounce to the menu.
+  const selectedLeague = leagueId ? leagues.result?.data.find(item => item.id === leagueId) : leagues.result?.data[0];
   return <>
-    <div className="intro intro-compact"><p className="eyebrow">THE WORKSPACE / {name.toUpperCase()}</p><h1>{name}.</h1></div>
+    <div className="intro intro-compact"><p className="eyebrow">THE WORKSPACE / {name.toUpperCase()}</p><h1 className={OWN_HEADING.has(name) ? 'sr-only' : undefined}>{name}.</h1></div>
     {name === 'Data sources' && <DataSourcesPage session={session} onHome={onHome} />}
     {name === 'Projected players' && <ProjectedPlayersPage league={selectedLeague} loading={leagues.loading} onHome={onHome} />}
     {name === 'Your drafts' && <DraftListPage league={selectedLeague} onHome={onHome} />}
@@ -96,8 +101,8 @@ function ProjectedPlayersPage({ league, loading, onHome }: { league?: League; lo
     <p>Ranked by projected season points under this league’s scoring. Estimates, not results. Tap a name to see how it was built.</p>
     <ErrorNotice text={resource.error} retry={resource.refresh} />
     <p className="loading-status" role="status">{resource.loading ? 'Loading projections…' : '\u00a0'}</p>
-    {resource.result && !total && <p className="notice">No projections for this league yet. Import players and season stats, then open the workspace and use “Prepare league projections”. <a href={`/app/draft?league=${encodeURIComponent(league.id)}`}>Go to workspace ↗</a></p>}
-    {!!resource.result?.data.length && <><div className="table-scroll"><table><caption className="sr-only">Players ranked by projected season points</caption><thead><tr><th>Rank</th><th>Player</th><th>Position</th><th>Projected season points</th><th>ADP</th></tr></thead><tbody>{resource.result.data.map(row => <tr key={row.playerId.value}><td>{row.rank}</td><th scope="row"><button className="player-name" onClick={() => setDetail({ id: row.playerId, fullName: row.fullName, positions: row.positions })}>{row.fullName}</button>{row.hasUnverifiedContext && <span className="muted"> · unverified context</span>}</th><td>{row.positions.join(' / ') || '—'}</td><td>{points(row.projectedSeasonValue)}</td><td>{row.averageDraftPosition === null ? '—' : points(row.averageDraftPosition)}</td></tr>)}</tbody></table></div>
+    {resource.result && !total && <div className="notice"><p>No projections for this league yet. They publish from the newest imported season.</p><PublishProjections leagueId={league.id} onPublished={resource.refresh} /></div>}
+    {!!resource.result?.data.length && <><div className="table-scroll"><table><caption className="sr-only">Players ranked by projected season points</caption><thead><tr><th>Rank</th><th>Player</th><th>Position</th><th>Projected season points</th><th>ADP</th></tr></thead><tbody>{resource.result.data.map(row => <tr key={row.playerId.value}><td>{row.rank}</td><th scope="row"><button className="player-name" onClick={() => setDetail({ id: row.playerId, fullName: row.fullName, positions: row.positions })}>{row.fullName}</button>{row.satOutLastSeason && <span className="muted"> · sat out last season</span>}{row.hasUnverifiedContext && <span className="muted"> · unverified context</span>}</th><td>{row.positions.join(' / ') || '—'}</td><td>{points(row.projectedSeasonValue)}</td><td>{row.averageDraftPosition === null ? '—' : points(row.averageDraftPosition)}</td></tr>)}</tbody></table></div>
       <div className="pagination"><button disabled={page === 1 || resource.loading} onClick={() => setPage(page - 1)}>Previous</button><span>Page {page} of {Math.max(1, Math.ceil(total / PAGE_SIZE))} · {total} players</span><button disabled={resource.loading || page * PAGE_SIZE >= total} onClick={() => setPage(page + 1)}>Next</button></div></>}
     {detail && <PlayerDetail key={detail.id.value} player={detail} leagueId={league.id} close={() => setDetail(null)} />}
   </section>;
