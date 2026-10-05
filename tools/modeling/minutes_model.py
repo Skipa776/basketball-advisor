@@ -6,9 +6,15 @@ A player's next-season minutes per game come from up to three prior seasons, eac
 by games played and a fitted recency weight, shrunk toward the league mean for short
 seasons, then shifted by last season's role and by age:
 
-    G       = sum_k w_k g_k                      (weighted games)
-    H       = sum_k w_k g_k mpg_k / G            (weighted history)
+    G       = sum_k w_j g_k                      (weighted games; j counts back from the newest season played)
+    H       = sum_k w_j g_k mpg_k / G            (weighted history)
     minutes = clamp((G H + kappa mu) / (G + kappa) + delta_role + beta * (age - AGE_CENTER), 0, MAX)
+
+The recency weight counts from the newest season the player actually played, so a player who
+sat out last season is not also discounted as if his own history were stale; the "none" role
+shift still carries what missing that season tells us. (A fitted discount for injury-short
+seasons, g_k (g_k / N_k)^rho, was tried: rho came out at -0.23 and the 2025-26 holdout did not
+move, so it was dropped.)
 
 Roles come from last season's minutes per game (bench < 18 <= rotation < 28 <= starter; no
 last season = "none"). The role shift is the role prior: across 2021-22..2024-25, bench
@@ -56,6 +62,12 @@ def load_seasons() -> dict[str, dict[int, dict]]:
     return seasons
 
 
+def recency(past: list[dict]) -> list[int]:
+    """Each line's recency index: 0 for the newest season played, then 1, 2."""
+    newest = min(line["lag"] for line in past)
+    return [line["lag"] - newest for line in past]
+
+
 def role(past: list[dict]) -> str:
     last = next((line for line in past if line["lag"] == 1), None)
     if last is None:
@@ -83,9 +95,9 @@ def fit(rows: list[dict], draws: int) -> tuple[dict, dict]:
     g = np.zeros((n, HISTORY_SEASONS))
     x = np.zeros((n, HISTORY_SEASONS))  # games * minutes per game = season minutes
     for i, row in enumerate(rows):
-        for line in row["past"]:
-            g[i, line["lag"] - 1] = line["games"]
-            x[i, line["lag"] - 1] = line["games"] * line["mpg"]
+        for line, j in zip(row["past"], recency(row["past"])):
+            g[i, j] = line["games"]
+            x[i, j] = line["games"] * line["mpg"]
     role_index = np.array([ROLES.index(r["role"]) for r in rows])
     age = np.array([0.0 if r["age"] is None else r["age"] - AGE_CENTER for r in rows])
     games = np.array([r["games"] for r in rows], dtype=float)
@@ -124,8 +136,9 @@ def fit(rows: list[dict], draws: int) -> tuple[dict, dict]:
 def predict(params: dict, age: int | None, past: list[dict]) -> float:
     """The formula the C# MinutesModel mirrors; goldens are computed with it."""
     w = params["weights"]
-    weighted_games = sum(w[line["lag"] - 1] * line["games"] for line in past)
-    history = sum(w[line["lag"] - 1] * line["games"] * line["mpg"] for line in past) / weighted_games
+    v = [w[j] for j in recency(past)]
+    weighted_games = sum(vk * line["games"] for vk, line in zip(v, past))
+    history = sum(vk * line["games"] * line["mpg"] for vk, line in zip(v, past)) / weighted_games
     centered = 0 if age is None else age - params["ageCenter"]
     shrunk = (weighted_games * history + params["kappa"] * params["mu"]) / (weighted_games + params["kappa"])
     minutes = shrunk + params["delta"][role(past)] + params["beta"] * centered
@@ -140,6 +153,8 @@ def goldens(params: dict) -> dict:
         (None, [{"lag": 2, "games": 12, "mpg": 9.4}]),
         (25, [{"lag": 1, "games": 8, "mpg": 11.0}]),
         (20, [{"lag": 1, "games": 82, "mpg": 41.9}]),
+        (31, [{"lag": 1, "games": 36, "mpg": 29.0}, {"lag": 2, "games": 67, "mpg": 34.0}]),
+        (26, [{"lag": 2, "games": 73, "mpg": 33.9}, {"lag": 3, "games": 69, "mpg": 32.0}]),
     ]
     return {"model": "projection-minutes", "parameters": params,
             "cases": [{"age": age, "history": past, "expected": predict(params, age, past)} for age, past in cases]}
@@ -158,7 +173,7 @@ def main() -> None:
     record = {"modelName": "projection-minutes", "version": f"projection-minutes-{fitted_at:%Y%m%d%H%M}",
               "fittedAt": fitted_at.isoformat(), "trainSeasonEndYears": args.target,
               "parameters": params, "metrics": metrics,
-              "cardMarkdown": "Minutes per game: games-weighted three-season history shrunk toward the "
+              "cardMarkdown": "Minutes per game: games-weighted three-season history, recency counted from the newest season played, shrunk toward the "
                               "league mean, plus a last-season role shift and a linear age term; NUTS posterior means."}
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(json.dumps(record, indent=2) + "\n")

@@ -44,7 +44,7 @@ Gates [model_params_contract](../contracts/model_params_contract.md).
 | `HP-03` | Seasons at lags 1, 2, 3 (under 100 min) and 4 | Lags 1 and 2 weighted 1 and w₂ with the κ prior; the short and the lag-4 seasons are ignored; age carried forward by its lag | ✅ |
 | `HP-04` | Parameters missing a modelled stat | `ArgumentException` naming the stat | ✅ |
 
-# Minutes model (`MM-01`–`MM-05`)
+# Minutes model (`MM-01`–`MM-06`)
 
 | ID | Case | Expected | Required |
 |---|---|---|---|
@@ -53,6 +53,7 @@ Gates [model_params_contract](../contracts/model_params_contract.md).
 | `MM-03` | A projection above 42 or below 0 | Clamped to `maxMinutes` and 0 | ✅ |
 | `MM-04` | Seasons at lags 1, 2, 3 (under 5 games) and 4 | Games × recency weights with κ shrinkage; the short and lag-4 seasons are ignored; age carried forward by its lag | ✅ |
 | `MM-05` | Parameters missing a role shift | `ArgumentException` naming the roles | ✅ |
+| `MM-06` | Sat out last season (seasons at lags 2 and 3) | Recency counts from the newest season played: lags 2 and 3 take the lag-1 and lag-2 weights; only the `none` shift differs from the same seasons a year later | ✅ |
 
 # Availability model (`AV-01`–`AV-05`)
 

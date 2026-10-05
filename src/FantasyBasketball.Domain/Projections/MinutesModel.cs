@@ -37,6 +37,8 @@ public sealed record MinutesHistory(int Lag, int Games, decimal MinutesPerGame, 
 /// <summary>
 /// Minutes per game: games- and recency-weighted history shrunk toward the league mean for
 /// short seasons, plus last season's role shift (the role prior) and a linear age term.
+/// Recency counts from the newest season played, so sitting out last season does not also
+/// discount the player's own history; the "none" role shift carries what that absence says.
 /// </summary>
 public sealed class MinutesModel(MinutesModelParameters parameters)
 {
@@ -59,8 +61,9 @@ public sealed class MinutesModel(MinutesModelParameters parameters)
     public decimal FromHistory(int? targetAge, IReadOnlyList<MinutesHistory> history)
     {
         ArgumentNullException.ThrowIfNull(history);
-        var weightedGames = history.Sum(item => parameters.Weights[item.Lag - 1] * item.Games);
-        var weightedMinutes = history.Sum(item => parameters.Weights[item.Lag - 1] * item.Games * item.MinutesPerGame);
+        var newest = history.Count == 0 ? 1 : history.Min(item => item.Lag);
+        var weightedGames = history.Sum(item => parameters.Weights[item.Lag - newest] * item.Games);
+        var weightedMinutes = history.Sum(item => parameters.Weights[item.Lag - newest] * item.Games * item.MinutesPerGame);
         var shrunk = (weightedMinutes + (parameters.Kappa * parameters.Mu)) / (weightedGames + parameters.Kappa);
         var centeredAge = targetAge is { } years ? years - parameters.AgeCenter : 0;
         var minutes = shrunk + parameters.Delta[Role(history)] + (parameters.Beta * centeredAge);
