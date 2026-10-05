@@ -10,8 +10,14 @@ each prior season adds its games played and games missed as discounted pseudo-ga
 (a power prior: every weight, the last season's included, is fitted, since a season's
 games are not independent trials — injuries come in runs):
 
-    alpha = phi * m       + sum_k w_k g_k
-    beta  = phi * (1 - m) + sum_k w_k (N_k - g_k)
+    alpha = phi_r * m       + sum_k w_{r,k} g_k
+    beta  = phi_r * (1 - m) + sum_k w_{r,k} (N_k - g_k)
+
+The prior strength and the weights depend on the player's role r (starter: STARTER_FROM+ minutes in his newest
+season; otherwise rotation): a rotation player misses games because he is not played, which
+persists, while a starter misses them mostly through injury, which mostly does not. With one
+set of weights, established players (30+ mpg) off a season under 50 games were predicted
+7-10 games short in every season from 2022-23 to 2025-26.
 
 N_k is that season's length (the most games any player logged, capped at 82, so the
 shortened 2019-20 and 2020-21 seasons count missed games against their own length).
@@ -38,6 +44,8 @@ HISTORY_SEASONS = 3
 AGE_CENTER = 27
 FULL_SEASON = 82
 MPG_CENTER = 20
+STARTER_FROM = 28.0  # minutes per game in the newest season; the minutes model's starter cut
+ROLES = ["rotation", "starter"]
 
 SQL = """
 select player_id, season_end_year, games_played, age, minutes_per_game
@@ -54,6 +62,11 @@ def load() -> tuple[dict[str, dict[int, dict]], dict[int, int]]:
             seasons[str(player_id)][season] = {"games": games, "age": age, "mpg": float(mpg)}
             length[season] = max(length[season], min(games, FULL_SEASON))
     return seasons, dict(length)
+
+
+def role(past: list[dict], starter_from: float = STARTER_FROM) -> str:
+    """Starter when the newest season in the history ran STARTER_FROM+ minutes per game."""
+    return "starter" if min(past, key=lambda line: line["lag"])["mpg"] >= starter_from else "rotation"
 
 
 def training_rows(seasons, length, targets: list[int]) -> list[dict]:
@@ -81,15 +94,17 @@ def fit(rows: list[dict], draws: int) -> tuple[dict, dict]:
         for line in row["past"]:
             played[i, line["lag"] - 1] = line["games"]
             missed[i, line["lag"] - 1] = line["seasonGames"] - line["games"]
+    role_index = np.array([ROLES.index(role(r["past"])) for r in rows])
     age = np.array([0.0 if r["age"] is None else r["age"] - AGE_CENTER for r in rows])
     mpg = np.array([(r["past"][0]["mpg"] - MPG_CENTER) / 10 for r in rows])  # past is newest first
 
     with pm.Model():
-        w = pm.Beta("w", 1, 4, shape=HISTORY_SEASONS)
+        w_all = pm.Beta("w", 1, 4, shape=(len(ROLES), HISTORY_SEASONS))
+        w = w_all[role_index]
         a = pm.Normal("a", 1.5, 1.0)
         b = pm.Normal("b", 0.0, 0.1)
         c = pm.Normal("c", 0.0, 1.0)
-        phi = pm.LogNormal("phi", np.log(10), 1.0)
+        phi = pm.LogNormal("phi", np.log(10), 1.0, shape=len(ROLES))[role_index]
         m = pm.math.sigmoid(a + b * age + c * mpg)
         alpha = phi * m + (played * w).sum(axis=1)
         beta = phi * (1 - m) + (missed * w).sum(axis=1)
@@ -100,8 +115,8 @@ def fit(rows: list[dict], draws: int) -> tuple[dict, dict]:
     post = trace.posterior
     mean = lambda name: post[name].mean(dim=("chain", "draw")).values
     params = {"ageCenter": AGE_CENTER, "mpgCenter": MPG_CENTER, "fullSeason": FULL_SEASON,
-              "weights": list(map(float, mean("w"))), "a": float(mean("a")),
-              "b": float(mean("b")), "c": float(mean("c")), "phi": float(mean("phi"))}
+              "weights": {r: list(map(float, ws)) for r, ws in zip(ROLES, mean("w"))}, "starterFrom": STARTER_FROM, "a": float(mean("a")),
+              "b": float(mean("b")), "c": float(mean("c")), "phi": dict(zip(ROLES, map(float, mean("phi"))))}
     rhat = max(float(np.max(v)) for v in pm.stats.rhat(trace).data_vars.values())
     return params, {"rows": n, "maxRhat": rhat}
 
@@ -112,8 +127,10 @@ def posterior(params: dict, age: int | None, past: list[dict]) -> tuple[float, f
     centered = 0 if age is None else age - params["ageCenter"]
     minutes = (past[0]["mpg"] - params["mpgCenter"]) / 10
     m = 1 / (1 + np.exp(-(params["a"] + params["b"] * centered + params["c"] * minutes)))
-    alpha = params["phi"] * m + sum(w[line["lag"] - 1] * line["games"] for line in past)
-    beta = params["phi"] * (1 - m) + sum(w[line["lag"] - 1] * (line["seasonGames"] - line["games"]) for line in past)
+    r = role(past, params["starterFrom"])
+    w, phi = w[r], params["phi"][r]
+    alpha = phi * m + sum(w[line["lag"] - 1] * line["games"] for line in past)
+    beta = phi * (1 - m) + sum(w[line["lag"] - 1] * (line["seasonGames"] - line["games"]) for line in past)
     return float(alpha), float(beta)
 
 

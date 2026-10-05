@@ -55,7 +55,7 @@ Gates [model_params_contract](../contracts/model_params_contract.md).
 | `MM-05` | Parameters missing a role shift | `ArgumentException` naming the roles | ✅ |
 | `MM-06` | Sat out last season (seasons at lags 2 and 3) | Recency counts from the newest season played: lags 2 and 3 take the lag-1 and lag-2 weights; only the `none` shift differs from the same seasons a year later | ✅ |
 
-# Availability model (`AV-01`–`AV-05`)
+# Availability model (`AV-01`–`AV-07`)
 
 | ID | Case | Expected | Required |
 |---|---|---|---|
@@ -64,6 +64,8 @@ Gates [model_params_contract](../contracts/model_params_contract.md).
 | `AV-03` | Two history seasons; no history | Alpha and beta add weighted games played and missed to φm and φ(1 − m); no history is the prior alone | ✅ |
 | `AV-04` | An 84-game line, a lag-5 line and a 0-game line | Games capped at the season's length; the lag-5 and 0-game lines are ignored | ✅ |
 | `AV-05` | Parameters with one weight | `ArgumentException` | ✅ |
+| `AV-06` | The same two seasons at 29 and 27.9 minutes per game, starter cut 28 | The starter's prior strength and weights apply at 29, the rotation ones at 27.9 | ✅ |
+| `AV-07` | A fit saved before roles (one weight list, one φ) | Parses as the same weights and φ for both roles and projects as before, so older versions stay activatable | ✅ |
 
 # Covariance and distributions (`SC-01`–`SC-04`)
 

@@ -4,26 +4,48 @@ using FantasyBasketball.Domain.Stats;
 
 namespace FantasyBasketball.Domain.Projections;
 
-/// <summary>Posterior means from tools/modeling/availability_model.py (model_params_contract).</summary>
+/// <summary>
+/// Posterior means from tools/modeling/availability_model.py (model_params_contract). Weights and
+/// prior strength are per role (rotation, starter); a fit from before roles carries one weight set
+/// and one phi, read as the same for both, so older versions stay activatable.
+/// </summary>
 public sealed record AvailabilityModelParameters(
     int AgeCenter,
     decimal MpgCenter,
     int FullSeason,
-    IReadOnlyList<decimal> Weights,
+    IReadOnlyDictionary<string, IReadOnlyList<decimal>> Weights,
     decimal A,
     decimal B,
     decimal C,
-    decimal Phi)
+    IReadOnlyDictionary<string, decimal> Phi,
+    decimal StarterFrom)
 {
     public const string ModelName = "projection-availability";
 
+    public static readonly IReadOnlyList<string> Roles = ["rotation", "starter"];
+
     public static AvailabilityModelParameters Parse(string json)
     {
-        var parameters = JsonSerializer.Deserialize<AvailabilityModelParameters>(json, new JsonSerializerOptions(JsonSerializerDefaults.Web))
-            ?? throw new ArgumentException("Availability parameters are empty.", nameof(json));
-        return parameters is { Weights.Count: 3, Phi: > 0m, FullSeason: > 0 }
+        using var document = JsonDocument.Parse(json);
+        var root = document.RootElement;
+        decimal Number(string name) => root.GetProperty(name).GetDecimal();
+        IReadOnlyDictionary<string, T> PerRole<T>(JsonElement element, Func<JsonElement, T> read) =>
+            element.ValueKind == JsonValueKind.Object
+                ? Roles.ToDictionary(role => role, role => read(element.GetProperty(role)))
+                : Roles.ToDictionary(role => role, _ => read(element));
+        var parameters = new AvailabilityModelParameters(
+            root.GetProperty("ageCenter").GetInt32(),
+            Number("mpgCenter"),
+            root.GetProperty("fullSeason").GetInt32(),
+            PerRole<IReadOnlyList<decimal>>(root.GetProperty("weights"), element => element.EnumerateArray().Select(value => value.GetDecimal()).ToArray()),
+            Number("a"),
+            Number("b"),
+            Number("c"),
+            PerRole(root.GetProperty("phi"), element => element.GetDecimal()),
+            root.TryGetProperty("starterFrom", out var starterFrom) ? starterFrom.GetDecimal() : decimal.MaxValue);
+        return parameters.FullSeason > 0 && Roles.All(role => parameters.Weights[role].Count == 3 && parameters.Phi[role] > 0m)
             ? parameters
-            : throw new ArgumentException("Availability parameters need three weights, a positive phi and a season length.", nameof(json));
+            : throw new ArgumentException("Availability parameters need three weights and a positive phi per role, and a season length.", nameof(json));
     }
 }
 
@@ -32,7 +54,9 @@ public sealed record AvailabilityHistory(int Lag, int Games, int SeasonGames, de
 
 /// <summary>
 /// Games played next season ~ BetaBinomial(full season, alpha, beta): an age- and
-/// minutes-dependent population prior updated by discounted games played and missed.
+/// minutes-dependent population prior updated by discounted games played and missed. A starter
+/// (newest season at StarterFrom+ minutes) has his own prior strength and weights: his missed
+/// games are mostly injuries, which repeat less than a rotation player's.
 /// </summary>
 public sealed class AvailabilityModel(AvailabilityModelParameters parameters)
 {
@@ -66,9 +90,12 @@ public sealed class AvailabilityModel(AvailabilityModelParameters parameters)
         var minutes = history.Count > 0 ? (history.MinBy(item => item.Lag)!.MinutesPerGame - parameters.MpgCenter) / 10m : 0m;
         var logit = parameters.A + (parameters.B * centeredAge) + (parameters.C * minutes);
         var mean = (decimal)(1 / (1 + Math.Exp(-(double)logit)));
-        var alpha = (parameters.Phi * mean) + history.Sum(item => parameters.Weights[item.Lag - 1] * item.Games);
-        var beta = (parameters.Phi * (1m - mean))
-            + history.Sum(item => parameters.Weights[item.Lag - 1] * (item.SeasonGames - item.Games));
+        var role = history.Count > 0 && history.MinBy(item => item.Lag)!.MinutesPerGame >= parameters.StarterFrom ? "starter" : "rotation";
+        var weights = parameters.Weights[role];
+        var phi = parameters.Phi[role];
+        var alpha = (phi * mean) + history.Sum(item => weights[item.Lag - 1] * item.Games);
+        var beta = (phi * (1m - mean))
+            + history.Sum(item => weights[item.Lag - 1] * (item.SeasonGames - item.Games));
         return new BetaBinomial(parameters.FullSeason, alpha, beta);
     }
 }
