@@ -1,6 +1,6 @@
 # Projection backtest — 2025–26 holdout
 
-As of 2025-10-01 · trained on 2024–25 · 390 players with 20+ games · model `baseline-v1` · commit `34ab58c`
+As of 2025-10-01 · trained on 2024–25 · 390 players with 20+ games · model `baseline-v1` · commit `f84389e`
 
 Fantasy points per game under ESPN default points scoring.
 
@@ -28,31 +28,31 @@ Fantasy points per game under ESPN default points scoring.
 
 ## Hierarchical rates (`projection-rates-202610030117`)
 
-Same players as the model above; per-minute rates from the hierarchical model, minutes from `projection-minutes-202610030206`.
+Same players as the model above; per-minute rates from the hierarchical model, minutes from `projection-minutes-202610050340`.
 
 | Metric | Hierarchical | baseline-v1 | Last season repeats | Hierarchical − baseline-v1 |
 |---|---|---|---|---|
-| MAE | 4.8846 | 5.2182 | 5.3542 | -0.3336 |
-| RMSE | 6.0771 | 6.6112 | 6.7809 | -0.5341 |
-| Spearman ρ | 0.7828 | 0.7521 | 0.7710 | 0.0307 |
+| MAE | 4.8734 | 5.2182 | 5.3542 | -0.3449 |
+| RMSE | 6.0616 | 6.6112 | 6.7809 | -0.5496 |
+| Spearman ρ | 0.7831 | 0.7521 | 0.7710 | 0.0310 |
 | Top-100 hit rate | 0.7800 | 0.7800 | 0.7600 | 0.0000 |
 
-80% intervals held the actual points per game for 0.7590 of 390 players (mean SD 5.6358; target 0.76–0.84). Distribution models: projection-availability-202610030224, projection-covariance-202610030228.
+80% intervals held the actual points per game for 0.7667 of 390 players (mean SD 5.6461; target 0.76–0.84). Distribution models: projection-availability-202610030224, projection-covariance-202610030228.
 
 ### Calibration by decile (hierarchical)
 
 | Decile | Players | Mean projected | Mean actual | Actual − projected |
 |---|---|---|---|---|
-| 1 | 39 | 9.4660 | 11.0830 | 1.6171 |
-| 2 | 39 | 12.7785 | 13.5139 | 0.7354 |
-| 3 | 39 | 15.3081 | 16.0091 | 0.7010 |
-| 4 | 39 | 17.3262 | 16.8230 | -0.5032 |
-| 5 | 39 | 19.1818 | 19.8422 | 0.6604 |
-| 6 | 39 | 21.0802 | 19.7408 | -1.3394 |
-| 7 | 39 | 24.1365 | 22.9103 | -1.2262 |
-| 8 | 39 | 28.1605 | 27.7480 | -0.4125 |
-| 9 | 39 | 33.2543 | 33.1429 | -0.1113 |
-| 10 | 39 | 42.4093 | 42.9551 | 0.5458 |
+| 1 | 39 | 9.6324 | 10.8726 | 1.2402 |
+| 2 | 39 | 12.7370 | 13.8191 | 1.0821 |
+| 3 | 39 | 15.2858 | 16.0405 | 0.7547 |
+| 4 | 39 | 17.2995 | 16.6409 | -0.6586 |
+| 5 | 39 | 19.1828 | 19.5842 | 0.4014 |
+| 6 | 39 | 21.0276 | 20.0547 | -0.9729 |
+| 7 | 39 | 24.1120 | 22.9103 | -1.2017 |
+| 8 | 39 | 28.1206 | 27.7480 | -0.3726 |
+| 9 | 39 | 33.2416 | 33.1429 | -0.0987 |
+| 10 | 39 | 42.3605 | 42.9551 | 0.5946 |
 
 ## Draft benchmark
 
@@ -61,11 +61,11 @@ Same players as the model above; per-minute rates from the hierarchical model, m
 | Drafter | Mean starting-lineup points |
 |---|---|
 | ADP bot | 20157.0650 |
-| Heuristic board | 27717.0450 |
-| Simulator | 27464.4600 |
+| Heuristic board | 27693.6300 |
+| Simulator | 27432.7450 |
 
 | Comparison (paired, 200 drafts) | Mean difference | 95% CI |
 |---|---|---|
-| Heuristic board − ADP bot | 7559.9800 | 7156.3088 to 7963.6512 |
-| Simulator − ADP bot | 7307.3950 | 6891.7667 to 7723.0233 |
-| Simulator − Heuristic board | -252.5850 | -549.2878 to 44.1178 |
+| Heuristic board − ADP bot | 7536.5650 | 7139.6511 to 7933.4789 |
+| Simulator − ADP bot | 7275.6800 | 6871.1824 to 7680.1776 |
+| Simulator − Heuristic board | -260.8850 | -562.4348 to 40.6648 |
