@@ -11,7 +11,8 @@ public sealed record ProjectedPlayer(
     IReadOnlyList<string> Positions,
     decimal ProjectedSeasonValue,
     decimal? AverageDraftPosition,
-    bool HasUnverifiedContext);
+    bool HasUnverifiedContext,
+    bool SatOutLastSeason = false);
 
 // The league's current published values, ranked by projected season value. Uses
 // the same current-publication rule as the draft board, so the two never disagree.
@@ -45,7 +46,8 @@ public sealed class ProjectedPlayerService(
                 candidate.Positions,
                 candidate.ProjectedSeasonValue,
                 candidate.AverageDraftPosition,
-                candidate.HasUnverifiedContext));
+                candidate.HasUnverifiedContext,
+                candidate.SatOutLastSeason));
         }
 
         return new PagedResult<ProjectedPlayer>(items, ranked.Length, page, limit);

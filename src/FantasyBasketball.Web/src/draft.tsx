@@ -120,7 +120,7 @@ export function DraftWorkspace({ league, draftId, onDraft }: { league: League; d
   </section>;
 }
 
-type Ranked = Player & { rank: number; projectedSeasonValue: number };
+type Ranked = Player & { rank: number; projectedSeasonValue: number; satOutLastSeason?: boolean };
 const POOL_PAGE = 50;
 
 /** The league's projected players (names, positions, season value), best first: every page of projected-players. */
@@ -132,8 +132,8 @@ function useLeagueDirectory(leagueId: string, version: number) {
       const all: Ranked[] = [];
       try {
         for (let page = 1; ; page++) {
-          const result = await api<{ rank: number; playerId: { value: string }; fullName: string; positions: string[]; projectedSeasonValue: number }[]>(`/api/leagues/${leagueId}/projected-players?page=${page}&limit=200`);
-          all.push(...result.data.map(item => ({ id: item.playerId, fullName: item.fullName, positions: item.positions, rank: item.rank, projectedSeasonValue: item.projectedSeasonValue })));
+          const result = await api<{ rank: number; playerId: { value: string }; fullName: string; positions: string[]; projectedSeasonValue: number; satOutLastSeason: boolean }[]>(`/api/leagues/${leagueId}/projected-players?page=${page}&limit=200`);
+          all.push(...result.data.map(item => ({ id: item.playerId, fullName: item.fullName, positions: item.positions, rank: item.rank, projectedSeasonValue: item.projectedSeasonValue, satOutLastSeason: item.satOutLastSeason })));
           if (!result.data.length || all.length >= (result.meta?.total ?? 0)) break;
         }
       } catch { /* the pool falls back to the alphabetical player list */ }
@@ -167,7 +167,7 @@ function PlayerPool({ leagueId, session, rankings, pick, disabled, actionLabel =
     ? rankings.filter(value => byId.has(value.playerId.value)).map((value, index) => ({ ...byId.get(value.playerId.value)!, rank: index + 1 }))
     : directory;
   const players = useResource<Player[]>(ranked ? null : `/api/players?search=${encodeURIComponent(query)}&page=${page}`);
-  const shown: (Player & { rank?: number; projectedSeasonValue?: number })[] | undefined = ranked ? ranked.slice((page - 1) * POOL_PAGE, page * POOL_PAGE) : players.result?.data;
+  const shown: (Player & { rank?: number; projectedSeasonValue?: number; satOutLastSeason?: boolean })[] | undefined = ranked ? ranked.slice((page - 1) * POOL_PAGE, page * POOL_PAGE) : players.result?.data;
   const total = ranked ? ranked.length : players.result?.meta?.total ?? 0;
   function move(event: KeyboardEvent, current = -1) {
     if (!['ArrowDown', 'ArrowUp'].includes(event.key)) return;
@@ -181,7 +181,7 @@ function PlayerPool({ leagueId, session, rankings, pick, disabled, actionLabel =
     {shown?.length === 0 && <p className="notice">{query ? 'No players match this search.' : <>No players yet. <a href="/app/data-sources">View data sources ↗</a></>}</p>}
     {!!shown?.length && <><div className="table-scroll"><table><caption className="sr-only">Player pool and draft actions</caption><thead><tr>{ranked && <th>Rank</th>}<th>Player</th><th>Position</th><th>{session ? 'Draft value' : 'Season value'}</th><th>Action</th></tr></thead><tbody ref={rows}>{shown.map(player => {
       const value = values.get(player.id.value); const taken = drafted.has(player.id.value);
-      return <tr key={player.id.value}>{ranked && <td data-numeric>{player.rank}</td>}<th scope="row"><button className="player-name" onClick={() => setDetail(player)}>{player.fullName}</button></th><td>{player.positions.join(' / ') || '—'}</td><td>{value ? <details><summary>{number(value.total)}</summary><div className="evidence"><p>Projected season: {number(value.projectedSeasonValue)}</p>{value.evidence.map((item, i) => <p key={i}>{item.statement}</p>)}</div></details> : <span className="muted">{taken ? 'Drafted' : session ? 'No projection' : player.projectedSeasonValue !== undefined ? number(player.projectedSeasonValue) : 'Ranked once a draft starts'}</span>}</td><td><button className="pick" disabled={disabled || taken || (!ranked && players.loading)} onClick={() => recordPick(player)} onKeyDown={event => { const buttons = [...(rows.current?.querySelectorAll('button.pick:not(:disabled)') ?? [])]; move(event, buttons.indexOf(event.currentTarget)); }}>{taken ? 'Drafted' : actionLabel}<span className="sr-only"> {player.fullName}</span></button></td></tr>;
+      return <tr key={player.id.value}>{ranked && <td data-numeric>{player.rank}</td>}<th scope="row"><button className="player-name" onClick={() => setDetail(player)}>{player.fullName}</button>{player.satOutLastSeason && <span className="muted"> · sat out last season</span>}</th><td>{player.positions.join(' / ') || '—'}</td><td>{value ? <details><summary>{number(value.total)}</summary><div className="evidence"><p>Projected season: {number(value.projectedSeasonValue)}</p>{value.evidence.map((item, i) => <p key={i}>{item.statement}</p>)}</div></details> : <span className="muted">{taken ? 'Drafted' : session ? 'No projection' : player.projectedSeasonValue !== undefined ? number(player.projectedSeasonValue) : 'Ranked once a draft starts'}</span>}</td><td><button className="pick" disabled={disabled || taken || (!ranked && players.loading)} onClick={() => recordPick(player)} onKeyDown={event => { const buttons = [...(rows.current?.querySelectorAll('button.pick:not(:disabled)') ?? [])]; move(event, buttons.indexOf(event.currentTarget)); }}>{taken ? 'Drafted' : actionLabel}<span className="sr-only"> {player.fullName}</span></button></td></tr>;
     })}</tbody></table></div><div className="pagination"><button disabled={page === 1 || (!ranked && players.loading)} onClick={() => setPage(page - 1)}>Previous</button><span>Page {page} · {total} {ranked ? (session ? 'available' : 'projected') : ''} players</span><button disabled={(!ranked && players.loading) || page * (ranked ? POOL_PAGE : players.result?.meta?.limit ?? 50) >= total} onClick={() => setPage(page + 1)}>Next</button></div></>}
     {session && !rankings.length && <div className="notice"><p>No projections for this league yet, so picks are not ranked.</p><PublishProjections leagueId={leagueId} onPublished={onPublished ?? (() => undefined)} /></div>}
     {!session && <p className="muted">Ranked by projected season points under your scoring. Draft value, which depends on the pick you are on, appears once a draft starts.</p>}

@@ -38,6 +38,13 @@ public sealed class DraftCandidateRepository(FantasyDbContext database)
             .GroupBy(row => row.PlayerId)
             .ToDictionary(group => group.Key, group => group.OrderByDescending(row => row.FetchedAt).ThenByDescending(row => row.Id).First());
         var baselineIds = adjustedRows.Values.Select(row => row.BaselineProjectionId).ToArray();
+        // The season each projection was built from; one older than the newest sat out last season.
+        var observedSeasons = await database.BaselineProjections.AsNoTracking()
+            .Where(row => baselineIds.Contains(row.Id))
+            .Join(database.ObservedStats.AsNoTracking(), row => row.ObservedStatsId, observed => observed.Id,
+                (row, observed) => new { row.Id, observed.SeasonEndYear })
+            .ToDictionaryAsync(row => row.Id, row => row.SeasonEndYear, cancellationToken);
+        var newestSeason = observedSeasons.Count == 0 ? 0 : observedSeasons.Values.Max();
         var distributions = await database.ProjectionDistributions.AsNoTracking()
             .Where(row => baselineIds.Contains(row.BaselineProjectionId))
             .Select(row => new { row.BaselineProjectionId, row.SeasonGames, row.GamesAlpha, row.GamesBeta })
@@ -80,7 +87,8 @@ public sealed class DraftCandidateRepository(FantasyDbContext database)
                     ? null
                     : new SeasonValueDistribution(value.PerGame, value.PerGameSd!.Value,
                         new BetaBinomial(games.SeasonGames, games.GamesAlpha, games.GamesBeta)),
-                player.CurrentTeamId is { } team ? new NbaTeamId(team) : null));
+                player.CurrentTeamId is { } team ? new NbaTeamId(team) : null,
+                adjusted is not null && observedSeasons.TryGetValue(adjusted.BaselineProjectionId, out var season) && season < newestSeason));
         }
 
         return results;
