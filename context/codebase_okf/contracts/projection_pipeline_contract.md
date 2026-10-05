@@ -136,6 +136,11 @@ the baseline in `projection_distribution`, never inside it; each league's
 shift the mean only; the SD comes from the unadjusted distribution. *Check: rows
 P-14 and P-15.*
 
+Players who sat out the pool's whole season (a season-long injury) are projected too,
+from their two seasons before it, when drafters expect them back: they have ADP fetched
+after the pool's season ended. Without that signal a missing player may have retired or
+been released, so he gets no projection. *Check: row P-17.*
+
 # Invariants
 
 - **The baseline is immutable.** Applying, changing, or removing context never

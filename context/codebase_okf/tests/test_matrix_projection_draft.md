@@ -35,6 +35,7 @@ The cases gating build steps 10, 11, and 12 — requirements R7, R8, R9, R10.
 | `P-14` | Publication with the rate, minutes, availability and covariance models active | The baseline carries hierarchical minutes, rates and per-game values, games played = the Beta-Binomial mean rounded, a `+`-joined model version, and one distribution stored beside it | ✅ |
 | `P-15` | Real database publication with the fitted golden parameters | `projection_distribution` holds one row per baseline; the league's fantasy value carries a per-game SD; the draft candidate exposes a season-value distribution consistent with the published value | ✅ |
 | `P-16` | New points league created after season stats are imported | Its draft board is ranked with no manual publication step: create and scoring edits publish from the newest imported season, as does `POST …/projections` with an empty body | ✅ |
+| `P-17` | A player who sat out the pool's whole season | Projected for the next season from the two seasons before, but only with ADP fetched after the pool's season ended; no such ADP (retired, released, or last year's list), no projection | ✅ |
 
 # Context (`C-`)
 

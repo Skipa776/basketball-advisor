@@ -15,13 +15,16 @@ public sealed class ProjectionService(
     TimeProvider timeProvider,
     IModelVersionRepository models,
     ISeasonStatLineRepository statistics,
-    IPlayerRepository players)
+    IPlayerRepository players,
+    IAdpRepository? adp = null)
 {
     /// <summary>
     /// Projects the season after <paramref name="pool"/>'s. With an active projection-rates model
     /// the hierarchical models supply rates, minutes, games and the distribution from the pool's
     /// season and the two before it; otherwise, or for anything a missing model leaves out, the
-    /// baseline-v1 projector does.
+    /// baseline-v1 projector does. Players who sat out the pool's whole season are projected too
+    /// (from the two seasons before it) when drafters expect them back: they have ADP published
+    /// after that season ended.
     /// </summary>
     public async Task<IReadOnlyList<ProjectedBaseline>> ProjectPoolAsync(
         IReadOnlyList<SeasonStatLine> pool,
@@ -34,13 +37,15 @@ public sealed class ProjectionService(
         var history = seasonProjector is null || pool.Count == 0 ? [] : await HistoryAsync(pool, cancellationToken);
         var byPlayer = history.ToLookup(line => line.PlayerId);
         var seasonGames = SeasonProjector.SeasonLengths(history);
+        var targetSeason = pool.Count == 0 ? 0 : pool[0].SeasonEndYear + 1;
+        var sources = pool.Concat(await ReturningAsync(pool, history, cancellationToken)).ToArray();
         var positions = seasonProjector is null
             ? new Dictionary<PlayerId, string?>()
-            : (await players.ListAsync(pool.Select(line => line.PlayerId).ToArray(), cancellationToken))
+            : (await players.ListAsync(sources.Select(line => line.PlayerId).ToArray(), cancellationToken))
                 .ToDictionary(player => player.Id, player => player.Positions.FirstOrDefault());
-        var results = new List<ProjectedBaseline>(pool.Count);
+        var results = new List<ProjectedBaseline>(sources.Length);
 
-        foreach (var source in pool)
+        foreach (var source in sources)
         {
             cancellationToken.ThrowIfCancellationRequested();
             var observed = new ObservedStats(source.PlayerId, source, computedAt);
@@ -50,7 +55,7 @@ public sealed class ProjectionService(
             {
                 var projection = seasonProjector.Project(
                     source.PlayerId,
-                    source.SeasonEndYear + 1,
+                    targetSeason,
                     positions.GetValueOrDefault(source.PlayerId),
                     byPlayer[source.PlayerId].ToArray(),
                     seasonGames,
@@ -101,6 +106,37 @@ public sealed class ProjectionService(
             covariance is null ? null : StatCovarianceParameters.Parse(covariance.ParametersJson),
             version);
     }
+
+    /// <summary>
+    /// The latest line of each player missing from the pool's season but in one of the two before
+    /// it, kept only with ADP fetched after the pool's season ended (so not retired or released).
+    /// </summary>
+    private async Task<IReadOnlyList<SeasonStatLine>> ReturningAsync(
+        IReadOnlyList<SeasonStatLine> pool, IReadOnlyList<SeasonStatLine> history, CancellationToken cancellationToken)
+    {
+        if (adp is null || pool.Count == 0 || history.Count == 0)
+        {
+            return [];
+        }
+
+        var seasonEnded = new DateTimeOffset(pool[0].SeasonEndYear, SeasonEndMonth, 1, 0, 0, 0, TimeSpan.Zero);
+        var inPool = pool.Select(line => line.PlayerId).ToHashSet();
+        var returning = new List<SeasonStatLine>();
+        foreach (var latest in history.Where(line => !inPool.Contains(line.PlayerId))
+            .GroupBy(line => line.PlayerId)
+            .Select(group => group.MaxBy(line => line.SeasonEndYear)!))
+        {
+            if (await adp.GetLatestAsync(latest.PlayerId, cancellationToken) is { } entry && entry.Provenance.FetchedAt >= seasonEnded)
+            {
+                returning.Add(latest);
+            }
+        }
+
+        return returning;
+    }
+
+    /// <summary>A regular season is over by July; ADP fetched from then on is for the next one.</summary>
+    private const int SeasonEndMonth = 7;
 
     /// <summary>The pool's season and the two before it, from the pool's source.</summary>
     private async Task<IReadOnlyList<SeasonStatLine>> HistoryAsync(IReadOnlyList<SeasonStatLine> pool, CancellationToken cancellationToken)

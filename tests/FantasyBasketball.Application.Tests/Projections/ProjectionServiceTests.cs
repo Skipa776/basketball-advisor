@@ -70,14 +70,74 @@ public sealed class ProjectionServiceTests
         repository.Distributions.ShouldHaveSingleItem().BaselineId.ShouldBe(projected.Baseline.Id);
     }
 
+    [Fact]
+    public async Task P17_players_who_sat_out_the_season_are_projected_when_drafters_expect_them_back()
+    {
+        var repository = new FakeProjectionRepository();
+        var options = new ProjectionOptions();
+        var active = CreateSource("active", 70, 2100m, 1400m);
+        var returning = CreateSource("returning", 60, 2000m, 1300m, 2025);
+        var retired = CreateSource("retired", 60, 2000m, 1300m, 2025);
+        var lastYearsAdp = CreateSource("stale-adp", 60, 2000m, 1300m, 2025);
+        var adp = new FakeAdpRepository(
+            Adp(returning.PlayerId, new DateTimeOffset(2026, 9, 20, 0, 0, 0, TimeSpan.Zero)),
+            Adp(lastYearsAdp.PlayerId, new DateTimeOffset(2025, 9, 20, 0, 0, 0, TimeSpan.Zero)));
+        var service = new ProjectionService(
+            new BaselineProjector(new MinutesProjector(), options),
+            repository,
+            options,
+            new FixedTimeProvider(new DateTimeOffset(2026, 10, 4, 12, 0, 0, TimeSpan.Zero)),
+            new FakeModelVersionRepository([.. ModelFixtures.All()]),
+            new SeasonFilteredStatLines([active, returning, retired, lastYearsAdp]),
+            new FakePlayerRepository(),
+            adp);
+
+        var projections = await service.ProjectPoolAsync([active], TestContext.Current.CancellationToken);
+
+        projections.Select(item => item.Baseline.PlayerId).ShouldBe([active.PlayerId, returning.PlayerId], ignoreOrder: true);
+        var comeback = projections.Single(item => item.Baseline.PlayerId == returning.PlayerId);
+        comeback.Distribution.ShouldNotBeNull();
+        comeback.Baseline.ProjectedMinutesPerGame.ShouldBeGreaterThan(0m);
+        repository.Items.Single(item => item.Baseline.PlayerId == returning.PlayerId).Observed.Source.SeasonEndYear.ShouldBe(2025);
+    }
+
+    private static Domain.Draft.AdpEntry Adp(PlayerId playerId, DateTimeOffset fetchedAt) =>
+        new(Guid.NewGuid(), playerId, 30m, null,
+            new DataProvenance(DataSourceName.FantasyPros, null, fetchedAt, null, "fantasypros-v1", DataSourceConfidence.ManualEntry, new string('b', 64)));
+
+    private sealed class FakeAdpRepository(params Domain.Draft.AdpEntry[] entries) : IAdpRepository
+    {
+        public Task AddAsync(Domain.Draft.AdpEntry entry, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<Domain.Draft.AdpEntry?> GetLatestAsync(PlayerId playerId, CancellationToken cancellationToken) =>
+            Task.FromResult(entries.FirstOrDefault(entry => entry.PlayerId == playerId));
+    }
+
+    /// <summary>Season lines by year, as the real store returns them.</summary>
+    private sealed class SeasonFilteredStatLines(IReadOnlyList<SeasonStatLine> lines) : ISeasonStatLineRepository
+    {
+        public Task<IReadOnlyList<SeasonProjectionPool>> ListPoolsAsync(CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<SeasonProjectionPool>>([]);
+
+        public Task<IReadOnlyList<SeasonStatLine>> ListPoolAsync(int seasonEndYear, string source, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<SeasonStatLine>>(lines.Where(line => line.SeasonEndYear == seasonEndYear).ToArray());
+
+        public Task AddAsync(SeasonStatLine statLine, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task SaveAgeAsync(PlayerId playerId, int seasonEndYear, string source, int age, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<SeasonStatLine?> GetAsync(PlayerId playerId, int seasonEndYear, string source, CancellationToken cancellationToken) =>
+            Task.FromResult(lines.FirstOrDefault(line => line.PlayerId == playerId && line.SeasonEndYear == seasonEndYear));
+    }
+
     private static SeasonStatLine CreateSource(
         string externalId,
         int gamesPlayed,
         decimal minutes,
-        decimal points) =>
+        decimal points,
+        int seasonEndYear = 2026) =>
         new(
             new PlayerId(Guid.NewGuid()),
-            2026,
+            seasonEndYear,
             gamesPlayed,
             minutes / gamesPlayed,
             new StatLine(new Dictionary<StatKey, decimal>()),
