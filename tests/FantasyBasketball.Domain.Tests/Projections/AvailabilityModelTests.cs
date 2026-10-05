@@ -10,9 +10,7 @@ namespace FantasyBasketball.Domain.Tests.Projections;
 public sealed class AvailabilityModelTests
 {
     // a 0 (prior mean 0.5 at age 27, 20 mpg), no age or minutes terms, phi 2, weights 0.1 / 0.05 / 0.
-    private static readonly AvailabilityModel Model = new(new AvailabilityModelParameters(27, 20m, 82,
-        new Dictionary<string, IReadOnlyList<decimal>> { ["rotation"] = [0.1m, 0.05m, 0m], ["starter"] = [0.1m, 0.05m, 0m] },
-        0m, 0m, 0m, new Dictionary<string, decimal> { ["rotation"] = 2m, ["starter"] = 2m }, decimal.MaxValue));
+    private static readonly AvailabilityModel Model = new(new AvailabilityModelParameters(27, 20m, 82, [0.1m, 0.05m, 0m], 0m, 0m, 0m, 2m));
 
     [Fact]
     public void AV01_beta_binomial_matches_scipy_moments_and_quantiles()
@@ -65,36 +63,6 @@ public sealed class AvailabilityModelTests
         var json = """{"ageCenter":27,"mpgCenter":20,"fullSeason":82,"weights":[0.1],"a":0,"b":0,"c":0,"phi":2}""";
 
         Should.Throw<ArgumentException>(() => AvailabilityModelParameters.Parse(json));
-    }
-
-    [Fact]
-    public void AV06_a_starter_takes_the_starter_weights_and_prior_strength()
-    {
-        var json = """{"ageCenter":27,"mpgCenter":20,"fullSeason":82,"starterFrom":28,"weights":{"rotation":[0.1,0,0],"starter":[0.02,0.01,0.01]},"a":0,"b":0,"c":0,"phi":{"rotation":2,"starter":4}}""";
-        var model = new AvailabilityModel(AvailabilityModelParameters.Parse(json));
-        AvailabilityHistory[] Seasons(decimal mpg) => [new(1, 36, 82, mpg, null), new(2, 67, 82, mpg, null)];
-
-        var starter = model.FromHistory(null, Seasons(29m));
-        var rotation = model.FromHistory(null, Seasons(27.9m));
-
-        // m = 0.5 (no terms); starter: phi 4, weights 0.02 / 0.01; rotation: phi 2, weight 0.1 on last season only.
-        starter.Alpha.ShouldBe(2m + (0.02m * 36m) + (0.01m * 67m));
-        starter.Beta.ShouldBe(2m + (0.02m * 46m) + (0.01m * 15m));
-        rotation.Alpha.ShouldBe(1m + (0.1m * 36m));
-        rotation.Beta.ShouldBe(1m + (0.1m * 46m));
-    }
-
-    [Fact]
-    public void AV07_a_fit_from_before_roles_reads_as_the_same_for_both()
-    {
-        var json = """{"ageCenter":27,"mpgCenter":20,"fullSeason":82,"weights":[0.1,0.05,0],"a":0,"b":0,"c":0,"phi":2}""";
-
-        var parameters = AvailabilityModelParameters.Parse(json);
-
-        parameters.Weights["starter"].ShouldBe([0.1m, 0.05m, 0m]);
-        parameters.Phi["rotation"].ShouldBe(2m);
-        new AvailabilityModel(parameters).FromHistory(27, [new AvailabilityHistory(1, 70, 82, 40m, null)]).Alpha
-            .ShouldBe(Model.FromHistory(27, [new AvailabilityHistory(1, 70, 82, 40m, null)]).Alpha);
     }
 
     private static SeasonStatLine Line(int season, int games) => new(
